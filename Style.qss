@@ -767,3 +767,8 @@ QCameraWidget QLabel {
 QCameraWidget QLabel:hover {
     background: #f5f5f5;
 }
+
+QMdiArea {
+    background-color: #f4f6f9;
+    border: none;
+}
