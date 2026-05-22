@@ -46,6 +46,7 @@ QDockWidget::title {
     text-align: left;
     background: #ffffff;
     padding: 8px 12px;
+    border-top: 1px solid #d9e1ea;
     border-bottom: 1px solid #d9e1ea;
     color: #354657;
     font-weight: 600;
@@ -68,6 +69,7 @@ QDockWidget::float-button:hover {
 QToolBar {
     background: #ffffff;
     border: none;
+    border-top: 1px solid #d9e1ea;
     border-bottom: 1px solid #d9e1ea;
     spacing: 3px;
     padding: 3px 3px;
@@ -75,6 +77,7 @@ QToolBar {
 
 QToolBar#EngineToolBar {
     background: #ffffff;
+    border-top: 1px solid #d3dde8;
     border-bottom: 1px solid #d3dde8;
     padding: 3px 3px;
     spacing: 3px;
@@ -248,6 +251,32 @@ QToolButton#EngineStatusModeButton::menu-indicator,
 QToolButton#EngineStatusViewButton::menu-indicator {
     image: none;
     width: 0px;
+}
+
+QLabel#CameraStatusLabel,
+QLabel#GocatorStatusLabel {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    border-radius: 12px;
+    padding: 0 10px;
+    min-height: 22px;
+    margin: 0 3px 0 0;
+    font-weight: bold;
+}
+
+QLabel#CameraStatusLabel[status="connected"],
+QLabel#GocatorStatusLabel[status="connected"] {
+    color: #2e7d32;
+}
+
+QLabel#CameraStatusLabel[status="disconnected"],
+QLabel#GocatorStatusLabel[status="disconnected"] {
+    color: #c62828;
+}
+
+QLabel#CameraStatusLabel[status="grabbing"],
+QLabel#GocatorStatusLabel[status="grabbing"] {
+    color: #1565c0;
 }
 
 QTabWidget,
@@ -759,7 +788,6 @@ QGocatorWidget QComboBox::item:selected {
 QCameraWidget QLabel {
     background: transparent;
     min-height: 22px;
-    max-height: 22px;
     padding: 0 6px;
     margin: 0;
 }
@@ -768,7 +796,21 @@ QCameraWidget QLabel:hover {
     background: #f5f5f5;
 }
 
+QCameraWidget QLabel#CameraStatusLabel,
+QGocatorWidget QLabel#GocatorStatusLabel {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    border-radius: 12px;
+    padding: 0 10px;
+    min-height: 22px;
+    margin: 0 3px 0 0;
+}
+
+QCameraWidget QLabel#CameraStatusLabel:hover,
+QGocatorWidget QLabel#GocatorStatusLabel:hover {
+    background: #ffffff;
+}
+
 QMdiArea {
-    background-color: #f4f6f9;
     border: none;
 }
