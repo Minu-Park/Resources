@@ -14,7 +14,7 @@ Playground 애플리케이션의 시각적 일관성을 확보하고, 라이트 
 * **전역 일관성 테마 (QSS)**: 모던하고 플랫한 감각의 프리미엄 라이트 테마 스타일시트(`Style.qss`)를 내장하여 일률적인 UI 감성을 보장합니다.
 * **단일화된 에셋 파이프라인**: 모든 애플리케이션 아이콘 및 브랜드 로고 자원이 `:/Resources` 가상 QRC 경로로 컴파일되어 파일 시스템 결합 없이 임베디드 배포됩니다.
 * **원클릭 스타일 설치 API**: `Resources::installResources(app)` 호출을 통해 별도의 리소스 번들 로딩 코드 작성 없이 QSS 적용, 번들 리소스 등록, 앱 아이콘 지정을 한 번에 수행할 수 있습니다.
-* **상태 시각화 컴포넌트 스타일 규격**: 카메라나 Gocator 센서 상태 인디케이터(Disconnected/Connected/Live 등)의 공통 상태 컬러 맵과 동적 CSS Property(`status`) 스타일이 완벽히 설계되어 있습니다.
+* **State visualization style contract**: Camera and Gocator status indicators share one dynamic CSS property (`status`) and color map for `Idle`, `Disconnected`, `Connected`, and `Live` states.
 
 ---
 

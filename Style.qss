@@ -269,6 +269,11 @@ QLabel#GocatorStatusLabel[status="connected"] {
     color: #2e7d32;
 }
 
+QLabel#CameraStatusLabel[status="idle"],
+QLabel#GocatorStatusLabel[status="idle"] {
+    color: #5c6b7a;
+}
+
 QLabel#CameraStatusLabel[status="disconnected"],
 QLabel#GocatorStatusLabel[status="disconnected"] {
     color: #c62828;
