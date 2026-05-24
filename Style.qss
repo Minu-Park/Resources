@@ -814,3 +814,36 @@ QGocatorWidget QLabel#GocatorStatusLabel:hover {
 QMdiArea {
     border: none;
 }
+
+/* QStaticImageControlWidget */
+QStaticImageControlWidget {
+    background: #ffffff;
+}
+
+QStaticImageControlWidget QLabel {
+    font-weight: 600;
+    color: #2a3a4b;
+}
+
+QStaticImageControlWidget QListWidget {
+    background-color: #ffffff;
+    border: 1px solid #d9e1ea;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+QStaticImageControlWidget QListWidget::item {
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #16202b;
+}
+
+QStaticImageControlWidget QListWidget::item:hover {
+    background-color: #f5f7fa;
+}
+
+QStaticImageControlWidget QListWidget::item:selected {
+    background-color: #e2eaf4;
+    color: #007acc;
+    font-weight: bold;
+}
