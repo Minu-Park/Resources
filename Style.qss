@@ -830,6 +830,33 @@ QStaticImageControlWidget QLabel {
     color: #2a3a4b;
 }
 
+QStaticImageControlWidget QToolButton {
+    min-width: 20px;
+    min-height: 20px;
+    max-width: 20px;
+    max-height: 20px;
+    padding: 0;
+    border-radius: 8px;
+}
+
+QStaticImageControlWidget QToolButton:hover {
+    background: #f3f3f3;
+}
+
+QStaticImageControlWidget QToolButton:pressed {
+    background: #e8e8e8;
+}
+
+QStaticImageControlWidget QSpinBox {
+    min-height: 22px;
+    max-height: 22px;
+    padding: 0 6px;
+    border: 1px solid #cfd9e4;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #16202b;
+}
+
 QStaticImageControlWidget QListWidget {
     background-color: #ffffff;
     border: 1px solid #d9e1ea;
@@ -844,11 +871,11 @@ QStaticImageControlWidget QListWidget::item {
 }
 
 QStaticImageControlWidget QListWidget::item:hover {
-    background-color: #f5f7fa;
+    background-color: #f3f3f3;
 }
 
 QStaticImageControlWidget QListWidget::item:selected {
-    background-color: #e2eaf4;
-    color: #007acc;
-    font-weight: bold;
+    background-color: #f0f0f0;
+    color: #16202b;
+    font-weight: 600;
 }

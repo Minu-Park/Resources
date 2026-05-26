@@ -15,6 +15,7 @@ Playground 애플리케이션의 시각적 일관성을 확보하고, 라이트 
 * **단일화된 에셋 파이프라인**: 모든 애플리케이션 아이콘 및 브랜드 로고 자원이 `:/Resources` 가상 QRC 경로로 컴파일되어 파일 시스템 결합 없이 임베디드 배포됩니다.
 * **원클릭 스타일 설치 API**: `Resources::installResources(app)` 호출을 통해 별도의 리소스 번들 로딩 코드 작성 없이 QSS 적용, 번들 리소스 등록, 앱 아이콘 지정을 한 번에 수행할 수 있습니다.
 * **State visualization style contract**: Camera and Gocator status indicators share one dynamic CSS property (`status`) and color map for `Idle`, `Disconnected`, `Connected`, and `Live` states.
+* **Neutral source-control styling**: `QStaticImageControlWidget` tool buttons, FPS input, and list selection use compact neutral styling aligned with the Camera/Gocator control-panel tone.
 
 ---
 
@@ -91,3 +92,7 @@ int main(int argc, char* argv[])
 > [!TIP]
 > **Dynamic QSS Properties**
 > 특정 위젯에 상태별 dynamic styling(예: 커넥션 정상 녹색 점멸, 에러 적색 점멸)을 적용할 때, 코드 내에 CSS 색상값을 하드코딩하지 마십시오. 대신 `widget->setProperty("status", "live")`와 같이 QSS dynamic property를 지정하고 `style()->unpolish()`/`polish()`를 실행해 QSS에 미리 선언된 스타일로 렌더링되게 설계하는 것을 강력히 권장합니다.
+
+> [!TIP]
+> **Test image controls**
+> Keep `QStaticImageControlWidget` sizing and selection tone in `Style.qss`: its playback buttons and FPS field align with device controls, and selected files use neutral gray emphasis rather than a device-specific accent color.
