@@ -309,6 +309,9 @@ QTabBar {
     background: #ffffff;
     qproperty-drawBase: 0;
     border: none;
+    border-top: 1px solid #d9e1ea;
+    border-bottom: 1px solid #d9e1ea;
+    padding-top: 4px;
 }
 
 QTabBar::tab {
