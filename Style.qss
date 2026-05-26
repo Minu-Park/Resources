@@ -310,30 +310,32 @@ QTabBar {
     qproperty-drawBase: 0;
     border: none;
     border-top: 1px solid #d9e1ea;
-    border-bottom: 1px solid #d9e1ea;
     padding-top: 4px;
 }
 
 QTabBar::tab {
-    background: #ffffff;
+    background: #f4f6f8;
     color: #516476;
-    border: none;
-    border-bottom: 2px solid transparent;
-    padding: 8px 16px;
-    margin: 0px;
+    border: 1px solid #d9e1ea;
+    border-bottom: none;
+    padding: 6px 16px;
+    margin-right: 2px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
     font-weight: 600;
 }
 
 QTabBar::tab:selected {
     background: #ffffff;
     color: #00457C;
-    border-bottom: 2px solid #00457C;
+    border-color: #d9e1ea;
+    border-bottom: 1px solid #ffffff;
     font-weight: bold;
 }
 
 QTabBar::tab:hover:!selected {
     color: #16202b;
-    background: #f4f6f8;
+    background: #eef1f4;
 }
 
 QTableWidget,
