@@ -21,6 +21,7 @@ private slots:
     void updateFloatIcon();
 
 private:
+    bool eventFilter(QObject* watched, QEvent* event) override;
     QDockWidget* _dockWidget = nullptr;
     QLabel* _titleLabel = nullptr;
     QPushButton* _floatButton = nullptr;

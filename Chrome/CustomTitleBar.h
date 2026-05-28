@@ -22,6 +22,7 @@ protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
+    bool eventFilter(QObject* watched, QEvent* event) override;
     void updateMaximizeIcon();
 
     QMdiSubWindow* _subWindow;

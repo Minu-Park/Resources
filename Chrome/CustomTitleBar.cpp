@@ -83,6 +83,20 @@ CustomTitleBar::CustomTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWid
         }
     });
     setMouseTracking(true);
+
+    // Register event filters to handle mouse hover swap dynamically
+    _minButton->installEventFilter(this);
+    _maxButton->installEventFilter(this);
+    _closeButton->installEventFilter(this);
+
+    _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png")));
+    _minButton->setIconSize(QSize(12, 12));
+
+    _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
+    _closeButton->setIconSize(QSize(12, 12));
+
+    _maxButton->setIconSize(QSize(12, 12));
+    updateMaximizeIcon();
 }
 
 void CustomTitleBar::mousePressEvent(QMouseEvent* event)
@@ -145,11 +159,36 @@ void CustomTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
 void CustomTitleBar::updateMaximizeIcon()
 {
     bool isMax = _subWindow->isMaximized();
-    if (_maxButton->property("maximized").toBool() != isMax) {
-        _maxButton->setProperty("maximized", isMax);
-        _maxButton->style()->unpolish(_maxButton);
-        _maxButton->style()->polish(_maxButton);
+    _maxButton->setProperty("maximized", isMax);
+
+    bool underMouse = _maxButton->underMouse();
+    _maxButton->setIcon(QIcon(underMouse ? QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png") : QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
+}
+
+bool CustomTitleBar::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == _minButton) {
+        if (event->type() == QEvent::Enter) {
+            _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48-hover.png")));
+        } else if (event->type() == QEvent::Leave) {
+            _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png")));
+        }
     }
+    else if (watched == _closeButton) {
+        if (event->type() == QEvent::Enter) {
+            _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png")));
+        } else if (event->type() == QEvent::Leave) {
+            _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
+        }
+    }
+    else if (watched == _maxButton) {
+        if (event->type() == QEvent::Enter) {
+            _maxButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png")));
+        } else if (event->type() == QEvent::Leave) {
+            _maxButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
+        }
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 void CustomTitleBar::paintEvent(QPaintEvent* event)

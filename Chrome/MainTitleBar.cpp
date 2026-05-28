@@ -1,5 +1,6 @@
 #include "MainTitleBar.h"
 #include <QMainWindow>
+#include <QWindow>
 #include <QMenuBar>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -30,7 +31,14 @@ MainTitleBar::MainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* 
     _logoLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
     QPixmap logoPixmap(QStringLiteral(":/Resources/Icon.png"));
     if (!logoPixmap.isNull()) {
-        _logoLabel->setPixmap(logoPixmap.scaled(18, 18, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        const double dpr = this->devicePixelRatio();
+        QPixmap scaledLogo = logoPixmap.scaled(
+            QSize(18, 18) * dpr,
+            Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+        );
+        scaledLogo.setDevicePixelRatio(dpr);
+        _logoLabel->setPixmap(scaledLogo);
     }
     _logoLabel->setFixedSize(18, 18);
     layout->addWidget(_logoLabel, 0, Qt::AlignVCenter);
@@ -86,11 +94,29 @@ MainTitleBar::MainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* 
     connect(_closeButton, &QPushButton::clicked, _mainWindow, &QWidget::close);
 
     connect(_mainWindow, &QWidget::windowTitleChanged, _titleLabel, &QLabel::setText);
+
+    _minButton->installEventFilter(this);
+    _maxButton->installEventFilter(this);
+    _closeButton->installEventFilter(this);
+
+    _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png")));
+    _minButton->setIconSize(QSize(14, 14));
+
+    _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
+    _closeButton->setIconSize(QSize(14, 14));
+
+    _maxButton->setIconSize(QSize(14, 14));
+    updateMaximizeIcon();
 }
 
 void MainTitleBar::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton && !_mainWindow->isMaximized()) {
+        if (auto* window = _mainWindow->windowHandle()) {
+            window->startSystemMove();
+            event->accept();
+            return;
+        }
         _dragPosition = event->globalPosition().toPoint() - _mainWindow->frameGeometry().topLeft();
         _isDragging = true;
         event->accept();
@@ -137,11 +163,36 @@ void MainTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
 void MainTitleBar::updateMaximizeIcon()
 {
     bool isMax = _mainWindow->isMaximized();
-    if (_maxButton->property("maximized").toBool() != isMax) {
-        _maxButton->setProperty("maximized", isMax);
-        _maxButton->style()->unpolish(_maxButton);
-        _maxButton->style()->polish(_maxButton);
+    _maxButton->setProperty("maximized", isMax);
+
+    bool underMouse = _maxButton->underMouse();
+    _maxButton->setIcon(QIcon(underMouse ? QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png") : QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
+}
+
+bool MainTitleBar::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == _minButton) {
+        if (event->type() == QEvent::Enter) {
+            _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48-hover.png")));
+        } else if (event->type() == QEvent::Leave) {
+            _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png")));
+        }
     }
+    else if (watched == _closeButton) {
+        if (event->type() == QEvent::Enter) {
+            _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png")));
+        } else if (event->type() == QEvent::Leave) {
+            _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
+        }
+    }
+    else if (watched == _maxButton) {
+        if (event->type() == QEvent::Enter) {
+            _maxButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png")));
+        } else if (event->type() == QEvent::Leave) {
+            _maxButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
+        }
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 void MainTitleBar::paintEvent(QPaintEvent* event)

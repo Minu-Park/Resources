@@ -57,39 +57,9 @@ QPushButton#MainCloseButton {
     padding: 0px;
 }
 
-QPushButton#MainMinButton {
-    image: url(:/Resources/Icons/icons8-minimize-window-48.png);
-}
-
-QPushButton#MainMinButton:hover {
-    image: url(:/Resources/Icons/icons8-minimize-window-48-hover.png);
-    background: transparent;
-}
-
-QPushButton#MainMaxButton[maximized="false"] {
-    image: url(:/Resources/Icons/icons8-maximize-window-48.png);
-}
-
-QPushButton#MainMaxButton[maximized="false"]:hover {
-    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
-    background: transparent;
-}
-
-QPushButton#MainMaxButton[maximized="true"] {
-    image: url(:/Resources/Icons/icons8-restore-window-50.png);
-}
-
-QPushButton#MainMaxButton[maximized="true"]:hover {
-    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
-    background: transparent;
-}
-
-QPushButton#MainCloseButton {
-    image: url(:/Resources/Icons/icons8-close-window-48.png);
-}
-
+QPushButton#MainMinButton:hover,
+QPushButton#MainMaxButton:hover,
 QPushButton#MainCloseButton:hover {
-    image: url(:/Resources/Icons/icons8-close-window-48-hover.png);
     background: transparent;
 }
 
@@ -144,39 +114,9 @@ QPushButton#TitleCloseButton {
     padding: 0px;
 }
 
-QPushButton#TitleMinButton {
-    image: url(:/Resources/Icons/icons8-minimize-window-48.png);
-}
-
-QPushButton#TitleMinButton:hover {
-    image: url(:/Resources/Icons/icons8-minimize-window-48-hover.png);
-    background: transparent;
-}
-
-QPushButton#TitleMaxButton[maximized="false"] {
-    image: url(:/Resources/Icons/icons8-maximize-window-48.png);
-}
-
-QPushButton#TitleMaxButton[maximized="false"]:hover {
-    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
-    background: transparent;
-}
-
-QPushButton#TitleMaxButton[maximized="true"] {
-    image: url(:/Resources/Icons/icons8-restore-window-50.png);
-}
-
-QPushButton#TitleMaxButton[maximized="true"]:hover {
-    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
-    background: transparent;
-}
-
-QPushButton#TitleCloseButton {
-    image: url(:/Resources/Icons/icons8-close-window-48.png);
-}
-
+QPushButton#TitleMinButton:hover,
+QPushButton#TitleMaxButton:hover,
 QPushButton#TitleCloseButton:hover {
-    image: url(:/Resources/Icons/icons8-close-window-48-hover.png);
     background: transparent;
 }
 
@@ -212,30 +152,8 @@ QPushButton#DockCloseButton {
     padding: 0px;
 }
 
-QPushButton#DockMaxButton[maximized="false"] {
-    image: url(:/Resources/Icons/icons8-maximize-window-48.png);
-}
-
-QPushButton#DockMaxButton[maximized="false"]:hover {
-    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
-    background: transparent;
-}
-
-QPushButton#DockMaxButton[maximized="true"] {
-    image: url(:/Resources/Icons/icons8-restore-window-50.png);
-}
-
-QPushButton#DockMaxButton[maximized="true"]:hover {
-    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
-    background: transparent;
-}
-
-QPushButton#DockCloseButton {
-    image: url(:/Resources/Icons/icons8-close-window-48.png);
-}
-
+QPushButton#DockMaxButton:hover,
 QPushButton#DockCloseButton:hover {
-    image: url(:/Resources/Icons/icons8-close-window-48-hover.png);
     background: transparent;
 }
 

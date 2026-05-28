@@ -63,6 +63,16 @@ DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     
     // Accept hover events to avoid parent intervention
     setMouseTracking(true);
+
+    // Register event filters to handle mouse hover swap dynamically
+    _closeButton->installEventFilter(this);
+    _floatButton->installEventFilter(this);
+
+    _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
+    _closeButton->setIconSize(QSize(12, 12));
+
+    _floatButton->setIconSize(QSize(12, 12));
+    updateFloatIcon();
 }
 
 void DockTitleBar::paintEvent(QPaintEvent* event)
@@ -92,9 +102,27 @@ void DockTitleBar::mouseReleaseEvent(QMouseEvent* event)
 void DockTitleBar::updateFloatIcon()
 {
     bool isFloat = _dockWidget->isFloating();
-    if (_floatButton->property("maximized").toBool() != isFloat) {
-        _floatButton->setProperty("maximized", isFloat);
-        _floatButton->style()->unpolish(_floatButton);
-        _floatButton->style()->polish(_floatButton);
+    _floatButton->setProperty("maximized", isFloat);
+
+    bool underMouse = _floatButton->underMouse();
+    _floatButton->setIcon(QIcon(underMouse ? QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png") : QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
+}
+
+bool DockTitleBar::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == _closeButton) {
+        if (event->type() == QEvent::Enter) {
+            _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png")));
+        } else if (event->type() == QEvent::Leave) {
+            _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
+        }
     }
+    else if (watched == _floatButton) {
+        if (event->type() == QEvent::Enter) {
+            _floatButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png")));
+        } else if (event->type() == QEvent::Leave) {
+            _floatButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
+        }
+    }
+    return QWidget::eventFilter(watched, event);
 }
