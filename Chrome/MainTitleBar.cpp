@@ -17,7 +17,7 @@ MainTitleBar::MainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* 
     , _mainWindow(mainWindow)
 {
     setObjectName(QStringLiteral("MainTitleBar"));
-    setFixedHeight(32);
+    setFixedHeight(34);
     setCursor(Qt::ArrowCursor);
 
     auto* layout = new QHBoxLayout(this);
@@ -113,9 +113,10 @@ void MainTitleBar::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton && !_mainWindow->isMaximized()) {
         if (auto* window = _mainWindow->windowHandle()) {
-            window->startSystemMove();
-            event->accept();
-            return;
+            if (window->startSystemMove()) {
+                event->accept();
+                return;
+            }
         }
         _dragPosition = event->globalPosition().toPoint() - _mainWindow->frameGeometry().topLeft();
         _isDragging = true;

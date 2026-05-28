@@ -126,3 +126,13 @@ bool DockTitleBar::eventFilter(QObject* watched, QEvent* event)
     }
     return QWidget::eventFilter(watched, event);
 }
+
+QSize DockTitleBar::sizeHint() const
+{
+    return QSize(QWidget::sizeHint().width(), 28);
+}
+
+QSize DockTitleBar::minimumSizeHint() const
+{
+    return QSize(QWidget::minimumSizeHint().width(), 28);
+}

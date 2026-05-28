@@ -11,6 +11,9 @@ class DockTitleBar : public QWidget {
 public:
     explicit DockTitleBar(QDockWidget* dockWidget, QWidget* parent = nullptr);
 
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
+
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
