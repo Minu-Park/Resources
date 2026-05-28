@@ -1,0 +1,113 @@
+/* theme/qss/60_processing.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
+
+/* Runtime path dialog */
+QLabel#RuntimePathsDescription {
+    color: #425467;
+}
+
+QLabel#RuntimePathsStatusLabel[state="normal"] {
+    color: #64748b;
+    font-weight: 400;
+}
+
+QLabel#RuntimePathsStatusLabel[state="warning"] {
+    color: #b45309;
+    font-weight: 600;
+}
+
+/* OpenCV processing panel */
+QLabel#ProcessingEditorTitle {
+    font-weight: 600;
+    color: #4a5a6a;
+}
+
+QToolButton#ProcessingEnableToggle {
+    border: 1px solid #cfd9e4;
+    border-radius: 11px;
+    padding: 2px 10px;
+    background-color: #ffffff;
+    color: #64748b;
+    font-weight: bold;
+    font-size: 11px;
+    min-height: 16px;
+    max-height: 16px;
+}
+
+QToolButton#ProcessingEnableToggle[active="true"] {
+    border: 1px solid #354657;
+    background-color: #f1f5f9;
+    color: #354657;
+}
+
+QTextEdit#ProcessingCodeEditor {
+    background-color: #ffffff;
+    color: #1e293b;
+    border: 1px solid #cfd9e4;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+QLabel#ProcessingParamEditorTitle {
+    font-weight: 600;
+    color: #4a5a6a;
+    font-size: 11px;
+}
+
+QTextEdit#ProcessingParamEditor {
+    background-color: #ffffff;
+    color: #1e293b;
+    border: 1px solid #cfd9e4;
+    border-radius: 8px;
+    padding: 4px;
+    font-family: "Courier New";
+    font-size: 11px;
+}
+
+QLabel#ProcessingParamHintLabel {
+    color: #64748b;
+    font-style: italic;
+    padding: 6px;
+    font-size: 11px;
+}
+
+QLabel#ProcessingParamEmptyLabel {
+    color: #777777;
+    font-style: italic;
+    padding: 4px;
+}
+
+QLabel#ProcessingParamNameLabel {
+    color: #4a5a6a;
+    font-weight: 600;
+}
+
+QLabel#ProcessingParamValueLabel {
+    font-weight: bold;
+    color: #354657;
+}
+
+QSlider#ProcessingParamSlider::groove:horizontal {
+    border: none;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+}
+
+QSlider#ProcessingParamSlider::sub-page:horizontal {
+    background: #354657;
+    border-radius: 2px;
+}
+
+QSlider#ProcessingParamSlider::handle:horizontal {
+    background: #ffffff;
+    border: 2px solid #354657;
+    width: 14px;
+    height: 14px;
+    margin: -5px 0;
+    border-radius: 7px;
+}
+
+QSlider#ProcessingParamSlider::handle:horizontal:hover {
+    background: #354657;
+}
+

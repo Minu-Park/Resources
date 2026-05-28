@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QFile>
 #include <QIcon>
+#include <QStringList>
 #include <QTextStream>
 
 // Global-scope helper to execute Q_INIT_RESOURCE, which relies on global symbols.
@@ -18,12 +19,26 @@ void installResources(QApplication& app)
 {
     initResourcesHelper();
 
-    QFile file(QStringLiteral(":/Resources/Style.qss"));
-    if (file.open(QFile::ReadOnly | QFile::Text))
-    {
-        QTextStream stream(&file);
-        app.setStyleSheet(stream.readAll());
+    const QStringList qssFiles = {
+        QStringLiteral(":/Resources/theme/qss/00_base.qss"),
+        QStringLiteral(":/Resources/theme/qss/10_graphics_engine.qss"),
+        QStringLiteral(":/Resources/theme/qss/20_statusbar.qss"),
+        QStringLiteral(":/Resources/theme/qss/30_camera_gocator.qss"),
+        QStringLiteral(":/Resources/theme/qss/40_chrome.qss"),
+        QStringLiteral(":/Resources/theme/qss/50_static_image.qss"),
+        QStringLiteral(":/Resources/theme/qss/60_processing.qss")
+    };
+
+    QString styleSheet;
+    for (const QString& qssFile : qssFiles) {
+        QFile file(qssFile);
+        if (file.open(QFile::ReadOnly | QFile::Text)) {
+            QTextStream stream(&file);
+            styleSheet += stream.readAll();
+            styleSheet += QLatin1Char('\n');
+        }
     }
+    app.setStyleSheet(styleSheet);
 
     app.setWindowIcon(QIcon(QStringLiteral(":/Resources/Icon.png")));
 }

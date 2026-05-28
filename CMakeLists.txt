@@ -14,6 +14,14 @@ qt_add_library(PlaygroundResources OBJECT
     Resources.qrc
     Resources.h
     Resources.cpp
+    Chrome/CustomTitleBar.h
+    Chrome/CustomTitleBar.cpp
+    Chrome/DockTitleBar.h
+    Chrome/DockTitleBar.cpp
+    Chrome/MainTitleBar.h
+    Chrome/MainTitleBar.cpp
+    Chrome/MdiSubWindowContainer.h
+    Chrome/MdiSubWindowContainer.cpp
 )
 
 add_library(Resources::Resources ALIAS PlaygroundResources)
@@ -27,4 +35,3 @@ target_include_directories(PlaygroundResources
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
-

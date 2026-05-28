@@ -1,0 +1,210 @@
+/* theme/qss/10_graphics_engine.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
+
+QToolBar {
+    background: #ffffff;
+    border: none;
+    border-top: 1px solid #d9e1ea;
+    border-bottom: 1px solid #d9e1ea;
+    spacing: 3px;
+    padding: 3px 3px;
+}
+
+QToolBar#EngineToolBar {
+    background: #ffffff;
+    border-top: none;
+    border-bottom: 1px solid #d3dde8;
+    padding: 3px 3px;
+    spacing: 3px;
+}
+
+QToolBar#EngineToolBar QToolButton {
+    min-height: 28px;
+    padding: 4px 10px;
+}
+
+QToolBar::separator {
+    background: #cfdae5;
+    width: 1px;
+    margin: 2px 6px;
+}
+
+QWidget#EngineToolbarBrand {
+    background: transparent;
+}
+
+QLabel#EngineToolbarLogo {
+    padding: 0 6px 0 0;
+    margin: 0;
+    min-height: 20px;
+    background: transparent;
+}
+
+QToolButton {
+    min-height: 24px;
+    padding: 3px 8px;
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: #2a3a4b;
+    font-weight: 600;
+}
+
+QToolButton:hover {
+    background: #f3f3f3;
+    border-color: #d4e2ef;
+    color: #16202b;
+}
+
+QToolButton:pressed {
+    background: #e8e8e8;
+    border-color: #c8d9ea;
+}
+
+QToolButton:checked {
+    background: #f0f0f0;
+    border-color: #cfcfcf;
+    color: #16202b;
+}
+
+QToolButton:disabled {
+    color: #95a3b1;
+    background: transparent;
+}
+
+
+QLabel#EngineStatusMode,
+QLabel#EngineStatusSummary,
+QLabel#EngineStatusPointer,
+QLabel#EngineStatusZoom,
+QLabel#EngineStatusFps {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    border-radius: 13px;
+    padding: 0 10px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 3px 0 0;
+    color: #425467;
+}
+
+QLabel#EngineStatusMode:hover,
+QLabel#EngineStatusSummary:hover,
+QLabel#EngineStatusPointer:hover,
+QLabel#EngineStatusZoom:hover,
+QLabel#EngineStatusFps:hover,
+QStatusBar QLabel:hover {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    color: #425467;
+}
+
+QLabel#EngineStatusMode {
+    background: #f6f6f6;
+    border-color: #d7d7d7;
+    color: #354657;
+    font-weight: 700;
+}
+
+QLabel#EngineStatusSummary {
+    padding: 0 6px;
+}
+
+QLabel#EngineStatusZoom {
+    color: #354657;
+    font-weight: 700;
+}
+
+QToolButton#EngineStatusModeButton,
+QToolButton#EngineStatusViewButton {
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    padding: 0 10px;
+    margin: 0 3px 0 0;
+    border: 1px solid #d7dee6;
+    border-radius: 13px;
+    background: #ffffff;
+    color: #354657;
+    font-weight: 700;
+    icon-size: 16px;
+}
+
+QToolButton#EngineStatusViewButton:disabled {
+    background: #ffffff;
+    border-color: #d7dee6;
+    color: #425467;
+}
+
+QToolButton#EngineStatusModeButton:hover,
+QToolButton#EngineStatusViewButton:hover {
+    background: #eef3f8;
+    border-color: #c7d4e2;
+    color: #26384a;
+}
+
+QToolButton#EngineStatusModeButton:pressed,
+QToolButton#EngineStatusViewButton:pressed {
+    background: #e7eef6;
+    border-color: #bccbda;
+}
+
+QToolButton#EngineStatusModeButton::menu-indicator,
+QToolButton#EngineStatusViewButton::menu-indicator {
+    image: none;
+    width: 0px;
+}
+
+
+QScrollBar#ImageViewOverlayScrollBar:horizontal,
+QScrollBar#ImageViewOverlayScrollBar:vertical {
+    background: transparent;
+    border: none;
+    margin: 0;
+    width: 10px;
+    height: 10px;
+}
+
+QScrollBar#ImageViewOverlayScrollBar::handle:horizontal,
+QScrollBar#ImageViewOverlayScrollBar::handle:vertical {
+    background: rgba(110, 110, 110, 150);
+    border: none;
+    border-radius: 5px;
+    min-width: 34px;
+    min-height: 34px;
+    margin: 1px;
+}
+
+QScrollBar#ImageViewOverlayScrollBar::handle:horizontal:hover,
+QScrollBar#ImageViewOverlayScrollBar::handle:vertical:hover {
+    background: rgba(95, 95, 95, 190);
+}
+
+QScrollBar#ImageViewOverlayScrollBar::add-line,
+QScrollBar#ImageViewOverlayScrollBar::sub-line,
+QScrollBar#ImageViewOverlayScrollBar::add-page,
+QScrollBar#ImageViewOverlayScrollBar::sub-page {
+    background: transparent;
+    border: none;
+    width: 0px;
+    height: 0px;
+}
+
+QSpinBox#PlotLineProfileCoordinateSpinBox {
+    background: #ffffff;
+    border: 1px solid #cfd9e4;
+    border-radius: 6px;
+    padding: 1px 5px;
+    color: #16202b;
+}
+
+QSpinBox#PlotLineProfileCoordinateSpinBox:focus {
+    border-color: #7da7d9;
+}
+
+QLabel#PlotLineProfilePointLabel {
+    background: transparent;
+    color: #354657;
+    font-weight: 700;
+}

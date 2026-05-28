@@ -1,0 +1,246 @@
+/* theme/qss/40_chrome.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
+
+QMdiArea {
+    border: none;
+}
+
+QMdiSubWindow {
+    border: none;
+    background: transparent;
+    padding: 0px;
+    margin: 0px;
+}
+
+/* Main Window Title Bar Styles */
+QWidget#MainTitleBar {
+    background-color: #ffffff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom: 1px solid #d9e1ea;
+}
+
+QWidget#MainTitleBar QMenuBar {
+    background: transparent;
+    border: none;
+}
+
+QWidget#CustomTitleBar QMenuBar {
+    background: transparent;
+    border: none;
+    font-size: 11px;
+}
+
+QWidget#MainTitleBar QMenuBar::item,
+QWidget#CustomTitleBar QMenuBar::item {
+    padding: 3px 8px;
+    margin: 0;
+}
+
+QLabel#MainTitleLabel {
+    background: transparent;
+    font-size: 13px;
+    font-weight: bold;
+    color: #16202b;
+    margin: 0px;
+    padding: 0px;
+}
+
+QPushButton#MainMinButton,
+QPushButton#MainMaxButton,
+QPushButton#MainCloseButton {
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    width: 18px;
+    height: 18px;
+    margin: 0px;
+    padding: 0px;
+}
+
+QPushButton#MainMinButton {
+    image: url(:/Resources/Icons/icons8-minimize-window-48.png);
+}
+
+QPushButton#MainMinButton:hover {
+    image: url(:/Resources/Icons/icons8-minimize-window-48-hover.png);
+    background: transparent;
+}
+
+QPushButton#MainMaxButton[maximized="false"] {
+    image: url(:/Resources/Icons/icons8-maximize-window-48.png);
+}
+
+QPushButton#MainMaxButton[maximized="false"]:hover {
+    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
+    background: transparent;
+}
+
+QPushButton#MainMaxButton[maximized="true"] {
+    image: url(:/Resources/Icons/icons8-restore-window-50.png);
+}
+
+QPushButton#MainMaxButton[maximized="true"]:hover {
+    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
+    background: transparent;
+}
+
+QPushButton#MainCloseButton {
+    image: url(:/Resources/Icons/icons8-close-window-48.png);
+}
+
+QPushButton#MainCloseButton:hover {
+    image: url(:/Resources/Icons/icons8-close-window-48-hover.png);
+    background: transparent;
+}
+
+QPushButton#MainMinButton:pressed,
+QPushButton#MainMaxButton:pressed,
+QPushButton#MainCloseButton:pressed {
+    background-color: transparent;
+}
+
+/* MDI SubWindow Custom Container */
+QWidget#MdiSubWindowContainer {
+    background-color: #ffffff;
+    border: 1px solid #d9e1ea;
+    border-radius: 12px;
+}
+
+QWidget#MdiSubWindowContainer[maximized="true"] {
+    border-radius: 0px;
+}
+
+/* Custom SubWindow Title Bar */
+QWidget#CustomTitleBar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #d9e1ea;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+QWidget#CustomTitleBar[maximized="true"] {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+
+QLabel#CustomTitleBarLabel {
+    background: transparent;
+    font-size: 11px;
+    font-weight: bold;
+    color: #16202b;
+    margin: 0px;
+    padding: 0px;
+}
+
+QPushButton#TitleMinButton,
+QPushButton#TitleMaxButton,
+QPushButton#TitleCloseButton {
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    width: 16px;
+    height: 16px;
+    margin: 0px;
+    padding: 0px;
+}
+
+QPushButton#TitleMinButton {
+    image: url(:/Resources/Icons/icons8-minimize-window-48.png);
+}
+
+QPushButton#TitleMinButton:hover {
+    image: url(:/Resources/Icons/icons8-minimize-window-48-hover.png);
+    background: transparent;
+}
+
+QPushButton#TitleMaxButton[maximized="false"] {
+    image: url(:/Resources/Icons/icons8-maximize-window-48.png);
+}
+
+QPushButton#TitleMaxButton[maximized="false"]:hover {
+    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
+    background: transparent;
+}
+
+QPushButton#TitleMaxButton[maximized="true"] {
+    image: url(:/Resources/Icons/icons8-restore-window-50.png);
+}
+
+QPushButton#TitleMaxButton[maximized="true"]:hover {
+    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
+    background: transparent;
+}
+
+QPushButton#TitleCloseButton {
+    image: url(:/Resources/Icons/icons8-close-window-48.png);
+}
+
+QPushButton#TitleCloseButton:hover {
+    image: url(:/Resources/Icons/icons8-close-window-48-hover.png);
+    background: transparent;
+}
+
+QPushButton#TitleMinButton:pressed,
+QPushButton#TitleMaxButton:pressed,
+QPushButton#TitleCloseButton:pressed {
+    background-color: transparent;
+}
+
+/* Custom Dock Title Bar */
+QWidget#DockTitleBar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #d9e1ea;
+}
+
+QLabel#DockTitleBarLabel {
+    background: transparent;
+    font-size: 11px;
+    font-weight: bold;
+    color: #354657;
+    padding-top: 1px; /* Slightly lower the font vertical alignment */
+}
+
+QPushButton#DockMinButton,
+QPushButton#DockMaxButton,
+QPushButton#DockCloseButton {
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    width: 16px;
+    height: 16px;
+    margin: 0px;
+    padding: 0px;
+}
+
+QPushButton#DockMaxButton[maximized="false"] {
+    image: url(:/Resources/Icons/icons8-maximize-window-48.png);
+}
+
+QPushButton#DockMaxButton[maximized="false"]:hover {
+    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
+    background: transparent;
+}
+
+QPushButton#DockMaxButton[maximized="true"] {
+    image: url(:/Resources/Icons/icons8-restore-window-50.png);
+}
+
+QPushButton#DockMaxButton[maximized="true"]:hover {
+    image: url(:/Resources/Icons/icons8-maximize-window-48-hover.png);
+    background: transparent;
+}
+
+QPushButton#DockCloseButton {
+    image: url(:/Resources/Icons/icons8-close-window-48.png);
+}
+
+QPushButton#DockCloseButton:hover {
+    image: url(:/Resources/Icons/icons8-close-window-48-hover.png);
+    background: transparent;
+}
+
+QPushButton#DockMinButton:pressed,
+QPushButton#DockMaxButton:pressed,
+QPushButton#DockCloseButton:pressed {
+    background-color: transparent;
+}

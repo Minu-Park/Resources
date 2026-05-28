@@ -1,0 +1,195 @@
+/* theme/qss/30_camera_gocator.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
+
+QCameraWidget,
+QGocatorWidget {
+    background: #ffffff;
+}
+
+QCameraWidget QComboBox,
+QGocatorWidget QComboBox {
+    min-height: 22px;
+    max-height: 22px;
+    padding: 0 6px;
+    border: 1px solid #cfd9e4;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #16202b;
+}
+
+QCameraWidget QToolButton,
+QGocatorWidget QToolButton {
+    min-width: 20px;
+    min-height: 20px;
+    max-width: 20px;
+    max-height: 20px;
+    padding: 0;
+    border-radius: 8px;
+}
+
+QCameraWidget QToolButton:hover,
+QGocatorWidget QToolButton:hover {
+    background: #f3f3f3;
+}
+
+QCameraWidget QToolButton:pressed,
+QGocatorWidget QToolButton:pressed {
+    background: #e8e8e8;
+}
+
+QCameraWidget QTreeWidget,
+QGocatorWidget QTreeWidget {
+    border: 1px solid #d9e1ea;
+    border-radius: 10px;
+    background: #ffffff;
+    padding: 3px;
+    alternate-background-color: #ffffff;
+    gridline-color: #ececec;
+    selection-background-color: #ffffff;
+    selection-color: #16202b;
+}
+
+QCameraWidget QTreeWidget::item,
+QGocatorWidget QTreeWidget::item {
+    min-height: 22px;
+    padding: 0 6px;
+}
+
+QCameraWidget QTreeWidget QCheckBox,
+QCameraWidget QTreeWidget QRadioButton,
+QGocatorWidget QTreeWidget QCheckBox,
+QGocatorWidget QTreeWidget QRadioButton {
+    padding: 0;
+    margin: 0;
+}
+
+QCameraWidget QTreeWidget::item:hover,
+QGocatorWidget QTreeWidget::item:hover {
+    background: #ffffff;
+}
+
+QCameraWidget QTreeWidget::item:selected,
+QGocatorWidget QTreeWidget::item:selected {
+    background: #ffffff;
+    color: #16202b;
+}
+
+QCameraWidget QTreeWidget::branch:has-children:closed,
+QGocatorWidget QTreeWidget::branch:has-children:closed {
+    image: url(:/Resources/Icons/icons8-arrow-48-2.png);
+    width: 10px;
+    height: 10px;
+}
+
+QCameraWidget QTreeWidget::branch:has-children:open,
+QGocatorWidget QTreeWidget::branch:has-children:open {
+    image: url(:/Resources/Icons/icons8-expand-arrow-48.png);
+    width: 10px;
+    height: 10px;
+}
+
+QCameraWidget QTreeWidget::branch:hover,
+QCameraWidget QTreeWidget::branch:selected,
+QCameraWidget QTreeWidget::branch:open:hover,
+QCameraWidget QTreeWidget::branch:closed:hover,
+QGocatorWidget QTreeWidget::branch:hover,
+QGocatorWidget QTreeWidget::branch:selected,
+QGocatorWidget QTreeWidget::branch:open:hover,
+QGocatorWidget QTreeWidget::branch:closed:hover {
+    background: transparent;
+}
+
+QCameraWidget QComboBox::drop-down,
+QGocatorWidget QComboBox::drop-down {
+    width: 18px;
+    border-left: 1px solid #d7e0ea;
+    background: #fafafa;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+QCameraWidget QComboBox::down-arrow,
+QGocatorWidget QComboBox::down-arrow {
+    image: url(:/Resources/Icons/icons8-expand-arrow-12.png);
+    width: 12px;
+    height: 8px;
+}
+
+QCameraWidget QComboBox:hover,
+QCameraWidget QComboBox:focus,
+QGocatorWidget QComboBox:hover,
+QGocatorWidget QComboBox:focus {
+    border-color: #b8c6d5;
+}
+
+QCameraWidget QComboBox QAbstractItemView,
+QGocatorWidget QComboBox QAbstractItemView {
+    border: 1px solid #cfd9e4;
+    border-radius: 8px;
+    selection-background-color: #efefef;
+    selection-color: #16202b;
+    background: #ffffff;
+}
+
+QCameraWidget QComboBox::item:selected,
+QGocatorWidget QComboBox::item:selected {
+    background: #efefef;
+    color: #16202b;
+}
+
+QCameraWidget QLabel {
+    background: transparent;
+    min-height: 22px;
+    padding: 0 6px;
+    margin: 0;
+}
+
+QCameraWidget QLabel:hover {
+    background: #f5f5f5;
+}
+
+QCameraWidget QLabel#CameraStatusLabel,
+QGocatorWidget QLabel#GocatorStatusLabel {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    border-radius: 13px;
+    padding: 0 10px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 3px 0 0;
+}
+
+QCameraWidget QStatusBar#CameraStatusBar QLabel#CameraStatusLabel,
+QGocatorWidget QStatusBar#GocatorStatusBar QLabel#GocatorStatusLabel {
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    padding: 0 12px;
+}
+
+QCameraWidget QLabel#CameraStatusLabel:hover,
+QGocatorWidget QLabel#GocatorStatusLabel:hover {
+    background: #ffffff;
+}
+
+QCameraWidget QLabel#CameraMessageLabel,
+QGocatorWidget QLabel#GocatorMessageLabel {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin-left: 6px;
+    color: #354657;
+    font-weight: 400;
+}
+
+QCameraWidget QLabel#CameraMessageLabel[messageState="normal"],
+QGocatorWidget QLabel#GocatorMessageLabel[messageState="normal"] {
+    color: #354657;
+    font-weight: 400;
+}
+
+QCameraWidget QLabel#CameraMessageLabel[messageState="error"],
+QGocatorWidget QLabel#GocatorMessageLabel[messageState="error"] {
+    color: #c62828;
+    font-weight: 700;
+}

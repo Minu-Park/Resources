@@ -4,6 +4,13 @@
         <file>Icon.png</file>
         <file>Resources.rc</file>
         <file>Style.qss</file>
+        <file>theme/qss/00_base.qss</file>
+        <file>theme/qss/10_graphics_engine.qss</file>
+        <file>theme/qss/20_statusbar.qss</file>
+        <file>theme/qss/30_camera_gocator.qss</file>
+        <file>theme/qss/40_chrome.qss</file>
+        <file>theme/qss/50_static_image.qss</file>
+        <file>theme/qss/60_processing.qss</file>
         <file>Icons/icons8-zoom-out-48.png</file>
         <file>Icons/icons8-zoom-in-48.png</file>
         <file>Icons/icons8-warning-96.png</file>
@@ -19,6 +26,7 @@
         <file>Icons/icons8-share-48.png</file>
         <file>Icons/icons8-setup-48.png</file>
         <file>Icons/icons8-setting-48.png</file>
+        <file>Icons/icons8-run-command-48.png</file>
         <file>Icons/icons8-sent-48.png</file>
         <file>Icons/icons8-secured-file-48.png</file>
         <file>Icons/icons8-secured-file-48-2.png</file>
@@ -76,12 +84,7 @@
         <file>Icons/icons8-collapse-arrow-48.png</file>
         <file>Icons/icons8-collapse-48.png</file>
         <file>Icons/icons8-close-window-48.png</file>
-        <file>Icons/icons8-close-50.png</file>
         <file>Icons/icons8-cinema-film-play-48.png</file>
-        <file>Icons/icons8-chevron-up-48.png</file>
-        <file>Icons/icons8-chevron-right-48.png</file>
-        <file>Icons/icons8-chevron-left-48.png</file>
-        <file>Icons/icons8-chevron-down-48.png</file>
         <file>Icons/icons8-checked-checkbox-48.png</file>
         <file>Icons/icons8-check-48.png</file>
         <file>Icons/icons8-cameras-48.png</file>
@@ -94,7 +97,6 @@
         <file>Icons/icons8-about-48.png</file>
         <file>Icons/icons8-expand-arrow-48.png</file>
         <file>Icons/icons8-expand-arrow-12.png</file>
-        <file>Icons/icons8-arrow-12.png</file>
         <file>Icons/icons8-collapse-arrow-12.png</file>
         <file>BASLER_Logo.png</file>
         <file>Icons/icons8-clear-48.png</file>
@@ -105,5 +107,9 @@
         <file>Icons/icons8-depth-48.png</file>
         <file>Icons/icons8-right-view-48.png</file>
         <file>Icons/icons8-map-grid-48.png</file>
+        <file>Icons/icons8-close-window-48-hover.png</file>
+        <file>Icons/icons8-maximize-window-48.png</file>
+        <file>Icons/icons8-maximize-window-48-hover.png</file>
+        <file>Icons/icons8-minimize-window-48-hover.png</file>
     </qresource>
 </RCC>

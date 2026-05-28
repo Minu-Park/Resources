@@ -1,0 +1,99 @@
+/* theme/qss/20_statusbar.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
+
+QStatusBar {
+    background: #ffffff;
+    border-top: 1px solid #d9e1ea;
+    color: #3d5063;
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    padding: 3px 6px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+QTextEdit#SystemLogViewer {
+    background-color: #ffffff;
+    color: #16202b;
+    border: none;
+    border-radius: 0px;
+    font-family: "Menlo", "Monaco", "Consolas", "DejaVu Sans Mono", "Liberation Mono", "Courier New", monospace;
+    font-size: 11px;
+    padding: 8px;
+}
+
+QStatusBar::item {
+    border: none;
+    background: transparent;
+    margin: 0;
+    padding: 0;
+}
+
+QStatusBar#EngineStatusBar::item {
+    border: none;
+    background: transparent;
+    margin: 0;
+    padding: 0;
+}
+
+QStatusBar#EngineStatusBar {
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    padding: 3px 6px;
+}
+
+QStatusBar#CameraStatusBar,
+QStatusBar#GocatorStatusBar {
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    padding: 3px 6px;
+}
+
+QStatusBar QLabel {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    border-radius: 13px;
+    padding: 0 10px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 3px 0 0;
+    color: #425467;
+}
+
+
+QLabel#CameraStatusLabel,
+QLabel#GocatorStatusLabel {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    border-radius: 13px;
+    padding: 0 10px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 3px 0 0;
+    font-weight: bold;
+}
+
+QLabel#CameraStatusLabel[status="connected"],
+QLabel#GocatorStatusLabel[status="connected"] {
+    color: #2e7d32;
+}
+
+QLabel#CameraStatusLabel[status="idle"],
+QLabel#GocatorStatusLabel[status="idle"] {
+    color: #5c6b7a;
+}
+
+QLabel#CameraStatusLabel[status="disconnected"],
+QLabel#GocatorStatusLabel[status="disconnected"] {
+    color: #c62828;
+}
+
+QLabel#CameraStatusLabel[status="grabbing"],
+QLabel#GocatorStatusLabel[status="grabbing"] {
+    color: #1565c0;
+}
+
