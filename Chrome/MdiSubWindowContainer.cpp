@@ -29,6 +29,9 @@ MdiSubWindowContainer::MdiSubWindowContainer(QMdiSubWindow* subWin, QWidget* con
 
     setMouseTracking(true);
     _subWin->installEventFilter(this);
+    if (_content) {
+        _content->installEventFilter(this);
+    }
 }
 
 void MdiSubWindowContainer::mousePressEvent(QMouseEvent* event)
@@ -56,28 +59,32 @@ void MdiSubWindowContainer::mouseMoveEvent(QMouseEvent* event)
         int top = geom.top();
         int bottom = geom.y() + geom.height();
 
+        QSize minSize = minimumSizeHint();
+        int minW = qMax(250, minSize.width());
+        int minH = qMax(150, minSize.height());
+
         if (_resizeMode & ResizeLeft) {
             left += delta.x();
-            if (right - left < 250) {
-                left = right - 250;
+            if (right - left < minW) {
+                left = right - minW;
             }
         }
         if (_resizeMode & ResizeRight) {
             right += delta.x();
-            if (right - left < 250) {
-                right = left + 250;
+            if (right - left < minW) {
+                right = left + minW;
             }
         }
         if (_resizeMode & ResizeTop) {
             top += delta.y();
-            if (bottom - top < 150) {
-                top = bottom - 150;
+            if (bottom - top < minH) {
+                top = bottom - minH;
             }
         }
         if (_resizeMode & ResizeBottom) {
             bottom += delta.y();
-            if (bottom - top < 150) {
-                bottom = top + 150;
+            if (bottom - top < minH) {
+                bottom = top + minH;
             }
         }
 
@@ -94,6 +101,9 @@ void MdiSubWindowContainer::mouseMoveEvent(QMouseEvent* event)
 void MdiSubWindowContainer::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
+        if (_resizeMode != ResizeNone) {
+            QMetaObject::invokeMethod(_content, "notifyManualResizeFinished", Qt::AutoConnection);
+        }
         _resizeMode = ResizeNone;
         setCursor(Qt::ArrowCursor);
         event->accept();
@@ -157,6 +167,24 @@ bool MdiSubWindowContainer::eventFilter(QObject* watched, QEvent* event)
     if (watched == _subWin && event->type() == QEvent::WindowStateChange) {
         handleWindowStateChange();
     }
+    else if (watched == _content && event->type() == QEvent::LayoutRequest) {
+        if (_subWin && !_subWin->isMinimized() && !_subWin->isMaximized()) {
+            QSize minSize = this->minimumSizeHint();
+            int minW = qMax(250, minSize.width());
+            int minH = qMax(150, minSize.height());
+
+            if (this->minimumSize() != QSize(minW, minH)) {
+                this->setMinimumSize(minW, minH);
+            }
+            if (_subWin->minimumSize() != QSize(minW, minH)) {
+                _subWin->setMinimumSize(minW, minH);
+            }
+
+            if (_subWin->width() < minW || _subWin->height() < minH) {
+                _subWin->resize(qMax(_subWin->width(), minW), qMax(_subWin->height(), minH));
+            }
+        }
+    }
     return QWidget::eventFilter(watched, event);
 }
 
@@ -178,8 +206,17 @@ void MdiSubWindowContainer::handleWindowStateChange()
         _subWin->setMinimumSize(0, 0);
         _subWin->setMaximumSize(16777215, 16777215);
 
-        this->setMinimumSize(250, 150);
+        QSize minSize = this->minimumSizeHint();
+        int minW = qMax(250, minSize.width());
+        int minH = qMax(150, minSize.height());
+
+        this->setMinimumSize(minW, minH);
         this->setMaximumSize(16777215, 16777215);
+        _subWin->setMinimumSize(minW, minH);
+
+        if (_subWin->width() < minW || _subWin->height() < minH) {
+            _subWin->resize(qMax(_subWin->width(), minW), qMax(_subWin->height(), minH));
+        }
 
         _titleBar->updateState(false);
         _content->show();
