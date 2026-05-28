@@ -7,6 +7,8 @@
 #include <QTextStream>
 #include <QFontDatabase>
 #include <QFont>
+#include <QMenu>
+#include <QEvent>
 #include <QDebug>
 
 // Global-scope helper to execute Q_INIT_RESOURCE, which relies on global symbols.
@@ -16,8 +18,44 @@ inline void initResourcesHelper()
     Q_INIT_RESOURCE(Resources);
 }
 
+// ---------------------------------------------------------------------------
+// PopupStyleFilter: removes the native popup frame so QSS border is the only
+// visible outline.  Installed once via installResources().
+// Saves and restores popup geometry because setWindowFlag() recreates the
+// native window and loses the original popup position.
+// ---------------------------------------------------------------------------
+class PopupStyleFilter : public QObject
+{
+public:
+    explicit PopupStyleFilter(QObject* parent = nullptr) : QObject(parent) {}
+
+protected:
+    bool eventFilter(QObject* obj, QEvent* event) override
+    {
+        if (event->type() == QEvent::Show) {
+            if (auto* widget = qobject_cast<QWidget*>(obj)) {
+                if ((widget->windowFlags() & Qt::Popup)
+                    && !widget->property("_popupStyled").toBool()) {
+                    widget->setProperty("_popupStyled", true);
+                    QRect geo = widget->geometry();
+                    widget->setWindowFlag(Qt::FramelessWindowHint, true);
+                    widget->setWindowFlag(Qt::NoDropShadowWindowHint, true);
+                    widget->setAttribute(Qt::WA_TranslucentBackground, true);
+                    widget->setGeometry(geo); // restore position lost by flag change
+                    widget->show();
+                    return true;
+                }
+            }
+        }
+        return QObject::eventFilter(obj, event);
+    }
+};
+
 namespace Resources
 {
+
+static PopupStyleFilter* s_popupFilter = nullptr;
+
 void installResources(QApplication& app)
 {
     initResourcesHelper();
@@ -68,5 +106,11 @@ void installResources(QApplication& app)
     app.setStyleSheet(styleSheet);
 
     app.setWindowIcon(QIcon(QStringLiteral(":/Resources/Icon.png")));
+
+    // Install global event filter to strip native popup borders.
+    if (!s_popupFilter) {
+        s_popupFilter = new PopupStyleFilter(&app);
+    }
+    app.installEventFilter(s_popupFilter);
 }
 }

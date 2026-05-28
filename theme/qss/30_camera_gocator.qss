@@ -5,17 +5,6 @@ QGocatorWidget {
     background: #ffffff;
 }
 
-QCameraWidget QComboBox,
-QGocatorWidget QComboBox {
-    min-height: 22px;
-    max-height: 22px;
-    padding: 0 6px;
-    border: 1px solid #cfd9e4;
-    border-radius: 8px;
-    background: #ffffff;
-    color: #16202b;
-}
-
 QCameraWidget QToolButton,
 QGocatorWidget QToolButton {
     min-width: 20px;
@@ -96,44 +85,6 @@ QGocatorWidget QTreeWidget::branch:selected,
 QGocatorWidget QTreeWidget::branch:open:hover,
 QGocatorWidget QTreeWidget::branch:closed:hover {
     background: transparent;
-}
-
-QCameraWidget QComboBox::drop-down,
-QGocatorWidget QComboBox::drop-down {
-    width: 18px;
-    border-left: 1px solid #d7e0ea;
-    background: #fafafa;
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-}
-
-QCameraWidget QComboBox::down-arrow,
-QGocatorWidget QComboBox::down-arrow {
-    image: url(:/Resources/Icons/icons8-expand-arrow-12.png);
-    width: 12px;
-    height: 8px;
-}
-
-QCameraWidget QComboBox:hover,
-QCameraWidget QComboBox:focus,
-QGocatorWidget QComboBox:hover,
-QGocatorWidget QComboBox:focus {
-    border-color: #b8c6d5;
-}
-
-QCameraWidget QComboBox QAbstractItemView,
-QGocatorWidget QComboBox QAbstractItemView {
-    border: 1px solid #cfd9e4;
-    border-radius: 8px;
-    selection-background-color: #efefef;
-    selection-color: #16202b;
-    background: #ffffff;
-}
-
-QCameraWidget QComboBox::item:selected,
-QGocatorWidget QComboBox::item:selected {
-    background: #efefef;
-    color: #16202b;
 }
 
 QCameraWidget QLabel {
