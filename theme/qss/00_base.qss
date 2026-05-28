@@ -2,7 +2,7 @@
 
 * {
     color: #16202b;
-    font-family: "Segoe UI", "SF Pro Text", "Noto Sans", sans-serif;
+    font-family: "Inter", "Segoe UI", "SF Pro Text", "Noto Sans", sans-serif;
     font-size: 12px;
     outline: none;
 }
@@ -152,6 +152,11 @@ QTextEdit {
     padding: 5px 8px;
     selection-background-color: #efefef;
     selection-color: #16202b;
+}
+
+QPlainTextEdit,
+QTextEdit {
+    font-family: "JetBrains Mono", "Courier New", Courier, monospace;
 }
 
 QComboBox,

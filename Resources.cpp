@@ -5,6 +5,9 @@
 #include <QIcon>
 #include <QStringList>
 #include <QTextStream>
+#include <QFontDatabase>
+#include <QFont>
+#include <QDebug>
 
 // Global-scope helper to execute Q_INIT_RESOURCE, which relies on global symbols.
 // This ensures the resource system registers the compiled .qrc binary data.
@@ -18,6 +21,30 @@ namespace Resources
 void installResources(QApplication& app)
 {
     initResourcesHelper();
+
+    // Load embedded fonts
+    const QStringList fontFiles = {
+        QStringLiteral(":/Resources/theme/fonts/Inter-Regular.ttf"),
+        QStringLiteral(":/Resources/theme/fonts/Inter-Bold.ttf"),
+        QStringLiteral(":/Resources/theme/fonts/JetBrainsMono-Regular.ttf"),
+        QStringLiteral(":/Resources/theme/fonts/JetBrainsMono-Bold.ttf")
+    };
+
+    for (const QString& fontFile : fontFiles) {
+        int id = QFontDatabase::addApplicationFont(fontFile);
+        if (id == -1) {
+            qWarning() << "Failed to load font from resource:" << fontFile;
+        }
+    }
+
+    // Set application default font
+    QFont defaultFont(QStringLiteral("Inter"));
+#if defined(Q_OS_MAC)
+    defaultFont.setPointSizeF(12.0);
+#else
+    defaultFont.setPointSizeF(10.0);
+#endif
+    app.setFont(defaultFont);
 
     const QStringList qssFiles = {
         QStringLiteral(":/Resources/theme/qss/00_base.qss"),
