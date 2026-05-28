@@ -8,6 +8,10 @@
 #include <QFontDatabase>
 #include <QFont>
 #include <QMenu>
+#include <QFrame>
+#include <QComboBox>
+#include <QAbstractItemView>
+#include <QScreen>
 #include <QEvent>
 #include <QDebug>
 
@@ -23,6 +27,10 @@ inline void initResourcesHelper()
 // visible outline.  Installed once via installResources().
 // Saves and restores popup geometry because setWindowFlag() recreates the
 // native window and loses the original popup position.
+//
+// Also repositions QComboBox dropdown popups to appear flush below (or above
+// when space is insufficient) the combo widget, giving a connected in-place
+// expansion appearance rather than a detached floating popup.
 // ---------------------------------------------------------------------------
 class PopupStyleFilter : public QObject
 {
@@ -41,13 +49,63 @@ protected:
                     widget->setWindowFlag(Qt::FramelessWindowHint, true);
                     widget->setWindowFlag(Qt::NoDropShadowWindowHint, true);
                     widget->setAttribute(Qt::WA_TranslucentBackground, true);
-                    widget->setGeometry(geo); // restore position lost by flag change
+
+                    if (auto* combo = qobject_cast<QComboBox*>(widget->parent())) {
+                        if (auto* frame = qobject_cast<QFrame*>(widget)) {
+                            frame->setFrameShape(QFrame::NoFrame);
+                        }
+                        widget->setContentsMargins(0, 0, 0, 0);
+                        geo = repositionComboPopup(combo, widget, geo);
+                    }
+
+                    widget->setGeometry(geo);
                     widget->show();
                     return true;
+                }
+
+                // Subsequent shows (popup already styled) — still reposition
+                if ((widget->windowFlags() & Qt::Popup)
+                    && widget->property("_popupStyled").toBool()) {
+                    if (auto* combo = qobject_cast<QComboBox*>(widget->parent())) {
+                        QRect geo = widget->geometry();
+                        geo = repositionComboPopup(combo, widget, geo);
+                        widget->setGeometry(geo);
+                    }
                 }
             }
         }
         return QObject::eventFilter(obj, event);
+    }
+
+private:
+    static QRect repositionComboPopup(QComboBox* combo, QWidget* popup, QRect geo)
+    {
+        const QPoint comboGlobal = combo->mapToGlobal(QPoint(0, 0));
+        const int comboW = combo->width();
+        const int comboH = combo->height();
+
+        // Container QFrame draws its own 1px border inside its geometry.
+        // To align outer edges with combo (which also has 1px border),
+        // position container at combo's left edge and match full width.
+        const int containerW = comboW;
+        const int containerX = comboGlobal.x();
+        const int containerY = comboGlobal.y() + comboH;
+
+        geo.setWidth(containerW);
+        geo.setHeight(geo.height());
+
+        if (auto* screen = combo->screen()) {
+            const QRect screenGeo = screen->availableGeometry();
+            if (containerY + geo.height() > screenGeo.bottom()) {
+                geo.moveTo(containerX, comboGlobal.y() - geo.height());
+            } else {
+                geo.moveTo(containerX, containerY);
+            }
+        } else {
+            geo.moveTo(containerX, containerY);
+        }
+
+        return geo;
     }
 };
 

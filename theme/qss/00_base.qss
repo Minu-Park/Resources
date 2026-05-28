@@ -190,6 +190,13 @@ QComboBox:on {
     border: 1px solid #8badc7;
 }
 
+QComboBox:on {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+}
+
+
 QComboBox:disabled,
 QAbstractSpinBox:disabled,
 QLineEdit:disabled {
@@ -218,12 +225,19 @@ QComboBox::down-arrow {
 }
 
 QComboBox QAbstractItemView {
-    border: 1px solid #c9d5e3;
-    border-radius: 8px;
+    border-left: 1px solid #8badc7;
+    border-right: 1px solid #8badc7;
+    border-bottom: 1px solid #8badc7;
+    border-top: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
     selection-background-color: #eaf1f9;
     selection-color: #00457C;
     background: #ffffff;
     padding: 2px;
+    margin: 0;
     outline: 0px;
 }
 
