@@ -1,6 +1,7 @@
 #include "MdiSubWindowContainer.h"
 #include "CustomTitleBar.h"
 #include <QMdiSubWindow>
+#include <QMdiArea>
 #include <QMenuBar>
 #include <QVBoxLayout>
 #include <QMouseEvent>
@@ -182,13 +183,40 @@ void MdiSubWindowContainer::leaveEvent(QEvent* event)
 
 bool MdiSubWindowContainer::eventFilter(QObject* watched, QEvent* event)
 {
-    if (watched == _subWin && event->type() == QEvent::WindowStateChange) {
-        handleWindowStateChange();
+    if (watched == _subWin) {
+        if (event->type() == QEvent::WindowStateChange) {
+            handleWindowStateChange();
+        }
+        else if (event->type() == QEvent::Resize) {
+            if (!_subWin->isMinimized() && !_subWin->isMaximized()) {
+                QSize minHint = minimumSizeHint();
+                QMdiArea* mdi = _subWin->mdiArea();
+                if (mdi && mdi->viewport()) {
+                    QSize mdiSize = mdi->viewport()->size();
+                    int finalW = qMin(minHint.width(), mdiSize.width());
+                    int finalH = qMin(minHint.height(), mdiSize.height());
+                    _subWin->setMinimumSize(QSize(finalW, finalH));
+                } else {
+                    _subWin->setMinimumSize(minHint);
+                }
+            } else {
+                _subWin->setMinimumSize(QSize(0, 0));
+            }
+        }
     }
     if (watched == _content && (event->type() == QEvent::LayoutRequest || event->type() == QEvent::Resize)) {
         if (_subWin) {
             if (!_subWin->isMinimized() && !_subWin->isMaximized()) {
-                _subWin->setMinimumSize(minimumSizeHint());
+                QSize minHint = minimumSizeHint();
+                QMdiArea* mdi = _subWin->mdiArea();
+                if (mdi && mdi->viewport()) {
+                    QSize mdiSize = mdi->viewport()->size();
+                    int finalW = qMin(minHint.width(), mdiSize.width());
+                    int finalH = qMin(minHint.height(), mdiSize.height());
+                    _subWin->setMinimumSize(QSize(finalW, finalH));
+                } else {
+                    _subWin->setMinimumSize(minHint);
+                }
             } else {
                 _subWin->setMinimumSize(QSize(0, 0));
             }
