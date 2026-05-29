@@ -203,3 +203,8 @@ QFrame#DockContainerWidget QTextEdit,
 QFrame#DockContainerWidget QAbstractScrollArea {
     background-color: #ffffff;
 }
+
+QRubberBand {
+    background-color: #ffffff;
+    border: 2px dashed #b0c2d4;
+}
