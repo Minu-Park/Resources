@@ -11,6 +11,7 @@
 #include <QFrame>
 #include <QComboBox>
 #include <QAbstractItemView>
+#include <QStatusBar>
 #include <QScreen>
 #include <QEvent>
 #include <QDebug>
@@ -23,23 +24,34 @@ inline void initResourcesHelper()
 }
 
 // ---------------------------------------------------------------------------
-// PopupStyleFilter: removes the native popup frame so QSS border is the only
-// visible outline.  Installed once via installResources().
+// ResourceStyleFilter: handles runtime style geometry that QSS cannot express
+// reliably. Installed once via installResources().
+//
+// Removes the native popup frame so QSS border is the only visible outline.
 // Saves and restores popup geometry because setWindowFlag() recreates the
 // native window and loses the original popup position.
 //
 // Also repositions QComboBox dropdown popups to appear flush below (or above
 // when space is insufficient) the combo widget, giving a connected in-place
 // expansion appearance rather than a detached floating popup.
+//
+// Applies QStatusBar contents insets because stylesheet padding does not move
+// child item positions consistently.
 // ---------------------------------------------------------------------------
-class PopupStyleFilter : public QObject
+class ResourceStyleFilter : public QObject
 {
 public:
-    explicit PopupStyleFilter(QObject* parent = nullptr) : QObject(parent) {}
+    explicit ResourceStyleFilter(QObject* parent = nullptr) : QObject(parent) {}
 
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+        if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
+            if (auto* statusBar = qobject_cast<QStatusBar*>(obj)) {
+                applyStatusBarInsets(statusBar);
+            }
+        }
+
         if (event->type() == QEvent::Show) {
             if (auto* widget = qobject_cast<QWidget*>(obj)) {
                 if ((widget->windowFlags() & Qt::Popup)
@@ -78,6 +90,15 @@ protected:
     }
 
 private:
+    static void applyStatusBarInsets(QStatusBar* statusBar)
+    {
+        if (!statusBar) return;
+        const QMargins margins(4, 0, 4, 0);
+        if (statusBar->contentsMargins() != margins) {
+            statusBar->setContentsMargins(margins);
+        }
+    }
+
     static QRect repositionComboPopup(QComboBox* combo, QWidget* popup, QRect geo)
     {
         const QPoint comboGlobal = combo->mapToGlobal(QPoint(0, 0));
@@ -112,7 +133,7 @@ private:
 namespace Resources
 {
 
-static PopupStyleFilter* s_popupFilter = nullptr;
+static ResourceStyleFilter* s_styleFilter = nullptr;
 
 void installResources(QApplication& app)
 {
@@ -165,10 +186,11 @@ void installResources(QApplication& app)
 
     app.setWindowIcon(QIcon(QStringLiteral(":/Resources/Icon.png")));
 
-    // Install global event filter to strip native popup borders.
-    if (!s_popupFilter) {
-        s_popupFilter = new PopupStyleFilter(&app);
+    // Install global event filter for runtime style geometry that QSS cannot
+    // drive reliably, such as QComboBox popup frames and QStatusBar insets.
+    if (!s_styleFilter) {
+        s_styleFilter = new ResourceStyleFilter(&app);
     }
-    app.installEventFilter(s_popupFilter);
+    app.installEventFilter(s_styleFilter);
 }
 }

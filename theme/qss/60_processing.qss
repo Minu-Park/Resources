@@ -22,15 +22,9 @@ QLabel#ProcessingEditorTitle {
 }
 
 QToolButton#ProcessingEnableToggle {
-    border: 1px solid #cfd9e4;
-    border-radius: 11px;
-    padding: 2px 10px;
-    background-color: #ffffff;
     color: #64748b;
     font-weight: bold;
     font-size: 11px;
-    min-height: 16px;
-    max-height: 16px;
 }
 
 QToolButton#ProcessingEnableToggle[active="true"] {
@@ -111,4 +105,3 @@ QSlider#ProcessingParamSlider::handle:horizontal {
 QSlider#ProcessingParamSlider::handle:horizontal:hover {
     background: #354657;
 }
-

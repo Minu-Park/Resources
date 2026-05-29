@@ -7,7 +7,7 @@ QStatusBar {
     height: 32px;
     min-height: 32px;
     max-height: 32px;
-    padding: 3px 6px;
+    padding: 3px 0;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
 }
@@ -32,52 +32,89 @@ QStatusBar::item {
     padding: 0;
 }
 
-QStatusBar#EngineStatusBar::item {
-    border: none;
-    background: transparent;
-    margin: 0;
-    padding: 0;
-}
 
-QStatusBar#EngineStatusBar {
-    height: 32px;
-    min-height: 32px;
-    max-height: 32px;
-    padding: 3px 6px;
-}
 
-QStatusBar#CameraStatusBar,
-QStatusBar#GocatorStatusBar {
-    height: 32px;
-    min-height: 32px;
-    max-height: 32px;
-    padding: 3px 6px;
-}
-
-QStatusBar QLabel {
+QStatusBar QLabel,
+QLabel#CameraStatusLabel,
+QLabel#GocatorStatusLabel,
+QLabel#EngineStatusMode,
+QLabel#EngineStatusSummary,
+QLabel#EngineStatusPointer,
+QLabel#EngineStatusZoom,
+QLabel#EngineStatusFps,
+QToolButton#EngineStatusModeButton,
+QToolButton#EngineStatusViewButton,
+QToolButton#ProcessingEnableToggle {
     background: #ffffff;
     border: 1px solid #d7dee6;
-    border-radius: 13px;
-    padding: 0 10px;
+    border-radius: 9px;
+    padding: 0 7px;
     height: 24px;
     min-height: 24px;
     max-height: 24px;
-    margin: 0 3px 0 0;
+    margin: 0 2px 0 0;
     color: #425467;
 }
 
-
-QLabel#CameraStatusLabel,
-QLabel#GocatorStatusLabel {
+QStatusBar QLabel:hover,
+QLabel#EngineStatusMode:hover,
+QLabel#EngineStatusSummary:hover,
+QLabel#EngineStatusPointer:hover,
+QLabel#EngineStatusZoom:hover,
+QLabel#EngineStatusFps:hover {
     background: #ffffff;
     border: 1px solid #d7dee6;
-    border-radius: 13px;
-    padding: 0 10px;
-    height: 24px;
-    min-height: 24px;
-    max-height: 24px;
-    margin: 0 3px 0 0;
-    font-weight: bold;
+    color: #425467;
+}
+
+QLabel#CameraStatusLabel,
+QLabel#GocatorStatusLabel,
+QLabel#EngineStatusMode,
+QLabel#EngineStatusZoom,
+QToolButton#EngineStatusModeButton,
+QToolButton#EngineStatusViewButton {
+    color: #354657;
+    font-weight: 700;
+}
+
+QLabel#EngineStatusMode {
+    background: #f6f6f6;
+    border-color: #d7d7d7;
+}
+
+QLabel#EngineStatusSummary {
+    padding: 0 6px;
+}
+
+QToolButton#EngineStatusModeButton,
+QToolButton#EngineStatusViewButton,
+QToolButton#ProcessingEnableToggle {
+    icon-size: 16px;
+}
+
+QToolButton#EngineStatusViewButton:disabled {
+    background: #ffffff;
+    border-color: #d7dee6;
+    color: #425467;
+}
+
+QToolButton#EngineStatusModeButton:hover,
+QToolButton#EngineStatusViewButton:hover {
+    background: #eef3f8;
+    border-color: #c7d4e2;
+    color: #26384a;
+}
+
+QToolButton#EngineStatusModeButton:pressed,
+QToolButton#EngineStatusViewButton:pressed {
+    background: #e7eef6;
+    border-color: #bccbda;
+}
+
+QToolButton#EngineStatusModeButton::menu-indicator,
+QToolButton#EngineStatusViewButton::menu-indicator {
+    image: none;
+    width: 0px;
 }
 
 QLabel#CameraStatusLabel[status="connected"],
@@ -99,4 +136,3 @@ QLabel#CameraStatusLabel[status="grabbing"],
 QLabel#GocatorStatusLabel[status="grabbing"] {
     color: #1565c0;
 }
-
