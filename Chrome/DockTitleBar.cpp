@@ -163,6 +163,8 @@ void DockTitleBar::handleTopLevelChanged(bool topLevel)
         _dockWidget->setWindowFlags(Qt::Widget);
         _dockWidget->setAttribute(Qt::WA_TranslucentBackground, false);
         _dockWidget->setAttribute(Qt::WA_NoSystemBackground, false);
+        _dockWidget->winId();
+        _dockWidget->show();
     }
 
     updateDockMask();
