@@ -210,11 +210,11 @@ QLabel#PlotLineProfilePointLabel {
 }
 
 /* Analysis Dialog & Titlebar Styles */
-QDialog#AnalysisDialog {
+#AnalysisDialog {
     background: transparent;
 }
 
-QWidget#AnalysisDialogTitleBar {
+#AnalysisDialogTitleBar {
     background: transparent;
 }
 
