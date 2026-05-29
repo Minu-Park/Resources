@@ -32,6 +32,4 @@ private:
     QLabel* _titleLabel = nullptr;
     QPushButton* _floatButton = nullptr;
     QPushButton* _closeButton = nullptr;
-    QPoint _dragPosition;
-    bool _isDragging = false;
 };
