@@ -51,8 +51,8 @@ QPushButton#MainCloseButton {
     border: none;
     background: transparent;
     border-radius: 6px;
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     margin: 0px;
     padding: 0px;
 }
@@ -161,4 +161,40 @@ QPushButton#DockMinButton:pressed,
 QPushButton#DockMaxButton:pressed,
 QPushButton#DockCloseButton:pressed {
     background-color: transparent;
+}
+
+QDockWidget[floatingState="true"] {
+    background: transparent;
+    background-color: transparent;
+    border: none;
+}
+
+QFrame#DockContainerWidget {
+    background-color: #ffffff;
+    border: none;
+}
+
+QFrame#DockContainerWidget[floatingState="true"],
+QDockWidget[floatingState="true"] QFrame#DockContainerWidget {
+    border: 1px solid #d9e1ea;
+    border-radius: 12px;
+    background-color: #ffffff;
+}
+
+QFrame#DockContainerWidget[floatingState="true"] QWidget#DockTitleBar,
+QDockWidget[floatingState="true"] QFrame#DockContainerWidget QWidget#DockTitleBar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #d9e1ea;
+    border-top-left-radius: 11px;
+    border-top-right-radius: 11px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+QFrame#DockContainerWidget[floatingState="true"] > QWidget,
+QDockWidget[floatingState="true"] QFrame#DockContainerWidget > QWidget {
+    background-color: #ffffff;
+    border: none;
+    border-bottom-left-radius: 11px;
+    border-bottom-right-radius: 11px;
 }

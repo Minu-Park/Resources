@@ -143,13 +143,15 @@ QLabel#AnalysisDialogTitleLabel {
 QPushButton#AnalysisDialogCloseButton {
     border: none;
     background: transparent;
+    border-radius: 6px;
+    width: 20px;
+    height: 20px;
     padding: 0;
     margin: 0;
 }
 
 QPushButton#AnalysisDialogCloseButton:hover {
-    background-color: #f5f5f5;
-    border-radius: 4px;
+    background: transparent;
 }
 
 StatisticsTableWidget QTableWidget {
