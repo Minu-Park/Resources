@@ -167,24 +167,6 @@ bool MdiSubWindowContainer::eventFilter(QObject* watched, QEvent* event)
     if (watched == _subWin && event->type() == QEvent::WindowStateChange) {
         handleWindowStateChange();
     }
-    else if (watched == _content && event->type() == QEvent::LayoutRequest) {
-        if (_subWin && !_subWin->isMinimized() && !_subWin->isMaximized()) {
-            QSize minSize = this->minimumSizeHint();
-            int minW = qMax(250, minSize.width());
-            int minH = qMax(150, minSize.height());
-
-            if (this->minimumSize() != QSize(minW, minH)) {
-                this->setMinimumSize(minW, minH);
-            }
-            if (_subWin->minimumSize() != QSize(minW, minH)) {
-                _subWin->setMinimumSize(minW, minH);
-            }
-
-            if (_subWin->width() < minW || _subWin->height() < minH) {
-                _subWin->resize(qMax(_subWin->width(), minW), qMax(_subWin->height(), minH));
-            }
-        }
-    }
     return QWidget::eventFilter(watched, event);
 }
 
@@ -192,76 +174,24 @@ void MdiSubWindowContainer::handleWindowStateChange()
 {
     if (!_subWin || !_content || !_titleBar) return;
 
-    if (_subWin->isMinimized()) {
-        _content->hide();
-        // Update title bar UI to minimized layout
-        _titleBar->updateState(true);
-        // Lock child container size instead of parent subwindow to avoid layout collision
-        this->setMinimumSize(160, 32);
-        this->setMaximumSize(160, 32);
-        _subWin->resize(160, 32);
-        // Force the container to be visible after the layout hides it
-        QMetaObject::invokeMethod(this, "show", Qt::QueuedConnection);
-    } else {
-        _subWin->setMinimumSize(0, 0);
-        _subWin->setMaximumSize(16777215, 16777215);
+    bool maximized = _subWin->isMaximized();
 
-        QSize minSize = this->minimumSizeHint();
-        int minW = qMax(250, minSize.width());
-        int minH = qMax(150, minSize.height());
+    setProperty("maximized", maximized);
+    style()->unpolish(this);
+    style()->polish(this);
+    _titleBar->setProperty("maximized", maximized);
+    _titleBar->style()->unpolish(_titleBar);
+    _titleBar->style()->polish(_titleBar);
 
-        this->setMinimumSize(minW, minH);
-        this->setMaximumSize(16777215, 16777215);
-        _subWin->setMinimumSize(minW, minH);
-
-        if (_subWin->width() < minW || _subWin->height() < minH) {
-            _subWin->resize(qMax(_subWin->width(), minW), qMax(_subWin->height(), minH));
-        }
-
-        _titleBar->updateState(false);
-        _content->show();
-    }
-
-    if (_subWin->isMaximized()) {
-        setProperty("maximized", true);
-        style()->unpolish(this);
-        style()->polish(this);
-        _titleBar->setProperty("maximized", true);
-        _titleBar->style()->unpolish(_titleBar);
-        _titleBar->style()->polish(_titleBar);
+    if (maximized) {
         _content->clearMask();
-    } else {
-        setProperty("maximized", false);
-        style()->unpolish(this);
-        style()->polish(this);
-        _titleBar->setProperty("maximized", false);
-        _titleBar->style()->unpolish(_titleBar);
-        _titleBar->style()->polish(_titleBar);
-        
-        QBitmap bmp(_content->size());
-        if (!bmp.isNull()) {
-            bmp.clear();
-            QPainter p(&bmp);
-            p.setRenderHint(QPainter::Antialiasing, true);
-            p.setBrush(Qt::color1);
-            p.setPen(Qt::NoPen);
-            p.drawRoundedRect(bmp.rect(), 11, 11);
-            p.drawRect(0, 0, bmp.width(), 11);
-            p.end();
-            _content->setMask(bmp);
-        }
     }
     update();
 }
 
 void MdiSubWindowContainer::hideEvent(QHideEvent* event)
 {
-    if (_subWin && _subWin->isMinimized()) {
-        event->ignore();
-        QMetaObject::invokeMethod(this, "show", Qt::QueuedConnection);
-    } else {
-        QWidget::hideEvent(event);
-    }
+    QWidget::hideEvent(event);
 }
 
 void MdiSubWindowContainer::resizeEvent(QResizeEvent* event)
