@@ -46,6 +46,28 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+        if (event->type() == QEvent::Polish) {
+            if (auto* menu = qobject_cast<QMenu*>(obj)) {
+                menu->setAttribute(Qt::WA_TranslucentBackground, true);
+                menu->setWindowFlag(Qt::FramelessWindowHint, true);
+                menu->setWindowFlag(Qt::NoDropShadowWindowHint, true);
+            }
+            else if (auto* combo = qobject_cast<QComboBox*>(obj)) {
+                if (auto* view = combo->view()) {
+                    if (auto* popup = view->parentWidget()) {
+                        popup->setAttribute(Qt::WA_TranslucentBackground, true);
+                        popup->setWindowFlag(Qt::FramelessWindowHint, true);
+                        popup->setWindowFlag(Qt::NoDropShadowWindowHint, true);
+                        if (auto* frame = qobject_cast<QFrame*>(popup)) {
+                            frame->setFrameShape(QFrame::NoFrame);
+                        }
+                        popup->setContentsMargins(0, 0, 0, 0);
+                        popup->setProperty("_popupStyled", true);
+                    }
+                }
+            }
+        }
+
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
             if (auto* statusBar = qobject_cast<QStatusBar*>(obj)) {
                 applyStatusBarInsets(statusBar);
@@ -54,30 +76,7 @@ protected:
 
         if (event->type() == QEvent::Show) {
             if (auto* widget = qobject_cast<QWidget*>(obj)) {
-                if ((widget->windowFlags() & Qt::Popup)
-                    && !widget->property("_popupStyled").toBool()) {
-                    if (auto* combo = qobject_cast<QComboBox*>(widget->parent())) {
-                        widget->setProperty("_popupStyled", true);
-                        QRect geo = widget->geometry();
-                        widget->setWindowFlag(Qt::FramelessWindowHint, true);
-                        widget->setWindowFlag(Qt::NoDropShadowWindowHint, true);
-                        widget->setAttribute(Qt::WA_TranslucentBackground, true);
-
-                        if (auto* frame = qobject_cast<QFrame*>(widget)) {
-                            frame->setFrameShape(QFrame::NoFrame);
-                        }
-                        widget->setContentsMargins(0, 0, 0, 0);
-                        geo = repositionComboPopup(combo, widget, geo);
-
-                        widget->setGeometry(geo);
-                        widget->show();
-                        return true;
-                    }
-                }
-
-                // Subsequent shows (popup already styled) — still reposition
-                if ((widget->windowFlags() & Qt::Popup)
-                    && widget->property("_popupStyled").toBool()) {
+                if (widget->windowFlags() & Qt::Popup) {
                     if (auto* combo = qobject_cast<QComboBox*>(widget->parent())) {
                         QRect geo = widget->geometry();
                         geo = repositionComboPopup(combo, widget, geo);
