@@ -15,10 +15,7 @@ QStatusBar {
 QTextEdit#SystemLogViewer {
     background-color: #ffffff;
     color: #16202b;
-    border-top: 1px solid #d9e1ea;
-    border-bottom: 1px solid #d9e1ea;
-    border-left: none;
-    border-right: none;
+    border: none;
     border-radius: 0px;
     font-family: "Menlo", "Monaco", "Consolas", "DejaVu Sans Mono", "Liberation Mono", "Courier New", monospace;
     font-size: 11px;
@@ -135,4 +132,42 @@ QLabel#GocatorStatusLabel[status="disconnected"] {
 QLabel#CameraStatusLabel[status="grabbing"],
 QLabel#GocatorStatusLabel[status="grabbing"] {
     color: #1565c0;
+}
+
+QWidget#MinimizedSessionIndicator {
+    background: #f0f4f8;
+    border: 1px solid #d7dee6;
+    border-radius: 9px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 2px 0 0;
+    padding: 0;
+}
+
+QPushButton#MinimizedSessionRestore {
+    background: transparent;
+    border: none;
+    color: #354657;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0 4px;
+    margin: 0;
+}
+
+QPushButton#MinimizedSessionRestore:hover {
+    color: #1565c0;
+}
+
+QPushButton#MinimizedSessionClose {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0 0 0 0;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    max-width: 16px;
+    max-height: 16px;
 }

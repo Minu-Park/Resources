@@ -43,7 +43,7 @@ CustomTitleBar::CustomTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWid
     // System control buttons bundled in a tight layout
     auto* buttonLayout = new QHBoxLayout();
     buttonLayout->setContentsMargins(0, 0, 0, 0);
-    buttonLayout->setSpacing(6); // 6px spacing to perfectly align centers with MainTitleBar 18px buttons (which use 4px spacing)
+    buttonLayout->setSpacing(6);
 
     _minButton = new QPushButton(this);
     _minButton->setObjectName(QStringLiteral("TitleMinButton"));
@@ -90,12 +90,12 @@ CustomTitleBar::CustomTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWid
     _closeButton->installEventFilter(this);
 
     _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png")));
-    _minButton->setIconSize(QSize(12, 12));
+    _minButton->setIconSize(QSize(16, 16));
 
     _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
-    _closeButton->setIconSize(QSize(12, 12));
+    _closeButton->setIconSize(QSize(16, 16));
 
-    _maxButton->setIconSize(QSize(12, 12));
+    _maxButton->setIconSize(QSize(16, 16));
     updateMaximizeIcon();
 }
 

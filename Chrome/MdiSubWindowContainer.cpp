@@ -174,6 +174,11 @@ void MdiSubWindowContainer::handleWindowStateChange()
 {
     if (!_subWin || !_content || !_titleBar) return;
 
+    if (_subWin->isMinimized()) {
+        emit minimizeRequested(_subWin);
+        return;
+    }
+
     bool maximized = _subWin->isMaximized();
 
     setProperty("maximized", maximized);

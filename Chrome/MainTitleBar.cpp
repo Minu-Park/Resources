@@ -62,7 +62,7 @@ MainTitleBar::MainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* 
     // System Window Control Buttons bundled in a tight layout
     auto* buttonLayout = new QHBoxLayout();
     buttonLayout->setContentsMargins(0, 0, 0, 0);
-    buttonLayout->setSpacing(4); // Tighter button spacing
+    buttonLayout->setSpacing(6);
 
     _minButton = new QPushButton(this);
     _minButton->setObjectName(QStringLiteral("MainMinButton"));
@@ -100,12 +100,12 @@ MainTitleBar::MainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* 
     _closeButton->installEventFilter(this);
 
     _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png")));
-    _minButton->setIconSize(QSize(14, 14));
+    _minButton->setIconSize(QSize(16, 16));
 
     _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
-    _closeButton->setIconSize(QSize(14, 14));
+    _closeButton->setIconSize(QSize(16, 16));
 
-    _maxButton->setIconSize(QSize(14, 14));
+    _maxButton->setIconSize(QSize(16, 16));
     updateMaximizeIcon();
 }
 
