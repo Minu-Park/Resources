@@ -69,9 +69,9 @@ DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     _floatButton->installEventFilter(this);
 
     _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
-    _closeButton->setIconSize(QSize(12, 12));
+    _closeButton->setIconSize(QSize(16, 16));
 
-    _floatButton->setIconSize(QSize(12, 12));
+    _floatButton->setIconSize(QSize(16, 16));
     updateFloatIcon();
 }
 

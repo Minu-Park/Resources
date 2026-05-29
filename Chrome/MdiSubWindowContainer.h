@@ -14,6 +14,9 @@ class MdiSubWindowContainer : public QWidget {
 public:
     MdiSubWindowContainer(QMdiSubWindow* subWin, QWidget* content, QMenuBar* menuBar, QWidget* parent = nullptr);
 
+signals:
+    void minimizeRequested(QMdiSubWindow* subWin);
+
 protected:
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;

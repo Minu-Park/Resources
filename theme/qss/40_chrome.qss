@@ -51,8 +51,8 @@ QPushButton#MainCloseButton {
     border: none;
     background: transparent;
     border-radius: 6px;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     margin: 0px;
     padding: 0px;
 }
@@ -108,8 +108,8 @@ QPushButton#TitleCloseButton {
     border: none;
     background: transparent;
     border-radius: 6px;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     margin: 0px;
     padding: 0px;
 }
@@ -146,8 +146,8 @@ QPushButton#DockCloseButton {
     border: none;
     background: transparent;
     border-radius: 6px;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     margin: 0px;
     padding: 0px;
 }
