@@ -487,3 +487,11 @@ QSplitter::handle:horizontal,
 QSplitter::handle:vertical {
     background: #f5f5f5;
 }
+
+QListView,
+QAbstractItemView {
+    background-color: #ffffff;
+    color: #16202b;
+    border: 1px solid #cfd9e4;
+    border-radius: 8px;
+}
