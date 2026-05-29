@@ -198,3 +198,8 @@ QDockWidget[floatingState="true"] QFrame#DockContainerWidget > QWidget {
     border-bottom-left-radius: 11px;
     border-bottom-right-radius: 11px;
 }
+
+QFrame#DockContainerWidget QTextEdit,
+QFrame#DockContainerWidget QAbstractScrollArea {
+    background-color: #ffffff;
+}
