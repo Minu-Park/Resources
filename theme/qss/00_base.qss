@@ -105,6 +105,8 @@ QTabBar::tab:hover:!selected {
     background: #eef1f4;
 }
 
+QTableView,
+QTreeView,
 QTableWidget,
 QTreeWidget {
     border: 1px solid #d9e1ea;
@@ -117,6 +119,8 @@ QTreeWidget {
     background-color: #ffffff;
 }
 
+QTableView::viewport,
+QTreeView::viewport,
 QTableWidget::viewport,
 QTreeWidget::viewport {
     background: transparent;
