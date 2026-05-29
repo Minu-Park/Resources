@@ -41,10 +41,8 @@ MdiSubWindowContainer::MdiSubWindowContainer(QMdiSubWindow* subWin, QWidget* con
 QSize MdiSubWindowContainer::minimumSizeHint() const
 {
     if (_content) {
-        QSize contentMin = _content->minimumSize();
-        if (contentMin.width() <= 0 || contentMin.height() <= 0) {
-            contentMin = _content->minimumSizeHint();
-        }
+        // Always query the dynamic layout constraints from minimumSizeHint() in real time
+        QSize contentMin = _content->minimumSizeHint();
         int titleHeight = _titleBar ? _titleBar->height() : 0;
         if (titleHeight <= 0) {
             titleHeight = 30; // Fallback height for custom title bar if not fully initialized
