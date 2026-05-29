@@ -187,7 +187,11 @@ bool MdiSubWindowContainer::eventFilter(QObject* watched, QEvent* event)
     }
     if (watched == _content && (event->type() == QEvent::LayoutRequest || event->type() == QEvent::Resize)) {
         if (_subWin) {
-            _subWin->setMinimumSize(minimumSizeHint());
+            if (!_subWin->isMinimized() && !_subWin->isMaximized()) {
+                _subWin->setMinimumSize(minimumSizeHint());
+            } else {
+                _subWin->setMinimumSize(QSize(0, 0));
+            }
         }
     }
     return QWidget::eventFilter(watched, event);
