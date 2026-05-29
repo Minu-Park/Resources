@@ -17,11 +17,11 @@ MainTitleBar::MainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* 
     , _mainWindow(mainWindow)
 {
     setObjectName(QStringLiteral("MainTitleBar"));
-    setFixedHeight(34);
+    setFixedHeight(40);
     setCursor(Qt::ArrowCursor);
 
     auto* layout = new QHBoxLayout(this);
-    layout->setContentsMargins(12, 0, 12, 0);
+    layout->setContentsMargins(12, 0, 10, 0);
     layout->setSpacing(12);
     layout->setAlignment(Qt::AlignVCenter);
 
@@ -100,12 +100,12 @@ MainTitleBar::MainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* 
     _closeButton->installEventFilter(this);
 
     _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png")));
-    _minButton->setIconSize(QSize(16, 16));
+    _minButton->setIconSize(QSize(20, 20));
 
     _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
-    _closeButton->setIconSize(QSize(16, 16));
+    _closeButton->setIconSize(QSize(20, 20));
 
-    _maxButton->setIconSize(QSize(16, 16));
+    _maxButton->setIconSize(QSize(20, 20));
     updateMaximizeIcon();
 }
 
