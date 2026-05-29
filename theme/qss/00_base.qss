@@ -488,8 +488,7 @@ QSplitter::handle:vertical {
     background: #f5f5f5;
 }
 
-QListView,
-QAbstractItemView {
+#AutoCompletePopup {
     background-color: #ffffff;
     color: #16202b;
     border: 1px solid #cfd9e4;
