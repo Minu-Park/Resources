@@ -32,6 +32,10 @@ MdiSubWindowContainer::MdiSubWindowContainer(QMdiSubWindow* subWin, QWidget* con
     if (_content) {
         _content->installEventFilter(this);
     }
+
+    if (_subWin) {
+        _subWin->setMinimumSize(minimumSizeHint());
+    }
 }
 
 QSize MdiSubWindowContainer::minimumSizeHint() const
@@ -182,6 +186,11 @@ bool MdiSubWindowContainer::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _subWin && event->type() == QEvent::WindowStateChange) {
         handleWindowStateChange();
+    }
+    if (watched == _content && (event->type() == QEvent::LayoutRequest || event->type() == QEvent::Resize)) {
+        if (_subWin) {
+            _subWin->setMinimumSize(minimumSizeHint());
+        }
     }
     return QWidget::eventFilter(watched, event);
 }
