@@ -56,23 +56,23 @@ protected:
             if (auto* widget = qobject_cast<QWidget*>(obj)) {
                 if ((widget->windowFlags() & Qt::Popup)
                     && !widget->property("_popupStyled").toBool()) {
-                    widget->setProperty("_popupStyled", true);
-                    QRect geo = widget->geometry();
-                    widget->setWindowFlag(Qt::FramelessWindowHint, true);
-                    widget->setWindowFlag(Qt::NoDropShadowWindowHint, true);
-                    widget->setAttribute(Qt::WA_TranslucentBackground, true);
-
                     if (auto* combo = qobject_cast<QComboBox*>(widget->parent())) {
+                        widget->setProperty("_popupStyled", true);
+                        QRect geo = widget->geometry();
+                        widget->setWindowFlag(Qt::FramelessWindowHint, true);
+                        widget->setWindowFlag(Qt::NoDropShadowWindowHint, true);
+                        widget->setAttribute(Qt::WA_TranslucentBackground, true);
+
                         if (auto* frame = qobject_cast<QFrame*>(widget)) {
                             frame->setFrameShape(QFrame::NoFrame);
                         }
                         widget->setContentsMargins(0, 0, 0, 0);
                         geo = repositionComboPopup(combo, widget, geo);
-                    }
 
-                    widget->setGeometry(geo);
-                    widget->show();
-                    return true;
+                        widget->setGeometry(geo);
+                        widget->show();
+                        return true;
+                    }
                 }
 
                 // Subsequent shows (popup already styled) — still reposition
