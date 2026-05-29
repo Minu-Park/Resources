@@ -114,6 +114,16 @@ QTreeWidget {
     alternate-background-color: #fafafa;
     selection-background-color: #efefef;
     selection-color: #16202b;
+    background-color: #ffffff;
+}
+
+QTableWidget::viewport,
+QTreeWidget::viewport {
+    background: transparent;
+}
+
+QHeaderView {
+    background: transparent;
 }
 
 QTableWidget::item,
