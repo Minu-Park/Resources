@@ -64,6 +64,7 @@ CustomTitleBar::CustomTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWid
     layout->addLayout(buttonLayout);
 
     connect(_minButton, &QPushButton::clicked, [this]() {
+        _subWindow->setProperty("wasMaximizedBeforeMinimize", _subWindow->isMaximized());
         _subWindow->setMinimumSize(QSize(0, 0));
         _subWindow->showMinimized();
     });
