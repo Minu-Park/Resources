@@ -13,6 +13,7 @@ class MdiSubWindowContainer : public QWidget {
     Q_OBJECT
 public:
     MdiSubWindowContainer(QMdiSubWindow* subWin, QWidget* content, QMenuBar* menuBar, QWidget* parent = nullptr);
+    QSize minimumSizeHint() const override;
 
 signals:
     void minimizeRequested(QMdiSubWindow* subWin);
