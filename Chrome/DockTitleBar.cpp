@@ -95,39 +95,17 @@ void DockTitleBar::paintEvent(QPaintEvent* event)
 
 void DockTitleBar::mousePressEvent(QMouseEvent* event)
 {
-    if (event->button() == Qt::LeftButton && _dockWidget->isFloating()) {
-        if (auto* window = _dockWidget->windowHandle()) {
-            if (window->startSystemMove()) {
-                event->accept();
-                return;
-            }
-        }
-        _dragPosition = event->globalPosition().toPoint() - _dockWidget->frameGeometry().topLeft();
-        _isDragging = true;
-        event->accept();
-    } else {
-        event->ignore(); // Let QDockWidget handle drag and undock natively
-    }
+    event->ignore(); // Let QDockWidget handle drag and undock natively at all times
 }
 
 void DockTitleBar::mouseMoveEvent(QMouseEvent* event)
 {
-    if (_isDragging && (event->buttons() & Qt::LeftButton)) {
-        _dockWidget->move(event->globalPosition().toPoint() - _dragPosition);
-        event->accept();
-    } else {
-        event->ignore();
-    }
+    event->ignore();
 }
 
 void DockTitleBar::mouseReleaseEvent(QMouseEvent* event)
 {
-    if (event->button() == Qt::LeftButton) {
-        _isDragging = false;
-        event->accept();
-    } else {
-        event->ignore();
-    }
+    event->ignore();
 }
 
 void DockTitleBar::handleTopLevelChanged(bool topLevel)
