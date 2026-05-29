@@ -144,3 +144,19 @@ QGocatorWidget QLabel#GocatorMessageLabel[messageState="error"] {
     color: #c62828;
     font-weight: 700;
 }
+
+QCameraWidget QTreeWidget::item[messageState="error"],
+QGocatorWidget QTreeWidget::item[messageState="error"] {
+    color: #c62828;
+    font-weight: 700;
+}
+
+QCameraWidget QTreeWidget::viewport,
+QGocatorWidget QTreeWidget::viewport {
+    background: transparent;
+}
+
+QCameraWidget QHeaderView,
+QGocatorWidget QHeaderView {
+    background: transparent;
+}
