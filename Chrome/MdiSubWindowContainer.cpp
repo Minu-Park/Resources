@@ -34,6 +34,22 @@ MdiSubWindowContainer::MdiSubWindowContainer(QMdiSubWindow* subWin, QWidget* con
     }
 }
 
+QSize MdiSubWindowContainer::minimumSizeHint() const
+{
+    if (_content) {
+        QSize contentMin = _content->minimumSize();
+        if (contentMin.width() <= 0 || contentMin.height() <= 0) {
+            contentMin = _content->minimumSizeHint();
+        }
+        int titleHeight = _titleBar ? _titleBar->height() : 0;
+        if (titleHeight <= 0) {
+            titleHeight = 30; // Fallback height for custom title bar if not fully initialized
+        }
+        return QSize(contentMin.width() + 2, contentMin.height() + titleHeight + 2);
+    }
+    return QWidget::minimumSizeHint();
+}
+
 void MdiSubWindowContainer::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
