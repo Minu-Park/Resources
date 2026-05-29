@@ -207,6 +207,7 @@ void MdiSubWindowContainer::handleWindowStateChange()
     }
 
     bool maximized = _subWin->isMaximized();
+    _subWin->setProperty("wasMaximizedBeforeMinimize", maximized);
 
     setProperty("maximized", maximized);
     style()->unpolish(this);
