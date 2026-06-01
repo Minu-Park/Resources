@@ -571,3 +571,33 @@ QSplitter::handle:vertical {
     background-color: #efefef;
     color: #16202b;
 }
+
+QFrame#SplashFrame, QFrame#LoadingFrame {
+    background: #ffffff;
+    border: 1px solid #d9e1ea;
+    border-radius: 14px;
+}
+
+QLabel#SplashTitle {
+    color: #00457C;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+QLabel#SplashVersion {
+    color: #516476;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+QLabel#SplashText, QLabel#LoadingText {
+    color: rgba(22, 32, 43, 160);
+    font-size: 10px;
+}
+
+QLabel#SplashPercent, QLabel#LoadingPercent {
+    color: #00457C;
+    font-size: 12px;
+    font-weight: bold;
+}
+
