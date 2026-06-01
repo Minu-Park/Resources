@@ -18,6 +18,8 @@
 #include <QColor>
 #include <QEvent>
 #include <QDebug>
+#include <QPainter>
+#include <QPen>
 
 // Global-scope helper to execute Q_INIT_RESOURCE, which relies on global symbols.
 // This ensures the resource system registers the compiled .qrc binary data.
@@ -52,6 +54,20 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+        if (event->type() == QEvent::Paint) {
+            if (obj->objectName() == QLatin1String("AutoCompletePopup")) {
+                if (auto* widget = qobject_cast<QWidget*>(obj)) {
+                    QPainter painter(widget);
+                    painter.setRenderHint(QPainter::Antialiasing);
+                    painter.setBrush(Qt::white);
+                    painter.setPen(QPen(QColor(0xcf, 0xd9, 0xe4), 1));
+                    QRectF rect = widget->rect();
+                    rect.adjust(0.5, 0.5, -0.5, -0.5);
+                    painter.drawRoundedRect(rect, 8.0, 8.0);
+                }
+            }
+        }
+
         if (event->type() == QEvent::Polish) {
             if (auto* menu = qobject_cast<QMenu*>(obj)) {
                 menu->setAttribute(Qt::WA_TranslucentBackground, true);
@@ -77,7 +93,8 @@ protected:
             }
             else if (auto* widget = qobject_cast<QWidget*>(obj)) {
                 if (widget->inherits("QComboBoxPrivateContainer") || 
-                    (widget->windowFlags() & Qt::Popup && widget->parent() && widget->parent()->inherits("QComboBox"))) {
+                    (widget->windowFlags() & Qt::Popup && widget->parent() && widget->parent()->inherits("QComboBox")) ||
+                    widget->objectName() == QLatin1String("AutoCompletePopup")) {
                     widget->setAttribute(Qt::WA_TranslucentBackground, true);
                     widget->setWindowFlag(Qt::FramelessWindowHint, true);
                     widget->setWindowFlag(Qt::NoDropShadowWindowHint, true);

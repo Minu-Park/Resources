@@ -546,8 +546,28 @@ QSplitter::handle:vertical {
 }
 
 #AutoCompletePopup {
-    background-color: #ffffff;
-    color: #16202b;
-    border: 1px solid #cfd9e4;
+    border: 1px solid transparent;
     border-radius: 8px;
+    background-color: transparent;
+    padding: 2px;
+    outline: 0px;
+}
+
+#AutoCompletePopup > QWidget#qt_scrollarea_viewport {
+    background-color: transparent;
+}
+
+#AutoCompletePopup::item {
+    min-height: 18px;
+    padding: 3px 6px;
+    margin: 0px;
+    border-radius: 4px;
+    color: #16202b;
+    background-color: transparent;
+}
+
+#AutoCompletePopup::item:hover,
+#AutoCompletePopup::item:selected {
+    background-color: #efefef;
+    color: #16202b;
 }
