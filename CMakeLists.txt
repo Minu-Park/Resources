@@ -10,7 +10,7 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Widgets)
 
-qt_add_library(PlaygroundResources OBJECT
+qt_add_library(PlaygroundResources STATIC
     Resources.qrc
     Resources.h
     Resources.cpp
