@@ -130,7 +130,36 @@ QTreeWidget::viewport {
 }
 
 QHeaderView {
+    background: #ffffff;
+    border: 1px solid #d6e0ea;
+    border-radius: 10px;
+}
+
+QHeaderView::section {
     background: transparent;
+    color: #354657;
+    border: none;
+    border-right: 1px solid #edf2f7;
+    min-height: 26px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+QHeaderView::section:first {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+QHeaderView::section:last {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-right: none;
+}
+
+QTableCornerButton::section {
+    background: transparent;
+    border: none;
 }
 
 QTableWidget::item,
@@ -148,16 +177,6 @@ QTreeWidget::item:selected {
     color: #16202b;
 }
 
-QHeaderView::section,
-QTableCornerButton::section {
-    background: transparent;
-    color: #43586c;
-    border: none;
-    border-right: 1px solid #edf1f5;
-    border-bottom: 1px solid #edf1f5;
-    padding: 5px 8px 4px 8px;
-    font-weight: 700;
-}
 
 QComboBox,
 QAbstractSpinBox,
@@ -166,7 +185,7 @@ QPlainTextEdit,
 QTextEdit {
     border: 1px solid #cfd9e4;
     border-radius: 8px;
-    padding: 5px 8px;
+    padding: 5px 4px;
     selection-background-color: #efefef;
     selection-color: #16202b;
 }
@@ -187,7 +206,7 @@ QAbstractSpinBox {
 QLineEdit {
     min-height: 22px;
     max-height: 22px;
-    padding: 0 8px;
+    padding: 0 4px;
 }
 
 QComboBox:hover,
@@ -223,14 +242,15 @@ QLineEdit:disabled {
 }
 
 QComboBox {
-    padding-right: 24px;
+    padding-right: 4px;
     combobox-popup: 0;
 }
 
 QComboBox::drop-down {
-    subcontrol-origin: padding;
+    subcontrol-origin: border;
     subcontrol-position: top right;
-    width: 24px;
+    width: 10px;
+    right: 4px;
     border-left: none;
     background: transparent;
 }
@@ -273,10 +293,14 @@ QComboBox QAbstractItemView::item:selected {
     color: #00457C;
 }
 
+QAbstractSpinBox {
+    padding-right: 4px;
+}
+
 QAbstractSpinBox::up-button,
 QAbstractSpinBox::down-button {
     subcontrol-origin: border;
-    width: 18px;
+    width: 12px;
     background: #ffffff;
     border-left: 1px solid #d7e0ea;
     border-right: 1px solid #d7e0ea;

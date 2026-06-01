@@ -105,3 +105,11 @@ QSlider#ProcessingParamSlider::handle:horizontal {
 QSlider#ProcessingParamSlider::handle:horizontal:hover {
     background: #354657;
 }
+
+/* Visual Parameter Table Bubble Header & Cell UI Optimization */
+QTableWidget#ProcessingParamTable {
+    border: none;
+    background: #ffffff;
+    gridline-color: #edf2f7;
+}
+
