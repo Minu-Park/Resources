@@ -75,6 +75,19 @@ protected:
             else if (auto* rubberBand = qobject_cast<QRubberBand*>(obj)) {
                 applyDockRubberBandStyle(rubberBand);
             }
+            else if (auto* widget = qobject_cast<QWidget*>(obj)) {
+                if (widget->inherits("QComboBoxPrivateContainer") || 
+                    (widget->windowFlags() & Qt::Popup && widget->parent() && widget->parent()->inherits("QComboBox"))) {
+                    widget->setAttribute(Qt::WA_TranslucentBackground, true);
+                    widget->setWindowFlag(Qt::FramelessWindowHint, true);
+                    widget->setWindowFlag(Qt::NoDropShadowWindowHint, true);
+                    if (auto* frame = qobject_cast<QFrame*>(widget)) {
+                        frame->setFrameShape(QFrame::NoFrame);
+                    }
+                    widget->setContentsMargins(0, 0, 0, 0);
+                    widget->setProperty("_popupStyled", true);
+                }
+            }
         }
 
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {

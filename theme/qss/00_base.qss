@@ -137,7 +137,7 @@ QHeaderView {
 
 QHeaderView::section {
     background: transparent;
-    color: #354657;
+    color: #000000;
     border: none;
     border-right: 1px solid #edf2f7;
     min-height: 22px;
@@ -270,8 +270,8 @@ QComboBox QAbstractItemView {
     border-top-right-radius: 0;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
-    selection-background-color: #eaf1f9;
-    selection-color: #00457C;
+    selection-background-color: #efefef;
+    selection-color: #16202b;
     background: #ffffff;
     padding: 2px;
     margin: 0;
@@ -289,8 +289,8 @@ QComboBox QAbstractItemView::item {
 
 QComboBox QAbstractItemView::item:hover,
 QComboBox QAbstractItemView::item:selected {
-    background-color: #eaf1f9;
-    color: #00457C;
+    background-color: #efefef;
+    color: #16202b;
 }
 
 QAbstractSpinBox {
@@ -376,26 +376,31 @@ QRadioButton:hover {
 
 QCheckBox::indicator,
 QRadioButton::indicator {
-    width: 19px;
-    height: 19px;
+    width: 22px;
+    height: 22px;
 }
 
 QCheckBox::indicator {
     border: 1px solid #cfd9e4;
-    border-radius: 7px;
+    border-radius: 8px;
     background: #ffffff;
 }
 
 QCheckBox::indicator:hover,
 QRadioButton::indicator:hover {
-    background: #f7fbff;
-    border-color: #9fb7cf;
+    background: #f8fafc;
+    border-color: #8badc7;
 }
 
 QCheckBox::indicator:checked {
     image: url(:/Resources/Icons/icons8-check-48.png);
-    border-color: #cfd9e4;
-    background: #eaf3fb;
+    border-color: #8badc7;
+    background: #f7fbff;
+}
+
+QCheckBox::indicator:checked:hover {
+    border-color: #7097b3;
+    background: #eef5fc;
 }
 
 QGraphicsView {
@@ -481,8 +486,8 @@ QMenu::item {
 }
 
 QMenu::item:selected {
-    background-color: #eaf1f9;
-    color: #00457C;
+    background-color: #efefef;
+    color: #16202b;
 }
 
 QMenu::indicator {
@@ -520,13 +525,24 @@ QMenuBar::item {
 
 QMenuBar::item:selected,
 QMenuBar::item:on {
-    background-color: #eaf1f9;
-    color: #00457C;
+    background-color: #efefef;
+    color: #16202b;
 }
 
-QSplitter::handle:horizontal,
+QSplitter::handle {
+    background: #cfd9e4;
+}
+
+QSplitter::handle:hover {
+    background: #8badc7;
+}
+
+QSplitter::handle:horizontal {
+    width: 2px;
+}
+
 QSplitter::handle:vertical {
-    background: #f5f5f5;
+    height: 2px;
 }
 
 #AutoCompletePopup {
