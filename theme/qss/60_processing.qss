@@ -124,7 +124,7 @@ QSlider#ProcessingParamSlider::groove:horizontal {
 }
 
 QSlider#ProcessingParamSlider::sub-page:horizontal {
-    background: #8badc7;
+    background: #00457C;
     border-radius: 1px;
 }
 
@@ -161,13 +161,6 @@ QTableWidget#ProcessingAdjustTable::item:selected {
     background: transparent;
 }
 
-QTableWidget#ProcessingParamTable QHeaderView,
-QTableWidget#ProcessingAdjustTable QHeaderView {
-    border: 1px solid #d6e0ea;
-    border-radius: 10px;
-    background: #ffffff;
-}
-
 QTableWidget#ProcessingParamTable::item,
 QTableWidget#ProcessingAdjustTable::item {
     padding: 0px;
@@ -194,6 +187,16 @@ QTableWidget#ProcessingAdjustTable QDoubleSpinBox {
     background: #ffffff;
     border: 1px solid #cfd9e4;
     border-radius: 8px;
+}
+
+QTableWidget#ProcessingAdjustTable QSpinBox,
+QTableWidget#ProcessingAdjustTable QDoubleSpinBox {
+    min-height: 22px;
+    max-height: 22px;
+}
+
+QCheckBox#ProcessingParamCheckBox {
+    padding-left: 3px;
 }
 
 QTableWidget#ProcessingParamTable QLineEdit,
@@ -258,4 +261,3 @@ QCheckBox#ParamRowSelectCheck::indicator {
     height: 22px;
     border-radius: 8px;
 }
-
