@@ -21,13 +21,12 @@ protected:
     void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
 
-private slots:
-    void updateFloatIcon();
-    void handleTopLevelChanged(bool topLevel);
-
 private:
     bool eventFilter(QObject* watched, QEvent* event) override;
-    void updateDockMask();
+    void applyFloatingChrome(bool floating);
+    void refreshFloatingChromeStyle();
+    void updateFloatingMask();
+
     QDockWidget* _dockWidget = nullptr;
     QLabel* _titleLabel = nullptr;
     QPushButton* _floatButton = nullptr;
