@@ -3,7 +3,6 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
-#include <QWindow>
 #include <QMouseEvent>
 #include <QStyle>
 #include <QStyleOption>
@@ -11,6 +10,7 @@
 #include <QBitmap>
 #include <QFrame>
 #include <QVBoxLayout>
+#include <QTimer>
 
 DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     : QWidget(parent)
@@ -21,7 +21,7 @@ DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
 
     auto* layout = new QHBoxLayout(this);
     // Align title bar text and buttons, adding slight top margin to lower the font
-    layout->setContentsMargins(12, 2, 12, 0); 
+    layout->setContentsMargins(12, 2, 12, 0);
     layout->setSpacing(6);
     layout->setAlignment(Qt::AlignVCenter);
 
@@ -42,7 +42,6 @@ DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     _floatButton = new QPushButton(this);
     _floatButton->setObjectName(QStringLiteral("DockMaxButton"));
     _floatButton->setFocusPolicy(Qt::NoFocus);
-    _floatButton->setProperty("maximized", _dockWidget->isFloating());
 
     // Close button
     _closeButton = new QPushButton(this);
@@ -62,12 +61,6 @@ DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
         _dockWidget->setFloating(!_dockWidget->isFloating());
     });
 
-    // Update icons on state change
-    connect(_dockWidget, &QDockWidget::topLevelChanged, this, &DockTitleBar::updateFloatIcon);
-    
-    // Accept hover events to avoid parent intervention
-    setMouseTracking(true);
-
     // Register event filters to handle mouse hover swap dynamically
     _closeButton->installEventFilter(this);
     _floatButton->installEventFilter(this);
@@ -76,12 +69,11 @@ DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     _closeButton->setIconSize(QSize(16, 16));
 
     _floatButton->setIconSize(QSize(16, 16));
-    updateFloatIcon();
+    _floatButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
 
     _dockWidget->installEventFilter(this);
-
-    connect(_dockWidget, &QDockWidget::topLevelChanged, this, &DockTitleBar::handleTopLevelChanged);
-    handleTopLevelChanged(_dockWidget->isFloating());
+    connect(_dockWidget, &QDockWidget::topLevelChanged, this, &DockTitleBar::applyFloatingChrome);
+    applyFloatingChrome(_dockWidget->isFloating());
 }
 
 void DockTitleBar::paintEvent(QPaintEvent* event)
@@ -108,89 +100,11 @@ void DockTitleBar::mouseReleaseEvent(QMouseEvent* event)
     event->ignore();
 }
 
-void DockTitleBar::handleTopLevelChanged(bool topLevel)
-{
-    _dockWidget->setProperty("floatingState", topLevel);
-    this->setProperty("floatingState", topLevel);
-
-    QWidget* container = _dockWidget->widget();
-    if (container)
-    {
-        container->setProperty("floatingState", topLevel);
-    }
-
-    if (topLevel)
-    {
-        // Save current position and apply frameless hint
-        QPoint pos = _dockWidget->pos();
-        _dockWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
-        _dockWidget->setAttribute(Qt::WA_TranslucentBackground, true);
-        _dockWidget->setAttribute(Qt::WA_NoSystemBackground, true);
-        _dockWidget->winId(); // Force platform window creation
-        _dockWidget->move(pos);
-        _dockWidget->show();
-
-        if (_dockWidget->layout())
-        {
-            _dockWidget->layout()->setContentsMargins(0, 0, 0, 0);
-            _dockWidget->layout()->setSpacing(0);
-        }
-    }
-    else
-    {
-        _dockWidget->setWindowFlags(Qt::Widget);
-        _dockWidget->setAttribute(Qt::WA_TranslucentBackground, false);
-        _dockWidget->setAttribute(Qt::WA_NoSystemBackground, false);
-        _dockWidget->winId();
-        _dockWidget->show();
-    }
-
-    updateDockMask();
-
-    _dockWidget->style()->unpolish(_dockWidget);
-    _dockWidget->style()->polish(_dockWidget);
-
-    if (container)
-    {
-        container->style()->unpolish(container);
-        container->style()->polish(container);
-        for (QObject* child : container->children())
-        {
-            if (QWidget* childWidget = qobject_cast<QWidget*>(child))
-            {
-                childWidget->style()->unpolish(childWidget);
-                childWidget->style()->polish(childWidget);
-            }
-        }
-    }
-
-    this->style()->unpolish(this);
-    this->style()->polish(this);
-    _dockWidget->update();
-}
-
-void DockTitleBar::updateDockMask()
-{
-    if (_dockWidget)
-    {
-        _dockWidget->clearMask();
-    }
-}
-
-void DockTitleBar::updateFloatIcon()
-{
-    bool isFloat = _dockWidget->isFloating();
-    _floatButton->setProperty("maximized", isFloat);
-
-    bool underMouse = _floatButton->underMouse();
-    _floatButton->setIcon(QIcon(underMouse ? QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png") : QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
-}
-
 bool DockTitleBar::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _dockWidget) {
         if (event->type() == QEvent::Resize || event->type() == QEvent::Show) {
-            updateDockMask();
+            updateFloatingMask();
         }
     }
     else if (watched == _closeButton) {
@@ -210,6 +124,74 @@ bool DockTitleBar::eventFilter(QObject* watched, QEvent* event)
     return QWidget::eventFilter(watched, event);
 }
 
+void DockTitleBar::applyFloatingChrome(bool floating)
+{
+    _dockWidget->setProperty("floatingState", floating);
+    setProperty("floatingState", floating);
+
+    if (QWidget* container = _dockWidget->widget()) {
+        container->setProperty("floatingState", floating);
+    }
+
+    _dockWidget->setAttribute(Qt::WA_TranslucentBackground, floating);
+    _dockWidget->setAttribute(Qt::WA_NoSystemBackground, floating);
+    _dockWidget->setWindowFlag(Qt::FramelessWindowHint, floating);
+
+    if (floating && _dockWidget->layout()) {
+        _dockWidget->layout()->setContentsMargins(0, 0, 0, 0);
+        _dockWidget->layout()->setSpacing(0);
+    }
+
+    refreshFloatingChromeStyle();
+    updateFloatingMask();
+
+    if (_dockWidget->isVisible()) {
+        QTimer::singleShot(0, _dockWidget, [this]() {
+            _dockWidget->show();
+            updateFloatingMask();
+        });
+    }
+}
+
+void DockTitleBar::refreshFloatingChromeStyle()
+{
+    _dockWidget->style()->unpolish(_dockWidget);
+    _dockWidget->style()->polish(_dockWidget);
+
+    if (QWidget* container = _dockWidget->widget()) {
+        container->style()->unpolish(container);
+        container->style()->polish(container);
+    }
+
+    style()->unpolish(this);
+    style()->polish(this);
+    _dockWidget->update();
+}
+
+void DockTitleBar::updateFloatingMask()
+{
+    if (!_dockWidget->isFloating()) {
+        _dockWidget->clearMask();
+        return;
+    }
+
+    const QSize size = _dockWidget->size();
+    if (size.isEmpty()) {
+        return;
+    }
+
+    QBitmap mask(size);
+    mask.fill(Qt::color0);
+
+    QPainter painter(&mask);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setBrush(Qt::color1);
+    painter.setPen(Qt::NoPen);
+    painter.drawRoundedRect(_dockWidget->rect().adjusted(0, 0, -1, -1), 12, 12);
+
+    _dockWidget->setMask(mask);
+}
+
 QSize DockTitleBar::sizeHint() const
 {
     return QSize(QWidget::sizeHint().width(), 28);
@@ -224,9 +206,6 @@ void DockTitleBar::setupDockWidget(QDockWidget* dockWidget, QWidget* contentWidg
 {
     if (!dockWidget || !contentWidget) return;
 
-    // Pre-enable translucent background to ensure smooth frameless rounding works when undocked
-    dockWidget->setAttribute(Qt::WA_TranslucentBackground, true);
-
     // Create container frame
     QFrame* container = new QFrame(dockWidget);
     container->setObjectName(QStringLiteral("DockContainerWidget"));
@@ -235,18 +214,13 @@ void DockTitleBar::setupDockWidget(QDockWidget* dockWidget, QWidget* contentWidg
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
-    // Create title bar inside container
-    auto* titleBar = new DockTitleBar(dockWidget, container);
-
-    layout->addWidget(titleBar);
     layout->addWidget(contentWidget, 1);
 
     // Set container to dock widget
     dockWidget->setWidget(container);
 
-    // Hide native titlebar using dummy widget
-    auto* dummyTitle = new QWidget(dockWidget);
-    dummyTitle->setFixedHeight(0);
-    dummyTitle->setVisible(false);
-    dockWidget->setTitleBarWidget(dummyTitle);
+    // Install the custom title bar as the real dock title bar so ignored
+    // mouse events still reach QDockWidget's native drag/dock handler.
+    auto* titleBar = new DockTitleBar(dockWidget, dockWidget);
+    dockWidget->setTitleBarWidget(titleBar);
 }

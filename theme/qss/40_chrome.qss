@@ -140,7 +140,6 @@ QLabel#DockTitleBarLabel {
     padding-top: 1px; /* Slightly lower the font vertical alignment */
 }
 
-QPushButton#DockMinButton,
 QPushButton#DockMaxButton,
 QPushButton#DockCloseButton {
     border: none;
@@ -157,10 +156,14 @@ QPushButton#DockCloseButton:hover {
     background: transparent;
 }
 
-QPushButton#DockMinButton:pressed,
 QPushButton#DockMaxButton:pressed,
 QPushButton#DockCloseButton:pressed {
     background-color: transparent;
+}
+
+QFrame#DockContainerWidget {
+    background-color: #ffffff;
+    border: none;
 }
 
 QDockWidget[floatingState="true"] {
@@ -169,21 +172,20 @@ QDockWidget[floatingState="true"] {
     border: none;
 }
 
-QFrame#DockContainerWidget {
-    background-color: #ffffff;
-    border: none;
-}
-
 QFrame#DockContainerWidget[floatingState="true"],
 QDockWidget[floatingState="true"] QFrame#DockContainerWidget {
     border: 1px solid #d9e1ea;
-    border-radius: 12px;
+    border-top: none;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
     background-color: #ffffff;
 }
 
-QFrame#DockContainerWidget[floatingState="true"] QWidget#DockTitleBar,
-QDockWidget[floatingState="true"] QFrame#DockContainerWidget QWidget#DockTitleBar {
+QDockWidget[floatingState="true"] QWidget#DockTitleBar {
     background-color: #ffffff;
+    border: 1px solid #d9e1ea;
     border-bottom: 1px solid #d9e1ea;
     border-top-left-radius: 11px;
     border-top-right-radius: 11px;
@@ -191,7 +193,6 @@ QDockWidget[floatingState="true"] QFrame#DockContainerWidget QWidget#DockTitleBa
     border-bottom-right-radius: 0px;
 }
 
-QFrame#DockContainerWidget[floatingState="true"] > QWidget,
 QDockWidget[floatingState="true"] QFrame#DockContainerWidget > QWidget {
     background-color: #ffffff;
     border: none;
@@ -205,6 +206,6 @@ QFrame#DockContainerWidget QAbstractScrollArea {
 }
 
 QRubberBand {
-    background-color: #ffffff;
-    border: 2px dashed #b0c2d4;
+    background-color: rgba(255, 255, 255, 220);
+    border: 1px solid #d9e1ea;
 }

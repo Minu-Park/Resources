@@ -13,6 +13,9 @@
 #include <QAbstractItemView>
 #include <QStatusBar>
 #include <QScreen>
+#include <QRubberBand>
+#include <QPalette>
+#include <QColor>
 #include <QEvent>
 #include <QDebug>
 
@@ -37,6 +40,9 @@ inline void initResourcesHelper()
 //
 // Applies QStatusBar contents insets because stylesheet padding does not move
 // child item positions consistently.
+//
+// Applies docking QRubberBand visuals at runtime because platform styles can
+// paint the native dock target preview without honoring the global QSS rule.
 // ---------------------------------------------------------------------------
 class ResourceStyleFilter : public QObject
 {
@@ -66,11 +72,17 @@ protected:
                     }
                 }
             }
+            else if (auto* rubberBand = qobject_cast<QRubberBand*>(obj)) {
+                applyDockRubberBandStyle(rubberBand);
+            }
         }
 
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
             if (auto* statusBar = qobject_cast<QStatusBar*>(obj)) {
                 applyStatusBarInsets(statusBar);
+            }
+            else if (auto* rubberBand = qobject_cast<QRubberBand*>(obj)) {
+                applyDockRubberBandStyle(rubberBand);
             }
         }
 
@@ -126,6 +138,27 @@ private:
         }
 
         return geo;
+    }
+
+    static void applyDockRubberBandStyle(QRubberBand* rubberBand)
+    {
+        if (!rubberBand || rubberBand->property("_resourcesRubberBandStyled").toBool()) {
+            return;
+        }
+
+        rubberBand->setProperty("_resourcesRubberBandStyled", true);
+        rubberBand->setAttribute(Qt::WA_StyledBackground, true);
+        rubberBand->setAttribute(Qt::WA_TranslucentBackground, false);
+        rubberBand->setAutoFillBackground(true);
+
+        QPalette palette = rubberBand->palette();
+        palette.setColor(QPalette::Window, QColor(255, 255, 255, 220));
+        rubberBand->setPalette(palette);
+        rubberBand->setStyleSheet(QStringLiteral(
+            "QRubberBand {"
+            " background-color: rgba(255, 255, 255, 220);"
+            " border: 1px solid #d9e1ea;"
+            "}"));
     }
 };
 
