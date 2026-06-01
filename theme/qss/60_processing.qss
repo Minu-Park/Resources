@@ -16,21 +16,50 @@ QLabel#RuntimePathsStatusLabel[state="warning"] {
 }
 
 /* OpenCV processing panel */
-QLabel#ProcessingEditorTitle {
+QLabel#ProcessingEditorTitle,
+QLabel#ProcessingParamTitle {
     font-weight: 600;
-    color: #4a5a6a;
+    color: #000000;
 }
 
-QToolButton#ProcessingEnableToggle {
-    color: #64748b;
+QToolButton#ProcessingEnableToggle,
+QToolButton#ProcessingAddParam,
+QToolButton#ProcessingRemoveParam {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    border-radius: 9px;
+    padding: 0 7px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 2px 0 0;
+    color: #000000;
     font-weight: bold;
     font-size: 11px;
 }
 
+QToolButton#ProcessingAddParam:hover,
+QToolButton#ProcessingRemoveParam:hover {
+    background: #eef3f8;
+    border-color: #c7d4e2;
+    color: #000000;
+}
+
+QToolButton#ProcessingAddParam:pressed,
+QToolButton#ProcessingRemoveParam:pressed {
+    background: #e7eef6;
+    border-color: #bccbda;
+}
+
 QToolButton#ProcessingEnableToggle[active="true"] {
-    border: 1px solid #354657;
-    background-color: #f1f5f9;
-    color: #354657;
+    border-color: #cfd9e4;
+    background-color: #f1f3f5;
+    color: #000000;
+}
+
+QToolButton#ProcessingEnableToggle[active="true"]:hover {
+    background-color: #e9ecef;
+    border-color: #b7c7d8;
 }
 
 QTextEdit#ProcessingCodeEditor {
@@ -44,7 +73,7 @@ QTextEdit#ProcessingCodeEditor {
 
 QLabel#ProcessingParamEditorTitle {
     font-weight: 600;
-    color: #4a5a6a;
+    color: #16202b;
     font-size: 11px;
 }
 
@@ -72,44 +101,161 @@ QLabel#ProcessingParamEmptyLabel {
 }
 
 QLabel#ProcessingParamNameLabel {
-    color: #4a5a6a;
+    color: #000000;
     font-weight: 600;
 }
 
 QLabel#ProcessingParamValueLabel {
     font-weight: bold;
-    color: #354657;
+    color: #000000;
+}
+
+QSlider#ProcessingParamSlider {
+    height: 20px;
+    min-height: 20px;
+    max-height: 20px;
 }
 
 QSlider#ProcessingParamSlider::groove:horizontal {
     border: none;
-    height: 4px;
-    background: #e2e8f0;
-    border-radius: 2px;
+    height: 2px;
+    background: #edf2f7;
+    border-radius: 1px;
 }
 
 QSlider#ProcessingParamSlider::sub-page:horizontal {
-    background: #354657;
-    border-radius: 2px;
+    background: #8badc7;
+    border-radius: 1px;
 }
 
 QSlider#ProcessingParamSlider::handle:horizontal {
     background: #ffffff;
-    border: 2px solid #354657;
-    width: 14px;
-    height: 14px;
-    margin: -5px 0;
+    border: 1px solid #cfd9e4;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0;
     border-radius: 7px;
 }
 
 QSlider#ProcessingParamSlider::handle:horizontal:hover {
-    background: #354657;
+    border-color: #8badc7;
+    background: #f8fafc;
 }
 
-/* Visual Parameter Table Bubble Header & Cell UI Optimization */
-QTableWidget#ProcessingParamTable {
+QSlider#ProcessingParamSlider::handle:horizontal:pressed {
+    border-color: #7097b3;
+    background: #f1f5f9;
+}
+
+QTableWidget#ProcessingParamTable,
+QTableWidget#ProcessingAdjustTable {
     border: none;
+    padding: 0px;
     background: #ffffff;
     gridline-color: #edf2f7;
+    selection-background-color: transparent;
+}
+
+QTableWidget#ProcessingParamTable::item:selected,
+QTableWidget#ProcessingAdjustTable::item:selected {
+    background: transparent;
+}
+
+QTableWidget#ProcessingParamTable QHeaderView,
+QTableWidget#ProcessingAdjustTable QHeaderView {
+    border: 1px solid #d6e0ea;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+QTableWidget#ProcessingParamTable::item,
+QTableWidget#ProcessingAdjustTable::item {
+    padding: 0px;
+}
+
+QTableWidget#ProcessingParamTable::item:hover,
+QTableWidget#ProcessingAdjustTable::item:hover {
+    background: transparent;
+}
+
+/* Table container and cell widget styling */
+QWidget#CellWidgetContainer {
+    background: transparent;
+    border: none;
+}
+
+QTableWidget#ProcessingParamTable QLineEdit,
+QTableWidget#ProcessingParamTable QComboBox,
+QTableWidget#ProcessingParamTable QAbstractSpinBox,
+QTableWidget#ProcessingAdjustTable QLineEdit,
+QTableWidget#ProcessingAdjustTable QComboBox,
+QTableWidget#ProcessingAdjustTable QSpinBox,
+QTableWidget#ProcessingAdjustTable QDoubleSpinBox {
+    background: #ffffff;
+    border: 1px solid #cfd9e4;
+    border-radius: 8px;
+}
+
+QTableWidget#ProcessingParamTable QLineEdit,
+QTableWidget#ProcessingAdjustTable QLineEdit {
+    padding: 0 4px;
+}
+
+QTableWidget#ProcessingParamTable QComboBox,
+QTableWidget#ProcessingParamTable QAbstractSpinBox,
+QTableWidget#ProcessingAdjustTable QComboBox,
+QTableWidget#ProcessingAdjustTable QSpinBox,
+QTableWidget#ProcessingAdjustTable QDoubleSpinBox {
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+QTableWidget#ProcessingParamTable QLineEdit:hover,
+QTableWidget#ProcessingParamTable QComboBox:hover,
+QTableWidget#ProcessingParamTable QAbstractSpinBox:hover,
+QTableWidget#ProcessingAdjustTable QLineEdit:hover,
+QTableWidget#ProcessingAdjustTable QComboBox:hover,
+QTableWidget#ProcessingAdjustTable QSpinBox:hover,
+QTableWidget#ProcessingAdjustTable QDoubleSpinBox:hover {
+    border-color: #cfd9e4;
+    background-color: #ffffff;
+}
+
+QTableWidget#ProcessingParamTable QLineEdit:focus,
+QTableWidget#ProcessingParamTable QComboBox:focus,
+QTableWidget#ProcessingParamTable QAbstractSpinBox:focus,
+QTableWidget#ProcessingAdjustTable QLineEdit:focus,
+QTableWidget#ProcessingAdjustTable QComboBox:focus,
+QTableWidget#ProcessingAdjustTable QSpinBox:focus,
+QTableWidget#ProcessingAdjustTable QDoubleSpinBox:focus {
+    border-color: #8badc7;
+    background-color: #ffffff;
+}
+
+QTableWidget#ProcessingParamTable QComboBox:on,
+QTableWidget#ProcessingAdjustTable QComboBox:on {
+    border-color: #8badc7;
+    background-color: #ffffff;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+}
+
+QCheckBox#ParamRowSelectCheck {
+    min-width: 24px;
+    max-width: 24px;
+    width: 24px;
+    spacing: 0px;
+    padding: 0px;
+    margin: 0px;
+    background: transparent;
+}
+
+QCheckBox#ParamRowSelectCheck::indicator {
+    width: 22px;
+    height: 22px;
+    border-radius: 8px;
 }
 
