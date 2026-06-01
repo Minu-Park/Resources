@@ -99,10 +99,10 @@ MainTitleBar::MainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* 
     _maxButton->installEventFilter(this);
     _closeButton->installEventFilter(this);
 
-    _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png")));
+    _minButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png"), QSize(20, 20)));
     _minButton->setIconSize(QSize(20, 20));
 
-    _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
+    _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png"), QSize(20, 20)));
     _closeButton->setIconSize(QSize(20, 20));
 
     _maxButton->setIconSize(QSize(20, 20));
@@ -167,30 +167,31 @@ void MainTitleBar::updateMaximizeIcon()
     _maxButton->setProperty("maximized", isMax);
 
     bool underMouse = _maxButton->underMouse();
-    _maxButton->setIcon(QIcon(underMouse ? QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png") : QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
+    QString path = underMouse ? QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png") : QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png");
+    _maxButton->setIcon(createSmoothIcon(path, QSize(20, 20)));
 }
 
 bool MainTitleBar::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _minButton) {
         if (event->type() == QEvent::Enter) {
-            _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48-hover.png")));
+            _minButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48-hover.png"), QSize(20, 20)));
         } else if (event->type() == QEvent::Leave) {
-            _minButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png")));
+            _minButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png"), QSize(20, 20)));
         }
     }
     else if (watched == _closeButton) {
         if (event->type() == QEvent::Enter) {
-            _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png")));
+            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png"), QSize(20, 20)));
         } else if (event->type() == QEvent::Leave) {
-            _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
+            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png"), QSize(20, 20)));
         }
     }
     else if (watched == _maxButton) {
         if (event->type() == QEvent::Enter) {
-            _maxButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png")));
+            _maxButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png"), QSize(20, 20)));
         } else if (event->type() == QEvent::Leave) {
-            _maxButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
+            _maxButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png"), QSize(20, 20)));
         }
     }
     return QWidget::eventFilter(watched, event);
@@ -203,4 +204,20 @@ void MainTitleBar::paintEvent(QPaintEvent* event)
     QPainter p(this);
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
     QWidget::paintEvent(event);
+}
+
+QIcon MainTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSize) const
+{
+    QPixmap pixmap(path);
+    if (pixmap.isNull()) {
+        return QIcon();
+    }
+    const double dpr = this->devicePixelRatio();
+    QPixmap scaledPixmap = pixmap.scaled(
+        logicalSize * dpr,
+        Qt::KeepAspectRatio,
+        Qt::SmoothTransformation
+    );
+    scaledPixmap.setDevicePixelRatio(dpr);
+    return QIcon(scaledPixmap);
 }
