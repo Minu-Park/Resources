@@ -22,6 +22,7 @@ protected:
 
 private:
     bool eventFilter(QObject* watched, QEvent* event) override;
+    QIcon createSmoothIcon(const QString& path, const QSize& logicalSize) const;
     void updateMaximizeIcon();
 
     QMainWindow* _mainWindow;
