@@ -16,10 +16,7 @@ QGocatorWidget QToolButton {
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"] {
-    border: none;
-    border-radius: 0;
     background: #ffffff;
-    padding: 0;
     alternate-background-color: #ffffff;
     gridline-color: #edf2f7;
     selection-background-color: #ffffff;
@@ -46,26 +43,6 @@ QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
     background: #ffffff;
     color: #16202b;
 }
-
-QTreeWidget[treeRole="DeviceFeatureTree"]::branch:has-children:closed {
-    image: url(:/Resources/Icons/icons8-tree-forward-48.png);
-    width: 16px;
-    height: 16px;
-}
-
-QTreeWidget[treeRole="DeviceFeatureTree"]::branch:has-children:open {
-    image: url(:/Resources/Icons/icons8-tree-expand-arrow-48.png);
-    width: 16px;
-    height: 16px;
-}
-
-QTreeWidget[treeRole="DeviceFeatureTree"]::branch:hover,
-QTreeWidget[treeRole="DeviceFeatureTree"]::branch:selected,
-QTreeWidget[treeRole="DeviceFeatureTree"]::branch:open:hover,
-QTreeWidget[treeRole="DeviceFeatureTree"]::branch:closed:hover {
-    background: transparent;
-}
-
 
 
 QCameraWidget QLabel {

@@ -177,6 +177,31 @@ QTreeWidget::item:selected {
     color: #16202b;
 }
 
+QTreeView::branch:has-children:closed,
+QTreeWidget::branch:has-children:closed {
+    image: url(:/Resources/Icons/icons8-tree-forward-48.png);
+    width: 16px;
+    height: 16px;
+}
+
+QTreeView::branch:has-children:open,
+QTreeWidget::branch:has-children:open {
+    image: url(:/Resources/Icons/icons8-tree-expand-arrow-48.png);
+    width: 16px;
+    height: 16px;
+}
+
+QTreeView::branch:hover,
+QTreeView::branch:selected,
+QTreeView::branch:open:hover,
+QTreeView::branch:closed:hover,
+QTreeWidget::branch:hover,
+QTreeWidget::branch:selected,
+QTreeWidget::branch:open:hover,
+QTreeWidget::branch:closed:hover {
+    background: transparent;
+}
+
 
 QComboBox,
 QAbstractSpinBox,

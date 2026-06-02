@@ -169,8 +169,6 @@ QSlider#ProcessingParamSlider::handle:horizontal:pressed {
 
 QTableWidget#ProcessingParamTable,
 QTableWidget#ProcessingAdjustTable {
-    border: none;
-    padding: 0px;
     background: #ffffff;
     gridline-color: #edf2f7;
     selection-background-color: transparent;
