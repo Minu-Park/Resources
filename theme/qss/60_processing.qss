@@ -59,7 +59,12 @@ QLabel#RuntimePathsLabel {
 
 QLineEdit#RuntimePathsLineEdit {
     min-width: 150px;
+    min-height: 22px;
+    max-height: 22px;
+    padding-top: 0px;
     padding-right: 10px;
+    padding-bottom: 0px;
+    font-size: 12px;
 }
 
 QPushButton#RuntimePathsBrowseButton {
@@ -68,7 +73,8 @@ QPushButton#RuntimePathsBrowseButton {
     min-height: 22px;
     max-height: 22px;
     padding: 0px 6px;
-    font-size: 11px;
+    margin: 0px;
+    font-size: 12px;
     font-weight: 600;
 }
 
