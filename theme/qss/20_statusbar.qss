@@ -136,33 +136,33 @@ QLabel#GocatorStatusLabel[status="grabbing"] {
 
 QPushButton#MainLogToggleBtn {
     background: #ffffff;
-    border: 1px solid #d7dee6;
+    border: 1px solid #c8d9eb;
     border-radius: 9px;
     padding: 0 8px;
     height: 24px;
     min-height: 24px;
     max-height: 24px;
     margin: 0 2px 0 0;
-    color: #425467;
+    color: #00457C;
     font-weight: 700;
     font-size: 11px;
 }
 
 QPushButton#MainLogToggleBtn:hover {
-    background: #f4f7fa;
-    border-color: #c7d4e2;
-    color: #26384a;
+    background: #f0f5fa;
+    border-color: #8badc7;
+    color: #00457C;
 }
 
 QPushButton#MainLogToggleBtn:checked {
-    background: #eef3f8;
-    border-color: #b7c7d8;
+    background: #e1ebf5;
+    border-color: #8badc7;
     color: #00457C;
 }
 
 QPushButton#MainLogToggleBtn:checked:hover {
-    background: #e1ebf5;
-    border-color: #9ab4d0;
+    background: #d4e3f0;
+    border-color: #7097b3;
     color: #00457C;
 }
 
