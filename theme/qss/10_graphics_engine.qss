@@ -73,18 +73,6 @@ QScrollBar#ImageViewOverlayScrollBar::sub-page {
     height: 0px;
 }
 
-QSpinBox#PlotLineProfileCoordinateSpinBox {
-    background: #ffffff;
-    border: 1px solid #cfd9e4;
-    border-radius: 6px;
-    padding: 1px 5px;
-    color: #16202b;
-}
-
-QSpinBox#PlotLineProfileCoordinateSpinBox:focus {
-    border-color: #7da7d9;
-}
-
 QLabel#PlotLineProfilePointLabel {
     background: transparent;
     color: #354657;
@@ -96,8 +84,17 @@ QLabel#PlotLineProfilePointLabel {
     background: transparent;
 }
 
-#AnalysisDialogTitleBar {
-    background: transparent;
+QWidget#AnalysisDialogContainer {
+    background-color: #ffffff;
+    border: 1px solid #d9e1ea;
+    border-radius: 12px;
+}
+
+QWidget#AnalysisDialogTitleBar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #d9e1ea;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
 }
 
 QLabel#AnalysisDialogTitleLabel {
@@ -118,17 +115,4 @@ QPushButton#AnalysisDialogCloseButton {
 
 QPushButton#AnalysisDialogCloseButton:hover {
     background: transparent;
-}
-
-StatisticsTableWidget QTableWidget {
-    background-color: #ffffff;
-    border: none;
-    border-bottom-left-radius: 11px;
-    border-bottom-right-radius: 11px;
-}
-
-StatisticsTableWidget QTableWidget QHeaderView::section {
-    background-color: #f8fafc;
-    border: none;
-    border-bottom: 1px solid #eef2f6;
 }
