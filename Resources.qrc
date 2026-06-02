@@ -3,7 +3,6 @@
         <file>Icon.ico</file>
         <file>Icon.png</file>
         <file>AppIcons/AppIcon.png</file>
-        <file>AppIcons/AppIcon_mac.png</file>
         <file>Resources.rc</file>
         <file>Style.qss</file>
         <file>theme/qss/00_base.qss</file>
