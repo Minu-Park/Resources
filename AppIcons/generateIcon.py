@@ -38,19 +38,15 @@ def main():
     resized_mac = img.resize((824, 824), Image.Resampling.LANCZOS)
     mac_canvas.paste(resized_mac, (100, 100))
     
-    icns_sizes = [(16, 16), (32, 32), (64, 64), (128, 128), (256, 256), (512, 512), (1024, 1024)]
-    
-    try:
-        mac_canvas.save(icns_path, format="ICNS", sizes=icns_sizes)
-        print(f"ICNS saved directly to {icns_path}")
-    except Exception as e:
-        print("Failed to save ICNS directly:", e)
-        print("Trying fallback iconutil...")
-        # Fallback to macOS native iconutil:
+    use_iconutil = False
+    if sys.platform == "darwin" and shutil.which("iconutil") is not None:
+        use_iconutil = True
+        
+    if use_iconutil:
+        print("Using macOS native iconutil to generate conforming ICNS...")
         iconset_dir = os.path.join(script_dir, "AppIcon.iconset")
         os.makedirs(iconset_dir, exist_ok=True)
         
-        # Resize and save all required sizes for iconutil from the padded macOS canvas
         sizes_dict = {
             "icon_16x16.png": (16, 16),
             "icon_16x16@2x.png": (32, 32),
@@ -69,11 +65,25 @@ def main():
             resized.save(os.path.join(iconset_dir, name))
             
         # Run iconutil
-        os.system(f"iconutil -c icns {iconset_dir}")
-        
+        ret = os.system(f"iconutil -c icns {iconset_dir}")
+        if ret == 0:
+            print(f"ICNS successfully generated via iconutil and saved to {icns_path}")
+        else:
+            print("Warning: iconutil failed, falling back to Pillow direct save.")
+            use_iconutil = False
+            
         # Clean up iconset
         shutil.rmtree(iconset_dir)
-        print(f"ICNS generated via iconutil and saved to {icns_path}")
+
+    if not use_iconutil:
+        # Fallback to Pillow direct save for non-macOS platforms
+        print("Saving ICNS directly using Pillow...")
+        icns_sizes = [(16, 16), (32, 32), (64, 64), (128, 128), (256, 256), (512, 512), (1024, 1024)]
+        try:
+            mac_canvas.save(icns_path, format="ICNS", sizes=icns_sizes)
+            print(f"ICNS saved directly to {icns_path}")
+        except Exception as e:
+            print("Failed to save ICNS directly:", e)
         
     print("Icon generation completed successfully!")
 
