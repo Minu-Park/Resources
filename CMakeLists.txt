@@ -24,6 +24,8 @@ qt_add_library(PlaygroundResources STATIC
     Chrome/MdiSubWindowContainer.cpp
     Chrome/ThemedDialog.h
     Chrome/ThemedDialog.cpp
+    Chrome/ThemedMessageBox.h
+    Chrome/ThemedMessageBox.cpp
 )
 
 add_library(Resources::Resources ALIAS PlaygroundResources)
