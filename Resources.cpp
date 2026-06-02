@@ -303,7 +303,9 @@ void installResources(QApplication& app)
     }
     app.setStyleSheet(styleSheet);
 
+#if !defined(Q_OS_MAC)
     app.setWindowIcon(QIcon(QStringLiteral(":/Resources/AppIcons/AppIcon.png")));
+#endif
 
     // Install global event filter for runtime style geometry that QSS cannot
     // drive reliably, such as QComboBox popup frames and QStatusBar insets.
