@@ -40,28 +40,13 @@ QLabel#RuntimePathsLabel {
     max-width: 160px;
 }
 
-QLineEdit#RuntimePathsLineEdit,
-QPushButton#RuntimePathsBrowseButton {
-    min-height: 22px;
-    max-height: 22px;
-    margin: 0px;
-    padding-top: 0px;
-    padding-bottom: 0px;
-    font-size: 12px;
-}
-
 QLineEdit#RuntimePathsLineEdit {
     min-width: 150px;
-    padding-left: 4px;
-    padding-right: 10px;
 }
 
 QPushButton#RuntimePathsBrowseButton {
     min-width: 75px;
     max-width: 75px;
-    padding-left: 6px;
-    padding-right: 6px;
-    font-weight: 600;
 }
 
 QPushButton#RuntimePathsApplyButton {
@@ -84,35 +69,6 @@ QLabel#ProcessingEditorTitle,
 QLabel#ProcessingParamTitle {
     font-weight: 600;
     color: #000000;
-}
-
-QToolButton#ProcessingEnableToggle,
-QToolButton#ProcessingAddParam,
-QToolButton#ProcessingRemoveParam {
-    background: #ffffff;
-    border: 1px solid #d7dee6;
-    border-radius: 9px;
-    padding: 0 7px;
-    height: 24px;
-    min-height: 24px;
-    max-height: 24px;
-    margin: 0 2px 0 0;
-    color: #000000;
-    font-weight: bold;
-    font-size: 11px;
-}
-
-QToolButton#ProcessingAddParam:hover,
-QToolButton#ProcessingRemoveParam:hover {
-    background: #eef3f8;
-    border-color: #c7d4e2;
-    color: #000000;
-}
-
-QToolButton#ProcessingAddParam:pressed,
-QToolButton#ProcessingRemoveParam:pressed {
-    background: #e7eef6;
-    border-color: #bccbda;
 }
 
 QToolButton#ProcessingEnableToggle[active="true"] {

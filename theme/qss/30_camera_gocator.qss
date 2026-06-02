@@ -15,18 +15,7 @@ QGocatorWidget QToolButton {
     border-radius: 8px;
 }
 
-QCameraWidget QToolButton:hover,
-QGocatorWidget QToolButton:hover {
-    background: #f3f3f3;
-}
-
-QCameraWidget QToolButton:pressed,
-QGocatorWidget QToolButton:pressed {
-    background: #e8e8e8;
-}
-
-QTreeWidget#CameraFeaturesTree,
-QTreeWidget#GocatorFeaturesTree {
+QTreeWidget[treeRole="DeviceFeatureTree"] {
     border: none;
     border-radius: 0;
     background: #ffffff;
@@ -38,53 +27,42 @@ QTreeWidget#GocatorFeaturesTree {
     show-decoration-selected: 0;
 }
 
-QTreeWidget#CameraFeaturesTree::item,
-QTreeWidget#GocatorFeaturesTree::item {
+QTreeWidget[treeRole="DeviceFeatureTree"]::item {
     min-height: 22px;
     padding: 0 6px;
 }
 
-QTreeWidget#CameraFeaturesTree QCheckBox,
-QTreeWidget#CameraFeaturesTree QRadioButton,
-QTreeWidget#GocatorFeaturesTree QCheckBox,
-QTreeWidget#GocatorFeaturesTree QRadioButton {
+QTreeWidget[treeRole="DeviceFeatureTree"] QCheckBox,
+QTreeWidget[treeRole="DeviceFeatureTree"] QRadioButton {
     padding: 0;
     margin: 0;
 }
 
-QTreeWidget#CameraFeaturesTree::item:hover,
-QTreeWidget#GocatorFeaturesTree::item:hover {
+QTreeWidget[treeRole="DeviceFeatureTree"]::item:hover {
     background: #ffffff;
 }
 
-QTreeWidget#CameraFeaturesTree::item:selected,
-QTreeWidget#GocatorFeaturesTree::item:selected {
+QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
     background: #ffffff;
     color: #16202b;
 }
 
-QTreeWidget#CameraFeaturesTree::branch:has-children:closed,
-QTreeWidget#GocatorFeaturesTree::branch:has-children:closed {
+QTreeWidget[treeRole="DeviceFeatureTree"]::branch:has-children:closed {
     image: url(:/Resources/Icons/icons8-tree-forward-48.png);
     width: 16px;
     height: 16px;
 }
 
-QTreeWidget#CameraFeaturesTree::branch:has-children:open,
-QTreeWidget#GocatorFeaturesTree::branch:has-children:open {
+QTreeWidget[treeRole="DeviceFeatureTree"]::branch:has-children:open {
     image: url(:/Resources/Icons/icons8-tree-expand-arrow-48.png);
     width: 16px;
     height: 16px;
 }
 
-QTreeWidget#CameraFeaturesTree::branch:hover,
-QTreeWidget#CameraFeaturesTree::branch:selected,
-QTreeWidget#CameraFeaturesTree::branch:open:hover,
-QTreeWidget#CameraFeaturesTree::branch:closed:hover,
-QTreeWidget#GocatorFeaturesTree::branch:hover,
-QTreeWidget#GocatorFeaturesTree::branch:selected,
-QTreeWidget#GocatorFeaturesTree::branch:open:hover,
-QTreeWidget#GocatorFeaturesTree::branch:closed:hover {
+QTreeWidget[treeRole="DeviceFeatureTree"]::branch:hover,
+QTreeWidget[treeRole="DeviceFeatureTree"]::branch:selected,
+QTreeWidget[treeRole="DeviceFeatureTree"]::branch:open:hover,
+QTreeWidget[treeRole="DeviceFeatureTree"]::branch:closed:hover {
     background: transparent;
 }
 
@@ -128,13 +106,6 @@ QGocatorWidget QLabel#GocatorMessageLabel[messageState="error"] {
     font-weight: 700;
 }
 
-QTreeWidget#CameraFeaturesTree::item[messageState="error"],
-QTreeWidget#GocatorFeaturesTree::item[messageState="error"] {
-    color: #c62828;
-    font-weight: 700;
-}
-
-QTreeWidget#CameraFeaturesTree::viewport,
-QTreeWidget#GocatorFeaturesTree::viewport {
+QTreeWidget[treeRole="DeviceFeatureTree"]::viewport {
     background: transparent;
 }

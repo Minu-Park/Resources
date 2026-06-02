@@ -9,6 +9,7 @@
 #include <QFont>
 #include <QMenu>
 #include <QFrame>
+#include <QLayout>
 #include <QComboBox>
 #include <QAbstractItemView>
 #include <QStatusBar>
@@ -45,6 +46,10 @@ inline void initResourcesHelper()
 //
 // Applies docking QRubberBand visuals at runtime because platform styles can
 // paint the native dock target preview without honoring the global QSS rule.
+//
+// Applies named QLayout margins/spacing because QSS cannot express layout
+// geometry. Modules expose semantic layout object names while Resources owns
+// the shared layout metrics.
 // ---------------------------------------------------------------------------
 class ResourceStyleFilter : public QObject
 {
@@ -114,6 +119,9 @@ protected:
             else if (auto* rubberBand = qobject_cast<QRubberBand*>(obj)) {
                 applyDockRubberBandStyle(rubberBand);
             }
+            else if (auto* widget = qobject_cast<QWidget*>(obj)) {
+                applyLayoutTheme(widget);
+            }
         }
 
         if (event->type() == QEvent::Show) {
@@ -137,6 +145,55 @@ private:
         const QMargins margins(4, 0, 4, 0);
         if (statusBar->contentsMargins() != margins) {
             statusBar->setContentsMargins(margins);
+        }
+    }
+
+    static void applyLayoutTheme(QWidget* widget)
+    {
+        if (!widget) return;
+        applyLayoutTheme(widget->layout());
+
+        const auto layouts = widget->findChildren<QLayout*>();
+        for (QLayout* layout : layouts) {
+            applyLayoutTheme(layout);
+        }
+    }
+
+    static void applyLayoutTheme(QLayout* layout)
+    {
+        if (!layout) return;
+
+        const QString name = layout->objectName();
+        if (name == QLatin1String("DeviceRootLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
+        }
+        else if (name == QLatin1String("DeviceTopBarLayout")) {
+            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 10);
+        }
+        else if (name == QLatin1String("DeviceSelectorLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
+        }
+        else if (name == QLatin1String("DeviceToolLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 6);
+        }
+        else if (name == QLatin1String("DeviceTreePanelLayout")) {
+            setLayoutMetrics(layout, QMargins(12, 0, 12, 12), 8);
+        }
+
+        for (int i = 0; i < layout->count(); ++i) {
+            if (QLayoutItem* item = layout->itemAt(i)) {
+                applyLayoutTheme(item->layout());
+            }
+        }
+    }
+
+    static void setLayoutMetrics(QLayout* layout, const QMargins& margins, int spacing)
+    {
+        if (layout->contentsMargins() != margins) {
+            layout->setContentsMargins(margins);
+        }
+        if (layout->spacing() != spacing) {
+            layout->setSpacing(spacing);
         }
     }
 

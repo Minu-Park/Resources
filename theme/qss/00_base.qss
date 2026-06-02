@@ -360,6 +360,39 @@ QPushButton:disabled {
     color: #97a6b4;
 }
 
+QToolButton {
+    min-height: 24px;
+    padding: 3px 8px;
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: #2a3a4b;
+    font-weight: 600;
+}
+
+QToolButton:hover {
+    background: #f3f3f3;
+    border-color: #d4e2ef;
+    color: #16202b;
+}
+
+QToolButton:pressed {
+    background: #e8e8e8;
+    border-color: #c8d9ea;
+}
+
+QToolButton:checked {
+    background: #f0f0f0;
+    border-color: #cfcfcf;
+    color: #16202b;
+}
+
+QToolButton:disabled {
+    color: #95a3b1;
+    background: transparent;
+}
+
 QCheckBox,
 QRadioButton {
     spacing: 6px;
