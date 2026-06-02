@@ -19,24 +19,6 @@ QStaticImageControlWidget QToolButton {
     border-radius: 8px;
 }
 
-QStaticImageControlWidget QToolButton:hover {
-    background: #f3f3f3;
-}
-
-QStaticImageControlWidget QToolButton:pressed {
-    background: #e8e8e8;
-}
-
-QStaticImageControlWidget QSpinBox {
-    min-height: 22px;
-    max-height: 22px;
-    padding: 0 6px;
-    border: 1px solid #cfd9e4;
-    border-radius: 8px;
-    background: #ffffff;
-    color: #16202b;
-}
-
 QStaticImageControlWidget QListWidget {
     background-color: #ffffff;
     border: 1px solid #d9e1ea;
@@ -59,4 +41,3 @@ QStaticImageControlWidget QListWidget::item:selected {
     color: #16202b;
     font-weight: 600;
 }
-
