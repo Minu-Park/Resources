@@ -134,6 +134,76 @@ QLabel#GocatorStatusLabel[status="grabbing"] {
     color: #1565c0;
 }
 
+QPushButton#MainLogToggleBtn {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    border-radius: 9px;
+    padding: 0 8px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 2px 0 0;
+    color: #425467;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+QPushButton#MainLogToggleBtn:hover {
+    background: #f4f7fa;
+    border-color: #c7d4e2;
+    color: #26384a;
+}
+
+QPushButton#MainLogToggleBtn:checked {
+    background: #eef3f8;
+    border-color: #b7c7d8;
+    color: #00457C;
+}
+
+QPushButton#MainLogToggleBtn:checked:hover {
+    background: #e1ebf5;
+    border-color: #9ab4d0;
+    color: #00457C;
+}
+
+QLabel#MainLogWarnLabel {
+    background: #fff3e0;
+    border: 1px solid #ffe0b2;
+    border-radius: 9px;
+    padding: 0 7px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 2px 0 0;
+    color: #e65100;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+QLabel#MainLogWarnLabel:hover {
+    background: #ffe0b2;
+    border-color: #ffb74d;
+}
+
+QLabel#MainLogErrorLabel {
+    background: #ffebee;
+    border: 1px solid #ffcdd2;
+    border-radius: 9px;
+    padding: 0 7px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 2px 0 0;
+    color: #c62828;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+QLabel#MainLogErrorLabel:hover {
+    background: #ffcdd2;
+    border-color: #e57373;
+}
+
 QWidget#MinimizedSessionIndicator {
     background: #f0f4f8;
     border: 1px solid #d7dee6;
