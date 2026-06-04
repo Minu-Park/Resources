@@ -91,26 +91,12 @@ QWidget#ProcessingTabBar {
     border-bottom: none;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
-    min-height: 28px;
-    max-height: 28px;
+    min-height: 32px;
+    max-height: 32px;
 }
 
-QLabel#ProcessingFileNameLabel {
-    background-color: #ffffff;
-    color: #1e293b;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-    border: 1px solid #cfd9e4;
-    border-bottom: none;
-    font-weight: 600;
-    font-size: 11px;
-    padding: 0px 16px;
-    margin-top: 4px;
-    margin-bottom: 0px;
-    height: 24px;
-    qproperty-alignment: AlignCenter;
-}
-
+QToolButton#ProcessingTabAddBtn,
+QToolButton#ProcessingTabDeleteBtn,
 QToolButton#ProcessingTabLoadBtn,
 QToolButton#ProcessingTabSaveBtn {
     width: 20px;
@@ -122,22 +108,33 @@ QToolButton#ProcessingTabSaveBtn {
     border: none;
     background: transparent;
     padding: 1px;
-    margin-top: 4px;
 }
 
+QToolButton#ProcessingTabAddBtn:hover,
+QToolButton#ProcessingTabDeleteBtn:hover,
 QToolButton#ProcessingTabLoadBtn:hover,
 QToolButton#ProcessingTabSaveBtn:hover {
     background-color: #cbd5e1;
     border-radius: 4px;
 }
 
+QToolButton#ProcessingTabAddBtn:pressed,
+QToolButton#ProcessingTabDeleteBtn:pressed,
 QToolButton#ProcessingTabLoadBtn:pressed,
 QToolButton#ProcessingTabSaveBtn:pressed {
     background-color: #94a3b8;
 }
 
+QToolButton#ProcessingTabDeleteBtn:disabled,
 QToolButton#ProcessingTabSaveBtn:disabled {
     opacity: 0.4;
+}
+
+QComboBox#ProcessingScriptComboBox {
+    font-weight: 600;
+    font-size: 11px;
+    min-width: 120px;
+    max-width: 200px;
 }
 
 QPlainTextEdit#ProcessingCodeEditor {

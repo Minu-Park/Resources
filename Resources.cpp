@@ -183,6 +183,9 @@ private:
         else if (name == QLatin1String("ProcessingRootLayout")) {
             setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 8);
         }
+        else if (name == QLatin1String("ProcessingTabBarLayout")) {
+            setLayoutMetrics(layout, QMargins(12, 5, 6, 5), 4);
+        }
         else if (name == QLatin1String("ProcessingInteractiveGroupLayout")) {
             setLayoutMetrics(layout, QMargins(12, 14, 12, 12), 8);
         }
