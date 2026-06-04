@@ -75,6 +75,37 @@ QTabWidget::pane {
     top: -1px;
 }
 
+QGroupBox {
+    background-color: #ffffff;
+    border: 1px solid #d9e1ea;
+    border-radius: 8px;
+    margin-top: 22px;
+    font-weight: 700;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 2px;
+    top: 0px;
+    padding: 0px;
+    background: transparent;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+QGroupBox QLabel,
+QGroupBox QLineEdit,
+QGroupBox QComboBox,
+QGroupBox QAbstractSpinBox,
+QGroupBox QCheckBox,
+QGroupBox QRadioButton,
+QGroupBox QPushButton,
+QGroupBox QToolButton {
+    font-weight: 400;
+}
+
 QTabBar {
     background: #ffffff;
     qproperty-drawBase: 0;

@@ -65,8 +65,7 @@ QPushButton#RuntimePathsApplyButton:pressed {
 
 
 /* OpenCV processing panel */
-QLabel#ProcessingEditorTitle,
-QLabel#ProcessingParamTitle {
+QLabel#ProcessingEditorTitle {
     font-weight: 600;
     color: #000000;
 }
@@ -180,20 +179,9 @@ QLabel#ProcessingParamHintLabel {
     font-size: 11px;
 }
 
-QLabel#ProcessingParamEmptyLabel {
-    color: #777777;
-    font-style: italic;
-    padding: 4px;
-}
-
 QLabel#ProcessingParamNameLabel {
     color: #000000;
-    font-weight: 600;
-}
-
-QLabel#ProcessingParamValueLabel {
-    font-weight: bold;
-    color: #000000;
+    font-weight: 400;
 }
 
 QSlider#ProcessingParamSlider {
@@ -233,117 +221,8 @@ QSlider#ProcessingParamSlider::handle:horizontal:pressed {
     background: #f1f5f9;
 }
 
-QTableWidget#ProcessingParamTable,
-QTableWidget#ProcessingAdjustTable {
-    background: #ffffff;
-    gridline-color: #edf2f7;
-    selection-background-color: transparent;
-}
-
-QTableWidget#ProcessingParamTable::item:selected,
-QTableWidget#ProcessingAdjustTable::item:selected {
-    background: transparent;
-}
-
-QTableWidget#ProcessingParamTable::item,
-QTableWidget#ProcessingAdjustTable::item {
-    padding: 0px;
-}
-
-QTableWidget#ProcessingParamTable::item:hover,
-QTableWidget#ProcessingAdjustTable::item:hover {
-    background: transparent;
-}
-
-/* Table container and cell widget styling */
-QWidget#CellWidgetContainer {
-    background: transparent;
-    border: none;
-}
-
-QTableWidget#ProcessingParamTable QLineEdit,
-QTableWidget#ProcessingParamTable QComboBox,
-QTableWidget#ProcessingParamTable QAbstractSpinBox,
-QTableWidget#ProcessingAdjustTable QLineEdit,
-QTableWidget#ProcessingAdjustTable QComboBox,
-QTableWidget#ProcessingAdjustTable QSpinBox,
-QTableWidget#ProcessingAdjustTable QDoubleSpinBox {
-    background: #ffffff;
-    border: 1px solid #cfd9e4;
-    border-radius: 8px;
-}
-
-QTableWidget#ProcessingAdjustTable QSpinBox,
-QTableWidget#ProcessingAdjustTable QDoubleSpinBox {
-    min-height: 22px;
-    max-height: 22px;
-}
-
 QCheckBox#ProcessingParamCheckBox {
     padding-left: 3px;
-}
-
-QTableWidget#ProcessingParamTable QLineEdit,
-QTableWidget#ProcessingAdjustTable QLineEdit {
-    padding: 0 4px;
-}
-
-QTableWidget#ProcessingParamTable QComboBox,
-QTableWidget#ProcessingParamTable QAbstractSpinBox,
-QTableWidget#ProcessingAdjustTable QComboBox,
-QTableWidget#ProcessingAdjustTable QSpinBox,
-QTableWidget#ProcessingAdjustTable QDoubleSpinBox {
-    padding-top: 0;
-    padding-bottom: 0;
-    padding-left: 4px;
-    padding-right: 4px;
-}
-
-QTableWidget#ProcessingParamTable QLineEdit:hover,
-QTableWidget#ProcessingParamTable QComboBox:hover,
-QTableWidget#ProcessingParamTable QAbstractSpinBox:hover,
-QTableWidget#ProcessingAdjustTable QLineEdit:hover,
-QTableWidget#ProcessingAdjustTable QComboBox:hover,
-QTableWidget#ProcessingAdjustTable QSpinBox:hover,
-QTableWidget#ProcessingAdjustTable QDoubleSpinBox:hover {
-    border-color: #cfd9e4;
-    background-color: #ffffff;
-}
-
-QTableWidget#ProcessingParamTable QLineEdit:focus,
-QTableWidget#ProcessingParamTable QComboBox:focus,
-QTableWidget#ProcessingParamTable QAbstractSpinBox:focus,
-QTableWidget#ProcessingAdjustTable QLineEdit:focus,
-QTableWidget#ProcessingAdjustTable QComboBox:focus,
-QTableWidget#ProcessingAdjustTable QSpinBox:focus,
-QTableWidget#ProcessingAdjustTable QDoubleSpinBox:focus {
-    border-color: #8badc7;
-    background-color: #ffffff;
-}
-
-QTableWidget#ProcessingParamTable QComboBox:on,
-QTableWidget#ProcessingAdjustTable QComboBox:on {
-    border-color: #8badc7;
-    background-color: #ffffff;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    border-bottom: none;
-}
-
-QCheckBox#ParamRowSelectCheck {
-    min-width: 24px;
-    max-width: 24px;
-    width: 24px;
-    spacing: 0px;
-    padding: 0px;
-    margin: 0px;
-    background: transparent;
-}
-
-QCheckBox#ParamRowSelectCheck::indicator {
-    width: 22px;
-    height: 22px;
-    border-radius: 8px;
 }
 
 /* QCodeEditor Line Number Gutter */
@@ -419,5 +298,3 @@ QToolBar#ProcessingToolBar {
     spacing: 4px;
     padding: 0px;
 }
-
-
