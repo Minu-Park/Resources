@@ -82,12 +82,78 @@ QToolButton#ProcessingEnableToggle[active="true"]:hover {
     border-color: #b7c7d8;
 }
 
+QWidget#ProcessingEditorContainer {
+    background: transparent;
+}
+
+QWidget#ProcessingTabBar {
+    background-color: #f1f5f9;
+    border: 1px solid #cfd9e4;
+    border-bottom: none;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    min-height: 28px;
+    max-height: 28px;
+}
+
+QLabel#ProcessingFileNameLabel {
+    background-color: #ffffff;
+    color: #1e293b;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border: 1px solid #cfd9e4;
+    border-bottom: none;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 0px 16px;
+    margin-top: 4px;
+    margin-bottom: 0px;
+    height: 24px;
+    qproperty-alignment: AlignCenter;
+}
+
+QToolButton#ProcessingTabLoadBtn,
+QToolButton#ProcessingTabSaveBtn {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px;
+    border: none;
+    background: transparent;
+    padding: 1px;
+    margin-top: 4px;
+}
+
+QToolButton#ProcessingTabLoadBtn:hover,
+QToolButton#ProcessingTabSaveBtn:hover {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+}
+
+QToolButton#ProcessingTabLoadBtn:pressed,
+QToolButton#ProcessingTabSaveBtn:pressed {
+    background-color: #94a3b8;
+}
+
+QToolButton#ProcessingTabSaveBtn:disabled {
+    opacity: 0.4;
+}
+
 QPlainTextEdit#ProcessingCodeEditor {
     background-color: #ffffff;
     color: #1e293b;
     border: 1px solid #cfd9e4;
-    border-radius: 8px;
-    padding: 6px;
+    border-top: 1px solid #cfd9e4;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 0px;
+    padding-right: 4px;
     font-family: "JetBrains Mono", monospace;
 }
 
@@ -345,3 +411,13 @@ QTableWidget#ProcessingBuildLogTable::item:selected {
     background-color: #f1f5f9;
     color: #0f172a;
 }
+
+/* Processing ToolBar */
+QToolBar#ProcessingToolBar {
+    background: transparent;
+    border: none;
+    spacing: 4px;
+    padding: 0px;
+}
+
+
