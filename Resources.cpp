@@ -10,6 +10,7 @@
 #include <QMenu>
 #include <QFrame>
 #include <QLayout>
+#include <QGridLayout>
 #include <QComboBox>
 #include <QAbstractItemView>
 #include <QStatusBar>
@@ -179,6 +180,19 @@ private:
         else if (name == QLatin1String("DeviceTreePanelLayout")) {
             setLayoutMetrics(layout, QMargins(12, 0, 12, 12), 8);
         }
+        else if (name == QLatin1String("ProcessingRootLayout")) {
+            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 8);
+        }
+        else if (name == QLatin1String("ProcessingInteractiveGroupLayout")) {
+            setLayoutMetrics(layout, QMargins(12, 14, 12, 12), 8);
+        }
+        else if (name == QLatin1String("ProcessingInteractiveGridLayout")) {
+            if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
+                setGridLayoutMetrics(grid, QMargins(0, 0, 0, 0), 12, 8);
+            } else {
+                setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
+            }
+        }
 
         for (int i = 0; i < layout->count(); ++i) {
             if (QLayoutItem* item = layout->itemAt(i)) {
@@ -194,6 +208,19 @@ private:
         }
         if (layout->spacing() != spacing) {
             layout->setSpacing(spacing);
+        }
+    }
+
+    static void setGridLayoutMetrics(QGridLayout* layout, const QMargins& margins, int horizontalSpacing, int verticalSpacing)
+    {
+        if (layout->contentsMargins() != margins) {
+            layout->setContentsMargins(margins);
+        }
+        if (layout->horizontalSpacing() != horizontalSpacing) {
+            layout->setHorizontalSpacing(horizontalSpacing);
+        }
+        if (layout->verticalSpacing() != verticalSpacing) {
+            layout->setVerticalSpacing(verticalSpacing);
         }
     }
 
