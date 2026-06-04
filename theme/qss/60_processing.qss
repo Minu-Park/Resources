@@ -82,7 +82,7 @@ QToolButton#ProcessingEnableToggle[active="true"]:hover {
     border-color: #b7c7d8;
 }
 
-QTextEdit#ProcessingCodeEditor {
+QPlainTextEdit#ProcessingCodeEditor {
     background-color: #ffffff;
     color: #1e293b;
     border: 1px solid #cfd9e4;
@@ -278,4 +278,70 @@ QCheckBox#ParamRowSelectCheck::indicator {
     width: 22px;
     height: 22px;
     border-radius: 8px;
+}
+
+/* QCodeEditor Line Number Gutter */
+QWidget#ProcessingLineNumberArea {
+    background-color: transparent;
+}
+
+/* Build Log Splitter */
+QSplitter#ProcessingEditorSplitter::handle {
+    background-color: #e2e8f0;
+    height: 2px;
+}
+
+/* Build Log Panel Container */
+QWidget#ProcessingBuildLogContainer {
+    background-color: #ffffff;
+    border-top: 1px solid #cfd9e4;
+}
+
+/* Build Log Header */
+QWidget#ProcessingBuildLogHeader {
+    background-color: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+    min-height: 28px;
+    max-height: 28px;
+}
+
+QLabel#ProcessingBuildLogTitle {
+    font-weight: bold;
+    color: #475569;
+    font-size: 11px;
+    padding-left: 8px;
+}
+
+QToolButton#ProcessingBuildLogClose {
+    border: none;
+    background: transparent;
+    padding: 2px;
+    border-radius: 4px;
+    margin-right: 4px;
+}
+
+QToolButton#ProcessingBuildLogClose:hover {
+    background-color: #cbd5e1;
+}
+
+QToolButton#ProcessingBuildLogClose:pressed {
+    background-color: #94a3b8;
+}
+
+/* Build Log Table */
+QTableWidget#ProcessingBuildLogTable {
+    background-color: #ffffff;
+    border: none;
+    gridline-color: #edf2f7;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+}
+
+QTableWidget#ProcessingBuildLogTable::item {
+    padding: 4px 8px;
+}
+
+QTableWidget#ProcessingBuildLogTable::item:selected {
+    background-color: #f1f5f9;
+    color: #0f172a;
 }
