@@ -150,7 +150,7 @@ QPlainTextEdit#ProcessingCodeEditor {
     padding-bottom: 4px;
     padding-left: 0px;
     padding-right: 4px;
-    font-family: "JetBrains Mono", monospace;
+    font-family: "JetBrains Mono";
 }
 
 QLabel#ProcessingParamEditorTitle {
@@ -165,7 +165,7 @@ QTextEdit#ProcessingParamEditor {
     border: 1px solid #cfd9e4;
     border-radius: 8px;
     padding: 4px;
-    font-family: "JetBrains Mono", monospace;
+    font-family: "JetBrains Mono";
     font-size: 11px;
 }
 
@@ -235,57 +235,79 @@ QSplitter#ProcessingEditorSplitter::handle {
 
 /* Build Log Panel Container */
 QWidget#ProcessingBuildLogContainer {
-    background-color: #ffffff;
-    border-top: 1px solid #cfd9e4;
+    background: transparent;
+    border: none;
 }
 
 /* Build Log Header */
 QWidget#ProcessingBuildLogHeader {
     background-color: #f1f5f9;
-    border-bottom: 1px solid #e2e8f0;
-    min-height: 28px;
-    max-height: 28px;
+    border: 1px solid #cfd9e4;
+    border-bottom: none;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    min-height: 32px;
+    max-height: 32px;
 }
 
 QLabel#ProcessingBuildLogTitle {
     font-weight: bold;
     color: #475569;
     font-size: 11px;
+    background: transparent;
+    border: none;
     padding-left: 8px;
+}
+
+QToolButton#ProcessingBuildLogClear {
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 4px;
+}
+
+QToolButton#ProcessingBuildLogClear:hover {
+    color: #0f172a;
+}
+
+QToolButton#ProcessingBuildLogClear:pressed {
+    color: #475569;
 }
 
 QToolButton#ProcessingBuildLogClose {
     border: none;
     background: transparent;
+    color: #64748b;
     padding: 2px;
     border-radius: 4px;
-    margin-right: 4px;
+    margin-right: 8px;
 }
 
 QToolButton#ProcessingBuildLogClose:hover {
-    background-color: #cbd5e1;
+    color: #0f172a;
 }
 
 QToolButton#ProcessingBuildLogClose:pressed {
-    background-color: #94a3b8;
+    color: #475569;
 }
 
-/* Build Log Table */
-QTableWidget#ProcessingBuildLogTable {
+/* Processing Console Log */
+QPlainTextEdit#ProcessingConsoleLog {
     background-color: #ffffff;
-    border: none;
-    gridline-color: #edf2f7;
-    font-family: "JetBrains Mono", monospace;
+    color: #1e293b;
+    border: 1px solid #cfd9e4;
+    border-top: 1px solid #cfd9e4;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    padding: 8px;
+    font-family: "JetBrains Mono";
     font-size: 11px;
-}
-
-QTableWidget#ProcessingBuildLogTable::item {
-    padding: 4px 8px;
-}
-
-QTableWidget#ProcessingBuildLogTable::item:selected {
-    background-color: #f1f5f9;
-    color: #0f172a;
 }
 
 /* Processing ToolBar */
