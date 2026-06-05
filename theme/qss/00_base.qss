@@ -2,7 +2,7 @@
 
 * {
     color: #16202b;
-    font-family: "Inter", "Segoe UI", "SF Pro Text", "Noto Sans", sans-serif;
+    font-family: "Inter";
     font-size: 12px;
     outline: none;
 }
@@ -248,7 +248,7 @@ QTextEdit {
 
 QPlainTextEdit,
 QTextEdit {
-    font-family: "JetBrains Mono", "Courier New", Courier, monospace;
+    font-family: "JetBrains Mono";
 }
 
 QComboBox,
