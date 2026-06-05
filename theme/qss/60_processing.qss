@@ -1,6 +1,35 @@
 /* theme/qss/60_processing.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
 
 /* Runtime path dialog */
+QListWidget#RuntimePathsListWidget {
+    border: 1px solid #cfd9e4;
+    border-radius: 8px;
+    padding: 4px;
+    background-color: #ffffff;
+    outline: none;
+    qproperty-iconSize: 8px 8px;
+}
+
+
+
+QListWidget#RuntimePathsListWidget::item {
+    padding: 6px 8px;
+    border-radius: 4px;
+    color: #334155;
+    margin-bottom: 2px;
+}
+
+QListWidget#RuntimePathsListWidget::item:hover {
+    background-color: #f8fafc;
+    color: #0f172a;
+}
+
+QListWidget#RuntimePathsListWidget::item:selected {
+    background-color: #e2e8f0;
+    color: #0f172a;
+    font-weight: 600;
+}
+
 QLabel#RuntimePathsDescription {
     color: #425467;
 }
@@ -16,23 +45,20 @@ QLabel#RuntimePathsStatusLabel[state="warning"] {
 }
 
 QLabel#RuntimePathsStatusBadge {
-    border-radius: 6px;
-    padding: 6px 12px;
+    background: transparent;
+    border: none;
+    padding: 0;
     font-weight: bold;
     font-size: 11px;
-    qproperty-alignment: AlignCenter;
+    qproperty-alignment: AlignLeft;
 }
 
 QLabel#RuntimePathsStatusBadge[state="ok"] {
-    background-color: #ecfdf5;
-    border: 1px solid #10b981;
-    color: #047857;
+    color: #10b981;
 }
 
 QLabel#RuntimePathsStatusBadge[state="nok"] {
-    background-color: #fef2f2;
-    border: 1px solid #f87171;
-    color: #b91c1c;
+    color: #ef4444;
 }
 
 QLabel#RuntimePathsLabel {
@@ -49,19 +75,6 @@ QPushButton#RuntimePathsBrowseButton {
     max-width: 75px;
 }
 
-QPushButton#RuntimePathsApplyButton {
-    background-color: #00457C;
-    color: #ffffff;
-    border: 1px solid #00335e;
-}
-
-QPushButton#RuntimePathsApplyButton:hover {
-    background-color: #005a9e;
-}
-
-QPushButton#RuntimePathsApplyButton:pressed {
-    background-color: #00335e;
-}
 
 
 /* OpenCV processing panel */
@@ -142,8 +155,9 @@ QPlainTextEdit#ProcessingCodeEditor {
     color: #1e293b;
     border: 1px solid #cfd9e4;
     border-top: 1px solid #cfd9e4;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border-bottom: none;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
     padding-top: 4px;
@@ -229,8 +243,12 @@ QWidget#ProcessingLineNumberArea {
 
 /* Build Log Splitter */
 QSplitter#ProcessingEditorSplitter::handle {
-    background-color: #e2e8f0;
+    background-color: transparent;
     height: 2px;
+}
+
+QSplitter#ProcessingEditorSplitter::handle:hover {
+    background-color: transparent;
 }
 
 /* Build Log Panel Container */
@@ -316,4 +334,79 @@ QToolBar#ProcessingToolBar {
     border: none;
     spacing: 4px;
     padding: 0px;
+}
+
+QToolButton#ProcessingCompileButton {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    border-radius: 9px;
+    padding: 0 7px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    color: #425467;
+}
+
+QToolButton#ProcessingCompileButton:hover {
+    background: #eef3f8;
+    border-color: #c7d4e2;
+    color: #26384a;
+}
+
+QToolButton#ProcessingCompileButton:pressed {
+    background: #e7eef6;
+    border-color: #bccbda;
+}
+
+QToolButton#ProcessingCompileButton:disabled {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    color: #94a3b8;
+}
+
+/* Editor StatusBar */
+QFrame#EditorStatusBar {
+    background-color: transparent;
+    border: 1px solid #cfd9e4;
+    border-top: 1px solid #cfd9e4;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    min-height: 22px;
+    max-height: 22px;
+}
+
+QFrame#EditorStatusBar QLabel {
+    color: #475569;
+    font-family: "JetBrains Mono", "Inter";
+    font-size: 10px;
+    font-weight: 500;
+}
+
+/* Save State Styles */
+QFrame#EditorStatusBar QLabel#EditorStatusSaveStatus[saveState="modified"] {
+    color: #b45309; /* warm orange/amber */
+    font-weight: 600;
+}
+
+QFrame#EditorStatusBar QLabel#EditorStatusSaveStatus[saveState="saved"] {
+    color: #10b981; /* green */
+}
+
+/* Clangd State Styles */
+QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="ready"] {
+    color: #10b981; /* green (connected) */
+    font-weight: 600;
+}
+
+QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="starting"] {
+    color: #3b82f6; /* blue (initial/starting) */
+}
+
+QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="error"] {
+    color: #ef4444; /* red (error) */
+    font-weight: 600;
+}
+
+QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="offline"] {
+    color: #ef4444; /* red (offline) */
 }

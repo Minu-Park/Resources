@@ -196,6 +196,28 @@ private:
                 setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
             }
         }
+        else if (name == QLatin1String("RuntimePathsBodyLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 16);
+        }
+        else if (name == QLatin1String("RuntimePathsLeftPanelLayout")) {
+            setLayoutMetrics(layout, QMargins(8, 12, 8, 8), 8);
+        }
+        else if (name == QLatin1String("RuntimePathsListButtonsLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
+        }
+        else if (name == QLatin1String("RuntimePathsFormLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
+        }
+        else if (name == QLatin1String("RuntimePathsFormGridLayout")) {
+            if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
+                setGridLayoutMetrics(grid, QMargins(8, 12, 8, 8), 8, 8);
+            } else {
+                setLayoutMetrics(layout, QMargins(8, 12, 8, 8), 8);
+            }
+        }
+        else if (name == QLatin1String("RuntimePathsBottomLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
+        }
 
         for (int i = 0; i < layout->count(); ++i) {
             if (QLayoutItem* item = layout->itemAt(i)) {

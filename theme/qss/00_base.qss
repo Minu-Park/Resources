@@ -100,9 +100,7 @@ QGroupBox QLineEdit,
 QGroupBox QComboBox,
 QGroupBox QAbstractSpinBox,
 QGroupBox QCheckBox,
-QGroupBox QRadioButton,
-QGroupBox QPushButton,
-QGroupBox QToolButton {
+QGroupBox QRadioButton {
     font-weight: 400;
 }
 
