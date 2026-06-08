@@ -251,14 +251,14 @@ QSplitter#ProcessingEditorSplitter::handle:hover {
     background-color: transparent;
 }
 
-/* Build Log Panel Container */
-QWidget#ProcessingBuildLogContainer {
+/* Compiler Console Panel Container */
+QWidget#ProcessingConsoleContainer {
     background: transparent;
     border: none;
 }
 
-/* Build Log Header */
-QWidget#ProcessingBuildLogHeader {
+/* Compiler Console Header */
+QWidget#ProcessingConsoleHeader {
     background-color: #f1f5f9;
     border: 1px solid #cfd9e4;
     border-bottom: none;
@@ -268,7 +268,7 @@ QWidget#ProcessingBuildLogHeader {
     max-height: 32px;
 }
 
-QLabel#ProcessingBuildLogTitle {
+QLabel#ProcessingConsoleTitle {
     font-weight: bold;
     color: #475569;
     font-size: 11px;
@@ -277,7 +277,7 @@ QLabel#ProcessingBuildLogTitle {
     padding-left: 8px;
 }
 
-QToolButton#ProcessingBuildLogClear {
+QToolButton#ProcessingConsoleClear {
     border: none;
     background: transparent;
     color: #64748b;
@@ -288,15 +288,15 @@ QToolButton#ProcessingBuildLogClear {
     margin-right: 4px;
 }
 
-QToolButton#ProcessingBuildLogClear:hover {
+QToolButton#ProcessingConsoleClear:hover {
     color: #0f172a;
 }
 
-QToolButton#ProcessingBuildLogClear:pressed {
+QToolButton#ProcessingConsoleClear:pressed {
     color: #475569;
 }
 
-QToolButton#ProcessingBuildLogClose {
+QToolButton#ProcessingConsoleClose {
     border: none;
     background: transparent;
     color: #64748b;
@@ -305,11 +305,11 @@ QToolButton#ProcessingBuildLogClose {
     margin-right: 8px;
 }
 
-QToolButton#ProcessingBuildLogClose:hover {
+QToolButton#ProcessingConsoleClose:hover {
     color: #0f172a;
 }
 
-QToolButton#ProcessingBuildLogClose:pressed {
+QToolButton#ProcessingConsoleClose:pressed {
     color: #475569;
 }
 
@@ -366,7 +366,7 @@ QToolButton#ProcessingCompileButton:disabled {
 
 /* Editor StatusBar */
 QFrame#EditorStatusBar {
-    background-color: transparent;
+    background-color: #ffffff;
     border: 1px solid #cfd9e4;
     border-top: 1px solid #cfd9e4;
     border-bottom-left-radius: 8px;
