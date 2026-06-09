@@ -561,9 +561,9 @@ QScrollBar#ImageViewOverlayScrollBar::sub-page {
 }
 
 QMenu {
-    border: 1px solid #d9e1ea;
+    border: none;
     border-radius: 8px;
-    background-color: #ffffff;
+    background-color: transparent;
     padding: 2px;
 }
 

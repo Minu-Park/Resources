@@ -21,7 +21,10 @@
 #include <QEvent>
 #include <QDebug>
 #include <QPainter>
+#include <QPainterPath>
 #include <QPen>
+#include <QBitmap>
+#include <QRegion>
 
 // Global-scope helper to execute Q_INIT_RESOURCE, which relies on global symbols.
 // This ensures the resource system registers the compiled .qrc binary data.
@@ -61,31 +64,43 @@ protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
         if (event->type() == QEvent::Paint) {
-            if (obj->objectName() == QLatin1String("AutoCompletePopup")) {
-                if (auto* widget = qobject_cast<QWidget*>(obj)) {
-                    QPainter painter(widget);
-                    painter.setRenderHint(QPainter::Antialiasing);
-                    painter.setBrush(Qt::white);
-                    painter.setPen(QPen(QColor(0xcf, 0xd9, 0xe4), 1));
-                    QRectF rect = widget->rect();
-                    rect.adjust(0.5, 0.5, -0.5, -0.5);
-                    painter.drawRoundedRect(rect, 8.0, 8.0);
+            if (auto* menu = qobject_cast<QMenu*>(obj)) {
+                paintPopupRoundedRect(menu, true);
+            }
+            else if (auto* widget = qobject_cast<QWidget*>(obj)) {
+                if (widget->objectName() == QLatin1String("AutoCompletePopup")) {
+                    paintPopupRoundedRect(widget, true);
+                } else if (widget->property("_popupStyled").toBool()) {
+                    paintPopupRoundedRect(widget, false);
+                }
+            }
+        }
+
+        if (event->type() == QEvent::Show || event->type() == QEvent::Resize) {
+            if (auto* menu = qobject_cast<QMenu*>(obj)) {
+                applyPopupMask(menu, true);
+            }
+            else if (auto* widget = qobject_cast<QWidget*>(obj)) {
+                if (widget->objectName() == QLatin1String("AutoCompletePopup")) {
+                    applyPopupMask(widget, true);
+                } else if (widget->property("_popupStyled").toBool()) {
+                    applyPopupMask(widget, false);
                 }
             }
         }
 
         if (event->type() == QEvent::Polish) {
             if (auto* menu = qobject_cast<QMenu*>(obj)) {
+                // Window flags first (single call to avoid multiple native window recreations),
+                // then translucent attribute last so it applies to the final native window.
+                menu->setWindowFlags(menu->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
                 menu->setAttribute(Qt::WA_TranslucentBackground, true);
-                menu->setWindowFlag(Qt::FramelessWindowHint, true);
-                menu->setWindowFlag(Qt::NoDropShadowWindowHint, true);
             }
             else if (auto* combo = qobject_cast<QComboBox*>(obj)) {
                 if (auto* view = combo->view()) {
                     if (auto* popup = view->parentWidget()) {
+                        popup->setWindowFlags(popup->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
                         popup->setAttribute(Qt::WA_TranslucentBackground, true);
-                        popup->setWindowFlag(Qt::FramelessWindowHint, true);
-                        popup->setWindowFlag(Qt::NoDropShadowWindowHint, true);
                         if (auto* frame = qobject_cast<QFrame*>(popup)) {
                             frame->setFrameShape(QFrame::NoFrame);
                         }
@@ -101,9 +116,8 @@ protected:
                 if (widget->inherits("QComboBoxPrivateContainer") || 
                     (widget->windowFlags() & Qt::Popup && widget->parent() && widget->parent()->inherits("QComboBox")) ||
                     widget->objectName() == QLatin1String("AutoCompletePopup")) {
+                    widget->setWindowFlags(widget->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
                     widget->setAttribute(Qt::WA_TranslucentBackground, true);
-                    widget->setWindowFlag(Qt::FramelessWindowHint, true);
-                    widget->setWindowFlag(Qt::NoDropShadowWindowHint, true);
                     if (auto* frame = qobject_cast<QFrame*>(widget)) {
                         frame->setFrameShape(QFrame::NoFrame);
                     }
@@ -277,6 +291,100 @@ private:
         }
 
         return geo;
+    }
+
+    static void paintPopupRoundedRect(QWidget* widget, bool allRounded)
+    {
+        const int w = widget->width();
+        const int h = widget->height();
+        QPainter painter(widget);
+
+        if (allRounded) {
+            painter.setRenderHint(QPainter::Antialiasing, false);
+            painter.setCompositionMode(QPainter::CompositionMode_Source);
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(QColor(QStringLiteral("#d9e1ea")));
+            painter.drawRoundedRect(QRectF(0.0, 0.0, w, h), 9.0, 9.0);
+
+            painter.setBrush(Qt::white);
+            painter.drawRoundedRect(QRectF(1.0, 1.0, w - 2.0, h - 2.0), 8.0, 8.0);
+
+            painter.setRenderHint(QPainter::Antialiasing, true);
+            painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+            painter.setPen(QPen(QColor(QStringLiteral("#d9e1ea")), 1.0));
+            painter.setBrush(Qt::NoBrush);
+            painter.drawRoundedRect(QRectF(0.5, 0.5, w - 1.0, h - 1.0), 8.0, 8.0);
+        } else {
+            // Bottom-only rounded: top edge is straight (connects flush to combo)
+            QPainterPath outerPath;
+            outerPath.moveTo(0, 0);
+            outerPath.lineTo(w, 0);
+            outerPath.lineTo(w, h - 9.0);
+            outerPath.arcTo(QRectF(w - 18.0, h - 18.0, 18.0, 18.0), 0, -90);
+            outerPath.lineTo(9.0, h);
+            outerPath.arcTo(QRectF(0, h - 18.0, 18.0, 18.0), -90, -90);
+            outerPath.lineTo(0, 0);
+
+            QPainterPath innerPath;
+            innerPath.moveTo(1, 0);
+            innerPath.lineTo(w - 1.0, 0);
+            innerPath.lineTo(w - 1.0, h - 9.0);
+            innerPath.arcTo(QRectF(w - 17.0, h - 17.0, 16.0, 16.0), 0, -90);
+            innerPath.lineTo(9.0, h - 1.0);
+            innerPath.arcTo(QRectF(1.0, h - 17.0, 16.0, 16.0), -90, -90);
+            innerPath.lineTo(1, 0);
+
+            painter.setRenderHint(QPainter::Antialiasing, false);
+            painter.setCompositionMode(QPainter::CompositionMode_Source);
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(QColor(QStringLiteral("#d9e1ea")));
+            painter.drawPath(outerPath);
+
+            painter.setBrush(Qt::white);
+            painter.drawPath(innerPath);
+
+            painter.setRenderHint(QPainter::Antialiasing, true);
+            painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+            painter.setPen(QPen(QColor(QStringLiteral("#d9e1ea")), 1.0));
+            painter.setBrush(Qt::NoBrush);
+            QPainterPath borderPath;
+            borderPath.moveTo(0.5, 0);
+            borderPath.lineTo(w - 0.5, 0);
+            borderPath.lineTo(w - 0.5, h - 8.5);
+            borderPath.arcTo(QRectF(w - 16.5, h - 16.5, 16.0, 16.0), 0, -90);
+            borderPath.lineTo(8.5, h - 0.5);
+            borderPath.arcTo(QRectF(0.5, h - 16.5, 16.0, 16.0), -90, -90);
+            borderPath.lineTo(0.5, 0);
+            painter.drawPath(borderPath);
+        }
+    }
+
+    static void applyPopupMask(QWidget* widget, bool allRounded)
+    {
+        QBitmap bmp(widget->size());
+        bmp.fill(Qt::color0);
+        QPainter painter(&bmp);
+        painter.setRenderHint(QPainter::Antialiasing, false);
+        painter.setBrush(Qt::color1);
+        painter.setPen(Qt::NoPen);
+
+        if (allRounded) {
+            painter.drawRoundedRect(widget->rect(), 9.0, 9.0);
+        } else {
+            const int w = widget->width();
+            const int h = widget->height();
+            QPainterPath path;
+            path.moveTo(0, 0);
+            path.lineTo(w, 0);
+            path.lineTo(w, h - 9.0);
+            path.arcTo(QRectF(w - 18.0, h - 18.0, 18.0, 18.0), 0, -90);
+            path.lineTo(9.0, h);
+            path.arcTo(QRectF(0, h - 18.0, 18.0, 18.0), -90, -90);
+            path.lineTo(0, 0);
+            painter.drawPath(path);
+        }
+
+        widget->setMask(QRegion(bmp));
     }
 
     static void applyDockRubberBandStyle(QRubberBand* rubberBand)
