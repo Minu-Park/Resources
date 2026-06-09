@@ -11,12 +11,28 @@ QMdiSubWindow {
     margin: 0px;
 }
 
+QMainWindow#MainWindow {
+    background-color: #ffffff;
+    border: 1px solid #d9e1ea;
+    border-radius: 12px;
+}
+
+QMainWindow#MainWindow[maximized="true"] {
+    border: none;
+    border-radius: 0px;
+}
+
 /* Main Window Title Bar Styles */
 QWidget#MainTitleBar {
     background-color: #ffffff;
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
     border-bottom: 1px solid #d9e1ea;
+}
+
+QWidget#MainTitleBar[maximized="true"] {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
 }
 
 QWidget#MainTitleBar QMenuBar {

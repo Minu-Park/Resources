@@ -156,10 +156,12 @@ ThemedDialog::ThemedDialog(const QString& title, QWidget* parent)
 
     auto* container = new QWidget(this);
     container->setObjectName(QStringLiteral("ThemedDialogContainer"));
+    container->setAttribute(Qt::WA_StyledBackground, true);
+    container->setAutoFillBackground(true);
     mainLayout->addWidget(container);
 
     auto* rootLayout = new QVBoxLayout(container);
-    rootLayout->setContentsMargins(0, 0, 0, 0);
+    rootLayout->setContentsMargins(1, 1, 1, 1);
     rootLayout->setSpacing(0);
 
     _titleBar = new TitleBar(this, title);
