@@ -1,7 +1,7 @@
 /* theme/qss/20_statusbar.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
 
 QStatusBar {
-    background: #ffffff;
+    background: transparent;
     border-top: 1px solid #d9e1ea;
     border-bottom: none;
     color: #3d5063;
@@ -14,6 +14,7 @@ QStatusBar {
 }
 
 QStatusBar[maximized="true"] {
+    background: #ffffff;
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
 }
