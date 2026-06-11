@@ -152,7 +152,7 @@ QComboBox#ProcessingScriptComboBox {
 
 QPlainTextEdit#ProcessingCodeEditor {
     background-color: #ffffff;
-    color: #1e293b;
+    color: #334155;
     border: 1px solid #cfd9e4;
     border-top: 1px solid #cfd9e4;
     border-bottom: none;
