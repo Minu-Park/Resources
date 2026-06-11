@@ -92,6 +92,10 @@ QWidget#MdiSubWindowContainer {
     border-radius: 12px;
 }
 
+QWidget#MdiSubWindowContainer[maximized="true"] {
+    border-radius: 0px;
+}
+
 /* Host Themed Dialog Shell */
 QWidget#ThemedDialogContainer {
     background-color: #ffffff;
@@ -139,6 +143,11 @@ QWidget#CustomTitleBar {
     border-bottom: 1px solid #d9e1ea;
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
+}
+
+QWidget#CustomTitleBar[maximized="true"] {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
 }
 
 QLabel#CustomTitleBarLabel {
