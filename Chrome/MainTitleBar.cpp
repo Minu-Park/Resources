@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QMouseEvent>
+#include <QMetaObject>
 #include <QPixmap>
 #include <QStyle>
 #include <QStyleOption>
@@ -85,8 +86,10 @@ MainTitleBar::MainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* 
     connect(_minButton, &QPushButton::clicked, _mainWindow, &QWidget::showMinimized);
     connect(_maxButton, &QPushButton::clicked, [this]() {
         if (_mainWindow->isMaximized()) {
+            QMetaObject::invokeMethod(_mainWindow, "prepareForRestoreTransition", Qt::DirectConnection);
             _mainWindow->showNormal();
         } else {
+            QMetaObject::invokeMethod(_mainWindow, "prepareForMaximizeTransition", Qt::DirectConnection);
             _mainWindow->showMaximized();
         }
         updateMaximizeIcon();
@@ -150,8 +153,10 @@ void MainTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         if (_mainWindow->isMaximized()) {
+            QMetaObject::invokeMethod(_mainWindow, "prepareForRestoreTransition", Qt::DirectConnection);
             _mainWindow->showNormal();
         } else {
+            QMetaObject::invokeMethod(_mainWindow, "prepareForMaximizeTransition", Qt::DirectConnection);
             _mainWindow->showMaximized();
         }
         updateMaximizeIcon();

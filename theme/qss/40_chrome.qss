@@ -31,6 +31,8 @@ QWidget#MainTitleBar {
 
 QWidget#MainTitleBar[maximized="true"] {
     background-color: #ffffff;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
 }
 
 QWidget#MainTitleBar QMenuBar {
