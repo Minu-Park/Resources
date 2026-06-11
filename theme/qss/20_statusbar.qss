@@ -15,8 +15,6 @@ QStatusBar {
 
 QStatusBar[maximized="true"] {
     background: #ffffff;
-    border-bottom-left-radius: 0px;
-    border-bottom-right-radius: 0px;
 }
 
 QTextEdit#SystemLogViewer {
