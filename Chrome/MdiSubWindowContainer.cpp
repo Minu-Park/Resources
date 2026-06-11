@@ -246,9 +246,6 @@ void MdiSubWindowContainer::handleWindowStateChange()
     _titleBar->style()->unpolish(_titleBar);
     _titleBar->style()->polish(_titleBar);
 
-    if (maximized) {
-        _content->clearMask();
-    }
     update();
 }
 
@@ -260,7 +257,7 @@ void MdiSubWindowContainer::hideEvent(QHideEvent* event)
 void MdiSubWindowContainer::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    if (_content && !_subWin->isMaximized() && !_subWin->isMinimized()) {
+    if (_content && !_subWin->isMinimized()) {
         QBitmap bmp(_content->size());
         if (!bmp.isNull()) {
             bmp.clear();
