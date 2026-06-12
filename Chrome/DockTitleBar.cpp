@@ -36,7 +36,7 @@ DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     // System control buttons bundled in a tight layout
     auto* buttonLayout = new QHBoxLayout();
     buttonLayout->setContentsMargins(0, 0, 0, 0);
-    buttonLayout->setSpacing(6); // 6px spacing to perfectly align centers with MainTitleBar 18px buttons (which use 4px spacing)
+    buttonLayout->setSpacing(0);
 
     // Floating/Restore button
     _floatButton = new QPushButton(this);
@@ -65,11 +65,11 @@ DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     _closeButton->installEventFilter(this);
     _floatButton->installEventFilter(this);
 
-    _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
+    _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png"), QSize(16, 16)));
     _closeButton->setIconSize(QSize(16, 16));
 
     _floatButton->setIconSize(QSize(16, 16));
-    _floatButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
+    _floatButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png"), QSize(16, 16)));
 
     _dockWidget->installEventFilter(this);
     connect(_dockWidget, &QDockWidget::topLevelChanged, this, &DockTitleBar::applyFloatingChrome);
@@ -109,16 +109,16 @@ bool DockTitleBar::eventFilter(QObject* watched, QEvent* event)
     }
     else if (watched == _closeButton) {
         if (event->type() == QEvent::Enter) {
-            _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png")));
+            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png"), QSize(16, 16)));
         } else if (event->type() == QEvent::Leave) {
-            _closeButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png")));
+            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png"), QSize(16, 16)));
         }
     }
     else if (watched == _floatButton) {
         if (event->type() == QEvent::Enter) {
-            _floatButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png")));
+            _floatButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png"), QSize(16, 16)));
         } else if (event->type() == QEvent::Leave) {
-            _floatButton->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png")));
+            _floatButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png"), QSize(16, 16)));
         }
     }
     return QWidget::eventFilter(watched, event);
@@ -190,6 +190,28 @@ void DockTitleBar::updateFloatingMask()
     painter.drawRoundedRect(_dockWidget->rect(), 12, 12);
 
     _dockWidget->setMask(mask);
+}
+
+QIcon DockTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSize) const
+{
+    const QPixmap source(path);
+    if (source.isNull()) {
+        return QIcon();
+    }
+
+    const qreal dpr = devicePixelRatioF();
+    QPixmap target(logicalSize * dpr);
+    target.fill(Qt::transparent);
+
+    {
+        QPainter painter(&target);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+        painter.drawPixmap(target.rect(), source);
+    }
+
+    target.setDevicePixelRatio(dpr);
+    return QIcon(target);
 }
 
 QSize DockTitleBar::sizeHint() const

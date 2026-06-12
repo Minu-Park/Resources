@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QIcon>
 #include <QWidget>
 
 class QDockWidget;
@@ -26,6 +27,7 @@ private:
     void applyFloatingChrome(bool floating);
     void refreshFloatingChromeStyle();
     void updateFloatingMask();
+    QIcon createSmoothIcon(const QString& path, const QSize& logicalSize) const;
 
     QDockWidget* _dockWidget = nullptr;
     QLabel* _titleLabel = nullptr;
