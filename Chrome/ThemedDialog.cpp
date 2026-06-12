@@ -122,18 +122,24 @@ private:
 
     QIcon createSmoothIcon(const QString& path, const QSize& logicalSize) const
     {
-        QPixmap pixmap(path);
-        if (pixmap.isNull()) {
+        const QPixmap source(path);
+        if (source.isNull()) {
             return QIcon();
         }
-        const double dpr = devicePixelRatio();
-        QPixmap scaledPixmap = pixmap.scaled(
-            logicalSize * dpr,
-            Qt::KeepAspectRatio,
-            Qt::SmoothTransformation
-        );
-        scaledPixmap.setDevicePixelRatio(dpr);
-        return QIcon(scaledPixmap);
+
+        const qreal dpr = devicePixelRatioF();
+        QPixmap target(logicalSize * dpr);
+        target.fill(Qt::transparent);
+
+        {
+            QPainter painter(&target);
+            painter.setRenderHint(QPainter::Antialiasing, true);
+            painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+            painter.drawPixmap(target.rect(), source);
+        }
+
+        target.setDevicePixelRatio(dpr);
+        return QIcon(target);
     }
 
     ThemedDialog* _dialog = nullptr;

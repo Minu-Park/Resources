@@ -43,7 +43,7 @@ CustomTitleBar::CustomTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWid
     // System control buttons bundled in a tight layout
     auto* buttonLayout = new QHBoxLayout();
     buttonLayout->setContentsMargins(0, 0, 0, 0);
-    buttonLayout->setSpacing(6);
+    buttonLayout->setSpacing(0);
 
     _minButton = new QPushButton(this);
     _minButton->setObjectName(QStringLiteral("TitleMinButton"));
@@ -207,18 +207,24 @@ void CustomTitleBar::paintEvent(QPaintEvent* event)
 
 QIcon CustomTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSize) const
 {
-    QPixmap pixmap(path);
-    if (pixmap.isNull()) {
+    const QPixmap source(path);
+    if (source.isNull()) {
         return QIcon();
     }
-    const double dpr = this->devicePixelRatio();
-    QPixmap scaledPixmap = pixmap.scaled(
-        logicalSize * dpr,
-        Qt::KeepAspectRatio,
-        Qt::SmoothTransformation
-    );
-    scaledPixmap.setDevicePixelRatio(dpr);
-    return QIcon(scaledPixmap);
+
+    const qreal dpr = devicePixelRatioF();
+    QPixmap target(logicalSize * dpr);
+    target.fill(Qt::transparent);
+
+    {
+        QPainter painter(&target);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+        painter.drawPixmap(target.rect(), source);
+    }
+
+    target.setDevicePixelRatio(dpr);
+    return QIcon(target);
 }
 
 void CustomTitleBar::updateState(bool isMinimized)
