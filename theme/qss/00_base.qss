@@ -568,7 +568,7 @@ QMenu {
 }
 
 QMenu::item {
-    padding: 3px 8px 3px 8px;
+    padding: 3px 8px 3px 12px;
     margin: 1px 4px;
     border-radius: 4px;
 }
@@ -585,7 +585,7 @@ QMenu::item:selected {
 QMenu::indicator {
     width: 16px;
     height: 16px;
-    left: 0px;
+    left: 6px;
 }
 
 QMenu::indicator:checked {
