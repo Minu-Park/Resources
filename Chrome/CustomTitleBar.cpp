@@ -20,11 +20,21 @@ CustomTitleBar::CustomTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWid
     setCursor(Qt::ArrowCursor);
 
     auto* layout = new QHBoxLayout(this);
-    layout->setContentsMargins(14, 0, 12, 0);
+    layout->setContentsMargins(11, 0, 12, 0);
     layout->setSpacing(6);
     layout->setAlignment(Qt::AlignVCenter);
 
-    // Title label is added to the layout directly
+    // Title label and icon are added to the layout directly
+    if (!_subWindow->windowIcon().isNull()) {
+        auto* iconLabel = new QLabel(this);
+        iconLabel->setObjectName(QStringLiteral("CustomTitleBarIconLabel"));
+        iconLabel->setPixmap(_subWindow->windowIcon().pixmap(18, 18));
+        iconLabel->setFixedSize(18, 18);
+        iconLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
+        layout->addWidget(iconLabel, 0, Qt::AlignVCenter);
+        layout->addSpacing(6);
+    }
+
     _titleLabel = new QLabel(_subWindow->windowTitle(), this);
     _titleLabel->setObjectName(QStringLiteral("CustomTitleBarLabel"));
     _titleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);

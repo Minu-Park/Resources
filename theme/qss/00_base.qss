@@ -573,6 +573,10 @@ QMenu::item {
     border-radius: 4px;
 }
 
+QMenu::icon {
+    padding-left: 6px;
+}
+
 QMenu::item:selected {
     background-color: #efefef;
     color: #16202b;
