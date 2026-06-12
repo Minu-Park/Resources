@@ -184,10 +184,10 @@ void DockTitleBar::updateFloatingMask()
     mask.fill(Qt::color0);
 
     QPainter painter(&mask);
-    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setBrush(Qt::color1);
     painter.setPen(Qt::NoPen);
-    painter.drawRoundedRect(_dockWidget->rect().adjusted(0, 0, -1, -1), 12, 12);
+    painter.drawRoundedRect(_dockWidget->rect(), 12, 12);
 
     _dockWidget->setMask(mask);
 }
