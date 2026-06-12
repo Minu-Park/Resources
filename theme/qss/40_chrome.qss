@@ -93,6 +93,8 @@ QWidget#MdiSubWindowContainer {
 }
 
 QWidget#MdiSubWindowContainer[maximized="true"] {
+    border-left: none;
+    border-right: none;
     border-radius: 0px;
 }
 
