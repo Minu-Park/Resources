@@ -121,7 +121,9 @@ void MdiSubWindowContainer::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         if (_resizeMode != ResizeNone) {
-            QMetaObject::invokeMethod(_content, "notifyManualResizeFinished", Qt::AutoConnection);
+            if (_content && _content->metaObject()->indexOfMethod("notifyManualResizeFinished()") >= 0) {
+                QMetaObject::invokeMethod(_content, "notifyManualResizeFinished", Qt::AutoConnection);
+            }
         }
         _resizeMode = ResizeNone;
         setCursor(Qt::ArrowCursor);
