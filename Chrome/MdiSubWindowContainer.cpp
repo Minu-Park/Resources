@@ -193,16 +193,22 @@ bool MdiSubWindowContainer::eventFilter(QObject* watched, QEvent* event)
             if (!_subWin->isMinimized() && !_subWin->isMaximized()) {
                 QSize minHint = minimumSizeHint();
                 QMdiArea* mdi = _subWin->mdiArea();
+                QSize targetMin;
                 if (mdi && mdi->viewport()) {
                     QSize mdiSize = mdi->viewport()->size();
                     int finalW = qMin(minHint.width(), mdiSize.width());
                     int finalH = qMin(minHint.height(), mdiSize.height());
-                    _subWin->setMinimumSize(QSize(finalW, finalH));
+                    targetMin = QSize(finalW, finalH);
                 } else {
-                    _subWin->setMinimumSize(minHint);
+                    targetMin = minHint;
+                }
+                if (_subWin->minimumSize() != targetMin) {
+                    _subWin->setMinimumSize(targetMin);
                 }
             } else {
-                _subWin->setMinimumSize(QSize(0, 0));
+                if (_subWin->minimumSize() != QSize(0, 0)) {
+                    _subWin->setMinimumSize(QSize(0, 0));
+                }
             }
         }
     }
@@ -211,16 +217,22 @@ bool MdiSubWindowContainer::eventFilter(QObject* watched, QEvent* event)
             if (!_subWin->isMinimized() && !_subWin->isMaximized()) {
                 QSize minHint = minimumSizeHint();
                 QMdiArea* mdi = _subWin->mdiArea();
+                QSize targetMin;
                 if (mdi && mdi->viewport()) {
                     QSize mdiSize = mdi->viewport()->size();
                     int finalW = qMin(minHint.width(), mdiSize.width());
                     int finalH = qMin(minHint.height(), mdiSize.height());
-                    _subWin->setMinimumSize(QSize(finalW, finalH));
+                    targetMin = QSize(finalW, finalH);
                 } else {
-                    _subWin->setMinimumSize(minHint);
+                    targetMin = minHint;
+                }
+                if (_subWin->minimumSize() != targetMin) {
+                    _subWin->setMinimumSize(targetMin);
                 }
             } else {
-                _subWin->setMinimumSize(QSize(0, 0));
+                if (_subWin->minimumSize() != QSize(0, 0)) {
+                    _subWin->setMinimumSize(QSize(0, 0));
+                }
             }
         }
     }
@@ -262,20 +274,7 @@ void MdiSubWindowContainer::hideEvent(QHideEvent* event)
 void MdiSubWindowContainer::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    if (_content && !_subWin->isMaximized() && !_subWin->isMinimized()) {
-        QBitmap bmp(_content->size());
-        if (!bmp.isNull()) {
-            bmp.clear();
-            QPainter p(&bmp);
-            p.setRenderHint(QPainter::Antialiasing, true);
-            p.setBrush(Qt::color1);
-            p.setPen(Qt::NoPen);
-            p.drawRoundedRect(bmp.rect(), 11, 11);
-            p.drawRect(0, 0, bmp.width(), 11);
-            p.end();
-            _content->setMask(bmp);
-        }
-    } else if (_content) {
+    if (_content) {
         _content->clearMask();
     }
 }
