@@ -274,7 +274,20 @@ void MdiSubWindowContainer::hideEvent(QHideEvent* event)
 void MdiSubWindowContainer::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    if (_content) {
+    if (_content && !_subWin->isMaximized() && !_subWin->isMinimized()) {
+        QBitmap bmp(_content->size());
+        if (!bmp.isNull()) {
+            bmp.clear();
+            QPainter p(&bmp);
+            p.setRenderHint(QPainter::Antialiasing, true);
+            p.setBrush(Qt::color1);
+            p.setPen(Qt::NoPen);
+            p.drawRoundedRect(bmp.rect(), 11, 11);
+            p.drawRect(0, 0, bmp.width(), 11);
+            p.end();
+            _content->setMask(bmp);
+        }
+    } else if (_content) {
         _content->clearMask();
     }
 }
