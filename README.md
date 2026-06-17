@@ -14,7 +14,7 @@ Playground 애플리케이션의 시각적 일관성을 확보하고, 라이트 
 * **전역 일관성 테마 (QSS)**: 현재 단일 테마를 `theme/qss/*.qss` 파트로 나누어 관리하고, `Resources::installResources(app)`가 정해진 순서로 합쳐 적용합니다.
 * **단일화된 에셋 파이프라인**: 모든 애플리케이션 아이콘 및 브랜드 로고 자원이 `:/Resources` 가상 QRC 경로로 컴파일되어 파일 시스템 결합 없이 임베디드 배포됩니다.
 * **원클릭 스타일 설치 API**: `Resources::installResources(app)` 호출을 통해 별도의 리소스 번들 로딩 코드 작성 없이 QSS 적용, 번들 리소스 등록, 앱 아이콘 지정을 한 번에 수행할 수 있습니다.
-* **Reusable chrome widgets**: `Chrome/MainTitleBar`, `Chrome/CustomTitleBar`, `Chrome/MdiSubWindowContainer`, and `Chrome/DockTitleBar` provide reusable frameless-window presentation without depending on host session classes.
+* **Reusable chrome widgets**: `Chrome/ThemedMainWindow`, `Chrome/ThemedMainTitleBar`, `Chrome/ThemedMdiContainer`, and `Chrome/ThemedDockTitleBar` provide reusable frameless-window presentation without depending on host session classes.
 * **State visualization style contract**: Camera and Gocator status indicators share one dynamic CSS property (`status`) and color map for `Idle`, `Disconnected`, `Connected`, and `Live` states.
 * **Neutral source-control styling**: `QStaticImageControlWidget` tool buttons, FPS input, and list selection use compact neutral styling aligned with the Camera/Gocator control-panel tone.
 
