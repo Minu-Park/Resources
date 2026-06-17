@@ -1,6 +1,7 @@
 #include "ThemedMdiContainer.h"
 #include "ThemedMdiTitleBar.h"
 #include <QMdiSubWindow>
+#include <QGraphicsDropShadowEffect>
 #include <QMdiArea>
 #include <QMenuBar>
 #include <QVBoxLayout>
@@ -36,6 +37,12 @@ ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, 
 
     if (_subWin) {
         _subWin->setMinimumSize(minimumSizeHint());
+
+        auto* shadow = new QGraphicsDropShadowEffect(_subWin);
+        shadow->setBlurRadius(16);
+        shadow->setColor(QColor(0, 0, 0, 35)); // Soft dropshadow
+        shadow->setOffset(0, 3);
+        _subWin->setGraphicsEffect(shadow);
     }
 }
 
@@ -262,6 +269,9 @@ void ThemedMdiContainer::handleWindowStateChange()
 
     if (maximized) {
         _content->clearMask();
+    }
+    if (_subWin && _subWin->graphicsEffect()) {
+        _subWin->graphicsEffect()->setEnabled(!maximized);
     }
     update();
 }

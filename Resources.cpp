@@ -475,8 +475,8 @@ void installResources(QApplication& app)
         "    border-bottom-right-radius: 7px;\n"
         "}\n"
         "QDockWidget[floatingState=\"true\"] QWidget#ThemedDockTitleBar {\n"
-        "    border-top-left-radius: 7px;\n"
-        "    border-top-right-radius: 7px;\n"
+        "    border-top-left-radius: 8px;\n"
+        "    border-top-right-radius: 8px;\n"
         "}\n"
         "QDockWidget[floatingState=\"true\"] QFrame#DockContainerWidget > QWidget {\n"
         "    border-bottom-left-radius: 6px;\n"
@@ -485,6 +485,11 @@ void installResources(QApplication& app)
         "QStatusBar {\n"
         "    border-bottom-left-radius: 7px;\n"
         "    border-bottom-right-radius: 7px;\n"
+        "}\n"
+        "QWidget#ThemedMdiContainer { border-radius: 8px; }\n"
+        "QWidget#ThemedMdiTitleBar {\n"
+        "    border-top-left-radius: 8px;\n"
+        "    border-top-right-radius: 8px;\n"
         "}\n"
     );
 #endif

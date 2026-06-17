@@ -1,13 +1,13 @@
 #pragma once
 
 #include <QIcon>
-#include <QWidget>
+#include <QFrame>
 
 class QDockWidget;
 class QLabel;
 class QPushButton;
 
-class ThemedDockTitleBar : public QWidget {
+class ThemedDockTitleBar : public QFrame {
     Q_OBJECT
 public:
     explicit ThemedDockTitleBar(QDockWidget* dockWidget, QWidget* parent = nullptr);
