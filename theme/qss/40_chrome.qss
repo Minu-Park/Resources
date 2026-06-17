@@ -22,20 +22,21 @@ QMainWindow#MainWindow[maximized="true"] {
 }
 
 /* Main Window Title Bar Styles */
-QWidget#MainTitleBar {
-    background-color: transparent;
+QWidget#ThemedMainTitleBar {
+    background-color: #ffffff;
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
     border-bottom: 1px solid #d9e1ea;
 }
 
-QWidget#MainTitleBar[maximized="true"] {
+QWidget#ThemedMainTitleBar[maximized="true"] {
     background-color: #ffffff;
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
+    border-bottom: 1px solid #d9e1ea;
 }
 
-QWidget#MainTitleBar QMenuBar {
+QWidget#ThemedMainTitleBar QMenuBar {
     background: transparent;
     border: none;
 }
@@ -46,7 +47,7 @@ QWidget#ThemedMdiTitleBar QMenuBar {
     font-size: 11px;
 }
 
-QWidget#MainTitleBar QMenuBar::item,
+QWidget#ThemedMainTitleBar QMenuBar::item,
 QWidget#ThemedMdiTitleBar QMenuBar::item {
     padding: 3px 8px;
     margin: 0;
@@ -86,13 +87,13 @@ QPushButton#MainCloseButton:pressed {
 }
 
 /* MDI SubWindow Custom Container */
-QWidget#MdiSubWindowContainer {
+QWidget#ThemedMdiContainer {
     background-color: #ffffff;
     border: 1px solid #d9e1ea;
     border-radius: 12px;
 }
 
-QWidget#MdiSubWindowContainer[maximized="true"] {
+QWidget#ThemedMdiContainer[maximized="true"] {
     border-left: none;
     border-right: none;
     border-radius: 0px;
@@ -186,12 +187,12 @@ QPushButton#TitleCloseButton:pressed {
 }
 
 /* Custom Dock Title Bar */
-QWidget#DockTitleBar {
+QWidget#ThemedDockTitleBar {
     background-color: #ffffff;
     border-bottom: 1px solid #d9e1ea;
 }
 
-QLabel#DockTitleBarLabel {
+QLabel#ThemedDockTitleBarLabel {
     background: transparent;
     font-size: 11px;
     font-weight: bold;
@@ -242,7 +243,7 @@ QDockWidget[floatingState="true"] QFrame#DockContainerWidget {
     background-color: #ffffff;
 }
 
-QDockWidget[floatingState="true"] QWidget#DockTitleBar {
+QDockWidget[floatingState="true"] QWidget#ThemedDockTitleBar {
     background-color: #ffffff;
     border: 1px solid #d9e1ea;
     border-bottom: 1px solid #d9e1ea;

@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <QPoint>
+#include <QPointer>
 
 class QVBoxLayout;
 class ThemedMainTitleBar;
@@ -10,7 +11,7 @@ class ThemedWindow : public QWidget {
     Q_OBJECT
 public:
     explicit ThemedWindow(QWidget* parent = nullptr);
-    ~ThemedWindow() override = default;
+    ~ThemedWindow() override;
 
     /**
      * @brief Sets the central content widget of the frameless themed window.
@@ -22,6 +23,9 @@ public:
      * @brief Accessor for the custom title bar widget.
      */
     ThemedMainTitleBar* titleBar() const { return _titleBar; }
+
+    void prepareForMaximizeTransition();
+    void prepareForRestoreTransition();
 
 protected:
     void changeEvent(QEvent* event) override;
@@ -36,10 +40,6 @@ protected:
     void updateWindowMask();
     void updateWindowChromeState();
     void applyWindowChromeState(bool maximized);
-    void prepareForMaximizeTransition();
-    void prepareForRestoreTransition();
-
-    void registerChildForResizeFilter(QWidget* widget);
 
     enum ResizeDirection {
         ResizeNone = 0,
@@ -61,4 +61,5 @@ private:
     int _resizeMode = ResizeNone;
     bool _windowChromeMaximized = false;
     bool _forceRoundedChrome = false;
+    QPointer<QWidget> _cursorOverriddenWidget = nullptr;
 };
