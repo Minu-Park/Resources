@@ -14,23 +14,25 @@ qt_add_library(PlaygroundResources STATIC
     Resources.qrc
     Resources.h
     Resources.cpp
-    Chrome/CustomTitleBar.h
-    Chrome/CustomTitleBar.cpp
-    Chrome/DockTitleBar.h
-    Chrome/DockTitleBar.cpp
-    Chrome/MainTitleBar.h
-    Chrome/MainTitleBar.cpp
-    Chrome/MdiSubWindowContainer.h
-    Chrome/MdiSubWindowContainer.cpp
+    Chrome/ThemedMdiTitleBar.h
+    Chrome/ThemedMdiTitleBar.cpp
+    Chrome/ThemedDockTitleBar.h
+    Chrome/ThemedDockTitleBar.cpp
+    Chrome/ThemedMainTitleBar.h
+    Chrome/ThemedMainTitleBar.cpp
+    Chrome/ThemedMdiContainer.h
+    Chrome/ThemedMdiContainer.cpp
     Chrome/ThemedDialog.h
     Chrome/ThemedDialog.cpp
     Chrome/ThemedMessageBox.h
     Chrome/ThemedMessageBox.cpp
-    Chrome/SplashWidget.h
-    Chrome/SplashWidget.cpp
-    Chrome/LoadingWidget.h
-    Chrome/LoadingWidget.cpp
-    Chrome/ProgressItem.h
+    Chrome/ThemedSplashWidget.h
+    Chrome/ThemedSplashWidget.cpp
+    Chrome/ThemedLoadingWidget.h
+    Chrome/ThemedLoadingWidget.cpp
+    Chrome/ThemedProgressBar.h
+    Chrome/ThemedWindow.h
+    Chrome/ThemedWindow.cpp
 )
 
 add_library(Resources::Resources ALIAS PlaygroundResources)

@@ -1,5 +1,5 @@
-#include "MdiSubWindowContainer.h"
-#include "CustomTitleBar.h"
+#include "ThemedMdiContainer.h"
+#include "ThemedMdiTitleBar.h"
 #include <QMdiSubWindow>
 #include <QMdiArea>
 #include <QMenuBar>
@@ -11,19 +11,19 @@
 #include <QStyle>
 #include <QStyleOption>
 
-MdiSubWindowContainer::MdiSubWindowContainer(QMdiSubWindow* subWin, QWidget* content, QMenuBar* menuBar, QWidget* parent)
+ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, QMenuBar* menuBar, QWidget* parent)
     : QWidget(parent)
     , _subWin(subWin)
     , _content(content)
 {
-    setObjectName(QStringLiteral("MdiSubWindowContainer"));
+    setObjectName(QStringLiteral("ThemedMdiContainer"));
     
     // 1px margin inside the container for border spacing and resize handles
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(1, 1, 1, 1);
     layout->setSpacing(0);
 
-    _titleBar = new CustomTitleBar(subWin, menuBar, this);
+    _titleBar = new ThemedMdiTitleBar(subWin, menuBar, this);
     layout->addWidget(_titleBar);
     
     layout->addWidget(_content);
@@ -39,7 +39,7 @@ MdiSubWindowContainer::MdiSubWindowContainer(QMdiSubWindow* subWin, QWidget* con
     }
 }
 
-QSize MdiSubWindowContainer::minimumSizeHint() const
+QSize ThemedMdiContainer::minimumSizeHint() const
 {
     if (_content) {
         // Always query the dynamic layout constraints from minimumSizeHint() in real time
@@ -53,7 +53,7 @@ QSize MdiSubWindowContainer::minimumSizeHint() const
     return QWidget::minimumSizeHint();
 }
 
-void MdiSubWindowContainer::mousePressEvent(QMouseEvent* event)
+void ThemedMdiContainer::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         _dragStartPos = event->globalPosition().toPoint();
@@ -66,7 +66,7 @@ void MdiSubWindowContainer::mousePressEvent(QMouseEvent* event)
     QWidget::mousePressEvent(event);
 }
 
-void MdiSubWindowContainer::mouseMoveEvent(QMouseEvent* event)
+void ThemedMdiContainer::mouseMoveEvent(QMouseEvent* event)
 {
     if (event->buttons() & Qt::LeftButton && _resizeMode != ResizeNone) {
         QPoint currentGlobalPos = event->globalPosition().toPoint();
@@ -117,7 +117,7 @@ void MdiSubWindowContainer::mouseMoveEvent(QMouseEvent* event)
     QWidget::mouseMoveEvent(event);
 }
 
-void MdiSubWindowContainer::mouseReleaseEvent(QMouseEvent* event)
+void ThemedMdiContainer::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         if (_resizeMode != ResizeNone) {
@@ -133,7 +133,7 @@ void MdiSubWindowContainer::mouseReleaseEvent(QMouseEvent* event)
     }
 }
 
-void MdiSubWindowContainer::paintEvent(QPaintEvent* event)
+void ThemedMdiContainer::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event);
     QStyleOption opt;
@@ -142,7 +142,7 @@ void MdiSubWindowContainer::paintEvent(QPaintEvent* event)
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &painter, this);
 }
 
-int MdiSubWindowContainer::determineResizeMode(const QPoint& pos)
+int ThemedMdiContainer::determineResizeMode(const QPoint& pos)
 {
     int mode = ResizeNone;
     const int border = 6; // detection boundary size
@@ -160,7 +160,7 @@ int MdiSubWindowContainer::determineResizeMode(const QPoint& pos)
     return mode;
 }
 
-void MdiSubWindowContainer::updateCursorShape(const QPoint& pos)
+void ThemedMdiContainer::updateCursorShape(const QPoint& pos)
 {
     int mode = determineResizeMode(pos);
 
@@ -177,13 +177,13 @@ void MdiSubWindowContainer::updateCursorShape(const QPoint& pos)
     }
 }
 
-void MdiSubWindowContainer::leaveEvent(QEvent* event)
+void ThemedMdiContainer::leaveEvent(QEvent* event)
 {
     Q_UNUSED(event);
     setCursor(Qt::ArrowCursor);
 }
 
-bool MdiSubWindowContainer::eventFilter(QObject* watched, QEvent* event)
+bool ThemedMdiContainer::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _subWin) {
         if (event->type() == QEvent::WindowStateChange) {
@@ -239,7 +239,7 @@ bool MdiSubWindowContainer::eventFilter(QObject* watched, QEvent* event)
     return QWidget::eventFilter(watched, event);
 }
 
-void MdiSubWindowContainer::handleWindowStateChange()
+void ThemedMdiContainer::handleWindowStateChange()
 {
     if (!_subWin || !_content || !_titleBar) return;
 
@@ -266,12 +266,12 @@ void MdiSubWindowContainer::handleWindowStateChange()
     update();
 }
 
-void MdiSubWindowContainer::hideEvent(QHideEvent* event)
+void ThemedMdiContainer::hideEvent(QHideEvent* event)
 {
     QWidget::hideEvent(event);
 }
 
-void MdiSubWindowContainer::resizeEvent(QResizeEvent* event)
+void ThemedMdiContainer::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
     if (_content && !_subWin->isMaximized() && !_subWin->isMinimized()) {
@@ -291,3 +291,4 @@ void MdiSubWindowContainer::resizeEvent(QResizeEvent* event)
         _content->clearMask();
     }
 }
+

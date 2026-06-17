@@ -1,4 +1,4 @@
-#include "DockTitleBar.h"
+#include "ThemedDockTitleBar.h"
 #include <QDockWidget>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -12,11 +12,11 @@
 #include <QVBoxLayout>
 #include <QTimer>
 
-DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
+ThemedDockTitleBar::ThemedDockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     : QWidget(parent)
     , _dockWidget(dockWidget)
 {
-    setObjectName(QStringLiteral("DockTitleBar"));
+    setObjectName(QStringLiteral("ThemedDockTitleBar"));
     setFixedHeight(28); // Standard compact height for dock widget title bars
 
     auto* layout = new QHBoxLayout(this);
@@ -27,7 +27,7 @@ DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
 
     // Title label
     _titleLabel = new QLabel(_dockWidget->windowTitle(), this);
-    _titleLabel->setObjectName(QStringLiteral("DockTitleBarLabel"));
+    _titleLabel->setObjectName(QStringLiteral("ThemedDockTitleBarLabel"));
     _titleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
     layout->addWidget(_titleLabel, 0, Qt::AlignVCenter);
 
@@ -72,11 +72,11 @@ DockTitleBar::DockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     _floatButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png"), QSize(16, 16)));
 
     _dockWidget->installEventFilter(this);
-    connect(_dockWidget, &QDockWidget::topLevelChanged, this, &DockTitleBar::applyFloatingChrome);
+    connect(_dockWidget, &QDockWidget::topLevelChanged, this, &ThemedDockTitleBar::applyFloatingChrome);
     applyFloatingChrome(_dockWidget->isFloating());
 }
 
-void DockTitleBar::paintEvent(QPaintEvent* event)
+void ThemedDockTitleBar::paintEvent(QPaintEvent* event)
 {
     QStyleOption opt;
     opt.initFrom(this);
@@ -85,22 +85,22 @@ void DockTitleBar::paintEvent(QPaintEvent* event)
     QWidget::paintEvent(event);
 }
 
-void DockTitleBar::mousePressEvent(QMouseEvent* event)
+void ThemedDockTitleBar::mousePressEvent(QMouseEvent* event)
 {
     event->ignore(); // Let QDockWidget handle drag and undock natively at all times
 }
 
-void DockTitleBar::mouseMoveEvent(QMouseEvent* event)
+void ThemedDockTitleBar::mouseMoveEvent(QMouseEvent* event)
 {
     event->ignore();
 }
 
-void DockTitleBar::mouseReleaseEvent(QMouseEvent* event)
+void ThemedDockTitleBar::mouseReleaseEvent(QMouseEvent* event)
 {
     event->ignore();
 }
 
-bool DockTitleBar::eventFilter(QObject* watched, QEvent* event)
+bool ThemedDockTitleBar::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _dockWidget) {
         if (event->type() == QEvent::Resize || event->type() == QEvent::Show) {
@@ -124,7 +124,7 @@ bool DockTitleBar::eventFilter(QObject* watched, QEvent* event)
     return QWidget::eventFilter(watched, event);
 }
 
-void DockTitleBar::applyFloatingChrome(bool floating)
+void ThemedDockTitleBar::applyFloatingChrome(bool floating)
 {
     _dockWidget->setProperty("floatingState", floating);
     setProperty("floatingState", floating);
@@ -153,7 +153,7 @@ void DockTitleBar::applyFloatingChrome(bool floating)
     }
 }
 
-void DockTitleBar::refreshFloatingChromeStyle()
+void ThemedDockTitleBar::refreshFloatingChromeStyle()
 {
     _dockWidget->style()->unpolish(_dockWidget);
     _dockWidget->style()->polish(_dockWidget);
@@ -168,7 +168,7 @@ void DockTitleBar::refreshFloatingChromeStyle()
     _dockWidget->update();
 }
 
-void DockTitleBar::updateFloatingMask()
+void ThemedDockTitleBar::updateFloatingMask()
 {
     if (!_dockWidget->isFloating()) {
         _dockWidget->clearMask();
@@ -192,7 +192,7 @@ void DockTitleBar::updateFloatingMask()
     _dockWidget->setMask(mask);
 }
 
-QIcon DockTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSize) const
+QIcon ThemedDockTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSize) const
 {
     const QPixmap source(path);
     if (source.isNull()) {
@@ -214,17 +214,17 @@ QIcon DockTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSi
     return QIcon(target);
 }
 
-QSize DockTitleBar::sizeHint() const
+QSize ThemedDockTitleBar::sizeHint() const
 {
     return QSize(QWidget::sizeHint().width(), 28);
 }
 
-QSize DockTitleBar::minimumSizeHint() const
+QSize ThemedDockTitleBar::minimumSizeHint() const
 {
     return QSize(QWidget::minimumSizeHint().width(), 28);
 }
 
-void DockTitleBar::setupDockWidget(QDockWidget* dockWidget, QWidget* contentWidget)
+void ThemedDockTitleBar::setupDockWidget(QDockWidget* dockWidget, QWidget* contentWidget)
 {
     if (!dockWidget || !contentWidget) return;
 
@@ -243,6 +243,7 @@ void DockTitleBar::setupDockWidget(QDockWidget* dockWidget, QWidget* contentWidg
 
     // Install the custom title bar as the real dock title bar so ignored
     // mouse events still reach QDockWidget's native drag/dock handler.
-    auto* titleBar = new DockTitleBar(dockWidget, dockWidget);
+    auto* titleBar = new ThemedDockTitleBar(dockWidget, dockWidget);
     dockWidget->setTitleBarWidget(titleBar);
 }
+

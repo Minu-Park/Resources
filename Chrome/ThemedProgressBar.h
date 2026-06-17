@@ -1,5 +1,5 @@
-#ifndef PROGRESSITEM_H
-#define PROGRESSITEM_H
+#ifndef THEMEDPROGRESSBAR_H
+#define THEMEDPROGRESSBAR_H
 
 #include <QWidget>
 #include <QTimer>
@@ -8,11 +8,11 @@
 #include <QtGlobal>
 #include <cmath>
 
-class ProgressItem : public QWidget
+class ThemedProgressBar : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ProgressItem(QWidget* parent = nullptr) : QWidget(parent) {
+    explicit ThemedProgressBar(QWidget* parent = nullptr) : QWidget(parent) {
         setFixedHeight(8);
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
@@ -115,4 +115,4 @@ private:
     qreal _phase = 0.;
 };
 
-#endif // PROGRESSITEM_H
+#endif // THEMEDPROGRESSBAR_H

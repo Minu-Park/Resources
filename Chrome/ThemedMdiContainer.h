@@ -5,14 +5,14 @@
 #include <QRect>
 
 class QMdiSubWindow;
-class CustomTitleBar;
+class ThemedMdiTitleBar;
 class QEvent;
 class QMenuBar;
 
-class MdiSubWindowContainer : public QWidget {
+class ThemedMdiContainer : public QWidget {
     Q_OBJECT
 public:
-    MdiSubWindowContainer(QMdiSubWindow* subWin, QWidget* content, QMenuBar* menuBar, QWidget* parent = nullptr);
+    ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, QMenuBar* menuBar, QWidget* parent = nullptr);
     QSize minimumSizeHint() const override;
 
 signals:
@@ -43,8 +43,9 @@ private:
 
     QMdiSubWindow* _subWin;
     QWidget* _content;
-    CustomTitleBar* _titleBar;
+    ThemedMdiTitleBar* _titleBar;
     QPoint _dragStartPos;
     QRect _dragStartGeometry;
     int _resizeMode = ResizeNone;
 };
+

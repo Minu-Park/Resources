@@ -1,6 +1,6 @@
-#include "SplashWidget.h"
+#include "ThemedSplashWidget.h"
 
-SplashWidget::SplashWidget(QWidget* parent, const QString& title, const QString& version)
+ThemedSplashWidget::ThemedSplashWidget(QWidget* parent, const QString& title, const QString& version)
     : QWidget(parent)
 {
     setAttribute(Qt::WA_TranslucentBackground);
@@ -66,7 +66,7 @@ SplashWidget::SplashWidget(QWidget* parent, const QString& title, const QString&
     layoutTextRow->addWidget(_labelText, 1);
     layoutTextRow->addWidget(_labelPercent, 0);
 
-    _progress = new ProgressItem(_frame);
+    _progress = new ThemedProgressBar(_frame);
     _progress->setObjectName(QStringLiteral("SplashProgress"));
 
     layoutInside->addWidget(_labelImage, 0, Qt::AlignRight);
@@ -84,7 +84,7 @@ SplashWidget::SplashWidget(QWidget* parent, const QString& title, const QString&
     setValue(0);
 }
 
-void SplashWidget::setValue(int v)
+void ThemedSplashWidget::setValue(int v)
 {
     _progress->setBusy(false);
     _progress->setValue(v);
@@ -94,12 +94,12 @@ void SplashWidget::setValue(int v)
     _lastProgress = pct;
 }
 
-void SplashWidget::setText(const QString& text)
+void ThemedSplashWidget::setText(const QString& text)
 {
     _labelText->setText(text);
 }
 
-void SplashWidget::setBusy(bool on)
+void ThemedSplashWidget::setBusy(bool on)
 {
     _progress->setBusy(on);
     _labelPercent->setText(on ? QString() : QStringLiteral("%1%").arg(_lastProgress));
@@ -110,31 +110,31 @@ void SplashWidget::setBusy(bool on)
     });
 }
 
-void SplashWidget::centerOn()
+void ThemedSplashWidget::centerOn()
 {
     const QRect r = QGuiApplication::primaryScreen()->availableGeometry();
     move(r.center() - rect().center());
 }
 
-void SplashWidget::setImage(const QPixmap& px, int imageHeight)
+void ThemedSplashWidget::setImage(const QPixmap& px, int imageHeight)
 {
     _iconImage = px;
     _imageHeight = imageHeight;
     updateImage();
 }
 
-void SplashWidget::setTitle(const QString& title)
+void ThemedSplashWidget::setTitle(const QString& title)
 {
     _labelTitle->setText(title);
     setWindowTitle(title);
 }
 
-void SplashWidget::setVersion(const QString& version)
+void ThemedSplashWidget::setVersion(const QString& version)
 {
     _labelVersion->setText(version);
 }
 
-void SplashWidget::updateImage()
+void ThemedSplashWidget::updateImage()
 {
     if (_iconImage.isNull()) {
         _labelImage->clear();
@@ -150,14 +150,15 @@ void SplashWidget::updateImage()
     _labelImage->setFixedHeight(qMax(30, int(scaled.height() / dpr)));
 }
 
-void SplashWidget::resizeEvent(QResizeEvent* e)
+void ThemedSplashWidget::resizeEvent(QResizeEvent* e)
 {
     QWidget::resizeEvent(e);
     updateImage();
 }
 
-void SplashWidget::showEvent(QShowEvent* e)
+void ThemedSplashWidget::showEvent(QShowEvent* e)
 {
     QWidget::showEvent(e);
     centerOn();
 }
+

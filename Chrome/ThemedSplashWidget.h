@@ -1,28 +1,32 @@
-#ifndef LOADINGWIDGET_H
-#define LOADINGWIDGET_H
+#ifndef ThemedSplashWidget_H
+#define ThemedSplashWidget_H
 
-#include "ProgressItem.h"
+#include "ThemedProgressBar.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFrame>
 #include <QLabel>
 #include <QGraphicsDropShadowEffect>
+#include <QGuiApplication>
+#include <QScreen>
 #include <QTimer>
 #include <QPixmap>
 #include <QResizeEvent>
 #include <QShowEvent>
 
-class LoadingWidget : public QWidget
+class ThemedSplashWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit LoadingWidget(QWidget* parent = nullptr);
-
+    explicit ThemedSplashWidget(QWidget* parent = nullptr, const QString& title = "", const QString& version = "");
+    
     void setValue(int v);
     void setText(const QString& text);
     void setBusy(bool on);
-    void centerInParent();
+    void centerOn();
     void setImage(const QPixmap& px, int imageHeight = 200);
+    void setTitle(const QString& title);
+    void setVersion(const QString& version);
 
 protected:
     void resizeEvent(QResizeEvent* e) override;
@@ -33,13 +37,16 @@ private:
 
     QFrame *_frame = nullptr;
     QLabel* _labelImage = nullptr;
+    QLabel* _labelTitle = nullptr;
+    QLabel* _labelVersion = nullptr;
     QLabel* _labelText = nullptr;
     QLabel* _labelPercent = nullptr;
-    ProgressItem *_progress = nullptr;
+    ThemedProgressBar *_progress = nullptr;
     int _lastProgress = 0;
 
     QPixmap _iconImage;
     int _imageHeight = 200;
 };
 
-#endif // LOADINGWIDGET_H
+#endif // ThemedSplashWidget_H
+
