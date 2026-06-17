@@ -1,0 +1,118 @@
+#ifndef PROGRESSITEM_H
+#define PROGRESSITEM_H
+
+#include <QWidget>
+#include <QTimer>
+#include <QPainter>
+#include <QPainterPath>
+#include <QtGlobal>
+#include <cmath>
+
+class ProgressItem : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit ProgressItem(QWidget* parent = nullptr) : QWidget(parent) {
+        setFixedHeight(8);
+        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+        _animationTimer.setInterval(16);
+        QObject::connect(&_animationTimer, &QTimer::timeout, this, [this]{
+            _phase += 0.005;
+            if (_phase > 1000.) _phase = 0.;
+            update();
+        });
+        _animationTimer.start();
+    }
+
+    void setBusy(bool on) {
+        _busy = on;
+        update();
+    }
+
+    void setValue(int value) {
+        _value = qBound(_min, value, _max);
+        update();
+    }
+
+    int getValue() const { return _value; }
+
+protected:
+    void paintEvent(QPaintEvent*) override
+    {
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing, true);
+
+        const QRectF r = rect().toRectF().adjusted(0.5, 0.5, -0.5, -0.5);
+        const qreal radius = r.height() / 2.0;
+
+        // Background
+        p.setPen(Qt::NoPen);
+        p.setBrush(QColor(0, 0, 0, 18));
+        p.drawRoundedRect(r, radius, radius);
+
+        // Progress ratio
+        qreal t = 0.0;
+        if (_max > _min) t = (_value - _min) / qreal(_max - _min);
+        t = qBound<qreal>(0.0, t, 1.0);
+
+        // Fill rect (always based on value)
+        QRectF fill = r;
+        fill.setWidth(r.width() * t);
+
+        const QRectF paintRect = fill;
+
+        // Fill gradient (mapped across full width for smooth transitions)
+        QLinearGradient g(r.topLeft(), r.topRight());
+        g.setColorAt(0.0, _startColor);
+        g.setColorAt(1.0, _endColor);
+
+        p.save();
+
+        // Clip to the background track's rounded bounds
+        QPainterPath clip;
+        clip.addRoundedRect(r, radius, radius);
+        p.setClipPath(clip);
+
+        p.setBrush(g);
+        p.drawRect(paintRect);
+
+        const qreal w = paintRect.width();
+        if (w > 1.0) {
+            qreal localPhase = std::fmod(_phase, 1.0);
+            if (localPhase < 0) localPhase += 1.0;
+
+            const qreal bandW = w * (_busy ? 0.25 : 0.18);
+            const qreal x = paintRect.left() + (localPhase * (w + bandW * 2) - bandW);
+
+            QLinearGradient shine(QPointF(x, 0), QPointF(x + bandW, 0));
+            shine.setColorAt(0.0, QColor(255, 255, 255, 0));
+            shine.setColorAt(0.5, QColor(255, 255, 255, _busy ? 90 : 70));
+            shine.setColorAt(1.0, QColor(255, 255, 255, 0));
+
+            p.setCompositionMode(QPainter::CompositionMode_Screen);
+            p.setBrush(shine);
+            p.drawRect(paintRect);
+        }
+
+        p.restore();
+
+        p.setPen(QPen(QColor(0, 0, 0, 25), 1));
+        p.setBrush(Qt::NoBrush);
+        p.drawRoundedRect(r, radius, radius);
+    }
+
+private:
+    int _min = 0;
+    int _max = 100;
+    int _value = 0;
+
+    bool _busy = false;
+    QTimer _animationTimer;
+    QColor _startColor = QColor(0x1e5ea6);
+    QColor _endColor   = QColor(0x0f3259);
+
+    qreal _phase = 0.;
+};
+
+#endif // PROGRESSITEM_H

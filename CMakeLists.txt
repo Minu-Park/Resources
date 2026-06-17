@@ -26,6 +26,11 @@ qt_add_library(PlaygroundResources STATIC
     Chrome/ThemedDialog.cpp
     Chrome/ThemedMessageBox.h
     Chrome/ThemedMessageBox.cpp
+    Chrome/SplashWidget.h
+    Chrome/SplashWidget.cpp
+    Chrome/LoadingWidget.h
+    Chrome/LoadingWidget.cpp
+    Chrome/ProgressItem.h
 )
 
 add_library(Resources::Resources ALIAS PlaygroundResources)

@@ -474,4 +474,66 @@ void installResources(QApplication& app)
     }
     app.installEventFilter(s_styleFilter);
 }
+
+void paintMainWindowBorder(QWidget* window, QPainter& painter, bool maximized, bool forceRounded)
+{
+    if (!window) return;
+    if (maximized && !forceRounded) {
+        painter.fillRect(window->rect(), QColor(QStringLiteral("#ffffff")));
+        return;
+    }
+
+    // Normal-state corners use the translucent backing store instead of a binary
+    // QBitmap mask so antialiased edge pixels are not hard-clipped.
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.fillRect(window->rect(), Qt::transparent);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(QStringLiteral("#d9e1ea")));
+    painter.drawRoundedRect(QRectF(0.0, 0.0, window->width(), window->height()), 13.0, 13.0);
+
+    // Fill interior with white (1px inset, slightly smaller radius).
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    painter.setBrush(QColor(QStringLiteral("#ffffff")));
+    painter.drawRoundedRect(QRectF(1.0, 1.0, window->width() - 2.0, window->height() - 2.0), 12.0, 12.0);
+
+    // Draw smooth 1px border.
+    painter.setPen(QPen(QColor(QStringLiteral("#d9e1ea")), 1.0));
+    painter.setBrush(Qt::NoBrush);
+    painter.drawRoundedRect(QRectF(0.5, 0.5, window->width() - 1.0, window->height() - 1.0), 12.0, 12.0);
+}
+
+void paintMdiAreaBackground(QWidget* viewport, QPainter& painter, const QPixmap& logo)
+{
+    if (!viewport) return;
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    painter.fillRect(viewport->rect(), QColor(QStringLiteral("#eeeeee")));
+
+    if (logo.isNull()) return;
+
+    const QSize logoSize = logo.size() / 2;
+    const QPoint topLeft(
+        (viewport->width() - logoSize.width()) / 2,
+        (viewport->height() - logoSize.height()) / 2);
+    painter.drawPixmap(QRect(topLeft, logoSize), logo);
+}
+
+QString formatLogHtml(int messageType, const QString& timestamp, const QString& message)
+{
+    QString typeStr;
+    QString color;
+    switch (messageType) {
+        case QtDebugMsg:    typeStr = QStringLiteral("DEBUG"); color = QStringLiteral("#78909c"); break;
+        case QtInfoMsg:     typeStr = QStringLiteral("INFO");  color = QStringLiteral("#1e88e5"); break;
+        case QtWarningMsg:  typeStr = QStringLiteral("WARN");  color = QStringLiteral("#fb8c00"); break;
+        case QtCriticalMsg: typeStr = QStringLiteral("CRIT");  color = QStringLiteral("#e53935"); break;
+        case QtFatalMsg:    typeStr = QStringLiteral("FATAL"); color = QStringLiteral("#b71c1c"); break;
+        default:            typeStr = QStringLiteral("LOG");   color = QStringLiteral("#7f8c8d"); break;
+    }
+
+    return QStringLiteral("<span style=\"color:#7f8c8d;\">[%1]</span> <span style=\"color:%2; font-weight:bold;\">[%3]</span> %4")
+        .arg(timestamp, color, typeStr, message.toHtmlEscaped());
+}
+
 }
