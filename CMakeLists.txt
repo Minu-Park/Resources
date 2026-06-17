@@ -40,6 +40,8 @@ add_library(Resources::Resources ALIAS PlaygroundResources)
 target_link_libraries(PlaygroundResources
     PUBLIC
         Qt6::Widgets
+    PRIVATE
+        $<$<PLATFORM_ID:Windows>:dwmapi>
 )
 
 target_include_directories(PlaygroundResources

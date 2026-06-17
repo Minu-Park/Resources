@@ -26,6 +26,10 @@
 #include <QBitmap>
 #include <QRegion>
 
+#ifdef Q_OS_WIN
+#include <dwmapi.h>
+#endif
+
 // Global-scope helper to execute Q_INIT_RESOURCE, which relies on global symbols.
 // This ensures the resource system registers the compiled .qrc binary data.
 inline void initResourcesHelper()
@@ -461,6 +465,12 @@ void installResources(QApplication& app)
             styleSheet += QLatin1Char('\n');
         }
     }
+#ifdef Q_OS_WIN
+    styleSheet += QStringLiteral(
+        "\nQWidget#ThemedDialogContainer { border-radius: 8px; }\n"
+        "QWidget#ThemedDialogTitleBar { border-top-left-radius: 8px; border-top-right-radius: 8px; }\n"
+    );
+#endif
     app.setStyleSheet(styleSheet);
 
 #if !defined(Q_OS_MAC)
@@ -490,17 +500,50 @@ void paintMainWindowBorder(QWidget* window, QPainter& painter, bool maximized, b
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setPen(Qt::NoPen);
     painter.setBrush(QColor(QStringLiteral("#d9e1ea")));
-    painter.drawRoundedRect(QRectF(0.0, 0.0, window->width(), window->height()), 13.0, 13.0);
+
+    qreal outerRadius = 13.0;
+    qreal innerRadius = 12.0;
+    getPlatformWindowRadius(outerRadius, innerRadius);
+
+    painter.drawRoundedRect(QRectF(0.0, 0.0, window->width(), window->height()), outerRadius, outerRadius);
 
     // Fill interior with white (1px inset, slightly smaller radius).
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
     painter.setBrush(QColor(QStringLiteral("#ffffff")));
-    painter.drawRoundedRect(QRectF(1.0, 1.0, window->width() - 2.0, window->height() - 2.0), 12.0, 12.0);
+    painter.drawRoundedRect(QRectF(1.0, 1.0, window->width() - 2.0, window->height() - 2.0), innerRadius, innerRadius);
 
     // Draw smooth 1px border.
     painter.setPen(QPen(QColor(QStringLiteral("#d9e1ea")), 1.0));
     painter.setBrush(Qt::NoBrush);
-    painter.drawRoundedRect(QRectF(0.5, 0.5, window->width() - 1.0, window->height() - 1.0), 12.0, 12.0);
+    painter.drawRoundedRect(QRectF(0.5, 0.5, window->width() - 1.0, window->height() - 1.0), innerRadius, innerRadius);
+}
+
+void applyWindowPlatformAttributes(QWidget* window)
+{
+#ifdef Q_OS_WIN
+    if (!window) return;
+    HWND hwnd = (HWND)window->winId();
+    if (hwnd) {
+        // 33: DWMWA_WINDOW_CORNER_PREFERENCE, 2: DWMWCP_ROUND
+        DWORD cornerPreference = 2;
+        DwmSetWindowAttribute(hwnd, 33, &cornerPreference, sizeof(cornerPreference));
+        
+        MARGINS margins = {-1, -1, -1, -1};
+        DwmExtendFrameIntoClientArea(hwnd, &margins);
+    }
+#endif
+    Q_UNUSED(window);
+}
+
+void getPlatformWindowRadius(qreal& outer, qreal& inner)
+{
+#ifdef Q_OS_WIN
+    outer = 8.0;
+    inner = 7.0;
+#else
+    outer = 13.0;
+    inner = 12.0;
+#endif
 }
 
 void paintMdiAreaBackground(QWidget* viewport, QPainter& painter, const QPixmap& logo)
