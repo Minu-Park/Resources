@@ -78,11 +78,34 @@ ThemedDockTitleBar::ThemedDockTitleBar(QDockWidget* dockWidget, QWidget* parent)
 
 void ThemedDockTitleBar::paintEvent(QPaintEvent* event)
 {
-    QStyleOption opt;
-    opt.initFrom(this);
+    Q_UNUSED(event);
     QPainter p(this);
-    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
-    QWidget::paintEvent(event);
+    p.setRenderHint(QPainter::Antialiasing, true);
+
+    bool floating = _dockWidget ? _dockWidget->isFloating() : false;
+
+    if (floating) {
+        // Clip drawing to our widget rect
+        p.setClipRect(rect());
+        p.setPen(Qt::NoPen);
+        p.setBrush(Qt::white);
+        // Draw a larger rounded rect so the bottom corners remain square
+        p.drawRoundedRect(QRectF(0, 0, width(), height() + 11), 11.0, 11.0);
+
+        // Draw the outer border line (left, top, right) matching the rounded top corners
+        p.setPen(QPen(QColor(0xd9, 0xe1, 0xea), 1.0));
+        p.setBrush(Qt::NoBrush);
+        p.drawRoundedRect(QRectF(0.5, 0.5, width() - 1.0, height() + 11.0), 11.0, 11.0);
+
+        // Draw the bottom border line (always straight at the bottom of the titlebar)
+        p.setPen(QColor(0xd9, 0xe1, 0xea));
+        p.drawLine(0, height() - 1, width(), height() - 1);
+    } else {
+        // Docked state: plain white background and bottom border only
+        p.fillRect(rect(), Qt::white);
+        p.setPen(QColor(0xd9, 0xe1, 0xea));
+        p.drawLine(rect().bottomLeft(), rect().bottomRight());
+    }
 }
 
 void ThemedDockTitleBar::mousePressEvent(QMouseEvent* event)

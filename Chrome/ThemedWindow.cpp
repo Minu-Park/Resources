@@ -3,6 +3,7 @@
 #include "Resources.h"
 
 #include <QEvent>
+#include <QPainterPath>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QVBoxLayout>
@@ -13,12 +14,13 @@
 #include <QScreen>
 #include <QGuiApplication>
 #include <QStatusBar>
+#include <QCoreApplication>
 
 ThemedWindow::ThemedWindow(QWidget* parent) : QWidget(parent) {
     setObjectName(QStringLiteral("ThemedWindow"));
     setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
-    setContentsMargins(1, 1, 1, 1);
+    setContentsMargins(1, 1, 1, 1); // Restore original 1px margin (no blank border)
     setProperty("maximized", false);
     setMouseTracking(true);
     setCursor(Qt::ArrowCursor);
@@ -26,6 +28,12 @@ ThemedWindow::ThemedWindow(QWidget* parent) : QWidget(parent) {
     _layout = new QVBoxLayout(this);
     _layout->setContentsMargins(0, 0, 0, 0);
     _layout->setSpacing(0);
+
+    qApp->installEventFilter(this); // Install application event filter to catch mouse moves over child widgets
+}
+
+ThemedWindow::~ThemedWindow() {
+    qApp->removeEventFilter(this);
 }
 
 void ThemedWindow::setCentralWidget(QWidget* widget) {
@@ -53,28 +61,19 @@ void ThemedWindow::setCentralWidget(QWidget* widget) {
             _titleBar = new ThemedMainTitleBar(mainWindow, menuBar, this);
             _titleBar->setProperty("maximized", _windowChromeMaximized || isMaximized());
             _layout->addWidget(_titleBar);
-            registerChildForResizeFilter(_titleBar);
+            
+            // Explicitly detach menuBar from QMainWindow to prevent layout padding/gaps
+            mainWindow->setMenuBar(nullptr);
         }
         
         // Ensure QMainWindow's default status bar works with our layout limits if needed.
         // Also remove the native title bar setup if it has one.
         mainWindow->setWindowFlags(Qt::Widget);
+        mainWindow->setContentsMargins(0, 0, 0, 0);
     }
 
     _layout->addWidget(_centralWidget, 1);
-    registerChildForResizeFilter(_centralWidget);
     updateWindowChromeState();
-}
-
-void ThemedWindow::registerChildForResizeFilter(QWidget* widget) {
-    if (!widget) return;
-    widget->setMouseTracking(true);
-    widget->installEventFilter(this);
-    const auto children = widget->findChildren<QWidget*>();
-    for (QWidget* child : children) {
-        child->setMouseTracking(true);
-        child->installEventFilter(this);
-    }
 }
 
 void ThemedWindow::updateWindowMask() {
@@ -85,6 +84,15 @@ void ThemedWindow::paintEvent(QPaintEvent* event) {
     Q_UNUSED(event);
     QPainter painter(this);
     Resources::paintMainWindowBorder(this, painter, _windowChromeMaximized || isMaximized(), _forceRoundedChrome);
+
+    // If title bar is present, fill a thin 2px strip immediately below the title bar
+    // with the central widget's background color (#eeeeee) to prevent any 1px white line
+    // artifacts from leaking due to widget geometry or style frame alignment.
+    if (_titleBar && _titleBar->isVisible() && _centralWidget) {
+        int y = contentsMargins().top() + _titleBar->height();
+        QRect stripRect(contentsMargins().left(), y, width() - contentsMargins().left() - contentsMargins().right(), 2);
+        painter.fillRect(stripRect, QColor(0xee, 0xee, 0xee)); // Use central MdiArea background color
+    }
 }
 
 void ThemedWindow::resizeEvent(QResizeEvent* event) {
@@ -194,7 +202,7 @@ int ThemedWindow::determineResizeMode(const QPoint& pos) {
 
     int mode = ResizeNone;
     const int border = 6;
-    const int topBorder = 3;
+    const int topBorder = 6;
 
     if (pos.x() < border) mode |= ResizeLeft;
     if (pos.x() > width() - border) mode |= ResizeRight;
@@ -218,62 +226,6 @@ void ThemedWindow::updateCursorShape(const QPoint& pos) {
     } else if (mode & ResizeTop || mode & ResizeBottom) {
         setCursor(Qt::SizeVerCursor);
     }
-}
-
-bool ThemedWindow::eventFilter(QObject* watched, QEvent* event) {
-    auto* watchedWidget = qobject_cast<QWidget*>(watched);
-    if (!watchedWidget) {
-        return QWidget::eventFilter(watched, event);
-    }
-
-    if (event->type() == QEvent::MouseMove) {
-        auto* mouseEvent = static_cast<QMouseEvent*>(event);
-        QPoint localPos = mapFromGlobal(mouseEvent->globalPosition().toPoint());
-
-        if (_resizeMode != ResizeNone) {
-            this->mouseMoveEvent(mouseEvent);
-            return true;
-        }
-
-        int mode = determineResizeMode(localPos);
-        if (mode != ResizeNone) {
-            Qt::CursorShape shape = Qt::ArrowCursor;
-            if ((mode & ResizeLeft && mode & ResizeTop) || (mode & ResizeRight && mode & ResizeBottom)) {
-                shape = Qt::SizeFDiagCursor;
-            } else if ((mode & ResizeRight && mode & ResizeTop) || (mode & ResizeLeft && mode & ResizeBottom)) {
-                shape = Qt::SizeBDiagCursor;
-            } else if (mode & ResizeLeft || mode & ResizeRight) {
-                shape = Qt::SizeHorCursor;
-            } else if (mode & ResizeTop || mode & ResizeBottom) {
-                shape = Qt::SizeVerCursor;
-            }
-
-            this->setCursor(shape);
-            watchedWidget->setCursor(shape);
-            return true;
-        } else {
-            this->unsetCursor();
-            watchedWidget->unsetCursor();
-        }
-    }
-    else if (event->type() == QEvent::MouseButtonPress) {
-        auto* mouseEvent = static_cast<QMouseEvent*>(event);
-        QPoint localPos = mapFromGlobal(mouseEvent->globalPosition().toPoint());
-        int mode = determineResizeMode(localPos);
-        if (mode != ResizeNone) {
-            this->mousePressEvent(mouseEvent);
-            return true;
-        }
-    }
-    else if (event->type() == QEvent::MouseButtonRelease) {
-        if (_resizeMode != ResizeNone) {
-            auto* mouseEvent = static_cast<QMouseEvent*>(event);
-            this->mouseReleaseEvent(mouseEvent);
-            return true;
-        }
-    }
-
-    return QWidget::eventFilter(watched, event);
 }
 
 void ThemedWindow::updateWindowChromeState() {
@@ -318,8 +270,74 @@ void ThemedWindow::prepareForMaximizeTransition() {
 }
 
 void ThemedWindow::prepareForRestoreTransition() {
-    _forceRoundedChrome = true;
+    _forceRoundedChrome = false;
     applyWindowChromeState(false);
-    updateWindowMask();
+    clearMask();
     update();
+}
+
+bool ThemedWindow::eventFilter(QObject* watched, QEvent* event) {
+    auto* w = qobject_cast<QWidget*>(watched);
+    if (w && (w == this || this->isAncestorOf(w))) {
+        if (event->type() == QEvent::MouseMove) {
+            auto* mouseEvent = static_cast<QMouseEvent*>(event);
+            QPoint globalPos = mouseEvent->globalPosition().toPoint();
+            QPoint localPos = mapFromGlobal(globalPos);
+
+            if (_resizeMode != ResizeNone) {
+                this->mouseMoveEvent(mouseEvent);
+                return true;
+            }
+
+            int mode = determineResizeMode(localPos);
+            if (mode != ResizeNone) {
+                if (_cursorOverriddenWidget && _cursorOverriddenWidget != w) {
+                    _cursorOverriddenWidget->unsetCursor();
+                }
+                updateCursorShape(localPos);
+                w->setCursor(cursor());
+                _cursorOverriddenWidget = w;
+                return true;
+            } else {
+                if (_cursorOverriddenWidget) {
+                    _cursorOverriddenWidget->unsetCursor();
+                    _cursorOverriddenWidget = nullptr;
+                }
+                this->unsetCursor();
+                this->setCursor(Qt::ArrowCursor);
+            }
+        }
+        else if (event->type() == QEvent::MouseButtonPress) {
+            auto* mouseEvent = static_cast<QMouseEvent*>(event);
+            QPoint globalPos = mouseEvent->globalPosition().toPoint();
+            QPoint localPos = mapFromGlobal(globalPos);
+            int mode = determineResizeMode(localPos);
+            if (mode != ResizeNone) {
+                this->mousePressEvent(mouseEvent);
+                return true;
+            }
+        }
+        else if (event->type() == QEvent::MouseButtonRelease) {
+            if (_resizeMode != ResizeNone) {
+                auto* mouseEvent = static_cast<QMouseEvent*>(event);
+                this->mouseReleaseEvent(mouseEvent);
+                if (_cursorOverriddenWidget) {
+                    _cursorOverriddenWidget->unsetCursor();
+                    _cursorOverriddenWidget = nullptr;
+                }
+                this->unsetCursor();
+                this->setCursor(Qt::ArrowCursor);
+                return true;
+            }
+        }
+        else if (event->type() == QEvent::Leave) {
+            if (_cursorOverriddenWidget) {
+                _cursorOverriddenWidget->unsetCursor();
+                _cursorOverriddenWidget = nullptr;
+            }
+            this->unsetCursor();
+            this->setCursor(Qt::ArrowCursor);
+        }
+    }
+    return QWidget::eventFilter(watched, event);
 }

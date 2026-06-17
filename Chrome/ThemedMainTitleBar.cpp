@@ -44,8 +44,8 @@ ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBa
     _logoLabel->setFixedSize(18, 18);
     layout->addWidget(_logoLabel, 0, Qt::AlignVCenter);
 
-    // App Title
-    _titleLabel = new QLabel(_mainWindow->windowTitle(), this);
+    // App Title - Use parent's windowTitle (ThemedWindow)
+    _titleLabel = new QLabel(parent ? parent->windowTitle() : QString(), this);
     _titleLabel->setObjectName(QStringLiteral("MainTitleLabel"));
     _titleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
     layout->addWidget(_titleLabel, 0, Qt::AlignVCenter);
@@ -83,20 +83,30 @@ ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBa
     buttonLayout->addWidget(_closeButton, 0, Qt::AlignVCenter);
     layout->addLayout(buttonLayout);
 
-    connect(_minButton, &QPushButton::clicked, _mainWindow, &QWidget::showMinimized);
-    connect(_maxButton, &QPushButton::clicked, [this]() {
-        if (_mainWindow->isMaximized()) {
-            QMetaObject::invokeMethod(_mainWindow, "prepareForRestoreTransition", Qt::DirectConnection);
-            _mainWindow->showNormal();
-        } else {
-            QMetaObject::invokeMethod(_mainWindow, "prepareForMaximizeTransition", Qt::DirectConnection);
-            _mainWindow->showMaximized();
+    connect(_minButton, &QPushButton::clicked, this, [this]() {
+        if (auto* topLevel = this->window()) {
+            topLevel->showMinimized();
         }
-        updateMaximizeIcon();
     });
-    connect(_closeButton, &QPushButton::clicked, _mainWindow, &QWidget::close);
+    connect(_maxButton, &QPushButton::clicked, [this]() {
+        if (auto* topLevel = this->window()) {
+            if (topLevel->isMaximized()) {
+                topLevel->showNormal();
+            } else {
+                topLevel->showMaximized();
+            }
+            updateMaximizeIcon();
+        }
+    });
+    connect(_closeButton, &QPushButton::clicked, this, [this]() {
+        if (auto* topLevel = this->window()) {
+            topLevel->close();
+        }
+    });
 
-    connect(_mainWindow, &QWidget::windowTitleChanged, _titleLabel, &QLabel::setText);
+    if (parent) {
+        connect(parent, &QWidget::windowTitleChanged, _titleLabel, &QLabel::setText);
+    }
 
     _minButton->installEventFilter(this);
     _maxButton->installEventFilter(this);
@@ -114,14 +124,15 @@ ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBa
 
 void ThemedMainTitleBar::mousePressEvent(QMouseEvent* event)
 {
-    if (event->button() == Qt::LeftButton && !_mainWindow->isMaximized()) {
-        if (auto* window = _mainWindow->windowHandle()) {
+    auto* topLevel = this->window();
+    if (event->button() == Qt::LeftButton && topLevel && !topLevel->isMaximized()) {
+        if (auto* window = topLevel->windowHandle()) {
             if (window->startSystemMove()) {
                 event->accept();
                 return;
             }
         }
-        _dragPosition = event->globalPosition().toPoint() - _mainWindow->frameGeometry().topLeft();
+        _dragPosition = event->globalPosition().toPoint() - topLevel->frameGeometry().topLeft();
         _isDragging = true;
         event->accept();
     } else {
@@ -131,8 +142,9 @@ void ThemedMainTitleBar::mousePressEvent(QMouseEvent* event)
 
 void ThemedMainTitleBar::mouseMoveEvent(QMouseEvent* event)
 {
-    if (_isDragging && (event->buttons() & Qt::LeftButton)) {
-        _mainWindow->move(event->globalPosition().toPoint() - _dragPosition);
+    auto* topLevel = this->window();
+    if (_isDragging && topLevel && (event->buttons() & Qt::LeftButton)) {
+        topLevel->move(event->globalPosition().toPoint() - _dragPosition);
         event->accept();
     } else {
         QWidget::mouseMoveEvent(event);
@@ -151,13 +163,12 @@ void ThemedMainTitleBar::mouseReleaseEvent(QMouseEvent* event)
 
 void ThemedMainTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
 {
-    if (event->button() == Qt::LeftButton) {
-        if (_mainWindow->isMaximized()) {
-            QMetaObject::invokeMethod(_mainWindow, "prepareForRestoreTransition", Qt::DirectConnection);
-            _mainWindow->showNormal();
+    auto* topLevel = this->window();
+    if (event->button() == Qt::LeftButton && topLevel) {
+        if (topLevel->isMaximized()) {
+            topLevel->showNormal();
         } else {
-            QMetaObject::invokeMethod(_mainWindow, "prepareForMaximizeTransition", Qt::DirectConnection);
-            _mainWindow->showMaximized();
+            topLevel->showMaximized();
         }
         updateMaximizeIcon();
         event->accept();
@@ -168,7 +179,8 @@ void ThemedMainTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
 
 void ThemedMainTitleBar::updateMaximizeIcon()
 {
-    bool isMax = _mainWindow->isMaximized();
+    auto* topLevel = this->window();
+    bool isMax = topLevel ? topLevel->isMaximized() : false;
     _maxButton->setProperty("maximized", isMax);
 
     bool underMouse = _maxButton->underMouse();
