@@ -482,6 +482,10 @@ void installResources(QApplication& app)
         "    border-bottom-left-radius: 6px;\n"
         "    border-bottom-right-radius: 6px;\n"
         "}\n"
+        "QStatusBar {\n"
+        "    border-bottom-left-radius: 7px;\n"
+        "    border-bottom-right-radius: 7px;\n"
+        "}\n"
     );
 #endif
     app.setStyleSheet(styleSheet);
