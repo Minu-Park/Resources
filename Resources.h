@@ -2,6 +2,12 @@
 
 #include <QtGlobal>
 
+#ifdef Q_OS_WIN
+#define PLATFORM_RADIUS(defaultVal, winVal) (winVal)
+#else
+#define PLATFORM_RADIUS(defaultVal, winVal) (defaultVal)
+#endif
+
 class QApplication;
 class QWidget;
 class QPainter;

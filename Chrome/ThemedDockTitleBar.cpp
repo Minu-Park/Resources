@@ -14,10 +14,11 @@
 #include <QTimer>
 
 ThemedDockTitleBar::ThemedDockTitleBar(QDockWidget* dockWidget, QWidget* parent)
-    : QWidget(parent)
+    : QFrame(parent)
     , _dockWidget(dockWidget)
 {
     setObjectName(QStringLiteral("ThemedDockTitleBar"));
+    setAttribute(Qt::WA_StyledBackground, true);
     setFixedHeight(28); // Standard compact height for dock widget title bars
 
     auto* layout = new QHBoxLayout(this);
@@ -88,17 +89,18 @@ void ThemedDockTitleBar::paintEvent(QPaintEvent* event)
     bool floating = _dockWidget ? _dockWidget->isFloating() : false;
 
     if (floating) {
+        const qreal radius = PLATFORM_RADIUS(11.0, 8.0);
         // Clip drawing to our widget rect
         p.setClipRect(rect());
         p.setPen(Qt::NoPen);
         p.setBrush(Qt::white);
         // Draw a larger rounded rect so the bottom corners remain square
-        p.drawRoundedRect(QRectF(0, 0, width(), height() + 11), 11.0, 11.0);
+        p.drawRoundedRect(QRectF(0, 0, width(), height() + radius), radius, radius);
 
         // Draw the outer border line (left, top, right) matching the rounded top corners
         p.setPen(QPen(QColor(0xd9, 0xe1, 0xea), 1.0));
         p.setBrush(Qt::NoBrush);
-        p.drawRoundedRect(QRectF(0.5, 0.5, width() - 1.0, height() + 11.0), 11.0, 11.0);
+        p.drawRoundedRect(QRectF(0.5, 0.5, width() - 1.0, height() + radius), radius, radius);
 
         // Draw the bottom border line (always straight at the bottom of the titlebar)
         p.setPen(QColor(0xd9, 0xe1, 0xea));
@@ -154,11 +156,12 @@ bool ThemedDockTitleBar::eventFilter(QObject* watched, QEvent* event)
 
 void ThemedDockTitleBar::applyFloatingChrome(bool floating)
 {
-    _dockWidget->setProperty("floatingState", floating);
-    setProperty("floatingState", floating);
+    const QString stateStr = floating ? QStringLiteral("true") : QStringLiteral("false");
+    _dockWidget->setProperty("floatingState", stateStr);
+    setProperty("floatingState", stateStr);
 
     if (QWidget* container = _dockWidget->widget()) {
-        container->setProperty("floatingState", floating);
+        container->setProperty("floatingState", stateStr);
     }
 
     _dockWidget->setAttribute(Qt::WA_TranslucentBackground, floating);
