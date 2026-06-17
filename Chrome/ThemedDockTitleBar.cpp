@@ -1,4 +1,5 @@
 #include "ThemedDockTitleBar.h"
+#include "Resources.h"
 #include <QDockWidget>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -164,6 +165,10 @@ void ThemedDockTitleBar::applyFloatingChrome(bool floating)
     _dockWidget->setAttribute(Qt::WA_NoSystemBackground, floating);
     _dockWidget->setWindowFlag(Qt::FramelessWindowHint, floating);
 
+    if (floating) {
+        Resources::applyWindowPlatformAttributes(_dockWidget);
+    }
+
     if (floating && _dockWidget->layout()) {
         _dockWidget->layout()->setContentsMargins(0, 0, 0, 0);
         _dockWidget->layout()->setSpacing(0);
@@ -175,6 +180,9 @@ void ThemedDockTitleBar::applyFloatingChrome(bool floating)
     if (_dockWidget->isVisible()) {
         QTimer::singleShot(0, _dockWidget, [this]() {
             _dockWidget->show();
+            if (_dockWidget->isFloating()) {
+                Resources::applyWindowPlatformAttributes(_dockWidget);
+            }
             updateFloatingMask();
         });
     }
@@ -197,31 +205,7 @@ void ThemedDockTitleBar::refreshFloatingChromeStyle()
 
 void ThemedDockTitleBar::updateFloatingMask()
 {
-#if defined(Q_OS_MAC) || defined(Q_OS_LINUX)
     _dockWidget->clearMask();
-    return;
-#else
-    if (!_dockWidget->isFloating()) {
-        _dockWidget->clearMask();
-        return;
-    }
-
-    const QSize size = _dockWidget->size();
-    if (size.isEmpty()) {
-        return;
-    }
-
-    QBitmap mask(size);
-    mask.fill(Qt::color0);
-
-    QPainter painter(&mask);
-    painter.setRenderHint(QPainter::Antialiasing, false);
-    painter.setBrush(Qt::color1);
-    painter.setPen(Qt::NoPen);
-    painter.drawRoundedRect(_dockWidget->rect(), 12, 12);
-
-    _dockWidget->setMask(mask);
-#endif
 }
 
 QIcon ThemedDockTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSize) const
