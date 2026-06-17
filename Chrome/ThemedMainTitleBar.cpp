@@ -1,4 +1,5 @@
 #include "ThemedMainTitleBar.h"
+#include "ThemedMainWindow.h"
 #include <QMainWindow>
 #include <QWindow>
 #include <QMenuBar>
@@ -12,6 +13,30 @@
 #include <QStyle>
 #include <QStyleOption>
 #include <QPainter>
+
+namespace {
+void toggleTopLevelMaximized(QWidget* topLevel)
+{
+    if (!topLevel) {
+        return;
+    }
+
+    const bool maximized = topLevel->isMaximized();
+    if (auto* themedWindow = qobject_cast<ThemedMainWindow*>(topLevel)) {
+        if (maximized) {
+            themedWindow->prepareForRestoreTransition();
+        } else {
+            themedWindow->prepareForMaximizeTransition();
+        }
+    }
+
+    if (maximized) {
+        topLevel->showNormal();
+    } else {
+        topLevel->showMaximized();
+    }
+}
+}
 
 ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* parent)
     : QWidget(parent)
@@ -90,11 +115,7 @@ ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBa
     });
     connect(_maxButton, &QPushButton::clicked, [this]() {
         if (auto* topLevel = this->window()) {
-            if (topLevel->isMaximized()) {
-                topLevel->showNormal();
-            } else {
-                topLevel->showMaximized();
-            }
+            toggleTopLevelMaximized(topLevel);
             updateMaximizeIcon();
         }
     });
@@ -165,11 +186,7 @@ void ThemedMainTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
 {
     auto* topLevel = this->window();
     if (event->button() == Qt::LeftButton && topLevel) {
-        if (topLevel->isMaximized()) {
-            topLevel->showNormal();
-        } else {
-            topLevel->showMaximized();
-        }
+        toggleTopLevelMaximized(topLevel);
         updateMaximizeIcon();
         event->accept();
     } else {
