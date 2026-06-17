@@ -42,11 +42,13 @@ ThemedDockTitleBar::ThemedDockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     _floatButton = new QPushButton(this);
     _floatButton->setObjectName(QStringLiteral("DockMaxButton"));
     _floatButton->setFocusPolicy(Qt::NoFocus);
+    _floatButton->setVisible(_dockWidget->features().testFlag(QDockWidget::DockWidgetFloatable));
 
     // Close button
     _closeButton = new QPushButton(this);
     _closeButton->setObjectName(QStringLiteral("DockCloseButton"));
     _closeButton->setFocusPolicy(Qt::NoFocus);
+    _closeButton->setVisible(_dockWidget->features().testFlag(QDockWidget::DockWidgetClosable));
 
     buttonLayout->addWidget(_floatButton, 0, Qt::AlignVCenter);
     buttonLayout->addWidget(_closeButton, 0, Qt::AlignVCenter);
@@ -126,9 +128,11 @@ void ThemedDockTitleBar::mouseReleaseEvent(QMouseEvent* event)
 bool ThemedDockTitleBar::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _dockWidget) {
+#if !defined(Q_OS_MAC) && !defined(Q_OS_LINUX)
         if (event->type() == QEvent::Resize || event->type() == QEvent::Show) {
             updateFloatingMask();
         }
+#endif
     }
     else if (watched == _closeButton) {
         if (event->type() == QEvent::Enter) {
@@ -193,6 +197,10 @@ void ThemedDockTitleBar::refreshFloatingChromeStyle()
 
 void ThemedDockTitleBar::updateFloatingMask()
 {
+#if defined(Q_OS_MAC) || defined(Q_OS_LINUX)
+    _dockWidget->clearMask();
+    return;
+#else
     if (!_dockWidget->isFloating()) {
         _dockWidget->clearMask();
         return;
@@ -213,6 +221,7 @@ void ThemedDockTitleBar::updateFloatingMask()
     painter.drawRoundedRect(_dockWidget->rect(), 12, 12);
 
     _dockWidget->setMask(mask);
+#endif
 }
 
 QIcon ThemedDockTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSize) const
