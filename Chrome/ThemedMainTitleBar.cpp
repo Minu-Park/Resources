@@ -1,4 +1,4 @@
-#include "MainTitleBar.h"
+#include "ThemedMainTitleBar.h"
 #include <QMainWindow>
 #include <QWindow>
 #include <QMenuBar>
@@ -13,11 +13,11 @@
 #include <QStyleOption>
 #include <QPainter>
 
-MainTitleBar::MainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* parent)
+ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* parent)
     : QWidget(parent)
     , _mainWindow(mainWindow)
 {
-    setObjectName(QStringLiteral("MainTitleBar"));
+    setObjectName(QStringLiteral("ThemedMainTitleBar"));
     setFixedHeight(40);
     setCursor(Qt::ArrowCursor);
 
@@ -112,7 +112,7 @@ MainTitleBar::MainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBar, QWidget* 
     updateMaximizeIcon();
 }
 
-void MainTitleBar::mousePressEvent(QMouseEvent* event)
+void ThemedMainTitleBar::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton && !_mainWindow->isMaximized()) {
         if (auto* window = _mainWindow->windowHandle()) {
@@ -129,7 +129,7 @@ void MainTitleBar::mousePressEvent(QMouseEvent* event)
     }
 }
 
-void MainTitleBar::mouseMoveEvent(QMouseEvent* event)
+void ThemedMainTitleBar::mouseMoveEvent(QMouseEvent* event)
 {
     if (_isDragging && (event->buttons() & Qt::LeftButton)) {
         _mainWindow->move(event->globalPosition().toPoint() - _dragPosition);
@@ -139,7 +139,7 @@ void MainTitleBar::mouseMoveEvent(QMouseEvent* event)
     }
 }
 
-void MainTitleBar::mouseReleaseEvent(QMouseEvent* event)
+void ThemedMainTitleBar::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         _isDragging = false;
@@ -149,7 +149,7 @@ void MainTitleBar::mouseReleaseEvent(QMouseEvent* event)
     }
 }
 
-void MainTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
+void ThemedMainTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         if (_mainWindow->isMaximized()) {
@@ -166,7 +166,7 @@ void MainTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
     }
 }
 
-void MainTitleBar::updateMaximizeIcon()
+void ThemedMainTitleBar::updateMaximizeIcon()
 {
     bool isMax = _mainWindow->isMaximized();
     _maxButton->setProperty("maximized", isMax);
@@ -176,7 +176,7 @@ void MainTitleBar::updateMaximizeIcon()
     _maxButton->setIcon(createSmoothIcon(path, QSize(16, 16)));
 }
 
-bool MainTitleBar::eventFilter(QObject* watched, QEvent* event)
+bool ThemedMainTitleBar::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _minButton) {
         if (event->type() == QEvent::Enter) {
@@ -202,7 +202,7 @@ bool MainTitleBar::eventFilter(QObject* watched, QEvent* event)
     return QWidget::eventFilter(watched, event);
 }
 
-void MainTitleBar::paintEvent(QPaintEvent* event)
+void ThemedMainTitleBar::paintEvent(QPaintEvent* event)
 {
     QStyleOption opt;
     opt.initFrom(this);
@@ -211,7 +211,7 @@ void MainTitleBar::paintEvent(QPaintEvent* event)
     QWidget::paintEvent(event);
 }
 
-QIcon MainTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSize) const
+QIcon ThemedMainTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSize) const
 {
     const QPixmap source(path);
     if (source.isNull()) {
@@ -232,3 +232,4 @@ QIcon MainTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSi
     target.setDevicePixelRatio(dpr);
     return QIcon(target);
 }
+

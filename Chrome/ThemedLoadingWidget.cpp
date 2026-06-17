@@ -1,6 +1,6 @@
-#include "LoadingWidget.h"
+#include "ThemedLoadingWidget.h"
 
-LoadingWidget::LoadingWidget(QWidget* parent)
+ThemedLoadingWidget::ThemedLoadingWidget(QWidget* parent)
     : QWidget(parent)
 {
     setAttribute(Qt::WA_TranslucentBackground);
@@ -46,7 +46,7 @@ LoadingWidget::LoadingWidget(QWidget* parent)
     layoutTextRow->addWidget(_labelText, 1);
     layoutTextRow->addWidget(_labelPercent, 0);
 
-    _progress = new ProgressItem(_frame);
+    _progress = new ThemedProgressBar(_frame);
     _progress->setObjectName(QStringLiteral("LoadingProgress"));
 
     layoutInside->addWidget(_labelImage, 0, Qt::AlignHCenter);
@@ -61,7 +61,7 @@ LoadingWidget::LoadingWidget(QWidget* parent)
     setBusy(true);
 }
 
-void LoadingWidget::setValue(int v)
+void ThemedLoadingWidget::setValue(int v)
 {
     _progress->setBusy(false);
     _progress->setValue(v);
@@ -71,12 +71,12 @@ void LoadingWidget::setValue(int v)
     _lastProgress = pct;
 }
 
-void LoadingWidget::setText(const QString& text)
+void ThemedLoadingWidget::setText(const QString& text)
 {
     _labelText->setText(text);
 }
 
-void LoadingWidget::setBusy(bool on)
+void ThemedLoadingWidget::setBusy(bool on)
 {
     _progress->setBusy(on);
     _labelPercent->setText(on ? QString() : QStringLiteral("%1%").arg(_lastProgress));
@@ -88,7 +88,7 @@ void LoadingWidget::setBusy(bool on)
     });
 }
 
-void LoadingWidget::centerInParent()
+void ThemedLoadingWidget::centerInParent()
 {
     if (!parentWidget()) return;
 
@@ -100,14 +100,14 @@ void LoadingWidget::centerInParent()
          parentGlobal.y() + (pr.height() - s.height()) / 2);
 }
 
-void LoadingWidget::setImage(const QPixmap& px, int imageHeight)
+void ThemedLoadingWidget::setImage(const QPixmap& px, int imageHeight)
 {
     _iconImage = px;
     _imageHeight = imageHeight;
     updateImage();
 }
 
-void LoadingWidget::updateImage()
+void ThemedLoadingWidget::updateImage()
 {
     if (_iconImage.isNull()) {
         _labelImage->clear();
@@ -123,14 +123,15 @@ void LoadingWidget::updateImage()
     _labelImage->setFixedHeight(qMax(30, int(scaled.height() / dpr)));
 }
 
-void LoadingWidget::resizeEvent(QResizeEvent* e)
+void ThemedLoadingWidget::resizeEvent(QResizeEvent* e)
 {
     QWidget::resizeEvent(e);
     updateImage();
 }
 
-void LoadingWidget::showEvent(QShowEvent* e)
+void ThemedLoadingWidget::showEvent(QShowEvent* e)
 {
     QWidget::showEvent(e);
     centerInParent();
 }
+

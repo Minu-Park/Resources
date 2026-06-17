@@ -40,14 +40,14 @@ QWidget#MainTitleBar QMenuBar {
     border: none;
 }
 
-QWidget#CustomTitleBar QMenuBar {
+QWidget#ThemedMdiTitleBar QMenuBar {
     background: transparent;
     border: none;
     font-size: 11px;
 }
 
 QWidget#MainTitleBar QMenuBar::item,
-QWidget#CustomTitleBar QMenuBar::item {
+QWidget#ThemedMdiTitleBar QMenuBar::item {
     padding: 3px 8px;
     margin: 0;
 }
@@ -140,19 +140,19 @@ QPushButton#ThemedDialogCloseButton:pressed {
 }
 
 /* Custom SubWindow Title Bar */
-QWidget#CustomTitleBar {
+QWidget#ThemedMdiTitleBar {
     background-color: #ffffff;
     border-bottom: 1px solid #d9e1ea;
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
 }
 
-QWidget#CustomTitleBar[maximized="true"] {
+QWidget#ThemedMdiTitleBar[maximized="true"] {
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
 }
 
-QLabel#CustomTitleBarLabel {
+QLabel#ThemedMdiTitleBarLabel {
     background: transparent;
     font-size: 11px;
     font-weight: bold;

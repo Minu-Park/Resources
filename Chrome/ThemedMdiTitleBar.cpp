@@ -1,4 +1,4 @@
-#include "CustomTitleBar.h"
+#include "ThemedMdiTitleBar.h"
 #include <QMdiSubWindow>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -10,12 +10,12 @@
 #include <QCoreApplication>
 #include <QMenuBar>
 
-CustomTitleBar::CustomTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWidget* parent)
+ThemedMdiTitleBar::ThemedMdiTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWidget* parent)
     : QWidget(parent)
     , _subWindow(subWindow)
     , _menuBar(menuBar)
 {
-    setObjectName(QStringLiteral("CustomTitleBar"));
+    setObjectName(QStringLiteral("ThemedMdiTitleBar"));
     setFixedHeight(32);
     setCursor(Qt::ArrowCursor);
 
@@ -27,7 +27,7 @@ CustomTitleBar::CustomTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWid
     // Title label and icon are added to the layout directly
     if (!_subWindow->windowIcon().isNull()) {
         auto* iconLabel = new QLabel(this);
-        iconLabel->setObjectName(QStringLiteral("CustomTitleBarIconLabel"));
+        iconLabel->setObjectName(QStringLiteral("ThemedMdiTitleBarIconLabel"));
         iconLabel->setPixmap(_subWindow->windowIcon().pixmap(18, 18));
         iconLabel->setFixedSize(18, 18);
         iconLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
@@ -36,7 +36,7 @@ CustomTitleBar::CustomTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWid
     }
 
     _titleLabel = new QLabel(_subWindow->windowTitle(), this);
-    _titleLabel->setObjectName(QStringLiteral("CustomTitleBarLabel"));
+    _titleLabel->setObjectName(QStringLiteral("ThemedMdiTitleBarLabel"));
     _titleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
     layout->addWidget(_titleLabel, 0, Qt::AlignVCenter);
 
@@ -113,7 +113,7 @@ CustomTitleBar::CustomTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWid
     updateMaximizeIcon();
 }
 
-void CustomTitleBar::mousePressEvent(QMouseEvent* event)
+void ThemedMdiTitleBar::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton && !_subWindow->isMaximized()) {
         _dragPosition = event->globalPosition().toPoint() - _subWindow->frameGeometry().topLeft();
@@ -124,7 +124,7 @@ void CustomTitleBar::mousePressEvent(QMouseEvent* event)
     }
 }
 
-void CustomTitleBar::mouseMoveEvent(QMouseEvent* event)
+void ThemedMdiTitleBar::mouseMoveEvent(QMouseEvent* event)
 {
     if (_isDragging && (event->buttons() & Qt::LeftButton)) {
         _subWindow->move(event->globalPosition().toPoint() - _dragPosition);
@@ -145,7 +145,7 @@ void CustomTitleBar::mouseMoveEvent(QMouseEvent* event)
     }
 }
 
-void CustomTitleBar::mouseReleaseEvent(QMouseEvent* event)
+void ThemedMdiTitleBar::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         _isDragging = false;
@@ -155,7 +155,7 @@ void CustomTitleBar::mouseReleaseEvent(QMouseEvent* event)
     }
 }
 
-void CustomTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
+void ThemedMdiTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         if (_subWindow->isMaximized()) {
@@ -170,7 +170,7 @@ void CustomTitleBar::mouseDoubleClickEvent(QMouseEvent* event)
     }
 }
 
-void CustomTitleBar::updateMaximizeIcon()
+void ThemedMdiTitleBar::updateMaximizeIcon()
 {
     bool isMax = _subWindow->isMaximized();
     _maxButton->setProperty("maximized", isMax);
@@ -180,7 +180,7 @@ void CustomTitleBar::updateMaximizeIcon()
     _maxButton->setIcon(createSmoothIcon(path, QSize(16, 16)));
 }
 
-bool CustomTitleBar::eventFilter(QObject* watched, QEvent* event)
+bool ThemedMdiTitleBar::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _minButton) {
         if (event->type() == QEvent::Enter) {
@@ -206,7 +206,7 @@ bool CustomTitleBar::eventFilter(QObject* watched, QEvent* event)
     return QWidget::eventFilter(watched, event);
 }
 
-void CustomTitleBar::paintEvent(QPaintEvent* event)
+void ThemedMdiTitleBar::paintEvent(QPaintEvent* event)
 {
     QStyleOption opt;
     opt.initFrom(this);
@@ -215,7 +215,7 @@ void CustomTitleBar::paintEvent(QPaintEvent* event)
     QWidget::paintEvent(event);
 }
 
-QIcon CustomTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSize) const
+QIcon ThemedMdiTitleBar::createSmoothIcon(const QString& path, const QSize& logicalSize) const
 {
     const QPixmap source(path);
     if (source.isNull()) {
@@ -237,7 +237,7 @@ QIcon CustomTitleBar::createSmoothIcon(const QString& path, const QSize& logical
     return QIcon(target);
 }
 
-void CustomTitleBar::updateState(bool isMinimized)
+void ThemedMdiTitleBar::updateState(bool isMinimized)
 {
     _isMinimized = isMinimized;
     
@@ -257,3 +257,4 @@ void CustomTitleBar::updateState(bool isMinimized)
         _titleLabel->setText(_subWindow->windowTitle());
     }
 }
+

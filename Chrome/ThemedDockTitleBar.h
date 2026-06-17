@@ -7,10 +7,10 @@ class QDockWidget;
 class QLabel;
 class QPushButton;
 
-class DockTitleBar : public QWidget {
+class ThemedDockTitleBar : public QWidget {
     Q_OBJECT
 public:
-    explicit DockTitleBar(QDockWidget* dockWidget, QWidget* parent = nullptr);
+    explicit ThemedDockTitleBar(QDockWidget* dockWidget, QWidget* parent = nullptr);
     static void setupDockWidget(QDockWidget* dockWidget, QWidget* contentWidget);
 
     QSize sizeHint() const override;
@@ -34,3 +34,4 @@ private:
     QPushButton* _floatButton = nullptr;
     QPushButton* _closeButton = nullptr;
 };
+
