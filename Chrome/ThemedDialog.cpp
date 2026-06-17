@@ -1,4 +1,5 @@
 #include "ThemedDialog.h"
+#include "Resources.h"
 
 #include <QHBoxLayout>
 #include <QIcon>
@@ -11,6 +12,9 @@
 #include <QStyleOption>
 #include <QVBoxLayout>
 #include <QWindow>
+#include <QShowEvent>
+
+
 
 class ThemedDialog::TitleBar final : public QWidget {
 public:
@@ -194,4 +198,10 @@ void ThemedDialog::setTitleText(const QString& title)
 {
     setWindowTitle(title);
     _titleBar->setTitleText(title);
+}
+
+void ThemedDialog::showEvent(QShowEvent* event)
+{
+    QDialog::showEvent(event);
+    Resources::applyWindowPlatformAttributes(this);
 }

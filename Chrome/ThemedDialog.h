@@ -13,6 +13,9 @@ public:
     QVBoxLayout* contentLayout() const;
     void setTitleText(const QString& title);
 
+protected:
+    void showEvent(QShowEvent* event) override;
+
 private:
     QWidget* _contentWidget = nullptr;
     QVBoxLayout* _contentLayout = nullptr;

@@ -11,6 +11,9 @@
 #include <QStyle>
 #include <QStatusBar>
 #include <QApplication>
+#include <QShowEvent>
+
+
 
 ThemedMainWindow::ThemedMainWindow(QWidget* parent) : QMainWindow(parent) {
     setObjectName(QStringLiteral("ThemedMainWindow"));
@@ -47,6 +50,11 @@ void ThemedMainWindow::paintEvent(QPaintEvent* event) {
 void ThemedMainWindow::resizeEvent(QResizeEvent* event) {
     QMainWindow::resizeEvent(event);
     updateWindowMask();
+}
+
+void ThemedMainWindow::showEvent(QShowEvent* event) {
+    QMainWindow::showEvent(event);
+    Resources::applyWindowPlatformAttributes(this);
 }
 
 void ThemedMainWindow::changeEvent(QEvent* event) {

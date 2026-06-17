@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QtGlobal>
+
 class QApplication;
 class QWidget;
 class QPainter;
@@ -19,6 +21,16 @@ void installResources(QApplication& app);
  * @brief Renders the frameless main window border and background with correct rounded edges.
  */
 void paintMainWindowBorder(QWidget* window, QPainter& painter, bool maximized, bool forceRounded);
+
+/**
+ * @brief Applies platform-specific window rendering attributes (e.g., DWM rounded corners and extend frame on Windows).
+ */
+void applyWindowPlatformAttributes(QWidget* window);
+
+/**
+ * @brief Retrieves the outer and inner corner radius based on the current operating system.
+ */
+void getPlatformWindowRadius(qreal& outer, qreal& inner);
 
 /**
  * @brief Fills the MDI area background and draws the branding logo cleanly.
