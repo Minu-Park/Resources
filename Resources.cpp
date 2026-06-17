@@ -469,6 +469,19 @@ void installResources(QApplication& app)
     styleSheet += QStringLiteral(
         "\nQWidget#ThemedDialogContainer { border-radius: 8px; }\n"
         "QWidget#ThemedDialogTitleBar { border-top-left-radius: 8px; border-top-right-radius: 8px; }\n"
+        "QFrame#DockContainerWidget[floatingState=\"true\"],\n"
+        "QDockWidget[floatingState=\"true\"] QFrame#DockContainerWidget {\n"
+        "    border-bottom-left-radius: 7px;\n"
+        "    border-bottom-right-radius: 7px;\n"
+        "}\n"
+        "QDockWidget[floatingState=\"true\"] QWidget#ThemedDockTitleBar {\n"
+        "    border-top-left-radius: 7px;\n"
+        "    border-top-right-radius: 7px;\n"
+        "}\n"
+        "QDockWidget[floatingState=\"true\"] QFrame#DockContainerWidget > QWidget {\n"
+        "    border-bottom-left-radius: 6px;\n"
+        "    border-bottom-right-radius: 6px;\n"
+        "}\n"
     );
 #endif
     app.setStyleSheet(styleSheet);
