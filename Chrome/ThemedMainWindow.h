@@ -1,28 +1,23 @@
 #pragma once
 
-#include <QWidget>
+#include <QMainWindow>
 #include <QPoint>
 #include <QPointer>
 
-class QVBoxLayout;
+class QMenuBar;
 class ThemedMainTitleBar;
 
-class ThemedWindow : public QWidget {
+class ThemedMainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit ThemedWindow(QWidget* parent = nullptr);
-    ~ThemedWindow() override;
-
-    /**
-     * @brief Sets the central content widget of the frameless themed window.
-     *        If it is a QMainWindow, it automatically extracts its QMenuBar to create the custom title bar.
-     */
-    void setCentralWidget(QWidget* widget);
+    explicit ThemedMainWindow(QWidget* parent = nullptr);
+    ~ThemedMainWindow() override;
 
     /**
      * @brief Accessor for the custom title bar widget.
      */
     ThemedMainTitleBar* titleBar() const { return _titleBar; }
+    QMenuBar* themedMenuBar() const { return _menuBar; }
 
     void prepareForMaximizeTransition();
     void prepareForRestoreTransition();
@@ -53,9 +48,8 @@ protected:
     void updateCursorShape(const QPoint& pos);
 
 private:
-    QVBoxLayout* _layout = nullptr;
+    QMenuBar* _menuBar = nullptr;
     ThemedMainTitleBar* _titleBar = nullptr;
-    QWidget* _centralWidget = nullptr;
 
     QPoint _dragStartPos;
     int _resizeMode = ResizeNone;

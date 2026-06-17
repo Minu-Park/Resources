@@ -44,7 +44,7 @@ ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBa
     _logoLabel->setFixedSize(18, 18);
     layout->addWidget(_logoLabel, 0, Qt::AlignVCenter);
 
-    // App Title - Use parent's windowTitle (ThemedWindow)
+    // App Title - Use parent's windowTitle (ThemedMainWindow)
     _titleLabel = new QLabel(parent ? parent->windowTitle() : QString(), this);
     _titleLabel->setObjectName(QStringLiteral("MainTitleLabel"));
     _titleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
@@ -244,4 +244,3 @@ QIcon ThemedMainTitleBar::createSmoothIcon(const QString& path, const QSize& log
     target.setDevicePixelRatio(dpr);
     return QIcon(target);
 }
-
