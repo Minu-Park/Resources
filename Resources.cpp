@@ -510,12 +510,10 @@ void installResources(QApplication& app)
 void paintMainWindowBorder(QWidget* window, QPainter& painter, bool maximized, bool forceRounded)
 {
     if (!window) return;
-    if (maximized && !forceRounded) {
-        painter.fillRect(window->rect(), QColor(QStringLiteral("#ffffff")));
-        return;
-    }
+    Q_UNUSED(maximized);
+    Q_UNUSED(forceRounded);
 
-    // Normal-state corners use the translucent backing store instead of a binary
+    // Main-window corners use the translucent backing store instead of a binary
     // QBitmap mask so antialiased edge pixels are not hard-clipped.
     painter.setCompositionMode(QPainter::CompositionMode_Source);
     painter.fillRect(window->rect(), Qt::transparent);

@@ -31,8 +31,8 @@ QWidget#ThemedMainTitleBar {
 
 QWidget#ThemedMainTitleBar[maximized="true"] {
     background-color: #ffffff;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
     border-bottom: 1px solid #d9e1ea;
 }
 
