@@ -454,6 +454,7 @@ QRadioButton {
     background: transparent;
     padding: 0;
     border: none;
+    min-height: 22px;
 }
 
 QCheckBox:hover,
@@ -463,13 +464,13 @@ QRadioButton:hover {
 
 QCheckBox::indicator,
 QRadioButton::indicator {
-    width: 22px;
-    height: 22px;
+    width: 16px;
+    height: 16px;
 }
 
 QCheckBox::indicator {
     border: 1px solid #cfd9e4;
-    border-radius: 8px;
+    border-radius: 4px;
     background: #ffffff;
 }
 
