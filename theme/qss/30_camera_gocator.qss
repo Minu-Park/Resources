@@ -28,6 +28,11 @@ QTreeWidget[treeRole="DeviceFeatureTree"]::item {
     padding: 0 6px;
 }
 
+QTreeWidget[treeRole="DeviceFeatureTree"]::item:has-children {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
 QTreeWidget[treeRole="DeviceFeatureTree"] QCheckBox,
 QTreeWidget[treeRole="DeviceFeatureTree"] QRadioButton {
     padding: 0;
