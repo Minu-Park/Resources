@@ -343,29 +343,28 @@ QComboBox QAbstractItemView::item:selected {
 
 QAbstractSpinBox {
     padding-right: 4px;
+    border: 1px solid #cfd9e4;
+    border-radius: 8px;
+    background: #ffffff;
 }
 
 QAbstractSpinBox::up-button,
 QAbstractSpinBox::down-button {
     subcontrol-origin: border;
-    width: 12px;
-    background: #ffffff;
-    border-left: 1px solid #d7e0ea;
-    border-right: 1px solid #d7e0ea;
+    width: 14px;
+    background: transparent;
+    border-left: 1px solid #cfd9e4;
 }
 
 QAbstractSpinBox::up-button {
     subcontrol-position: top right;
     border-top-right-radius: 8px;
-    border-top: 1px solid #d7e0ea;
-    border-bottom: 1px solid #d7e0ea;
+    border-bottom: 1px solid #cfd9e4;
 }
 
 QAbstractSpinBox::down-button {
     subcontrol-position: bottom right;
     border-bottom-right-radius: 8px;
-    border-top: 1px solid #d7e0ea;
-    border-bottom: 1px solid #d7e0ea;
 }
 
 QAbstractSpinBox::up-arrow {
