@@ -63,7 +63,8 @@ QLineEdit,
 QComboBox,
 QAbstractSpinBox,
 QPlainTextEdit,
-QTextEdit {
+QTextEdit,
+QTextBrowser {
     background: #ffffff;
     color: #16202b;
 }
@@ -235,7 +236,8 @@ QComboBox,
 QAbstractSpinBox,
 QLineEdit,
 QPlainTextEdit,
-QTextEdit {
+QTextEdit,
+QTextBrowser {
     border: 1px solid #cfd9e4;
     border-radius: 8px;
     padding: 5px 4px;
@@ -244,8 +246,13 @@ QTextEdit {
 }
 
 QPlainTextEdit,
-QTextEdit {
+QTextEdit,
+QTextBrowser {
     font-family: "JetBrains Mono";
+}
+
+QTextBrowser[contentRole="document"] {
+    font-family: "Inter";
 }
 
 QComboBox,
@@ -261,7 +268,8 @@ QComboBox:hover,
 QAbstractSpinBox:hover,
 QLineEdit:hover,
 QPlainTextEdit:hover,
-QTextEdit:hover {
+QTextEdit:hover,
+QTextBrowser:hover {
     border-color: #b7c7d8;
 }
 
@@ -270,6 +278,7 @@ QAbstractSpinBox:focus,
 QLineEdit:focus,
 QPlainTextEdit:focus,
 QTextEdit:focus,
+QTextBrowser:focus,
 QComboBox:on {
     border: 1px solid #8badc7;
 }
