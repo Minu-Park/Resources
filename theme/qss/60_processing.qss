@@ -380,6 +380,7 @@ QFrame#EditorStatusBar QLabel {
     font-family: "JetBrains Mono", "Inter";
     font-size: 10px;
     font-weight: 500;
+    min-height: 0px;
 }
 
 /* Save State Styles */

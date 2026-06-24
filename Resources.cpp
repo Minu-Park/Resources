@@ -269,9 +269,11 @@ private:
 
     static QRect repositionComboPopup(QComboBox* combo, QWidget* popup, QRect geo)
     {
-        const QPoint comboGlobal = combo->mapToGlobal(QPoint(0, 0));
-        const int comboW = combo->width();
-        const int comboH = combo->height();
+        // Account for QSS margin: 1px
+        const int margin = 1;
+        const QPoint comboGlobal = combo->mapToGlobal(QPoint(margin, margin));
+        const int comboW = combo->width() - (margin * 2);
+        const int comboH = combo->height() - (margin * 2);
 
         // Container QFrame draws its own 1px border inside its geometry.
         // To align outer edges with combo (which also has 1px border),
