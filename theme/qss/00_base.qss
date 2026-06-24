@@ -346,6 +346,7 @@ QAbstractSpinBox {
     border: 1px solid #cfd9e4;
     border-radius: 8px;
     background: #ffffff;
+    margin: 0px;
 }
 
 QAbstractSpinBox > QLineEdit {
