@@ -255,7 +255,6 @@ QLineEdit {
     max-height: 22px;
     padding-top: 0;
     padding-bottom: 0;
-    margin: 1px;
 }
 
 QComboBox:hover,
@@ -393,7 +392,6 @@ QPushButton {
     background: #ffffff;
     color: #16202b;
     font-weight: 700;
-    margin: 1px;
 }
 
 QPushButton:hover {
@@ -453,7 +451,6 @@ QRadioButton {
     padding: 0;
     border: none;
     min-height: 22px;
-    margin: 1px;
 }
 
 QCheckBox:hover,
