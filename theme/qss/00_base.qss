@@ -346,14 +346,8 @@ QAbstractSpinBox {
     border: 1px solid #cfd9e4;
     border-radius: 8px;
     background: #ffffff;
-    margin: 0px;
 }
 
-QAbstractSpinBox > QLineEdit {
-    min-height: 0px;
-    padding: 0px;
-    background: transparent;
-}
 
 QAbstractSpinBox::up-button,
 QAbstractSpinBox::down-button {
