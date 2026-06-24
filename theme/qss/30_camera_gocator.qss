@@ -25,21 +25,9 @@ QTreeWidget[treeRole="DeviceFeatureTree"] {
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"]::item {
-    min-height: 26px;
-    padding: 0 6px;
+    min-height: 24px;
 }
 
-QTreeWidget[treeRole="DeviceFeatureTree"] QCheckBox,
-QTreeWidget[treeRole="DeviceFeatureTree"] QRadioButton {
-    padding: 0;
-    margin: 0;
-}
-
-QTreeWidget[treeRole="DeviceFeatureTree"] QComboBox,
-QTreeWidget[treeRole="DeviceFeatureTree"] QAbstractSpinBox,
-QTreeWidget[treeRole="DeviceFeatureTree"] QLineEdit {
-    margin: 0;
-}
 
 QTreeWidget[treeRole="DeviceFeatureTree"]::item:hover {
     background: #ffffff;
@@ -48,18 +36,6 @@ QTreeWidget[treeRole="DeviceFeatureTree"]::item:hover {
 QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
     background: #ffffff;
     color: #16202b;
-}
-
-
-QCameraWidget QLabel {
-    background: transparent;
-    min-height: 22px;
-    padding: 0 6px;
-    margin: 0;
-}
-
-QCameraWidget QLabel:hover {
-    background: #f5f5f5;
 }
 
 QCameraWidget QLabel#CameraStatusLabel:hover,
