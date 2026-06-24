@@ -350,10 +350,12 @@ QAbstractSpinBox {
 
 QAbstractSpinBox::up-button,
 QAbstractSpinBox::down-button {
-    subcontrol-origin: border;
-    width: 14px;
+    subcontrol-origin: padding;
+    width: 16px;
     background: transparent;
     border-left: 1px solid #cfd9e4;
+    margin: 0;
+    padding: 0;
 }
 
 QAbstractSpinBox::up-button {
