@@ -350,8 +350,6 @@ QAbstractSpinBox {
 
 QAbstractSpinBox > QLineEdit {
     min-height: 0px;
-    margin-top: -1px;
-    margin-bottom: -1px;
     padding: 0px;
     background: transparent;
 }
