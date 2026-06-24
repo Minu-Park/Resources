@@ -348,6 +348,13 @@ QAbstractSpinBox {
     background: #ffffff;
 }
 
+QAbstractSpinBox > QLineEdit {
+    min-height: 0px;
+    margin: 0px;
+    padding: 0px;
+    background: transparent;
+}
+
 QAbstractSpinBox::up-button,
 QAbstractSpinBox::down-button {
     subcontrol-origin: padding;
