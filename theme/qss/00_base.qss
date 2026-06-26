@@ -47,6 +47,12 @@ QMainWindow::separator:hover {
     background: #9eacba;
 }
 
+QMainWindow#MainWindow::separator:horizontal {
+    background-color: #d9e1ea;
+    border: none;
+    height: 2px;
+}
+
 QDockWidget {
     color: #16202b;
     background: #ffffff;
