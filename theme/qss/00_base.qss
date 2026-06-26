@@ -39,18 +39,19 @@ QDialog {
 QMainWindow::separator {
     width: 2px;
     height: 2px;
-    background: #b8c3cf;
+    background: #d9e1ea;
     margin: 0;
 }
 
 QMainWindow::separator:hover {
-    background: #9eacba;
+    background: #b8c3cf;
 }
 
-QMainWindow#MainWindow::separator:horizontal {
+MainWindow::separator:horizontal,
+ThemedMainWindow::separator:horizontal {
+    height: 2px;
     background-color: #d9e1ea;
     border: none;
-    height: 2px;
 }
 
 QDockWidget {
