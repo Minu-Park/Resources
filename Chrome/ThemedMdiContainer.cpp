@@ -274,6 +274,10 @@ void ThemedMdiContainer::handleWindowStateChange()
         _subWin->graphicsEffect()->setEnabled(!maximized);
     }
     update();
+
+    if (QMdiArea* mdi = _subWin->mdiArea()) {
+        QMetaObject::invokeMethod(mdi->parent(), "updateMdiMinimumSize", Qt::QueuedConnection);
+    }
 }
 
 void ThemedMdiContainer::hideEvent(QHideEvent* event)
