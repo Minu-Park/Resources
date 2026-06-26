@@ -195,42 +195,7 @@ QLabel#ProcessingParamNameLabel {
     font-weight: 400;
 }
 
-QSlider#ProcessingParamSlider {
-    height: 20px;
-    min-height: 20px;
-    max-height: 20px;
-}
 
-QSlider#ProcessingParamSlider::groove:horizontal {
-    border: none;
-    height: 2px;
-    background: #edf2f7;
-    border-radius: 1px;
-}
-
-QSlider#ProcessingParamSlider::sub-page:horizontal {
-    background: #00457C;
-    border-radius: 1px;
-}
-
-QSlider#ProcessingParamSlider::handle:horizontal {
-    background: #ffffff;
-    border: 1px solid #cfd9e4;
-    width: 12px;
-    height: 12px;
-    margin: -6px 0;
-    border-radius: 7px;
-}
-
-QSlider#ProcessingParamSlider::handle:horizontal:hover {
-    border-color: #8badc7;
-    background: #f8fafc;
-}
-
-QSlider#ProcessingParamSlider::handle:horizontal:pressed {
-    border-color: #7097b3;
-    background: #f1f5f9;
-}
 
 QCheckBox#ProcessingParamCheckBox {
     padding-left: 3px;

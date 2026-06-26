@@ -712,3 +712,42 @@ QLabel#SplashPercent, QLabel#LoadingPercent {
     font-size: 12px;
     font-weight: bold;
 }
+
+/* Global QSlider Defaults */
+QSlider {
+    height: 20px;
+    min-height: 20px;
+    max-height: 20px;
+}
+
+QSlider::groove:horizontal {
+    border: none;
+    height: 4px;
+    background: #edf2f7;
+    border-radius: 2px;
+}
+
+QSlider::sub-page:horizontal {
+    background: #00457C;
+    border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+    background: #ffffff;
+    border: 1px solid #cfd9e4;
+    width: 12px;
+    height: 12px;
+    margin-top: -5px;
+    margin-bottom: -5px;
+    border-radius: 7px;
+}
+
+QSlider::handle:horizontal:hover {
+    border-color: #8badc7;
+    background: #f8fafc;
+}
+
+QSlider::handle:horizontal:pressed {
+    border-color: #7097b3;
+    background: #f1f5f9;
+}
