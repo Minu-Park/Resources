@@ -40,6 +40,7 @@ QStatusBar::item {
 
 QStatusBar QLabel,
 QLabel#CameraStatusLabel,
+QLabel#FramegrabberStatusLabel,
 QLabel#GocatorStatusLabel,
 QLabel#EngineStatusMode,
 QLabel#EngineStatusSummary,
@@ -72,6 +73,7 @@ QLabel#EngineStatusFps:hover {
 }
 
 QLabel#CameraStatusLabel,
+QLabel#FramegrabberStatusLabel,
 QLabel#GocatorStatusLabel,
 QLabel#EngineStatusMode,
 QLabel#EngineStatusZoom,
@@ -134,21 +136,25 @@ QToolButton#EngineStatusViewButton::menu-indicator {
 }
 
 QLabel#CameraStatusLabel[status="connected"],
+QLabel#FramegrabberStatusLabel[status="connected"],
 QLabel#GocatorStatusLabel[status="connected"] {
     color: #2e7d32;
 }
 
 QLabel#CameraStatusLabel[status="idle"],
+QLabel#FramegrabberStatusLabel[status="idle"],
 QLabel#GocatorStatusLabel[status="idle"] {
     color: #5c6b7a;
 }
 
 QLabel#CameraStatusLabel[status="disconnected"],
+QLabel#FramegrabberStatusLabel[status="disconnected"],
 QLabel#GocatorStatusLabel[status="disconnected"] {
     color: #c62828;
 }
 
 QLabel#CameraStatusLabel[status="grabbing"],
+QLabel#FramegrabberStatusLabel[status="grabbing"],
 QLabel#GocatorStatusLabel[status="grabbing"] {
     color: #1565c0;
 }
