@@ -1,10 +1,12 @@
 /* theme/qss/30_camera_gocator.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
 
+QFramegrabberWidget,
 QCameraWidget,
 QGocatorWidget {
     background: #ffffff;
 }
 
+QFramegrabberWidget QToolButton,
 QCameraWidget QToolButton,
 QGocatorWidget QToolButton {
     min-width: 20px;
@@ -38,11 +40,13 @@ QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
     color: #16202b;
 }
 
+QFramegrabberWidget QLabel#FramegrabberStatusLabel:hover,
 QCameraWidget QLabel#CameraStatusLabel:hover,
 QGocatorWidget QLabel#GocatorStatusLabel:hover {
     background: #ffffff;
 }
 
+QFramegrabberWidget QLabel#FramegrabberMessageLabel,
 QCameraWidget QLabel#CameraMessageLabel,
 QGocatorWidget QLabel#GocatorMessageLabel {
     background: transparent;
@@ -53,12 +57,14 @@ QGocatorWidget QLabel#GocatorMessageLabel {
     font-weight: 400;
 }
 
+QFramegrabberWidget QLabel#FramegrabberMessageLabel[messageState="normal"],
 QCameraWidget QLabel#CameraMessageLabel[messageState="normal"],
 QGocatorWidget QLabel#GocatorMessageLabel[messageState="normal"] {
     color: #354657;
     font-weight: 400;
 }
 
+QFramegrabberWidget QLabel#FramegrabberMessageLabel[messageState="error"],
 QCameraWidget QLabel#CameraMessageLabel[messageState="error"],
 QGocatorWidget QLabel#GocatorMessageLabel[messageState="error"] {
     color: #c62828;
@@ -67,4 +73,17 @@ QGocatorWidget QLabel#GocatorMessageLabel[messageState="error"] {
 
 QTreeWidget[treeRole="DeviceFeatureTree"]::viewport {
     background: transparent;
+}
+
+QLabel#FramegrabberConfigurationStateLabel[state="idle"] {
+    color: #5c6b7a;
+}
+
+QLabel#FramegrabberConfigurationStateLabel[state="normal"] {
+    color: #2e7d32;
+}
+
+QLabel#FramegrabberConfigurationStateLabel[state="warning"] {
+    color: #e65100;
+    font-weight: 700;
 }
