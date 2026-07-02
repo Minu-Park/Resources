@@ -6,6 +6,20 @@ QGocatorWidget {
     background: #ffffff;
 }
 
+QTabWidget#FramegrabberControlTabs::pane {
+    background: transparent;
+    border: none;
+    border-top: 1px solid #d9e1ea;
+    border-radius: 0;
+    top: 0;
+}
+
+QTabWidget#FramegrabberControlTabs > QTabBar {
+    background: transparent;
+    border-top: none;
+    padding-top: 0;
+}
+
 QFramegrabberWidget QToolButton,
 QCameraWidget QToolButton,
 QGocatorWidget QToolButton {
@@ -73,17 +87,4 @@ QGocatorWidget QLabel#GocatorMessageLabel[messageState="error"] {
 
 QTreeWidget[treeRole="DeviceFeatureTree"]::viewport {
     background: transparent;
-}
-
-QLabel#FramegrabberConfigurationStateLabel[state="idle"] {
-    color: #5c6b7a;
-}
-
-QLabel#FramegrabberConfigurationStateLabel[state="normal"] {
-    color: #2e7d32;
-}
-
-QLabel#FramegrabberConfigurationStateLabel[state="warning"] {
-    color: #e65100;
-    font-weight: 700;
 }
