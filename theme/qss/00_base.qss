@@ -80,7 +80,7 @@ QTabWidget::pane {
     background: #ffffff;
     border: 1px solid #d9e1ea;
     border-radius: 10px;
-    top: -1px;
+    top: -2px;
 }
 
 QGroupBox {
@@ -116,33 +116,88 @@ QTabBar {
     background: #ffffff;
     qproperty-drawBase: 0;
     border: none;
-    border-top: 1px solid #d9e1ea;
-    padding-top: 4px;
+    padding: 0px;
+    margin-left: 6px;
 }
 
 QTabBar::tab {
-    background: #f4f6f8;
+    background: transparent;
     color: #516476;
-    border: 1px solid #d9e1ea;
-    border-bottom: none;
-    padding: 6px 16px;
-    margin-right: 2px;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    font-weight: 600;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 8px;
+    margin-right: 0px;
+    border-radius: 0px;
+    font-weight: 500;
 }
 
 QTabBar::tab:selected {
-    background: #ffffff;
+    background: transparent;
     color: #00457C;
-    border-color: #d9e1ea;
-    border-bottom: 1px solid #ffffff;
-    font-weight: bold;
+    border-bottom: 2px solid #00457C;
+    font-weight: 700;
 }
 
 QTabBar::tab:hover:!selected {
-    color: #16202b;
-    background: #eef1f4;
+    color: #00457C;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+QTabBar::tear {
+    width: 0px;
+    border: none;
+    background: transparent;
+    image: none;
+}
+
+QTabBar::scroller {
+    width: 52px;
+    margin-right: 6px;
+}
+
+QTabBar QToolButton {
+    border: 1px solid transparent;
+    background-color: #ffffff;
+    width: 20px;
+    height: 24px;
+    margin: 0px 0px;
+}
+
+QTabBar QToolButton#ScrollLeftButton {
+    margin-left: 8px;
+}
+
+QTabBar QToolButton:hover {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+}
+
+QTabBar QToolButton:pressed {
+    background-color: #94a3b8;
+}
+
+QTabBar QToolButton:disabled {
+    background-color: #ffffff;
+}
+
+QTabBar QToolButton::left-arrow {
+    image: url(:/Resources/Icons/icons8-back-48.png);
+    width: 10px;
+    height: 10px;
+}
+
+QTabBar QToolButton::left-arrow:disabled {
+    image: url(:/Resources/Icons/icons8-back-48-disabled.png);
+}
+
+QTabBar QToolButton::right-arrow {
+    image: url(:/Resources/Icons/icons8-forward-48.png);
+    width: 10px;
+    height: 10px;
+}
+
+QTabBar QToolButton::right-arrow:disabled {
+    image: url(:/Resources/Icons/icons8-forward-48-disabled.png);
 }
 
 QTableView,

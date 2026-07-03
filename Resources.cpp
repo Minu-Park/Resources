@@ -195,6 +195,9 @@ private:
         else if (name == QLatin1String("DeviceToolLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 6);
         }
+        else if (name == QLatin1String("DeviceInfoLayout")) {
+            setLayoutMetrics(layout, QMargins(12, 0, 12, 12), 0);
+        }
         else if (name == QLatin1String("DeviceTreePanelLayout")) {
             setLayoutMetrics(layout, QMargins(12, 0, 12, 12), 8);
         }

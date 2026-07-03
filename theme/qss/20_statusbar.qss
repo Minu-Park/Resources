@@ -88,20 +88,15 @@ QLabel#EngineStatusMode {
     border-color: #d7d7d7;
 }
 
-QLabel#EngineStatusSummary {
-    padding: 0 6px;
-}
-
-QLabel#MainStatusMessage {
-    background: transparent;
-    border: none;
-    padding: 0 6px;
-    margin: 0 2px 0 0;
+QStatusBar QLabel[statusRole="message"] {
+    min-width: 0px;
     color: #425467;
+    font-weight: 400;
 }
 
-QLabel#MainStatusMessage[messageState="error"] {
+QStatusBar QLabel[statusRole="message"][messageState="error"] {
     color: #c62828;
+    font-weight: 700;
 }
 
 QToolButton#EngineStatusModeButton,
@@ -191,23 +186,16 @@ QPushButton#MainLogToggleBtn:checked:hover {
     color: #00457C;
 }
 
-QLabel#MainLogWarnLabel {
+QPushButton#MainLogToggleBtn[logState="warning"] {
     background: #fff3e0;
-    border: 1px solid #ffe0b2;
-    border-radius: 9px;
-    padding: 0 7px;
-    height: 24px;
-    min-height: 24px;
-    max-height: 24px;
-    margin: 0 2px 0 0;
+    border-color: #ffb74d;
     color: #e65100;
-    font-weight: 700;
-    font-size: 11px;
 }
 
-QLabel#MainLogWarnLabel:hover {
+QPushButton#MainLogToggleBtn[logState="warning"]:hover {
     background: #ffe0b2;
-    border-color: #ffb74d;
+    border-color: #fb8c00;
+    color: #e65100;
 }
 
 QLabel#MainLogErrorLabel {
