@@ -60,31 +60,6 @@ QGocatorWidget QLabel#GocatorStatusLabel:hover {
     background: #ffffff;
 }
 
-QFramegrabberWidget QLabel#FramegrabberMessageLabel,
-QCameraWidget QLabel#CameraMessageLabel,
-QGocatorWidget QLabel#GocatorMessageLabel {
-    background: transparent;
-    border: none;
-    padding: 0;
-    margin-left: 3px;
-    color: #354657;
-    font-weight: 400;
-}
-
-QFramegrabberWidget QLabel#FramegrabberMessageLabel[messageState="normal"],
-QCameraWidget QLabel#CameraMessageLabel[messageState="normal"],
-QGocatorWidget QLabel#GocatorMessageLabel[messageState="normal"] {
-    color: #354657;
-    font-weight: 400;
-}
-
-QFramegrabberWidget QLabel#FramegrabberMessageLabel[messageState="error"],
-QCameraWidget QLabel#CameraMessageLabel[messageState="error"],
-QGocatorWidget QLabel#GocatorMessageLabel[messageState="error"] {
-    color: #c62828;
-    font-weight: 700;
-}
-
 QTreeWidget[treeRole="DeviceFeatureTree"]::viewport {
     background: transparent;
 }

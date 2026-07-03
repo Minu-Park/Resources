@@ -73,6 +73,7 @@
         <file>Icons/icons8-high-importance-48.png</file>
         <file>Icons/icons8-gears-48.png</file>
         <file>Icons/icons8-forward-48.png</file>
+        <file>Icons/icons8-forward-48-disabled.png</file>
         <file>Icons/icons8-folder-48.png</file>
         <file>Icons/icons8-export-csv-48.png</file>
         <file>Icons/icons8-export-48.png</file>
@@ -100,6 +101,7 @@
         <file>Icons/icons8-camera-48-2.png</file>
         <file>Icons/icons8-camera-48 (2).png</file>
         <file>Icons/icons8-back-48.png</file>
+        <file>Icons/icons8-back-48-disabled.png</file>
         <file>Icons/icons8-add-image-48.png</file>
         <file>Icons/icons8-add-camera-48.png</file>
         <file>Icons/icons8-about-48.png</file>
