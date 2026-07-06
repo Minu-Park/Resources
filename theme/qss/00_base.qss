@@ -16,10 +16,9 @@ QFrame {
 
 QToolTip {
     color: #16202b;
-    background: #ffffff;
-    border: 0px solid transparent;
-    border-radius: 6px;
-    padding: 1px 3px;
+    background-color: transparent;
+    border: 1px solid transparent;
+    padding: 3px 6px;
 }
 
 QMainWindow {
