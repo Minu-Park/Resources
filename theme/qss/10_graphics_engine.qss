@@ -39,6 +39,43 @@ QLabel#EngineToolbarLogo {
     background: transparent;
 }
 
+QLabel#GraphicsSourceTitle {
+    background: rgba(255, 255, 255, 220);
+    color: #354657;
+    border: 1px solid #d7dee6;
+    border-radius: 9px;
+    padding: 0 7px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 6px;
+    font-weight: 700;
+}
+
+QTabBar#GraphicsSourceTabBar {
+    border-top: 1px solid #d9e1ea;
+    border-right: none;
+    border-bottom: none;
+    border-left: none;
+    margin-left: 0;
+    padding-left: 6px;
+}
+
+QTabBar#GraphicsSourceTabBar::tab {
+    border-top: 2px solid transparent;
+    border-bottom: none;
+    padding: 5px 8px;
+}
+
+QTabBar#GraphicsSourceTabBar::tab:selected {
+    border-top: 2px solid #00457C;
+    border-bottom: none;
+}
+
+QTabBar#GraphicsSourceTabBar::tab:hover:!selected {
+    border-top: 2px solid #cbd5e1;
+    border-bottom: none;
+}
+
 QScrollBar#ImageViewOverlayScrollBar:horizontal,
 QScrollBar#ImageViewOverlayScrollBar:vertical {
     background: transparent;
