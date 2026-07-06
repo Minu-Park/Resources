@@ -218,7 +218,7 @@ QLabel#MainLogErrorLabel:hover {
 }
 
 QWidget#MinimizedSessionIndicator {
-    background: #f0f4f8;
+    background: #ffffff;
     border: 1px solid #d7dee6;
     border-radius: 9px;
     height: 24px;
@@ -226,6 +226,10 @@ QWidget#MinimizedSessionIndicator {
     max-height: 24px;
     margin: 0 2px 0 0;
     padding: 0;
+}
+
+QWidget#MinimizedSessionIndicator[minimized="true"] {
+    background: #f0f4f8;
 }
 
 QPushButton#MinimizedSessionRestore {
