@@ -72,7 +72,8 @@ protected:
                 paintPopupRoundedRect(menu, true);
             }
             else if (auto* widget = qobject_cast<QWidget*>(obj)) {
-                if (widget->objectName() == QLatin1String("AutoCompletePopup")) {
+                if (widget->objectName() == QLatin1String("AutoCompletePopup") ||
+                    widget->inherits("QTipLabel")) {
                     paintPopupRoundedRect(widget, true);
                 } else if (widget->property("_popupStyled").toBool()) {
                     paintPopupRoundedRect(widget, false);
@@ -85,7 +86,8 @@ protected:
                 applyPopupMask(menu, true);
             }
             else if (auto* widget = qobject_cast<QWidget*>(obj)) {
-                if (widget->objectName() == QLatin1String("AutoCompletePopup")) {
+                if (widget->objectName() == QLatin1String("AutoCompletePopup") ||
+                    widget->inherits("QTipLabel")) {
                     applyPopupMask(widget, true);
                 } else if (widget->property("_popupStyled").toBool()) {
                     applyPopupMask(widget, false);
@@ -127,6 +129,11 @@ protected:
                     }
                     widget->setContentsMargins(0, 0, 0, 0);
                     widget->setProperty("_popupStyled", true);
+                }
+                else if (widget->inherits("QTipLabel")) {
+                    widget->setWindowFlags(widget->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+                    widget->setAttribute(Qt::WA_TranslucentBackground, true);
+                    widget->setContentsMargins(1, 1, 1, 1);
                 }
             }
         }
@@ -427,6 +434,11 @@ static ResourceStyleFilter* s_styleFilter = nullptr;
 void installResources(QApplication& app)
 {
     initResourcesHelper();
+
+    // Disable tooltip and combo box transition effects to prevent black artifacts during DWM animation
+    QApplication::setEffectEnabled(Qt::UI_FadeTooltip, false);
+    QApplication::setEffectEnabled(Qt::UI_AnimateTooltip, false);
+    QApplication::setEffectEnabled(Qt::UI_AnimateCombo, false);
 
     // Load embedded fonts
     const QStringList fontFiles = {
