@@ -376,3 +376,11 @@ QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="error"] {
 QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="offline"] {
     color: #ef4444; /* red (offline) */
 }
+
+/* Code Editor Signature Help */
+QLabel#SignatureHelpLabel {
+    color: #16202b;
+    background-color: transparent;
+    border: 1px solid transparent;
+    padding: 1px 3px;
+}

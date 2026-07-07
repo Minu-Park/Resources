@@ -75,6 +75,7 @@ protected:
             }
             else if (auto* widget = qobject_cast<QWidget*>(obj)) {
                 if (widget->objectName() == QLatin1String("AutoCompletePopup") ||
+                    widget->objectName() == QLatin1String("SignatureHelpLabel") ||
                     widget->inherits("QTipLabel")) {
                     paintPopupRoundedRect(widget, true);
                 } else if (widget->property("_popupStyled").toBool()) {
@@ -89,6 +90,7 @@ protected:
             }
             else if (auto* widget = qobject_cast<QWidget*>(obj)) {
                 if (widget->objectName() == QLatin1String("AutoCompletePopup") ||
+                    widget->objectName() == QLatin1String("SignatureHelpLabel") ||
                     widget->inherits("QTipLabel")) {
                     applyPopupMask(widget, true);
                 } else if (widget->property("_popupStyled").toBool()) {
@@ -136,6 +138,10 @@ protected:
                     widget->setWindowFlags(widget->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
                     widget->setAttribute(Qt::WA_TranslucentBackground, true);
                     widget->setContentsMargins(1, 1, 1, 1);
+                }
+                else if (widget->objectName() == QLatin1String("SignatureHelpLabel")) {
+                    widget->setWindowFlags(widget->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+                    widget->setAttribute(Qt::WA_TranslucentBackground, true);
                 }
             }
             else if (auto* label = qobject_cast<QLabel*>(obj)) {
