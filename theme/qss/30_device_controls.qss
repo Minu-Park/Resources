@@ -45,12 +45,17 @@ QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
     color: #16202b;
 }
 
+QTreeWidget[treeRole="DeviceFeatureTree"] QComboBox:hover,
+QTreeWidget[treeRole="DeviceFeatureTree"] QAbstractSpinBox:hover,
+QTreeWidget[treeRole="DeviceFeatureTree"] QLineEdit:hover {
+    border-color: #cfd9e4;
+}
+
 QFramegrabberWidget QLabel#FramegrabberStatusLabel:hover,
 QCameraWidget QLabel#CameraStatusLabel:hover,
 QGocatorWidget QLabel#GocatorStatusLabel:hover {
     background: #ffffff;
 }
-
 
 
 

@@ -12,6 +12,35 @@
 #include <QStyle>
 #include <QStyleOption>
 
+#include <algorithm>
+
+namespace {
+bool containsOpenGLWidget(QWidget* widget)
+{
+    if (!widget) {
+        return false;
+    }
+    if (widget->inherits("QOpenGLWidget")) {
+        return true;
+    }
+    const QList<QWidget*> children = widget->findChildren<QWidget*>();
+    return std::any_of(children.cbegin(), children.cend(), [](const QWidget* child) {
+        return child && child->inherits("QOpenGLWidget");
+    });
+}
+
+void applyOpenGLContentCompatibility(QMdiSubWindow* subWin, QWidget* content)
+{
+    if (!subWin || !content || !containsOpenGLWidget(content)) {
+        return;
+    }
+    content->clearMask();
+    if (QGraphicsEffect* effect = subWin->graphicsEffect()) {
+        effect->setEnabled(false);
+    }
+}
+}
+
 ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, QMenuBar* menuBar, QWidget* parent)
     : QWidget(parent)
     , _subWin(subWin)
@@ -43,6 +72,7 @@ ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, 
         shadow->setColor(QColor(0, 0, 0, 35)); // Soft dropshadow
         shadow->setOffset(0, 3);
         _subWin->setGraphicsEffect(shadow);
+        applyOpenGLContentCompatibility(_subWin, _content);
     }
 }
 
@@ -267,11 +297,12 @@ void ThemedMdiContainer::handleWindowStateChange()
     _titleBar->style()->unpolish(_titleBar);
     _titleBar->style()->polish(_titleBar);
 
-    if (maximized) {
+    const bool hasOpenGLContent = containsOpenGLWidget(_content);
+    if (maximized || hasOpenGLContent) {
         _content->clearMask();
     }
     if (_subWin && _subWin->graphicsEffect()) {
-        _subWin->graphicsEffect()->setEnabled(!maximized);
+        _subWin->graphicsEffect()->setEnabled(!maximized && !hasOpenGLContent);
     }
     update();
 
@@ -288,6 +319,10 @@ void ThemedMdiContainer::hideEvent(QHideEvent* event)
 void ThemedMdiContainer::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
+    if (_content && containsOpenGLWidget(_content)) {
+        applyOpenGLContentCompatibility(_subWin, _content);
+        return;
+    }
     if (_content && !_subWin->isMaximized() && !_subWin->isMinimized()) {
         QBitmap bmp(_content->size());
         if (!bmp.isNull()) {
@@ -305,4 +340,3 @@ void ThemedMdiContainer::resizeEvent(QResizeEvent* event)
         _content->clearMask();
     }
 }
-
