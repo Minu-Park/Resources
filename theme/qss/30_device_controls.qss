@@ -1,4 +1,4 @@
-/* theme/qss/30_camera_gocator.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
+/* theme/qss/30_device_controls.qss: shared device-control theme; keep load order in Resources.cpp. */
 
 QFramegrabberWidget,
 QCameraWidget,
@@ -34,21 +34,12 @@ QGocatorWidget QToolButton {
 QTreeWidget[treeRole="DeviceFeatureTree"] {
     background: #ffffff;
     alternate-background-color: #ffffff;
-    gridline-color: #edf2f7;
     selection-background-color: #ffffff;
     selection-color: #16202b;
     show-decoration-selected: 0;
 }
 
-QTreeWidget[treeRole="DeviceFeatureTree"]::item {
-    min-height: 24px;
-}
-
-
-QTreeWidget[treeRole="DeviceFeatureTree"]::item:hover {
-    background: #ffffff;
-}
-
+QTreeWidget[treeRole="DeviceFeatureTree"]::item:hover,
 QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
     background: #ffffff;
     color: #16202b;
@@ -60,6 +51,8 @@ QGocatorWidget QLabel#GocatorStatusLabel:hover {
     background: #ffffff;
 }
 
-QTreeWidget[treeRole="DeviceFeatureTree"]::viewport {
-    background: transparent;
-}
+
+
+
+
+

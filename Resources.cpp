@@ -15,7 +15,11 @@
 #include <QLabel>
 #include <QMovie>
 #include <QAbstractItemView>
+#include <QHeaderView>
 #include <QStatusBar>
+#include <QStyledItemDelegate>
+#include <QTimer>
+#include <QTreeWidget>
 #include <QScreen>
 #include <QRubberBand>
 #include <QPalette>
@@ -38,6 +42,37 @@ inline void initResourcesHelper()
 {
     Q_INIT_RESOURCE(Resources);
 }
+
+// ---------------------------------------------------------------------------
+class DeviceFeatureTreeDelegate : public QStyledItemDelegate
+{
+public:
+    explicit DeviceFeatureTreeDelegate(QTreeWidget* tree)
+        : QStyledItemDelegate(tree),
+          _tree(tree)
+    {
+    }
+
+    QSize sizeHint(
+        const QStyleOptionViewItem& option,
+        const QModelIndex& index) const override
+    {
+        QSize hint = QStyledItemDelegate::sizeHint(option, index);
+        hint.setHeight(qMax(hint.height(), 24));
+        if (_tree) {
+            if (QWidget* editor = _tree->indexWidget(index)) {
+                editor->ensurePolished();
+                hint.setHeight(qMax(
+                    hint.height(),
+                    qMin(editor->sizeHint().height(), editor->maximumHeight()) + 2));
+            }
+        }
+        return hint;
+    }
+
+private:
+    QTreeWidget* _tree = nullptr;
+};
 
 // ---------------------------------------------------------------------------
 // ResourceStyleFilter: handles runtime style geometry that QSS cannot express
@@ -166,6 +201,12 @@ protected:
                 applyDockRubberBandStyle(rubberBand);
             }
             else if (auto* widget = qobject_cast<QWidget*>(obj)) {
+                if (auto* tree = qobject_cast<QTreeWidget*>(widget)) {
+                    applyDeviceFeatureTree(tree);
+                    if (event->type() == QEvent::Show) {
+                        applyInitialDeviceFeatureTreeWidth(tree);
+                    }
+                }
                 applyLayoutTheme(widget);
             }
         }
@@ -207,6 +248,55 @@ protected:
     }
 
 private:
+    static void applyDeviceFeatureTree(QTreeWidget* tree)
+    {
+        if (!tree
+            || tree->property("treeRole").toString() != QLatin1String("DeviceFeatureTree")
+            || tree->property("_deviceFeatureTreeConfigured").toBool()) {
+            return;
+        }
+
+        tree->setProperty("_deviceFeatureTreeConfigured", true);
+        tree->setRootIsDecorated(true);
+        tree->setAnimated(false);
+        tree->setAlternatingRowColors(false);
+        tree->setUniformRowHeights(false);
+        tree->setIndentation(18);
+        tree->setItemDelegate(new DeviceFeatureTreeDelegate(tree));
+
+        QHeaderView* header = tree->header();
+        header->setStretchLastSection(true);
+        header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        header->setSectionResizeMode(0, QHeaderView::Interactive);
+        header->setSectionResizeMode(1, QHeaderView::Stretch);
+        header->setMinimumSectionSize(60);
+    }
+
+    static void applyInitialDeviceFeatureTreeWidth(QTreeWidget* tree)
+    {
+        if (!tree
+            || tree->property("treeRole").toString() != QLatin1String("DeviceFeatureTree")
+            || tree->property("_deviceFeatureTreeWidthInitialized").toBool()
+            || tree->property("_deviceFeatureTreeWidthPending").toBool()) {
+            return;
+        }
+
+        tree->setProperty("_deviceFeatureTreeWidthPending", true);
+        QTimer::singleShot(0, tree, [tree]
+        {
+            tree->setProperty("_deviceFeatureTreeWidthPending", false);
+            const int availableWidth = tree->viewport()->width();
+            if (availableWidth <= 0) {
+                return;
+            }
+
+            tree->header()->resizeSection(
+                0,
+                qMax(tree->header()->minimumSectionSize(), availableWidth / 2));
+            tree->setProperty("_deviceFeatureTreeWidthInitialized", true);
+        });
+    }
+
     static void applyStatusBarInsets(QStatusBar* statusBar)
     {
         if (!statusBar) return;
@@ -510,7 +600,7 @@ void installResources(QApplication& app)
         QStringLiteral(":/Resources/theme/qss/00_base.qss"),
         QStringLiteral(":/Resources/theme/qss/10_graphics_engine.qss"),
         QStringLiteral(":/Resources/theme/qss/20_statusbar.qss"),
-        QStringLiteral(":/Resources/theme/qss/30_camera_gocator.qss"),
+        QStringLiteral(":/Resources/theme/qss/30_device_controls.qss"),
         QStringLiteral(":/Resources/theme/qss/40_chrome.qss"),
         QStringLiteral(":/Resources/theme/qss/50_static_image.qss"),
         QStringLiteral(":/Resources/theme/qss/60_processing.qss")
