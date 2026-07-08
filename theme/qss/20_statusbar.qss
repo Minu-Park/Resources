@@ -258,16 +258,3 @@ QPushButton#MinimizedSessionClose {
     max-width: 16px;
     max-height: 16px;
 }
-
-QLabel#DeviceLoadingLabel {
-    background: transparent;
-    border: none;
-    padding: 0;
-    margin: 0 4px 0 0;
-    width: 20px;
-    height: 20px;
-    min-width: 20px;
-    min-height: 20px;
-    max-width: 20px;
-    max-height: 20px;
-}
