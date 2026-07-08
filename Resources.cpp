@@ -13,7 +13,6 @@
 #include <QGridLayout>
 #include <QComboBox>
 #include <QLabel>
-#include <QMovie>
 #include <QAbstractItemView>
 #include <QHeaderView>
 #include <QStatusBar>
@@ -179,18 +178,6 @@ protected:
                     widget->setAttribute(Qt::WA_TranslucentBackground, true);
                 }
             }
-            else if (auto* label = qobject_cast<QLabel*>(obj)) {
-                if (label->objectName() == QLatin1String("DeviceLoadingLabel")) {
-                    if (!label->movie()) {
-                        auto* movie = new QMovie(QStringLiteral(":/Resources/Icons/icons8-loading-50.gif"), QByteArray(), label);
-                        movie->setScaledSize(QSize(20, 20));
-                        label->setMovie(movie);
-                        if (label->isVisible()) {
-                            movie->start();
-                        }
-                    }
-                }
-            }
         }
 
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
@@ -212,18 +199,6 @@ protected:
         }
 
         if (event->type() == QEvent::Show) {
-            if (auto* label = qobject_cast<QLabel*>(obj)) {
-                if (label->objectName() == QLatin1String("DeviceLoadingLabel")) {
-                    if (!label->movie()) {
-                        auto* movie = new QMovie(QStringLiteral(":/Resources/Icons/icons8-loading-50.gif"), QByteArray(), label);
-                        movie->setScaledSize(QSize(20, 20));
-                        label->setMovie(movie);
-                    }
-                    if (auto* movie = label->movie()) {
-                        movie->start();
-                    }
-                }
-            }
             if (auto* widget = qobject_cast<QWidget*>(obj)) {
                 if (widget->windowFlags() & Qt::Popup) {
                     if (auto* combo = qobject_cast<QComboBox*>(widget->parent())) {
@@ -235,15 +210,6 @@ protected:
             }
         }
 
-        if (event->type() == QEvent::Hide) {
-            if (auto* label = qobject_cast<QLabel*>(obj)) {
-                if (label->objectName() == QLatin1String("DeviceLoadingLabel")) {
-                    if (auto* movie = label->movie()) {
-                        movie->stop();
-                    }
-                }
-            }
-        }
         return QObject::eventFilter(obj, event);
     }
 
