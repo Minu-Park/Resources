@@ -48,4 +48,3 @@ private:
     QRect _dragStartGeometry;
     int _resizeMode = ResizeNone;
 };
-
