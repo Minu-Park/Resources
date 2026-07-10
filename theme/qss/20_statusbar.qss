@@ -101,6 +101,11 @@ QStatusBar QLabel[statusRole="message"][messageState="error"] {
     font-weight: 700;
 }
 
+QLabel[statusRole="coordinates"],
+QLabel[statusRole="fps"] {
+    font-family: "JetBrains Mono", "Inter";
+}
+
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton,
 QToolButton#ProcessingEnableToggle {
