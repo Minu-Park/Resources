@@ -24,6 +24,7 @@
 #include <QPalette>
 #include <QColor>
 #include <QEvent>
+#include <QMouseEvent>
 #include <QDebug>
 #include <QPainter>
 #include <QPainterPath>
@@ -74,6 +75,16 @@ private:
 };
 
 // ---------------------------------------------------------------------------
+static bool isDeviceFeatureTreeViewport(const QObject* object)
+{
+    const auto* viewport = qobject_cast<const QWidget*>(object);
+    const auto* tree = viewport ? qobject_cast<const QTreeWidget*>(viewport->parentWidget()) : nullptr;
+    return tree
+        && tree->viewport() == viewport
+        && tree->property("treeRole").toString() == QLatin1String("DeviceFeatureTree");
+}
+
+// ---------------------------------------------------------------------------
 // ResourceStyleFilter: handles runtime style geometry that QSS cannot express
 // reliably. Installed once via installResources().
 //
@@ -103,6 +114,16 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+        if (event->type() == QEvent::MouseMove && isDeviceFeatureTreeViewport(obj)) {
+            const auto* mouseEvent = static_cast<const QMouseEvent*>(event);
+            if (mouseEvent->buttons() == Qt::NoButton) {
+                // Persistent cell widgets receive their own hover event first. Do not let
+                // the containing item view turn a pointer-only move into a new current item
+                // and focus transfer.
+                return true;
+            }
+        }
+
         if (event->type() == QEvent::Paint) {
             if (auto* menu = qobject_cast<QMenu*>(obj)) {
                 paintPopupRoundedRect(menu, true);
