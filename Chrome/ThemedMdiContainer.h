@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <QPoint>
 #include <QRect>
+#include <QList>
 
 class QMdiSubWindow;
 class ThemedMdiTitleBar;
@@ -13,6 +14,9 @@ class ThemedMdiContainer : public QWidget {
     Q_OBJECT
 public:
     ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, QMenuBar* menuBar, QWidget* parent = nullptr);
+    [[nodiscard]] QWidget* content() const noexcept;
+    QWidget* takeContent();
+    void restoreContent(QWidget* content);
     QSize minimumSizeHint() const override;
 
 signals:
@@ -30,6 +34,10 @@ protected:
 
 private:
     void handleWindowStateChange();
+    void beginResize(int resizeMode, const QPoint& globalPosition);
+    void resizeFromGlobalPosition(const QPoint& globalPosition);
+    void finishResize();
+    void updateResizeHandleGeometry();
     enum ResizeDirection {
         ResizeNone = 0,
         ResizeLeft = 1,
@@ -47,4 +55,5 @@ private:
     QPoint _dragStartPos;
     QRect _dragStartGeometry;
     int _resizeMode = ResizeNone;
+    QList<QWidget*> _resizeHandles;
 };

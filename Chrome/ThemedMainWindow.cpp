@@ -37,6 +37,50 @@ ThemedMainWindow::~ThemedMainWindow() {
     qApp->removeEventFilter(this);
 }
 
+void ThemedMainWindow::setFullscreenTitleBarOverlayEnabled(const bool enabled)
+{
+    if (_fullscreenTitleBarOverlayEnabled == enabled)
+    {
+        return;
+    }
+
+    _fullscreenTitleBarOverlayEnabled = enabled;
+    if (enabled)
+    {
+        _titleBar->setMenuBar(nullptr);
+        _fullscreenTitleBarOverlay = new ThemedMainTitleBar(this, _menuBar, this);
+        _fullscreenTitleBarOverlay->setProperty("fullscreenOverlay", true);
+        _fullscreenTitleBarOverlay->setGeometry(0, 0, width(), _titleBar->height());
+        _fullscreenTitleBarOverlay->hide();
+        _titleBar->hide();
+        return;
+    }
+
+    if (_fullscreenTitleBarOverlay)
+    {
+        _fullscreenTitleBarOverlay->hide();
+        _fullscreenTitleBarOverlay->setMenuBar(nullptr);
+        _titleBar->setMenuBar(_menuBar);
+        delete _fullscreenTitleBarOverlay;
+        _fullscreenTitleBarOverlay = nullptr;
+    }
+    _titleBar->show();
+}
+
+void ThemedMainWindow::setFullscreenTitleBarOverlayVisible(const bool visible)
+{
+    if (!_fullscreenTitleBarOverlayEnabled || !_fullscreenTitleBarOverlay)
+    {
+        return;
+    }
+
+    _fullscreenTitleBarOverlay->setVisible(visible);
+    if (visible)
+    {
+        _fullscreenTitleBarOverlay->raise();
+    }
+}
+
 void ThemedMainWindow::updateWindowMask() {
     clearMask();
 }
@@ -44,11 +88,19 @@ void ThemedMainWindow::updateWindowMask() {
 void ThemedMainWindow::paintEvent(QPaintEvent* event) {
     QMainWindow::paintEvent(event);
     QPainter painter(this);
-    Resources::paintMainWindowBorder(this, painter, _windowChromeMaximized || isMaximized(), _forceRoundedChrome);
+    Resources::paintMainWindowBorder(
+        this,
+        painter,
+        _windowChromeMaximized || isMaximized() || isFullScreen(),
+        !isFullScreen());
 }
 
 void ThemedMainWindow::resizeEvent(QResizeEvent* event) {
     QMainWindow::resizeEvent(event);
+    if (_fullscreenTitleBarOverlay)
+    {
+        _fullscreenTitleBarOverlay->setGeometry(0, 0, width(), _fullscreenTitleBarOverlay->height());
+    }
     updateWindowMask();
 }
 
@@ -153,7 +205,7 @@ void ThemedMainWindow::leaveEvent(QEvent* event) {
 }
 
 int ThemedMainWindow::determineResizeMode(const QPoint& pos) {
-    if (isMaximized()) {
+    if (isMaximized() || isFullScreen()) {
         return ResizeNone;
     }
 
@@ -186,10 +238,11 @@ void ThemedMainWindow::updateCursorShape(const QPoint& pos) {
 }
 
 void ThemedMainWindow::updateWindowChromeState() {
-    if (!isMaximized()) {
+    const bool edgeToEdge = isMaximized() || isFullScreen();
+    if (!edgeToEdge) {
         _forceRoundedChrome = false;
     }
-    applyWindowChromeState(isMaximized());
+    applyWindowChromeState(edgeToEdge);
 }
 
 void ThemedMainWindow::applyWindowChromeState(bool maximized) {
@@ -205,6 +258,12 @@ void ThemedMainWindow::applyWindowChromeState(bool maximized) {
         _titleBar->style()->unpolish(_titleBar);
         _titleBar->style()->polish(_titleBar);
         _titleBar->update();
+    }
+    if (_fullscreenTitleBarOverlay) {
+        _fullscreenTitleBarOverlay->setProperty("maximized", maximized);
+        _fullscreenTitleBarOverlay->style()->unpolish(_fullscreenTitleBarOverlay);
+        _fullscreenTitleBarOverlay->style()->polish(_fullscreenTitleBarOverlay);
+        _fullscreenTitleBarOverlay->update();
     }
 
     if (QStatusBar* bar = statusBar()) {

@@ -21,6 +21,8 @@ public:
 
     void prepareForMaximizeTransition();
     void prepareForRestoreTransition();
+    void setFullscreenTitleBarOverlayEnabled(bool enabled);
+    void setFullscreenTitleBarOverlayVisible(bool visible);
 
 protected:
     void changeEvent(QEvent* event) override;
@@ -51,6 +53,8 @@ protected:
 private:
     QMenuBar* _menuBar = nullptr;
     ThemedMainTitleBar* _titleBar = nullptr;
+    ThemedMainTitleBar* _fullscreenTitleBarOverlay = nullptr;
+    bool _fullscreenTitleBarOverlayEnabled = false;
 
     QPoint _dragStartPos;
     int _resizeMode = ResizeNone;
