@@ -106,6 +106,17 @@ QLabel[statusRole="fps"] {
     font-family: "JetBrains Mono", "Inter";
 }
 
+QLabel#EngineStatusMode,
+QLabel#EngineStatusSummary,
+QLabel#EngineStatusRenderPath,
+QLabel#EngineStatusPointer,
+QLabel#EngineStatusZoom,
+QLabel#EngineStatusFps,
+QToolButton#EngineStatusModeButton,
+QToolButton#EngineStatusViewButton {
+    font-family: "JetBrains Mono";
+}
+
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton,
 QToolButton#ProcessingEnableToggle {

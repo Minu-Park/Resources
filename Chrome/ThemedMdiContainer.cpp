@@ -10,6 +10,7 @@
 #include <QBitmap>
 #include <QStyle>
 #include <QStyleOption>
+#include <QResizeEvent>
 
 ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, QMenuBar* menuBar, QWidget* parent)
     : QWidget(parent)
@@ -28,6 +29,23 @@ ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, 
     
     layout->addWidget(_content);
 
+    const auto addResizeHandle = [this](const int resizeMode, const Qt::CursorShape cursor) {
+        auto* handle = new QWidget(this);
+        handle->setObjectName(QStringLiteral("ThemedMdiResizeHandle"));
+        handle->setProperty("resizeMode", resizeMode);
+        handle->setCursor(cursor);
+        handle->installEventFilter(this);
+        _resizeHandles.append(handle);
+    };
+    addResizeHandle(ResizeLeft, Qt::SizeHorCursor);
+    addResizeHandle(ResizeRight, Qt::SizeHorCursor);
+    addResizeHandle(ResizeTop, Qt::SizeVerCursor);
+    addResizeHandle(ResizeBottom, Qt::SizeVerCursor);
+    addResizeHandle(ResizeLeft | ResizeTop, Qt::SizeFDiagCursor);
+    addResizeHandle(ResizeRight | ResizeTop, Qt::SizeBDiagCursor);
+    addResizeHandle(ResizeLeft | ResizeBottom, Qt::SizeBDiagCursor);
+    addResizeHandle(ResizeRight | ResizeBottom, Qt::SizeFDiagCursor);
+
     setMouseTracking(true);
     _subWin->installEventFilter(this);
     if (_content) {
@@ -36,6 +54,62 @@ ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, 
     if (_subWin) {
         _subWin->setMinimumSize(minimumSizeHint());
     }
+}
+
+QWidget* ThemedMdiContainer::content() const noexcept
+{
+    return _content;
+}
+
+QWidget* ThemedMdiContainer::takeContent()
+{
+    if (!_content)
+    {
+        return nullptr;
+    }
+
+    QWidget* content = _content;
+    _content = nullptr;
+    content->removeEventFilter(this);
+    if (layout())
+    {
+        layout()->removeWidget(content);
+    }
+    // The rounded MDI mask belongs to this chrome container.  A detached
+    // GraphicsEngine must not retain the old MDI-size clipping region when it
+    // is reparented into an HMI wrapper.
+    content->clearMask();
+    content->setParent(nullptr);
+    if (_subWin)
+    {
+        _subWin->setMinimumSize(minimumSizeHint());
+    }
+    return content;
+}
+
+void ThemedMdiContainer::restoreContent(QWidget* content)
+{
+    if (!content || _content == content)
+    {
+        return;
+    }
+    if (_content)
+    {
+        return;
+    }
+
+    _content = content;
+    content->setParent(this);
+    content->installEventFilter(this);
+    if (layout())
+    {
+        layout()->addWidget(content);
+    }
+    if (_subWin)
+    {
+        _subWin->setMinimumSize(minimumSizeHint());
+    }
+    updateGeometry();
 }
 
 QSize ThemedMdiContainer::minimumSizeHint() const
@@ -55,8 +129,7 @@ QSize ThemedMdiContainer::minimumSizeHint() const
 void ThemedMdiContainer::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
-        _dragStartPos = event->globalPosition().toPoint();
-        _resizeMode = determineResizeMode(event->position().toPoint());
+        beginResize(determineResizeMode(event->position().toPoint()), event->globalPosition().toPoint());
         if (_resizeMode != ResizeNone) {
             event->accept();
             return;
@@ -68,46 +141,7 @@ void ThemedMdiContainer::mousePressEvent(QMouseEvent* event)
 void ThemedMdiContainer::mouseMoveEvent(QMouseEvent* event)
 {
     if (event->buttons() & Qt::LeftButton && _resizeMode != ResizeNone) {
-        QPoint currentGlobalPos = event->globalPosition().toPoint();
-        QPoint delta = currentGlobalPos - _dragStartPos;
-        QRect geom = _subWin->geometry();
-
-        int left = geom.left();
-        int right = geom.x() + geom.width();
-        int top = geom.top();
-        int bottom = geom.y() + geom.height();
-
-        QSize minSize = minimumSizeHint();
-        int minW = qMax(250, minSize.width());
-        int minH = qMax(150, minSize.height());
-
-        if (_resizeMode & ResizeLeft) {
-            left += delta.x();
-            if (right - left < minW) {
-                left = right - minW;
-            }
-        }
-        if (_resizeMode & ResizeRight) {
-            right += delta.x();
-            if (right - left < minW) {
-                right = left + minW;
-            }
-        }
-        if (_resizeMode & ResizeTop) {
-            top += delta.y();
-            if (bottom - top < minH) {
-                top = bottom - minH;
-            }
-        }
-        if (_resizeMode & ResizeBottom) {
-            bottom += delta.y();
-            if (bottom - top < minH) {
-                bottom = top + minH;
-            }
-        }
-
-        _subWin->setGeometry(left, top, right - left, bottom - top);
-        _dragStartPos = currentGlobalPos;
+        resizeFromGlobalPosition(event->globalPosition().toPoint());
         event->accept();
         return;
     } else {
@@ -120,11 +154,8 @@ void ThemedMdiContainer::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
         if (_resizeMode != ResizeNone) {
-            if (_content && _content->metaObject()->indexOfMethod("notifyManualResizeFinished()") >= 0) {
-                QMetaObject::invokeMethod(_content, "notifyManualResizeFinished", Qt::AutoConnection);
-            }
+            finishResize();
         }
-        _resizeMode = ResizeNone;
         setCursor(Qt::ArrowCursor);
         event->accept();
     } else {
@@ -184,6 +215,28 @@ void ThemedMdiContainer::leaveEvent(QEvent* event)
 
 bool ThemedMdiContainer::eventFilter(QObject* watched, QEvent* event)
 {
+    if (auto* handle = qobject_cast<QWidget*>(watched); _resizeHandles.contains(handle)) {
+        if (event->type() == QEvent::MouseButtonPress) {
+            auto* mouseEvent = static_cast<QMouseEvent*>(event);
+            if (mouseEvent->button() == Qt::LeftButton) {
+                beginResize(handle->property("resizeMode").toInt(), mouseEvent->globalPosition().toPoint());
+                return _resizeMode != ResizeNone;
+            }
+        }
+        if (event->type() == QEvent::MouseMove && _resizeMode != ResizeNone) {
+            auto* mouseEvent = static_cast<QMouseEvent*>(event);
+            resizeFromGlobalPosition(mouseEvent->globalPosition().toPoint());
+            return true;
+        }
+        if (event->type() == QEvent::MouseButtonRelease && _resizeMode != ResizeNone) {
+            auto* mouseEvent = static_cast<QMouseEvent*>(event);
+            if (mouseEvent->button() == Qt::LeftButton) {
+                finishResize();
+                return true;
+            }
+        }
+    }
+
     if (watched == _subWin) {
         if (event->type() == QEvent::WindowStateChange) {
             handleWindowStateChange();
@@ -264,7 +317,12 @@ void ThemedMdiContainer::handleWindowStateChange()
     update();
 
     if (QMdiArea* mdi = _subWin->mdiArea()) {
-        QMetaObject::invokeMethod(mdi->parent(), "updateMdiMinimumSize", Qt::QueuedConnection);
+        for (QObject* owner = mdi->parent(); owner; owner = owner->parent()) {
+            if (owner->metaObject()->indexOfMethod("updateMdiMinimumSize()") >= 0) {
+                QMetaObject::invokeMethod(owner, "updateMdiMinimumSize", Qt::QueuedConnection);
+                break;
+            }
+        }
     }
 }
 
@@ -291,5 +349,68 @@ void ThemedMdiContainer::resizeEvent(QResizeEvent* event)
         }
     } else if (_content) {
         _content->clearMask();
+    }
+    updateResizeHandleGeometry();
+}
+
+void ThemedMdiContainer::beginResize(const int resizeMode, const QPoint& globalPosition)
+{
+    if (!_subWin || _subWin->isMaximized()) {
+        _resizeMode = ResizeNone;
+        return;
+    }
+    _resizeMode = resizeMode;
+    _dragStartPos = globalPosition;
+}
+
+void ThemedMdiContainer::resizeFromGlobalPosition(const QPoint& globalPosition)
+{
+    if (!_subWin || _resizeMode == ResizeNone) {
+        return;
+    }
+
+    const QPoint delta = globalPosition - _dragStartPos;
+    const QRect geom = _subWin->geometry();
+    int left = geom.left();
+    int right = geom.x() + geom.width();
+    int top = geom.top();
+    int bottom = geom.y() + geom.height();
+    const QSize minSize = minimumSizeHint();
+    const int minW = qMax(250, minSize.width());
+    const int minH = qMax(150, minSize.height());
+
+    if (_resizeMode & ResizeLeft) left = qMin(left + delta.x(), right - minW);
+    if (_resizeMode & ResizeRight) right = qMax(right + delta.x(), left + minW);
+    if (_resizeMode & ResizeTop) top = qMin(top + delta.y(), bottom - minH);
+    if (_resizeMode & ResizeBottom) bottom = qMax(bottom + delta.y(), top + minH);
+
+    _subWin->setGeometry(left, top, right - left, bottom - top);
+    _dragStartPos = globalPosition;
+}
+
+void ThemedMdiContainer::finishResize()
+{
+    if (_content && _content->metaObject()->indexOfMethod("notifyManualResizeFinished()") >= 0) {
+        QMetaObject::invokeMethod(_content, "notifyManualResizeFinished", Qt::AutoConnection);
+    }
+    _resizeMode = ResizeNone;
+}
+
+void ThemedMdiContainer::updateResizeHandleGeometry()
+{
+    constexpr int border = 6;
+    const int containerWidth = width();
+    const int containerHeight = height();
+    for (QWidget* handle : _resizeHandles) {
+        const int mode = handle->property("resizeMode").toInt();
+        if (mode == (ResizeLeft | ResizeTop)) handle->setGeometry(0, 0, border, border);
+        else if (mode == (ResizeRight | ResizeTop)) handle->setGeometry(qMax(0, containerWidth - border), 0, border, border);
+        else if (mode == (ResizeLeft | ResizeBottom)) handle->setGeometry(0, qMax(0, containerHeight - border), border, border);
+        else if (mode == (ResizeRight | ResizeBottom)) handle->setGeometry(qMax(0, containerWidth - border), qMax(0, containerHeight - border), border, border);
+        else if (mode == ResizeLeft) handle->setGeometry(0, border, border, qMax(0, containerHeight - 2 * border));
+        else if (mode == ResizeRight) handle->setGeometry(qMax(0, containerWidth - border), border, border, qMax(0, containerHeight - 2 * border));
+        else if (mode == ResizeTop) handle->setGeometry(border, 0, qMax(0, containerWidth - 2 * border), border);
+        else if (mode == ResizeBottom) handle->setGeometry(border, qMax(0, containerHeight - border), qMax(0, containerWidth - 2 * border), border);
+        handle->raise();
     }
 }

@@ -46,10 +46,10 @@ ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBa
     setFixedHeight(40);
     setCursor(Qt::ArrowCursor);
 
-    auto* layout = new QHBoxLayout(this);
-    layout->setContentsMargins(12, 0, 13, 0);
-    layout->setSpacing(12);
-    layout->setAlignment(Qt::AlignVCenter);
+    _layout = new QHBoxLayout(this);
+    _layout->setContentsMargins(12, 0, 13, 0);
+    _layout->setSpacing(12);
+    _layout->setAlignment(Qt::AlignVCenter);
 
     // App Logo
     _logoLabel = new QLabel(this);
@@ -67,23 +67,17 @@ ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBa
         _logoLabel->setPixmap(scaledLogo);
     }
     _logoLabel->setFixedSize(18, 18);
-    layout->addWidget(_logoLabel, 0, Qt::AlignVCenter);
+    _layout->addWidget(_logoLabel, 0, Qt::AlignVCenter);
 
     // App Title - Use parent's windowTitle (ThemedMainWindow)
     _titleLabel = new QLabel(parent ? parent->windowTitle() : QString(), this);
     _titleLabel->setObjectName(QStringLiteral("MainTitleLabel"));
     _titleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
-    layout->addWidget(_titleLabel, 0, Qt::AlignVCenter);
+    _layout->addWidget(_titleLabel, 0, Qt::AlignVCenter);
 
-    // Menubar integration directly into the single row
-    if (menuBar) {
-        menuBar->setParent(this);
-        menuBar->setNativeMenuBar(false);
-        menuBar->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
-        layout->addWidget(menuBar, 0, Qt::AlignVCenter);
-    }
+    setMenuBar(menuBar);
 
-    layout->addStretch();
+    _layout->addStretch();
 
     // System Window Control Buttons bundled in a tight layout
     auto* buttonLayout = new QHBoxLayout();
@@ -106,7 +100,7 @@ ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBa
     buttonLayout->addWidget(_minButton, 0, Qt::AlignVCenter);
     buttonLayout->addWidget(_maxButton, 0, Qt::AlignVCenter);
     buttonLayout->addWidget(_closeButton, 0, Qt::AlignVCenter);
-    layout->addLayout(buttonLayout);
+    _layout->addLayout(buttonLayout);
 
     connect(_minButton, &QPushButton::clicked, this, [this]() {
         if (auto* topLevel = this->window()) {
@@ -141,6 +135,28 @@ ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBa
 
     _maxButton->setIconSize(QSize(16, 16));
     updateMaximizeIcon();
+}
+
+void ThemedMainTitleBar::setMenuBar(QMenuBar* menuBar)
+{
+    if (_menuBar == menuBar)
+    {
+        return;
+    }
+
+    if (_menuBar)
+    {
+        _layout->removeWidget(_menuBar);
+    }
+
+    _menuBar = menuBar;
+    if (_menuBar)
+    {
+        _menuBar->setParent(this);
+        _menuBar->setNativeMenuBar(false);
+        _menuBar->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
+        _layout->insertWidget(_layout->indexOf(_titleLabel) + 1, _menuBar, 0, Qt::AlignVCenter);
+    }
 }
 
 void ThemedMainTitleBar::mousePressEvent(QMouseEvent* event)
