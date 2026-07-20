@@ -24,6 +24,8 @@ qt_add_library(PlaygroundResources STATIC
     Chrome/ThemedMdiContainer.cpp
     Chrome/ThemedDialog.h
     Chrome/ThemedDialog.cpp
+    Chrome/ThemedFileDialog.h
+    Chrome/ThemedFileDialog.cpp
     Chrome/ThemedMessageBox.h
     Chrome/ThemedMessageBox.cpp
     Chrome/ThemedSplashWidget.h

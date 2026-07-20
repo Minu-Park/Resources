@@ -711,6 +711,16 @@ QSplitter::handle:vertical {
     height: 2px;
 }
 
+QSplitter[fileDialogRole="sidebar"]::handle:horizontal {
+    background: #edf2f7;
+    width: 10px;
+    margin: 8px 4px;
+}
+
+QSplitter[fileDialogRole="sidebar"]::handle:horizontal:hover {
+    background: #cbd9e6;
+}
+
 #AutoCompletePopup {
     border: 1px solid transparent;
     border-radius: 8px;
