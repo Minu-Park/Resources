@@ -1,5 +1,6 @@
 #include "Chrome/ThemedFileDialog.h"
 
+#include <QCoreApplication>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDir>
@@ -40,8 +41,31 @@ protected:
         QStyleOptionHeader option;
         initStyleOptionForIndex(&option, logicalIndex);
         option.rect = rect;
+        option.textAlignment &= ~Qt::AlignVertical_Mask;
         option.textAlignment |= Qt::AlignVCenter;
+        painter->save();
         style()->drawControl(QStyle::CE_Header, &option, painter, this);
+        painter->restore();
+
+        if (logicalIndex != 0) {
+            return;
+        }
+
+        const QString firstSectionText = option.text.isEmpty()
+            ? QCoreApplication::translate("QFileSystemModel", "Name")
+            : option.text;
+        const int sortIndicatorWidth = option.sortIndicator == QStyleOptionHeader::None
+            ? 0
+            : style()->pixelMetric(QStyle::PM_HeaderMarkSize, &option, this) + 6;
+        const QRect labelRect = rect.adjusted(6, 0, -(6 + sortIndicatorWidth), 0);
+        painter->save();
+        painter->setPen(palette().color(QPalette::Text));
+        painter->setFont(font());
+        painter->drawText(
+            labelRect,
+            Qt::AlignLeft | Qt::AlignVCenter | Qt::TextSingleLine,
+            firstSectionText);
+        painter->restore();
     }
 };
 
@@ -120,7 +144,7 @@ ThemedFileDialog::ThemedFileDialog(
     for (const char* objectName : {"backButton", "forwardButton", "toParentButton", "newFolderButton", "listModeButton", "detailModeButton"}) {
         if (auto* button = _fileDialog->findChild<QToolButton*>(QLatin1String(objectName))) {
             button->setProperty("fileDialogRole", "navigation");
-            button->setIconSize(QSize(16, 16));
+            button->setIconSize(QSize(14, 14));
             if (button->objectName() == QLatin1String("backButton")) {
                 button->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-back-48.png")));
             } else if (button->objectName() == QLatin1String("forwardButton")) {
@@ -140,21 +164,31 @@ ThemedFileDialog::ThemedFileDialog(
     }
 
     if (auto* itemView = _fileDialog->findChild<QTreeView*>("treeView")) {
-        QHeaderView* originalHeader = itemView->header();
-        auto* header = new FileDialogHeaderView(itemView);
-        header->setProperty("fileDialogRole", "itemHeader");
-        header->setSectionsClickable(originalHeader->sectionsClickable());
-        header->setSectionsMovable(originalHeader->sectionsMovable());
-        header->setStretchLastSection(originalHeader->stretchLastSection());
-        header->setMinimumSectionSize(originalHeader->minimumSectionSize());
-        header->setDefaultSectionSize(originalHeader->defaultSectionSize());
-        header->setSortIndicatorShown(originalHeader->isSortIndicatorShown());
-        header->setSortIndicator(originalHeader->sortIndicatorSection(), originalHeader->sortIndicatorOrder());
-        header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        header->restoreState(originalHeader->saveState());
-        itemView->setHeader(header);
-        header->style()->unpolish(header);
-        header->style()->polish(header);
+        itemView->setProperty("fileDialogRole", "itemView");
+        itemView->style()->unpolish(itemView);
+        itemView->style()->polish(itemView);
+        if (QHeaderView* header = itemView->header()) {
+            auto* centeredHeader = new FileDialogHeaderView(itemView);
+            centeredHeader->setModel(itemView->model());
+            centeredHeader->setProperty("fileDialogRole", "itemHeader");
+            centeredHeader->setSectionsClickable(header->sectionsClickable());
+            centeredHeader->setSectionsMovable(header->sectionsMovable());
+            centeredHeader->setStretchLastSection(header->stretchLastSection());
+            centeredHeader->setMinimumSectionSize(header->minimumSectionSize());
+            centeredHeader->setDefaultSectionSize(header->defaultSectionSize());
+            centeredHeader->setSortIndicatorShown(header->isSortIndicatorShown());
+            centeredHeader->setSortIndicator(header->sortIndicatorSection(), header->sortIndicatorOrder());
+            centeredHeader->restoreState(header->saveState());
+            itemView->setHeader(centeredHeader);
+            centeredHeader->style()->unpolish(centeredHeader);
+            centeredHeader->style()->polish(centeredHeader);
+        }
+    }
+
+    if (auto* itemView = _fileDialog->findChild<QListView*>("listView")) {
+        itemView->setProperty("fileDialogRole", "itemView");
+        itemView->style()->unpolish(itemView);
+        itemView->style()->polish(itemView);
     }
 
     #if defined(Q_OS_MACOS)

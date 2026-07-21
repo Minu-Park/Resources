@@ -248,6 +248,12 @@ QHeaderView::section:last {
     border-right: none;
 }
 
+QHeaderView[fileDialogRole="itemHeader"] {
+    color: #000000;
+    font-size: 12px;
+    font-weight: 700;
+}
+
 QTableCornerButton::section {
     background: transparent;
     border: none;
@@ -726,13 +732,21 @@ QListView[fileDialogRole="sidebar"] {
     border-radius: 0px;
 }
 
+QTreeView[fileDialogRole="itemView"]::item:selected,
+QTreeView[fileDialogRole="itemView"]::item:selected:!active,
+QListView[fileDialogRole="itemView"]::item:selected,
+QListView[fileDialogRole="itemView"]::item:selected:!active {
+    background-color: #dcecf9;
+    color: #16202b;
+}
+
 QToolButton[fileDialogRole="navigation"] {
-    min-width: 28px;
-    min-height: 28px;
-    max-width: 28px;
-    max-height: 28px;
-    padding: 3px;
-    qproperty-iconSize: 16px 16px;
+    min-width: 22px;
+    min-height: 22px;
+    max-width: 22px;
+    max-height: 22px;
+    padding: 2px;
+    qproperty-iconSize: 14px 14px;
 }
 
 #AutoCompletePopup {
