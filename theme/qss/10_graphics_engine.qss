@@ -13,13 +13,15 @@ QToolBar#EngineToolBar {
     background: #ffffff;
     border-top: none;
     border-bottom: 1px solid #d3dde8;
-    padding: 3px 3px;
+    min-height: 32px;
+    padding: 6px;
     spacing: 3px;
 }
 
 QToolBar#EngineToolBar QToolButton {
-    min-height: 28px;
-    padding: 4px 10px;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 3px;
 }
 
 QToolBar::separator {
