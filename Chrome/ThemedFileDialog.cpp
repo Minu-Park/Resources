@@ -97,7 +97,7 @@ ThemedFileDialog::ThemedFileDialog(
     case Mode::DirectoryMany:
         _fileDialog->setOption(QFileDialog::ShowDirsOnly, true);
         _fileDialog->setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
-        _fileDialog->setFileMode(QFileDialog::ExistingFiles);
+        _fileDialog->setFileMode(QFileDialog::Directory);
         _fileDialog->setAcceptMode(QFileDialog::AcceptOpen);
         break;
     case Mode::Save:
@@ -207,7 +207,9 @@ ThemedFileDialog::ThemedFileDialog(
     connect(_fileDialog, &QFileDialog::accepted, this, &QDialog::accept);
     connect(_fileDialog, &QFileDialog::rejected, this, &QDialog::reject);
 
-    resize(sizeHint().expandedTo(QSize(720, 520)));
+    // QFileDialog's size hint expands with the current folder's view state.
+    // Open every new dialog at a stable working size instead.
+    resize(720, 520);
     QTimer::singleShot(0, this, [this] {
         applyBottomCornerMask();
         scheduleActionButtonAlignment();

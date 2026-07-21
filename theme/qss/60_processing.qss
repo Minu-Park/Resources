@@ -1,7 +1,8 @@
 /* theme/qss/60_processing.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
 
 /* Runtime path dialog */
-QListWidget#RuntimePathsListWidget {
+QListWidget#RuntimePathsListWidget,
+QListWidget#RuntimePathEntriesList {
     border: 1px solid #cfd9e4;
     border-radius: 8px;
     padding: 4px;
@@ -12,19 +13,22 @@ QListWidget#RuntimePathsListWidget {
 
 
 
-QListWidget#RuntimePathsListWidget::item {
+QListWidget#RuntimePathsListWidget::item,
+QListWidget#RuntimePathEntriesList::item {
     padding: 6px 8px;
     border-radius: 4px;
     color: #334155;
     margin-bottom: 2px;
 }
 
-QListWidget#RuntimePathsListWidget::item:hover {
+QListWidget#RuntimePathsListWidget::item:hover,
+QListWidget#RuntimePathEntriesList::item:hover {
     background-color: #f8fafc;
     color: #0f172a;
 }
 
-QListWidget#RuntimePathsListWidget::item:selected {
+QListWidget#RuntimePathsListWidget::item:selected,
+QListWidget#RuntimePathEntriesList::item:selected {
     background-color: #e2e8f0;
     color: #0f172a;
     font-weight: 600;
@@ -32,6 +36,10 @@ QListWidget#RuntimePathsListWidget::item:selected {
 
 QLabel#RuntimePathsDescription {
     color: #425467;
+}
+
+QLabel#RuntimePathEntriesDescription {
+    color: #64748b;
 }
 
 QLabel#RuntimePathsStatusLabel[state="normal"] {
