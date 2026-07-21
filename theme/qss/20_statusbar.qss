@@ -38,7 +38,7 @@ QStatusBar::item {
 
 
 
-QStatusBar QLabel,
+/* Device state labels and the full GraphicsEngine statusbar use bubble geometry. */
 QLabel#CameraStatusLabel,
 QLabel#FramegrabberStatusLabel,
 QLabel#GocatorStatusLabel,
@@ -48,6 +48,18 @@ QLabel#EngineStatusRenderPath,
 QLabel#EngineStatusPointer,
 QLabel#EngineStatusZoom,
 QLabel#EngineStatusFps,
+QLabel#MainLogErrorLabel {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    border-radius: 9px;
+    padding: 0 7px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 2px 0 0;
+    color: #425467;
+}
+
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton,
 QToolButton#ProcessingEnableToggle {
@@ -62,18 +74,6 @@ QToolButton#ProcessingEnableToggle {
     color: #425467;
 }
 
-QStatusBar QLabel:hover,
-QLabel#EngineStatusMode:hover,
-QLabel#EngineStatusSummary:hover,
-QLabel#EngineStatusRenderPath:hover,
-QLabel#EngineStatusPointer:hover,
-QLabel#EngineStatusZoom:hover,
-QLabel#EngineStatusFps:hover {
-    background: #ffffff;
-    border: 1px solid #d7dee6;
-    color: #425467;
-}
-
 QLabel#CameraStatusLabel,
 QLabel#FramegrabberStatusLabel,
 QLabel#GocatorStatusLabel,
@@ -85,12 +85,12 @@ QToolButton#EngineStatusViewButton {
     font-weight: 700;
 }
 
-QLabel#EngineStatusMode {
-    background: #f6f6f6;
-    border-color: #d7d7d7;
-}
-
 QStatusBar QLabel[statusRole="message"] {
+    background: transparent;
+    border: none;
+    border-radius: 0px;
+    padding: 0;
+    margin: 0 8px 0 0;
     min-width: 0px;
     color: #425467;
     font-weight: 400;
@@ -217,22 +217,9 @@ QPushButton#MainLogToggleBtn[logState="warning"]:hover {
 }
 
 QLabel#MainLogErrorLabel {
-    background: #ffebee;
-    border: 1px solid #ffcdd2;
-    border-radius: 9px;
-    padding: 0 7px;
-    height: 24px;
-    min-height: 24px;
-    max-height: 24px;
-    margin: 0 2px 0 0;
     color: #c62828;
     font-weight: 700;
     font-size: 11px;
-}
-
-QLabel#MainLogErrorLabel:hover {
-    background: #ffcdd2;
-    border-color: #e57373;
 }
 
 QWidget#MinimizedSessionIndicator {
