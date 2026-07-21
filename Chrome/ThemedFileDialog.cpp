@@ -120,6 +120,7 @@ ThemedFileDialog::ThemedFileDialog(
     for (const char* objectName : {"backButton", "forwardButton", "toParentButton", "newFolderButton", "listModeButton", "detailModeButton"}) {
         if (auto* button = _fileDialog->findChild<QToolButton*>(QLatin1String(objectName))) {
             button->setProperty("fileDialogRole", "navigation");
+            button->setIconSize(QSize(16, 16));
             if (button->objectName() == QLatin1String("backButton")) {
                 button->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-back-48.png")));
             } else if (button->objectName() == QLatin1String("forwardButton")) {
@@ -156,6 +157,7 @@ ThemedFileDialog::ThemedFileDialog(
         header->style()->polish(header);
     }
 
+    #if defined(Q_OS_MACOS)
     _buttonBox = _fileDialog->findChild<QDialogButtonBox*>("buttonBox");
     _fileNameEdit = _fileDialog->findChild<QLineEdit*>("fileNameEdit");
     _fileTypeComboBox = _fileDialog->findChild<QComboBox*>("fileTypeCombo");
@@ -167,6 +169,7 @@ ThemedFileDialog::ThemedFileDialog(
         _cancelButton = _buttonBox->button(QDialogButtonBox::Cancel);
         _buttonBox->installEventFilter(this);
     }
+    #endif
 
     contentLayout()->addWidget(_fileDialog);
     connect(_fileDialog, &QFileDialog::accepted, this, &QDialog::accept);
