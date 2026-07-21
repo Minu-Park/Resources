@@ -186,6 +186,31 @@ QPushButton#MainLogToggleBtn {
     font-size: 11px;
 }
 
+QPushButton#RuntimeLibrariesStatusButton {
+    background: #ffffff;
+    border: 1px solid #d7dee6;
+    border-radius: 9px;
+    padding: 0 8px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 2px 0 0;
+    color: #425467;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+QPushButton#RuntimeLibrariesStatusButton:hover {
+    background: #eef3f8;
+    border-color: #c7d4e2;
+    color: #26384a;
+}
+
+QPushButton#RuntimeLibrariesStatusButton:pressed {
+    background: #e7eef6;
+    border-color: #bccbda;
+}
+
 QPushButton#MainLogToggleBtn:hover {
     background: #f0f5fa;
     border-color: #8badc7;

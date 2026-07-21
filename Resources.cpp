@@ -13,6 +13,8 @@
 #include <QGridLayout>
 #include <QComboBox>
 #include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QAbstractItemView>
 #include <QHeaderView>
 #include <QStatusBar>
@@ -219,9 +221,12 @@ protected:
             }
         }
 
-        if (event->type() == QEvent::Show) {
+        if (event->type() == QEvent::Show || event->type() == QEvent::LayoutRequest) {
             if (auto* widget = qobject_cast<QWidget*>(obj)) {
-                if (widget->windowFlags() & Qt::Popup) {
+                if (widget->objectName() == QLatin1String("RuntimePathsFormContainer")) {
+                    scheduleRuntimePathsBrowseButtonAlignment(widget);
+                }
+                if (event->type() == QEvent::Show && widget->windowFlags() & Qt::Popup) {
                     if (auto* combo = qobject_cast<QComboBox*>(widget->parent())) {
                         QRect geo = widget->geometry();
                         geo = repositionComboPopup(combo, widget, geo);
@@ -235,6 +240,48 @@ protected:
     }
 
 private:
+    static void scheduleRuntimePathsBrowseButtonAlignment(QWidget* formContainer)
+    {
+        static constexpr auto queuedProperty = "_runtimePathsBrowseAlignmentQueued";
+        if (formContainer->property(queuedProperty).toBool()) {
+            return;
+        }
+
+        formContainer->setProperty(queuedProperty, true);
+        QTimer::singleShot(0, formContainer, [formContainer]() {
+            formContainer->setProperty("_runtimePathsBrowseAlignmentQueued", false);
+            alignRuntimePathsBrowseButtons(formContainer);
+        });
+    }
+
+    static void alignRuntimePathsBrowseButtons(QWidget* formContainer)
+    {
+        const auto browseButtons = formContainer->findChildren<QPushButton*>(
+            QStringLiteral("RuntimePathsBrowseButton"));
+        for (QPushButton* button : browseButtons) {
+            auto* grid = qobject_cast<QGridLayout*>(button->parentWidget()->layout());
+            if (!grid) {
+                continue;
+            }
+
+            int row = 0;
+            int column = 0;
+            int rowSpan = 0;
+            int columnSpan = 0;
+            grid->getItemPosition(grid->indexOf(button), &row, &column, &rowSpan, &columnSpan);
+            QLayoutItem* editorItem = grid->itemAtPosition(row, column - 1);
+            auto* editor = editorItem ? qobject_cast<QLineEdit*>(editorItem->widget()) : nullptr;
+            if (!editor) {
+                continue;
+            }
+
+            const QPoint editorOrigin = button->parentWidget()->mapFromGlobal(
+                editor->mapToGlobal(QPoint(0, 0)));
+            const int editorCenterY = editorOrigin.y() + (editor->height() / 2);
+            button->move(button->x(), editorCenterY - (button->height() / 2));
+        }
+    }
+
     static void applyDeviceFeatureTree(QTreeWidget* tree)
     {
         if (!tree
