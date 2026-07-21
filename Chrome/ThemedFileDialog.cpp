@@ -165,6 +165,9 @@ ThemedFileDialog::ThemedFileDialog(
         itemView->setProperty("fileDialogRole", "itemView");
         itemView->style()->unpolish(itemView);
         itemView->style()->polish(itemView);
+#if defined(Q_OS_MACOS)
+        // macOS can provide an empty first QFileDialog header. Keep Windows'
+        // native header, whose model-specific state must remain intact.
         if (QHeaderView* header = itemView->header()) {
             auto* centeredHeader = new FileDialogHeaderView(itemView);
             centeredHeader->setModel(itemView->model());
@@ -181,6 +184,7 @@ ThemedFileDialog::ThemedFileDialog(
             centeredHeader->style()->unpolish(centeredHeader);
             centeredHeader->style()->polish(centeredHeader);
         }
+#endif
     }
 
     if (auto* itemView = _fileDialog->findChild<QListView*>("listView")) {
