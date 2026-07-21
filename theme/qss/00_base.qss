@@ -712,13 +712,27 @@ QSplitter::handle:vertical {
 }
 
 QSplitter[fileDialogRole="sidebar"]::handle:horizontal {
-    background: #edf2f7;
-    width: 10px;
-    margin: 8px 4px;
+    background: transparent;
+    width: 4px;
+    margin: 0px;
 }
 
 QSplitter[fileDialogRole="sidebar"]::handle:horizontal:hover {
-    background: #cbd9e6;
+    background: transparent;
+}
+
+QListView[fileDialogRole="sidebar"] {
+    border: none;
+    border-radius: 0px;
+}
+
+QToolButton[fileDialogRole="navigation"] {
+    min-width: 28px;
+    min-height: 28px;
+    max-width: 28px;
+    max-height: 28px;
+    padding: 3px;
+    qproperty-iconSize: 16px 16px;
 }
 
 #AutoCompletePopup {
