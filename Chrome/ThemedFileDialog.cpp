@@ -47,13 +47,11 @@ protected:
         style()->drawControl(QStyle::CE_Header, &option, painter, this);
         painter->restore();
 
-        if (logicalIndex != 0) {
+        if (logicalIndex != 0 || !option.text.isEmpty()) {
             return;
         }
 
-        const QString firstSectionText = option.text.isEmpty()
-            ? QCoreApplication::translate("QFileSystemModel", "Name")
-            : option.text;
+        const QString firstSectionText = QCoreApplication::translate("QFileSystemModel", "Name");
         const int sortIndicatorWidth = option.sortIndicator == QStyleOptionHeader::None
             ? 0
             : style()->pixelMetric(QStyle::PM_HeaderMarkSize, &option, this) + 6;
