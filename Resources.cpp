@@ -374,6 +374,9 @@ private:
         else if (name == QLatin1String("DeviceTreePanelLayout")) {
             setLayoutMetrics(layout, QMargins(12, 0, 12, 12), 8);
         }
+        else if (name == QLatin1String("DeviceTabbedTreePanelLayout")) {
+            setLayoutMetrics(layout, QMargins(12, 8, 12, 12), 8);
+        }
         else if (name == QLatin1String("ProcessingRootLayout")) {
             setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 8);
         }
