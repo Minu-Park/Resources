@@ -2,11 +2,13 @@
 
 QFramegrabberWidget,
 QCameraWidget,
-QGocatorWidget {
+QGocatorWidget,
+QHeliotisC4Widget {
     background: #ffffff;
 }
 
-QTabWidget#FramegrabberControlTabs::pane {
+QTabWidget#FramegrabberControlTabs::pane,
+QTabWidget#HeliotisC4ControlTabs::pane {
     background: transparent;
     border: none;
     border-top: 1px solid #d9e1ea;
@@ -14,7 +16,8 @@ QTabWidget#FramegrabberControlTabs::pane {
     top: 0;
 }
 
-QTabWidget#FramegrabberControlTabs > QTabBar {
+QTabWidget#FramegrabberControlTabs > QTabBar,
+QTabWidget#HeliotisC4ControlTabs > QTabBar {
     background: transparent;
     border-top: none;
     padding-top: 0;
@@ -22,7 +25,8 @@ QTabWidget#FramegrabberControlTabs > QTabBar {
 
 QFramegrabberWidget QToolButton,
 QCameraWidget QToolButton,
-QGocatorWidget QToolButton {
+QGocatorWidget QToolButton,
+QHeliotisC4Widget QToolButton {
     min-width: 20px;
     min-height: 20px;
     max-width: 20px;
@@ -53,10 +57,10 @@ QTreeWidget[treeRole="DeviceFeatureTree"] QLineEdit:hover {
 
 QFramegrabberWidget QLabel#FramegrabberStatusLabel:hover,
 QCameraWidget QLabel#CameraStatusLabel:hover,
-QGocatorWidget QLabel#GocatorStatusLabel:hover {
+QGocatorWidget QLabel#GocatorStatusLabel:hover,
+QHeliotisC4Widget QLabel#HeliotisC4StatusLabel:hover {
     background: #ffffff;
 }
-
 
 
 
