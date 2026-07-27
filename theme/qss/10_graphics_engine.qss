@@ -133,6 +133,7 @@ QTabWidget#AnalysisPanelTabs::pane {
     border: none;
     border-top: 1px solid #d9e1ea;
     background: transparent;
+    top: 2px;
 }
 
 QTabWidget#AnalysisPanelTabs::tab-bar {
@@ -155,6 +156,9 @@ QTabWidget#AnalysisPanelTabs QTabBar::close-button {
 }
 
 QToolButton#PlotResetButton {
+    min-height: 20px;
+    max-height: 20px;
+    padding: 0;
     background: transparent;
     border: none;
 }
