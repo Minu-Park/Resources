@@ -140,7 +140,6 @@ QTabWidget#AnalysisPanelTabs::pane {
 
 QTabWidget#AnalysisPanelTabs::tab-bar {
     alignment: left;
-    left: 8px;
 }
 
 QTabWidget#AnalysisPanelTabs QTabBar {
@@ -156,6 +155,7 @@ QTabWidget#AnalysisPanelTabs QTabBar::tab {
 
 QTabWidget#AnalysisPanelTabs QTabBar::close-button {
     image: url(:/Resources/Icons/icons8-close-window-48.png);
+    left: 8px;
 }
 
 QToolButton#PlotResetButton {
