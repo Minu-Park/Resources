@@ -131,12 +131,21 @@ QTabWidget#AnalysisPanelTabs {
 
 QTabWidget#AnalysisPanelTabs::pane {
     border: none;
+    border-top: 1px solid #d9e1ea;
     background: transparent;
 }
 
+QTabWidget#AnalysisPanelTabs::tab-bar {
+    alignment: left;
+}
+
+QTabWidget#AnalysisPanelTabs QTabBar {
+    margin-left: 0px;
+}
+
 QTabWidget#AnalysisPanelTabs QTabBar::tab {
-    min-height: 20px;
-    max-height: 20px;
+    min-height: 22px;
+    max-height: 22px;
     padding: 0 6px;
     background: transparent;
 }
