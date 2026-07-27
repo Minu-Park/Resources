@@ -259,7 +259,7 @@ private:
             ? QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png")
             : QStringLiteral(":/Resources/Icons/icons8-close-window-48.png");
         button->setIcon(QIcon(path));
-        button->setIconSize(QSize(8, 8));
+        button->setIconSize(QSize(16, 16));
     }
 
     static void scheduleRuntimePathsBrowseButtonAlignment(QWidget* formContainer)

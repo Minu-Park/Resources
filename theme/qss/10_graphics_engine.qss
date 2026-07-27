@@ -154,10 +154,10 @@ QTabWidget#AnalysisPanelTabs QTabBar::tab {
 }
 
 QToolButton#AnalysisTabCloseButton {
-    min-width: 8px;
-    max-width: 8px;
-    min-height: 8px;
-    max-height: 8px;
+    min-width: 16px;
+    max-width: 16px;
+    min-height: 16px;
+    max-height: 16px;
     padding: 0;
     background: transparent;
     border: none;
