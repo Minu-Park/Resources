@@ -162,11 +162,6 @@ QToolButton#AnalysisTabCloseButton {
     background: transparent;
     border: none;
     qproperty-text: "";
-    image: url(:/Resources/Icons/icons8-close-window-48.png);
-}
-
-QToolButton#AnalysisTabCloseButton:hover {
-    image: url(:/Resources/Icons/icons8-close-window-48-hover.png);
 }
 
 QToolButton#PlotResetButton {

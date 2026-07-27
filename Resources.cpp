@@ -15,6 +15,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QToolButton>
 #include <QAbstractItemView>
 #include <QHeaderView>
 #include <QStatusBar>
@@ -116,6 +117,13 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+        if (event->type() == QEvent::Enter || event->type() == QEvent::Leave) {
+            if (auto* button = qobject_cast<QToolButton*>(obj);
+                button && button->objectName() == QLatin1String("AnalysisTabCloseButton")) {
+                applyAnalysisTabCloseButtonIcon(button, event->type() == QEvent::Enter);
+            }
+        }
+
         if (event->type() == QEvent::MouseMove && isDeviceFeatureTreeViewport(obj)) {
             const auto* mouseEvent = static_cast<const QMouseEvent*>(event);
             if (mouseEvent->buttons() == Qt::NoButton) {
@@ -180,7 +188,11 @@ protected:
                 applyDockRubberBandStyle(rubberBand);
             }
             else if (auto* widget = qobject_cast<QWidget*>(obj)) {
-                if (widget->inherits("QComboBoxPrivateContainer") || 
+                if (auto* button = qobject_cast<QToolButton*>(widget);
+                    button && button->objectName() == QLatin1String("AnalysisTabCloseButton")) {
+                    applyAnalysisTabCloseButtonIcon(button, false);
+                }
+                else if (widget->inherits("QComboBoxPrivateContainer") ||
                     (widget->windowFlags() & Qt::Popup && widget->parent() && widget->parent()->inherits("QComboBox")) ||
                     widget->objectName() == QLatin1String("AutoCompletePopup")) {
                     widget->setWindowFlags(widget->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
@@ -240,6 +252,16 @@ protected:
     }
 
 private:
+    static void applyAnalysisTabCloseButtonIcon(QToolButton* button, const bool hover)
+    {
+        if (!button) return;
+        const QString path = hover
+            ? QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png")
+            : QStringLiteral(":/Resources/Icons/icons8-close-window-48.png");
+        button->setIcon(QIcon(path));
+        button->setIconSize(QSize(8, 8));
+    }
+
     static void scheduleRuntimePathsBrowseButtonAlignment(QWidget* formContainer)
     {
         static constexpr auto queuedProperty = "_runtimePathsBrowseAlignmentQueued";
