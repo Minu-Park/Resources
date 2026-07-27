@@ -130,7 +130,7 @@ QTabWidget#AnalysisPanelTabs {
 }
 
 QTabWidget#AnalysisPanelTabs::pane {
-    border: 1px solid #d9e1ea;
+    border: none;
     background: transparent;
 }
 
