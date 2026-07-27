@@ -154,15 +154,19 @@ QTabWidget#AnalysisPanelTabs QTabBar::tab {
 }
 
 QToolButton#AnalysisTabCloseButton {
-    min-width: 12px;
-    max-width: 12px;
-    min-height: 12px;
-    max-height: 12px;
+    min-width: 8px;
+    max-width: 8px;
+    min-height: 8px;
+    max-height: 8px;
     padding: 0;
     background: transparent;
     border: none;
     qproperty-text: "";
     image: url(:/Resources/Icons/icons8-close-window-48.png);
+}
+
+QToolButton#AnalysisTabCloseButton:hover {
+    image: url(:/Resources/Icons/icons8-close-window-48-hover.png);
 }
 
 QToolButton#PlotResetButton {
