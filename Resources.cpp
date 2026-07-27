@@ -387,10 +387,7 @@ private:
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
         }
         else if (name == QLatin1String("AnalysisPanelRootLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 0, 12, 8), 0);
-        }
-        else if (name == QLatin1String("AnalysisPanelHeaderLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 6);
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
         }
         else if (name == QLatin1String("ProcessingInteractiveGroupLayout")) {
             setLayoutMetrics(layout, QMargins(12, 14, 12, 12), 8);

@@ -120,19 +120,8 @@ QLabel#PlotLineProfilePointLabel {
 
 /* Embedded Analysis Panel */
 QWidget#AnalysisPanel {
-    background-color: #ffffff;
-    border-top: 1px solid #d9e1ea;
-}
-
-QWidget#AnalysisPanelHeader {
-    background-color: #ffffff;
-    border-bottom: 1px solid #d9e1ea;
-}
-
-QLabel#AnalysisPanelTitle {
-    color: #16202b;
-    font-weight: bold;
-    font-size: 11px;
+    background: transparent;
+    border: none;
 }
 
 QTabWidget#AnalysisPanelTabs {
@@ -142,14 +131,19 @@ QTabWidget#AnalysisPanelTabs {
 
 QTabWidget#AnalysisPanelTabs::pane {
     border: 1px solid #d9e1ea;
-    border-top: none;
-    background: #fafbfc;
+    background: transparent;
 }
 
 QTabWidget#AnalysisPanelTabs QTabBar::tab {
-    min-height: 26px;
+    min-height: 22px;
+    background: transparent;
 }
 
 QTabWidget#AnalysisPanelTabs QTabBar::close-button {
     image: url(:/Resources/Icons/icons8-close-window-48.png);
+}
+
+QToolButton#PlotResetButton {
+    background: transparent;
+    border: none;
 }
