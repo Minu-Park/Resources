@@ -135,7 +135,9 @@ QTabWidget#AnalysisPanelTabs::pane {
 }
 
 QTabWidget#AnalysisPanelTabs QTabBar::tab {
-    min-height: 22px;
+    min-height: 20px;
+    max-height: 20px;
+    padding: 0 6px;
     background: transparent;
 }
 
