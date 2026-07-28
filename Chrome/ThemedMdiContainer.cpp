@@ -19,7 +19,8 @@ ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, 
 {
     setObjectName(QStringLiteral("ThemedMdiContainer"));
     
-    // 1px margin inside the container for border spacing and resize handles
+    // Keep a 1px inset for the normal rounded frame. Maximized MDI windows
+    // remove their lateral frame, so they must not retain a white side strip.
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(1, 1, 1, 1);
     layout->setSpacing(0);
@@ -306,6 +307,10 @@ void ThemedMdiContainer::handleWindowStateChange()
     }
 
     setProperty("maximized", maximized);
+    if (auto* containerLayout = qobject_cast<QVBoxLayout*>(layout())) {
+        const int lateralInset = maximized ? 0 : 1;
+        containerLayout->setContentsMargins(lateralInset, 1, lateralInset, 1);
+    }
     style()->unpolish(this);
     style()->polish(this);
     _titleBar->setProperty("maximized", maximized);
