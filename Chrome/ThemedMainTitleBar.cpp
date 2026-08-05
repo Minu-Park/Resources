@@ -156,6 +156,10 @@ void ThemedMainTitleBar::setMenuBar(QMenuBar* menuBar)
         _menuBar->setNativeMenuBar(false);
         _menuBar->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
         _layout->insertWidget(_layout->indexOf(_titleLabel) + 1, _menuBar, 0, Qt::AlignVCenter);
+        // QWidget::setParent() hides the widget even when it moves between
+        // title-bar hosts. Show it again so fullscreen overlay reparenting
+        // keeps the host menus available.
+        _menuBar->show();
     }
 }
 
