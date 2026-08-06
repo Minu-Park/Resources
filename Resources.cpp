@@ -15,6 +15,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QTabBar>
 #include <QToolButton>
 #include <QAbstractItemView>
 #include <QHeaderView>
@@ -87,6 +88,115 @@ static bool isDeviceFeatureTreeViewport(const QObject* object)
         && tree->property("treeRole").toString() == QLatin1String("DeviceFeatureTree");
 }
 
+static QTabBar* graphicsSettingsTabBarFor(QObject* object)
+{
+    for (QObject* current = object; current != nullptr; current = current->parent())
+    {
+        auto* tabBar = qobject_cast<QTabBar*>(current);
+        if (tabBar == nullptr)
+        {
+            continue;
+        }
+
+        for (QObject* parent = tabBar->parent(); parent != nullptr; parent = parent->parent())
+        {
+            if (parent->inherits("QTabWidget")
+                && parent->objectName() == QLatin1String("GraphicsSettingsPanelTabs"))
+            {
+                return tabBar;
+            }
+        }
+    }
+    return nullptr;
+}
+
+static bool isGraphicsSettingsTabScrollerButton(const QToolButton* button)
+{
+    if (button == nullptr
+        || (button->objectName() != QLatin1String("ScrollLeftButton")
+            && button->objectName() != QLatin1String("ScrollRightButton")))
+    {
+        return false;
+    }
+    return graphicsSettingsTabBarFor(const_cast<QToolButton*>(button)) != nullptr;
+}
+
+static void alignGraphicsSettingsTabScrollerButtons(QTabBar* tabBar)
+{
+    if (tabBar == nullptr || tabBar->count() == 0)
+    {
+        return;
+    }
+
+    // QTabBar positions its scroll buttons against the tab strip's lower edge.
+    // Center them against the whole strip instead of a tab rect so the arrow
+    // and its hover fill share the same vertical axis as the tab labels.
+    const int referenceCenterY = tabBar->rect().center().y() + 1;
+
+    for (auto* button : tabBar->findChildren<QToolButton*>())
+    {
+        if (!isGraphicsSettingsTabScrollerButton(button))
+        {
+            continue;
+        }
+
+        const int targetY = referenceCenterY - button->height() / 2;
+        if (button->y() != targetY)
+        {
+            button->move(button->x(), targetY);
+        }
+    }
+}
+
+static void scheduleGraphicsSettingsTabScrollerAlignment(QTabBar* tabBar)
+{
+    if (tabBar == nullptr || tabBar->property("_graphicsSettingsScrollerAlignmentScheduled").toBool())
+    {
+        return;
+    }
+
+    tabBar->setProperty("_graphicsSettingsScrollerAlignmentScheduled", true);
+    QTimer::singleShot(0, tabBar, [tabBar]()
+    {
+        tabBar->setProperty("_graphicsSettingsScrollerAlignmentScheduled", false);
+        alignGraphicsSettingsTabScrollerButtons(tabBar);
+    });
+}
+
+static void paintGraphicsSettingsTabScrollerButton(QToolButton* button)
+{
+    if (button == nullptr)
+    {
+        return;
+    }
+
+    QPainter painter(button);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.fillRect(button->rect(), QColor(QStringLiteral("#ffffff")));
+
+    const QColor hoverColor = button->isDown()
+        ? QColor(QStringLiteral("#94a3b8"))
+        : QColor(QStringLiteral("#cbd5e1"));
+    const QRectF hoverRect = QRectF(button->rect()).adjusted(5.0, 5.0, -5.0, -5.0);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(hoverColor);
+    painter.drawRoundedRect(hoverRect, 4.0, 4.0);
+
+    const QString iconPath = button->objectName() == QLatin1String("ScrollLeftButton")
+        ? QStringLiteral(":/Resources/Icons/icons8-back-48.png")
+        : QStringLiteral(":/Resources/Icons/icons8-forward-48.png");
+    const QPixmap arrow = QIcon(iconPath).pixmap(QSize(10, 10), QIcon::Normal, QIcon::Off);
+    if (!arrow.isNull())
+    {
+        constexpr qreal arrowSize = 10.0;
+        const QRectF target((button->width() - arrowSize) / 2.0,
+                            (button->height() - arrowSize) / 2.0,
+                            arrowSize,
+                            arrowSize);
+        painter.drawPixmap(target, arrow, QRectF(0.0, 0.0, arrow.width(), arrow.height()));
+    }
+}
+
 // ---------------------------------------------------------------------------
 // ResourceStyleFilter: handles runtime style geometry that QSS cannot express
 // reliably. Installed once via installResources().
@@ -117,6 +227,17 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+        if (event->type() == QEvent::Show
+            || event->type() == QEvent::Resize
+            || event->type() == QEvent::LayoutRequest)
+        {
+            if (auto* tabBar = qobject_cast<QTabBar*>(obj);
+                tabBar != nullptr && graphicsSettingsTabBarFor(tabBar) == tabBar)
+            {
+                scheduleGraphicsSettingsTabScrollerAlignment(tabBar);
+            }
+        }
+
         if (event->type() == QEvent::Enter || event->type() == QEvent::Leave) {
             if (auto* button = qobject_cast<QToolButton*>(obj);
                 button && button->objectName() == QLatin1String("AnalysisTabCloseButton")) {
@@ -139,6 +260,12 @@ protected:
                 paintPopupRoundedRect(menu, true);
             }
             else if (auto* widget = qobject_cast<QWidget*>(obj)) {
+                if (auto* button = qobject_cast<QToolButton*>(widget);
+                    button && isGraphicsSettingsTabScrollerButton(button)
+                    && button->isEnabled() && (button->underMouse() || button->isDown())) {
+                    paintGraphicsSettingsTabScrollerButton(button);
+                    return true;
+                }
                 if (widget->objectName() == QLatin1String("AutoCompletePopup") ||
                     widget->objectName() == QLatin1String("SignatureHelpLabel") ||
                     widget->inherits("QTipLabel")) {
@@ -410,6 +537,32 @@ private:
         }
         else if (name == QLatin1String("AnalysisPanelRootLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
+        }
+        else if (name == QLatin1String("GraphicsSettingsPanelRootLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
+        }
+        else if (name == QLatin1String("GraphicsSettingsPanelHeaderLayout")) {
+            setLayoutMetrics(layout, QMargins(12, 4, 12, 4), 6);
+        }
+        else if (name == QLatin1String("GraphicsSettingsDisplayPageLayout") ||
+                 name == QLatin1String("GraphicsSettingsSurfacePageLayout") ||
+                 name == QLatin1String("GraphicsSettingsPointCloudPageLayout") ||
+                 name == QLatin1String("GraphicsSettingsRangePageLayout")) {
+            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 12);
+        }
+        else if (name == QLatin1String("GraphicsSettingsSurfaceMappingLayout") ||
+                 name == QLatin1String("GraphicsSettingsPointCloudMappingLayout") ||
+                 name == QLatin1String("GraphicsSettingsRangeMappingLayout") ||
+                 name == QLatin1String("GraphicsSettingsSurfaceRenderingLayout") ||
+                 name == QLatin1String("GraphicsSettingsPointCloudRenderingLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
+        }
+        else if (name == QLatin1String("GraphicsSettingsSurfaceMappingFormLayout") ||
+                 name == QLatin1String("GraphicsSettingsPointCloudMappingFormLayout") ||
+                 name == QLatin1String("GraphicsSettingsRangeMappingFormLayout") ||
+                 name == QLatin1String("GraphicsSettingsSurfaceRenderingFormLayout") ||
+                 name == QLatin1String("GraphicsSettingsPointCloudRenderingFormLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
         }
         else if (name == QLatin1String("ProcessingInteractiveGroupLayout")) {
             setLayoutMetrics(layout, QMargins(12, 14, 12, 12), 8);

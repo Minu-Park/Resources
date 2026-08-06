@@ -107,6 +107,100 @@ QLabel#PlotLineProfilePointLabel {
     font-weight: 700;
 }
 
+/* Right-side Graphics Settings Panel */
+QWidget#GraphicsSettingsPanel {
+    background: #ffffff;
+    border-left: 1px solid #d9e1ea;
+}
+
+QWidget#GraphicsSettingsPanelHeader {
+    background: #ffffff;
+    border-bottom: 1px solid #d9e1ea;
+}
+
+QLabel#GraphicsSettingsPanelTitle {
+    background: transparent;
+    color: #16202b;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+QToolButton#GraphicsSettingsPanelCloseButton {
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+}
+
+QToolButton#GraphicsSettingsPanelCloseButton:hover,
+QToolButton#GraphicsSettingsPanelCloseButton:pressed {
+    background: transparent;
+}
+
+QTabWidget#GraphicsSettingsPanelTabs {
+    background: transparent;
+    border: none;
+}
+
+QTabWidget#GraphicsSettingsPanelTabs::pane {
+    background: #ffffff;
+    border: none;
+    border-top: 1px solid #d9e1ea;
+    border-radius: 0;
+    top: 0;
+}
+
+QTabWidget#GraphicsSettingsPanelTabs > QTabBar {
+    background: transparent;
+    border-top: none;
+    padding-top: 0;
+}
+
+QTabWidget#GraphicsSettingsPanelTabs QTabBar {
+    margin-left: 0;
+}
+
+QTabWidget#GraphicsSettingsPanelTabs QTabBar::tab {
+    min-height: 26px;
+    max-height: 26px;
+    padding: 0 8px;
+    background: transparent;
+}
+
+QTabWidget#GraphicsSettingsPanelTabs QTabBar QToolButton:hover,
+QTabWidget#GraphicsSettingsPanelTabs QTabBar QToolButton:pressed {
+    background-color: transparent;
+    border: 1px solid transparent;
+}
+
+QScrollArea#GraphicsSettingsPageScrollArea {
+    background: #ffffff;
+    border: none;
+}
+
+QWidget#GraphicsSettingsPageViewport,
+QWidget#GraphicsSettingsDisplayPage,
+QWidget#GraphicsSettingsSurfacePage,
+QWidget#GraphicsSettingsPointCloudPage,
+QWidget#GraphicsSettingsRangePage {
+    background: #ffffff;
+}
+
+QLabel#GraphicsSettingsSectionTitle {
+    background: transparent;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+QLabel#GraphicsSettingsRangeChannelNote {
+    color: #64748b;
+}
+
 /* Embedded Analysis Panel */
 QWidget#AnalysisPanel {
     background: transparent;
