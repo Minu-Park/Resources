@@ -1,5 +1,5 @@
 # Resources Release Note
 
-## Playground v0.4.0-beta.1 integration
+## v1.1.0
 
-- Added the Script Viewer icon to the shared Qt resource catalog.
+- Added a script-oriented viewer icon to the shared Qt resource catalog.
