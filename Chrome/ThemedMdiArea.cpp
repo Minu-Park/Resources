@@ -158,6 +158,8 @@ class ThemedMdiShadowWidget final : public QWidget {
     Q_PROPERTY(int offsetX READ offsetX WRITE setOffsetX)
     Q_PROPERTY(int offsetY READ offsetY WRITE setOffsetY)
     Q_PROPERTY(qulonglong cacheGeneration READ cacheGeneration)
+    Q_PROPERTY(int cacheCornerAlpha READ cacheCornerAlpha)
+    Q_PROPERTY(int cacheInteriorAlpha READ cacheInteriorAlpha)
     Q_PROPERTY(bool profilingEnabled READ profilingEnabled)
     Q_PROPERTY(qulonglong profilePaintCount READ profilePaintCount)
     Q_PROPERTY(qulonglong profileCacheBuildCount READ profileCacheBuildCount)
@@ -183,6 +185,17 @@ public:
     [[nodiscard]] int offsetX() const noexcept { return _offsetX; }
     [[nodiscard]] int offsetY() const noexcept { return _offsetY; }
     [[nodiscard]] qulonglong cacheGeneration() const noexcept { return _cacheGeneration; }
+    [[nodiscard]] int cacheCornerAlpha() const
+    {
+        const int padding = shadowPadding();
+        return cacheAlphaAt(QPointF(padding, padding));
+    }
+    [[nodiscard]] int cacheInteriorAlpha() const
+    {
+        const int padding = shadowPadding();
+        return cacheAlphaAt(QPointF(padding + _cornerRadius,
+                                    padding + _cornerRadius));
+    }
     [[nodiscard]] bool profilingEnabled() const noexcept { return _diagnostics != nullptr; }
     [[nodiscard]] qulonglong profilePaintCount() const noexcept
     {
@@ -276,9 +289,11 @@ public:
                                     targetRect.size());
         if (_fullOutputRect != outputRect
             || _localTargetRect != localTargetRect
-            || previousSize != size()) {
+            || previousSize != size()
+            || _maskedCornerRadius != _cornerRadius) {
             _fullOutputRect = outputRect;
             _localTargetRect = localTargetRect;
+            _maskedCornerRadius = _cornerRadius;
             if (_diagnostics) {
                 ++_diagnostics->maskUpdates;
             }
@@ -287,6 +302,23 @@ public:
             if (shadowRegion.isEmpty()) {
                 clearMask();
                 return false;
+            }
+
+            // Keep the broad target interior out of the backing-store damage
+            // region, but admit small corner guards so the ARGB cache can draw
+            // the target's rounded silhouette without a rectangular notch.
+            const int effectiveRadius = std::clamp(
+                _cornerRadius, 0,
+                std::min(_localTargetRect.width(), _localTargetRect.height()) / 2);
+            if (effectiveRadius > 0) {
+                const int span = effectiveRadius + 1;
+                const int right = _localTargetRect.right() - span + 1;
+                const int bottom = _localTargetRect.bottom() - span + 1;
+                shadowRegion += QRegion(QRect(_localTargetRect.topLeft(), QSize(span, span)));
+                shadowRegion += QRegion(QRect(right, _localTargetRect.top(), span, span));
+                shadowRegion += QRegion(QRect(_localTargetRect.left(), bottom, span, span));
+                shadowRegion += QRegion(QRect(right, bottom, span, span));
+                shadowRegion &= QRegion(rect());
             }
             setMask(shadowRegion);
             update();
@@ -320,6 +352,19 @@ protected:
     }
 
 private:
+    [[nodiscard]] int cacheAlphaAt(const QPointF& logicalPoint) const
+    {
+        if (_cache.isNull() || _cacheDpr <= 0.0) {
+            return -1;
+        }
+        const QImage image = _cache.toImage();
+        const int x = std::clamp(
+            qFloor(logicalPoint.x() * _cacheDpr), 0, image.width() - 1);
+        const int y = std::clamp(
+            qFloor(logicalPoint.y() * _cacheDpr), 0, image.height() - 1);
+        return qAlpha(image.pixel(x, y));
+    }
+
     void invalidateCache(bool geometryChanged = false)
     {
         if (_diagnostics) {
@@ -362,6 +407,15 @@ private:
             for (int x = 0; x < physicalSize; ++x) {
                 const QPointF point((x + 0.5) / currentDpr,
                                     (y + 0.5) / currentDpr);
+                const qreal targetDistance = signedDistanceToRoundedRect(
+                    point, coreRect, _cornerRadius);
+                // Leave the one-physical-pixel boundary band intact. The
+                // actual frame above this sibling owns edge antialiasing;
+                // applying fractional coverage here as well would create a
+                // bright seam at the rounded corners.
+                if (targetDistance < (-0.5 / currentDpr)) {
+                    continue;
+                }
                 const qreal signedDistance = signedDistanceToRoundedRect(
                     point, shiftedCore, _cornerRadius);
                 const qreal distance = std::max(0.0, signedDistance);
@@ -422,13 +476,14 @@ private:
         }
     }
 
-    QColor _shadowColor = QColor(8, 20, 35, 54);
-    int _shadowExtent = 14;
+    QColor _shadowColor = QColor(22, 32, 43, 30);
+    int _shadowExtent = 10;
     int _cornerRadius = 12;
     int _offsetX = 0;
-    int _offsetY = 3;
+    int _offsetY = 2;
     QRect _fullOutputRect;
     QRect _localTargetRect;
+    int _maskedCornerRadius = -1;
     QPixmap _cache;
     qreal _cacheDpr = 0.0;
     int _sourceMarginPixels = 0;
@@ -603,6 +658,8 @@ void ThemedMdiArea::setShadowTarget(QMdiSubWindow* target)
     }
     QObject::disconnect(_contentAttachmentConnection);
     _contentAttachmentConnection = {};
+    QObject::disconnect(_cornerRadiusConnection);
+    _cornerRadiusConnection = {};
     _connectedContainer.clear();
 
     _shadowTarget = target;
@@ -624,6 +681,8 @@ void ThemedMdiArea::connectTargetContainer()
 
     QObject::disconnect(_contentAttachmentConnection);
     _contentAttachmentConnection = {};
+    QObject::disconnect(_cornerRadiusConnection);
+    _cornerRadiusConnection = {};
     _connectedContainer = container;
     if (_connectedContainer) {
         _contentAttachmentConnection = connect(
@@ -634,6 +693,11 @@ void ThemedMdiArea::connectTargetContainer()
                 } else {
                     scheduleShadowSynchronization();
                 }
+            });
+        _cornerRadiusConnection = connect(
+            _connectedContainer, &ThemedMdiContainer::frameCornerRadiusChanged,
+            this, [this]() {
+                scheduleShadowSynchronization();
             });
     }
 }
@@ -660,6 +724,10 @@ void ThemedMdiArea::synchronizeShadow(bool ensureStacking)
     }
 
     _shadow->ensurePolished();
+    if (_connectedContainer) {
+        _connectedContainer->ensurePolished();
+        _shadow->setCornerRadius(_connectedContainer->frameCornerRadius());
+    }
     const int padding = _shadow->shadowPadding();
     const QRect targetRect = _shadowTarget->geometry();
     const QRect fullShadowRect = targetRect.adjusted(-padding, -padding, padding, padding);

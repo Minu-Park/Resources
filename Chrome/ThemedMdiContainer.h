@@ -12,9 +12,12 @@ class QMenuBar;
 
 class ThemedMdiContainer : public QWidget {
     Q_OBJECT
+    Q_PROPERTY(int frameCornerRadius READ frameCornerRadius WRITE setFrameCornerRadius)
 public:
     ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, QMenuBar* menuBar, QWidget* parent = nullptr);
     [[nodiscard]] QWidget* content() const noexcept;
+    [[nodiscard]] int frameCornerRadius() const noexcept;
+    void setFrameCornerRadius(int radius);
     QWidget* takeContent();
     void restoreContent(QWidget* content);
     QSize minimumSizeHint() const override;
@@ -22,6 +25,7 @@ public:
 signals:
     void minimizeRequested(QMdiSubWindow* subWin);
     void contentAttachmentChanged(bool attached);
+    void frameCornerRadiusChanged(int radius);
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
@@ -35,6 +39,7 @@ protected:
 
 private:
     void handleWindowStateChange();
+    void updateContentMask();
     void beginResize(int resizeMode, const QPoint& globalPosition);
     void resizeFromGlobalPosition(const QPoint& globalPosition);
     void finishResize();
@@ -56,5 +61,6 @@ private:
     QPoint _dragStartPos;
     QRect _dragStartGeometry;
     int _resizeMode = ResizeNone;
+    int _frameCornerRadius = 12;
     QList<QWidget*> _resizeHandles;
 };
