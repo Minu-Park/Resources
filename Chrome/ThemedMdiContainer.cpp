@@ -85,6 +85,7 @@ QWidget* ThemedMdiContainer::takeContent()
     {
         _subWin->setMinimumSize(minimumSizeHint());
     }
+    emit contentAttachmentChanged(false);
     return content;
 }
 
@@ -111,6 +112,7 @@ void ThemedMdiContainer::restoreContent(QWidget* content)
         _subWin->setMinimumSize(minimumSizeHint());
     }
     updateGeometry();
+    emit contentAttachmentChanged(true);
 }
 
 QSize ThemedMdiContainer::minimumSizeHint() const

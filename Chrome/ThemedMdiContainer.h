@@ -21,6 +21,7 @@ public:
 
 signals:
     void minimizeRequested(QMdiSubWindow* subWin);
+    void contentAttachmentChanged(bool attached);
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
