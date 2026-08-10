@@ -5,6 +5,7 @@
 #include <QPointer>
 
 #include <memory>
+#include <vector>
 
 class QEvent;
 class QMdiSubWindow;
@@ -15,7 +16,8 @@ class ThemedMdiArea : public QMdiArea {
 public:
     enum class ShadowMode {
         Disabled,
-        ActiveWindowOnly
+        ActiveWindowOnly,
+        AllVisibleWindows
     };
 
     explicit ThemedMdiArea(QWidget* parent = nullptr);
@@ -31,23 +33,24 @@ protected:
 
 private:
     class ShadowDiagnostics;
+    struct ShadowEntry;
     friend class ThemedMdiShadowWidget;
 
     void installShadowOnViewport(QWidget* viewport);
-    void setShadowTarget(QMdiSubWindow* target);
-    void connectTargetContainer();
-    void synchronizeShadow(bool ensureStacking);
+    void clearShadowEntries();
+    void refreshShadowEntries();
+    [[nodiscard]] ShadowEntry* shadowEntryFor(QMdiSubWindow* target) const;
+    void connectEntryContainer(ShadowEntry& entry);
+    void synchronizeShadow(ShadowEntry& entry);
+    void synchronizeAllShadows(bool ensureStacking);
     void scheduleShadowSynchronization();
     void reportShadowDiagnostics();
-    void hideShadow();
-    [[nodiscard]] bool canShowShadow() const;
+    void hideShadows();
+    void hideShadowFor(QMdiSubWindow* target);
+    [[nodiscard]] bool canShowShadow(const ShadowEntry& entry) const;
 
-    QPointer<ThemedMdiShadowWidget> _shadow;
     QPointer<QWidget> _trackedViewport;
-    QPointer<QMdiSubWindow> _shadowTarget;
-    QPointer<ThemedMdiContainer> _connectedContainer;
-    QMetaObject::Connection _contentAttachmentConnection;
-    QMetaObject::Connection _cornerRadiusConnection;
+    std::vector<std::unique_ptr<ShadowEntry>> _shadowEntries;
     std::unique_ptr<ShadowDiagnostics> _shadowDiagnostics;
     ShadowMode _shadowMode = ShadowMode::Disabled;
     bool _shadowSyncQueued = false;

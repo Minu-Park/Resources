@@ -3,6 +3,7 @@
 #include "ThemedMdiContainer.h"
 
 #include <QColor>
+#include <QChildEvent>
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QEvent>
@@ -12,6 +13,7 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QRegion>
+#include <QSet>
 #include <QStyle>
 #include <QTimer>
 #include <QWidget>
@@ -157,6 +159,7 @@ class ThemedMdiShadowWidget final : public QWidget {
     Q_PROPERTY(int cornerRadius READ cornerRadius WRITE setCornerRadius)
     Q_PROPERTY(int offsetX READ offsetX WRITE setOffsetX)
     Q_PROPERTY(int offsetY READ offsetY WRITE setOffsetY)
+    Q_PROPERTY(QObject* targetWindow READ targetWindow)
     Q_PROPERTY(qulonglong cacheGeneration READ cacheGeneration)
     Q_PROPERTY(int cacheCornerAlpha READ cacheCornerAlpha)
     Q_PROPERTY(int cacheInteriorAlpha READ cacheInteriorAlpha)
@@ -166,8 +169,10 @@ class ThemedMdiShadowWidget final : public QWidget {
 
 public:
     explicit ThemedMdiShadowWidget(QWidget* parent,
+                                  QMdiSubWindow* target,
                                   ThemedMdiArea::ShadowDiagnostics* diagnostics)
         : QWidget(parent)
+        , _target(target)
         , _diagnostics(diagnostics)
     {
         setObjectName(QStringLiteral("ThemedMdiShadow"));
@@ -184,6 +189,7 @@ public:
     [[nodiscard]] int cornerRadius() const noexcept { return _cornerRadius; }
     [[nodiscard]] int offsetX() const noexcept { return _offsetX; }
     [[nodiscard]] int offsetY() const noexcept { return _offsetY; }
+    [[nodiscard]] QObject* targetWindow() const noexcept { return _target; }
     [[nodiscard]] qulonglong cacheGeneration() const noexcept { return _cacheGeneration; }
     [[nodiscard]] int cacheCornerAlpha() const
     {
@@ -476,11 +482,11 @@ private:
         }
     }
 
-    QColor _shadowColor = QColor(22, 32, 43, 30);
-    int _shadowExtent = 10;
+    QColor _shadowColor = QColor(22, 32, 43, 24);
+    int _shadowExtent = 8;
     int _cornerRadius = 12;
     int _offsetX = 0;
-    int _offsetY = 2;
+    int _offsetY = 1;
     QRect _fullOutputRect;
     QRect _localTargetRect;
     int _maskedCornerRadius = -1;
@@ -490,7 +496,17 @@ private:
     int _targetMargin = 0;
     qulonglong _cacheGeneration = 0;
     std::function<void()> _metricsChanged;
+    QPointer<QMdiSubWindow> _target;
     ThemedMdiArea::ShadowDiagnostics* _diagnostics = nullptr;
+};
+
+struct ThemedMdiArea::ShadowEntry {
+    QPointer<QMdiSubWindow> target;
+    QPointer<ThemedMdiShadowWidget> shadow;
+    QPointer<ThemedMdiContainer> container;
+    QMetaObject::Connection targetDestroyedConnection;
+    QMetaObject::Connection contentAttachmentConnection;
+    QMetaObject::Connection cornerRadiusConnection;
 };
 
 ThemedMdiArea::ThemedMdiArea(QWidget* parent)
@@ -509,27 +525,21 @@ ThemedMdiArea::ThemedMdiArea(QWidget* parent)
                                  .arg(shadowProfileIntervalMs);
     }
 
-    // QMdiArea already routes viewport child events through eventFilter().
-    // Construct the proxy only after every derived member is initialized.
     installShadowOnViewport(viewport());
 
     connect(this, &QMdiArea::subWindowActivated, this,
-            [this](QMdiSubWindow* subWindow) {
+            [this](QMdiSubWindow*) {
                 if (_shadowMode == ShadowMode::Disabled) {
-                    hideShadow();
+                    hideShadows();
                     return;
                 }
-                setShadowTarget(subWindow);
-                synchronizeShadow(true);
+                synchronizeAllShadows(true);
             });
 }
 
 ThemedMdiArea::~ThemedMdiArea()
 {
-    if (_shadow) {
-        _shadow->setMetricsChangedCallback({});
-    }
-    setShadowTarget(nullptr);
+    clearShadowEntries();
     if (_trackedViewport) {
         _trackedViewport->removeEventFilter(this);
     }
@@ -543,13 +553,11 @@ void ThemedMdiArea::setShadowMode(ShadowMode mode)
 
     _shadowMode = mode;
     if (_shadowMode == ShadowMode::Disabled) {
-        setShadowTarget(nullptr);
-        hideShadow();
+        clearShadowEntries();
         return;
     }
 
-    setShadowTarget(activeSubWindow());
-    synchronizeShadow(true);
+    synchronizeAllShadows(true);
 }
 
 ThemedMdiArea::ShadowMode ThemedMdiArea::shadowMode() const noexcept
@@ -560,44 +568,67 @@ ThemedMdiArea::ShadowMode ThemedMdiArea::shadowMode() const noexcept
 bool ThemedMdiArea::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _trackedViewport) {
-        if (event->type() == QEvent::Hide) {
-            hideShadow();
-        } else if (event->type() == QEvent::Close) {
-            hideShadow();
+        switch (event->type()) {
+        case QEvent::Hide:
+            hideShadows();
+            break;
+        case QEvent::Close:
+            hideShadows();
             scheduleShadowSynchronization();
-        } else if (event->type() == QEvent::Resize) {
-            synchronizeShadow(false);
-        } else if (event->type() == QEvent::Show) {
+            break;
+        case QEvent::Resize:
+            synchronizeAllShadows(false);
+            break;
+        case QEvent::Show:
             scheduleShadowSynchronization();
+            break;
+        case QEvent::ChildAdded:
+        case QEvent::ChildRemoved: {
+            auto* childEvent = static_cast<QChildEvent*>(event);
+            if (qobject_cast<QMdiSubWindow*>(childEvent->child())) {
+                scheduleShadowSynchronization();
+            }
+            break;
+        }
+        default:
+            break;
         }
     }
 
-    if (watched == _shadowTarget) {
-        switch (event->type()) {
-        case QEvent::Move:
-        case QEvent::Resize:
-            synchronizeShadow(false);
-            break;
-        case QEvent::Hide:
-        case QEvent::Destroy:
-            hideShadow();
-            break;
-        case QEvent::Close:
-            hideShadow();
-            scheduleShadowSynchronization();
-            break;
-        case QEvent::WindowStateChange:
-        case QEvent::ParentChange:
-        case QEvent::WinIdChange:
-            hideShadow();
-            scheduleShadowSynchronization();
-            break;
-        case QEvent::Show:
-        case QEvent::ZOrderChange:
-            scheduleShadowSynchronization();
-            break;
-        default:
-            break;
+    if (auto* target = qobject_cast<QMdiSubWindow*>(watched)) {
+        if (ShadowEntry* entry = shadowEntryFor(target)) {
+            switch (event->type()) {
+            case QEvent::Move:
+            case QEvent::Resize: {
+                ScopedTimingSample synchronizationTiming(
+                    _shadowDiagnostics ? &_shadowDiagnostics->synchronizations : nullptr);
+                synchronizeShadow(*entry);
+                break;
+            }
+            case QEvent::Hide:
+                hideShadowFor(target);
+                break;
+            case QEvent::Destroy:
+                hideShadowFor(target);
+                scheduleShadowSynchronization();
+                break;
+            case QEvent::Close:
+                hideShadowFor(target);
+                scheduleShadowSynchronization();
+                break;
+            case QEvent::WindowStateChange:
+            case QEvent::ParentChange:
+            case QEvent::WinIdChange:
+                hideShadowFor(target);
+                scheduleShadowSynchronization();
+                break;
+            case QEvent::Show:
+            case QEvent::ZOrderChange:
+                scheduleShadowSynchronization();
+                break;
+            default:
+                break;
+            }
         }
     }
 
@@ -619,137 +650,210 @@ void ThemedMdiArea::setupViewport(QWidget* newViewport)
     if (_trackedViewport) {
         _trackedViewport->removeEventFilter(this);
     }
-    if (_shadow) {
-        _shadow->setMetricsChangedCallback({});
-        delete _shadow;
-        _shadow.clear();
-    }
+    clearShadowEntries();
 
     QMdiArea::setupViewport(newViewport);
     installShadowOnViewport(newViewport);
-    hideShadow();
     scheduleShadowSynchronization();
 }
 
 void ThemedMdiArea::installShadowOnViewport(QWidget* newViewport)
 {
     _trackedViewport = newViewport;
-    if (!_trackedViewport) {
-        return;
+    if (_trackedViewport) {
+        _trackedViewport->installEventFilter(this);
     }
-
-    _shadow = new ThemedMdiShadowWidget(
-        _trackedViewport, _shadowDiagnostics.get());
-    _trackedViewport->installEventFilter(this);
-    _shadow->setMetricsChangedCallback([this]() {
-        scheduleShadowSynchronization();
-    });
 }
 
-void ThemedMdiArea::setShadowTarget(QMdiSubWindow* target)
+void ThemedMdiArea::clearShadowEntries()
 {
-    if (_shadowTarget == target) {
-        connectTargetContainer();
-        return;
+    for (const std::unique_ptr<ShadowEntry>& entry : _shadowEntries) {
+        QObject::disconnect(entry->targetDestroyedConnection);
+        QObject::disconnect(entry->contentAttachmentConnection);
+        QObject::disconnect(entry->cornerRadiusConnection);
+        if (entry->shadow) {
+            entry->shadow->setMetricsChangedCallback({});
+            delete entry->shadow;
+        }
     }
-
-    if (_shadowTarget) {
-        _shadowTarget->removeEventFilter(this);
-    }
-    QObject::disconnect(_contentAttachmentConnection);
-    _contentAttachmentConnection = {};
-    QObject::disconnect(_cornerRadiusConnection);
-    _cornerRadiusConnection = {};
-    _connectedContainer.clear();
-
-    _shadowTarget = target;
-    if (_shadowTarget) {
-        _shadowTarget->installEventFilter(this);
-    }
-    connectTargetContainer();
+    _shadowEntries.clear();
 }
 
-void ThemedMdiArea::connectTargetContainer()
+void ThemedMdiArea::refreshShadowEntries()
 {
-    ThemedMdiContainer* container = nullptr;
-    if (_shadowTarget) {
-        container = qobject_cast<ThemedMdiContainer*>(_shadowTarget->widget());
-    }
-    if (_connectedContainer == container) {
+    if (_shadowMode == ShadowMode::Disabled || !_trackedViewport) {
+        clearShadowEntries();
         return;
     }
 
-    QObject::disconnect(_contentAttachmentConnection);
-    _contentAttachmentConnection = {};
-    QObject::disconnect(_cornerRadiusConnection);
-    _cornerRadiusConnection = {};
-    _connectedContainer = container;
-    if (_connectedContainer) {
-        _contentAttachmentConnection = connect(
-            _connectedContainer, &ThemedMdiContainer::contentAttachmentChanged,
-            this, [this](bool attached) {
-                if (!attached) {
-                    hideShadow();
-                } else {
-                    scheduleShadowSynchronization();
+    const QList<QMdiSubWindow*> windows = subWindowList(QMdiArea::StackingOrder);
+    QSet<QMdiSubWindow*> targets;
+    for (QMdiSubWindow* target : windows) {
+        if (target && target->parentWidget() == _trackedViewport) {
+            targets.insert(target);
+        }
+    }
+
+    _shadowEntries.erase(
+        std::remove_if(
+            _shadowEntries.begin(), _shadowEntries.end(),
+            [this, &targets](const std::unique_ptr<ShadowEntry>& entry) {
+                if (entry->target && targets.contains(entry->target)) {
+                    return false;
                 }
-            });
-        _cornerRadiusConnection = connect(
-            _connectedContainer, &ThemedMdiContainer::frameCornerRadiusChanged,
-            this, [this]() {
+                QObject::disconnect(entry->targetDestroyedConnection);
+                QObject::disconnect(entry->contentAttachmentConnection);
+                QObject::disconnect(entry->cornerRadiusConnection);
+                if (entry->shadow) {
+                    entry->shadow->setMetricsChangedCallback({});
+                    delete entry->shadow;
+                }
+                return true;
+            }),
+        _shadowEntries.end());
+
+    for (QMdiSubWindow* target : windows) {
+        if (!targets.contains(target)) {
+            continue;
+        }
+        ShadowEntry* entry = shadowEntryFor(target);
+        if (!entry) {
+            auto newEntry = std::make_unique<ShadowEntry>();
+            newEntry->target = target;
+            newEntry->shadow = new ThemedMdiShadowWidget(
+                _trackedViewport, target, _shadowDiagnostics.get());
+            newEntry->shadow->setMetricsChangedCallback([this]() {
                 scheduleShadowSynchronization();
             });
+            const QPointer<ThemedMdiShadowWidget> shadow = newEntry->shadow;
+            newEntry->targetDestroyedConnection = connect(
+                target, &QObject::destroyed, this, [this, shadow]() {
+                    if (shadow) {
+                        shadow->hide();
+                    }
+                    scheduleShadowSynchronization();
+                });
+            entry = newEntry.get();
+            _shadowEntries.push_back(std::move(newEntry));
+        }
+        connectEntryContainer(*entry);
     }
 }
 
-void ThemedMdiArea::synchronizeShadow(bool ensureStacking)
+ThemedMdiArea::ShadowEntry* ThemedMdiArea::shadowEntryFor(QMdiSubWindow* target) const
+{
+    const auto iterator = std::find_if(
+        _shadowEntries.begin(), _shadowEntries.end(),
+        [target](const std::unique_ptr<ShadowEntry>& entry) {
+            return entry->target == target;
+        });
+    return iterator == _shadowEntries.end() ? nullptr : iterator->get();
+}
+
+void ThemedMdiArea::connectEntryContainer(ShadowEntry& entry)
+{
+    ThemedMdiContainer* container = entry.target
+        ? qobject_cast<ThemedMdiContainer*>(entry.target->widget())
+        : nullptr;
+    if (entry.container == container) {
+        return;
+    }
+
+    QObject::disconnect(entry.contentAttachmentConnection);
+    entry.contentAttachmentConnection = {};
+    QObject::disconnect(entry.cornerRadiusConnection);
+    entry.cornerRadiusConnection = {};
+    entry.container = container;
+    if (!entry.container) {
+        return;
+    }
+
+    const QPointer<QMdiSubWindow> target = entry.target;
+    entry.contentAttachmentConnection = connect(
+        entry.container, &ThemedMdiContainer::contentAttachmentChanged,
+        this, [this, target](bool attached) {
+            if (!target) {
+                return;
+            }
+            if (!attached) {
+                hideShadowFor(target);
+            } else {
+                scheduleShadowSynchronization();
+            }
+        });
+    entry.cornerRadiusConnection = connect(
+        entry.container, &ThemedMdiContainer::frameCornerRadiusChanged,
+        this, [this]() {
+            scheduleShadowSynchronization();
+        });
+}
+
+void ThemedMdiArea::synchronizeShadow(ShadowEntry& entry)
+{
+    connectEntryContainer(entry);
+    if (!canShowShadow(entry)) {
+        if (entry.shadow) {
+            entry.shadow->hide();
+        }
+        return;
+    }
+
+    entry.shadow->ensurePolished();
+    if (entry.container) {
+        entry.container->ensurePolished();
+        entry.shadow->setCornerRadius(entry.container->frameCornerRadius());
+    }
+    const int padding = entry.shadow->shadowPadding();
+    const QRect targetRect = entry.target->geometry();
+    const QRect fullShadowRect = targetRect.adjusted(-padding, -padding, padding, padding);
+    const QRect clippedShadowRect = fullShadowRect.intersected(viewport()->rect());
+    if (!clippedShadowRect.isValid()
+        || !entry.shadow->setTrackedGeometry(targetRect, fullShadowRect, clippedShadowRect)) {
+        entry.shadow->hide();
+        return;
+    }
+
+    if (!entry.shadow->isVisible()) {
+        entry.shadow->show();
+        if (entry.shadow->parentWidget() == entry.target->parentWidget()) {
+            entry.shadow->stackUnder(entry.target);
+            if (_shadowDiagnostics) {
+                ++_shadowDiagnostics->stackUnderCalls;
+            }
+        }
+    }
+}
+
+void ThemedMdiArea::synchronizeAllShadows(bool ensureStacking)
 {
     ScopedTimingSample synchronizationTiming(
         _shadowDiagnostics ? &_shadowDiagnostics->synchronizations : nullptr);
     if (_shadowMode == ShadowMode::Disabled) {
-        hideShadow();
+        clearShadowEntries();
         return;
     }
 
-    if (_shadowTarget != activeSubWindow()) {
-        setShadowTarget(activeSubWindow());
-        ensureStacking = true;
-    } else {
-        connectTargetContainer();
+    refreshShadowEntries();
+    const QList<QMdiSubWindow*> windows = subWindowList(QMdiArea::StackingOrder);
+    for (QMdiSubWindow* target : windows) {
+        if (ShadowEntry* entry = shadowEntryFor(target)) {
+            synchronizeShadow(*entry);
+        }
     }
 
-    if (!canShowShadow()) {
-        hideShadow();
+    if (!ensureStacking) {
         return;
     }
-
-    _shadow->ensurePolished();
-    if (_connectedContainer) {
-        _connectedContainer->ensurePolished();
-        _shadow->setCornerRadius(_connectedContainer->frameCornerRadius());
-    }
-    const int padding = _shadow->shadowPadding();
-    const QRect targetRect = _shadowTarget->geometry();
-    const QRect fullShadowRect = targetRect.adjusted(-padding, -padding, padding, padding);
-    const QRect clippedShadowRect = fullShadowRect.intersected(viewport()->rect());
-    if (!clippedShadowRect.isValid()) {
-        hideShadow();
-        return;
-    }
-
-    const bool wasVisible = _shadow->isVisible();
-    if (!_shadow->setTrackedGeometry(targetRect, fullShadowRect, clippedShadowRect)) {
-        hideShadow();
-        return;
-    }
-    if (!wasVisible) {
-        _shadow->show();
-    }
-    if ((ensureStacking || !wasVisible)
-        && _shadow->parentWidget() == _shadowTarget->parentWidget()) {
-        _shadow->stackUnder(_shadowTarget);
-        if (_shadowDiagnostics) {
-            ++_shadowDiagnostics->stackUnderCalls;
+    for (QMdiSubWindow* target : windows) {
+        ShadowEntry* entry = shadowEntryFor(target);
+        if (!entry || !entry->shadow || !entry->shadow->isVisible()) {
+            continue;
+        }
+        if (entry->shadow->parentWidget() == target->parentWidget()) {
+            entry->shadow->stackUnder(target);
+            if (_shadowDiagnostics) {
+                ++_shadowDiagnostics->stackUnderCalls;
+            }
         }
     }
 }
@@ -768,7 +872,7 @@ void ThemedMdiArea::scheduleShadowSynchronization()
     _shadowSyncQueued = true;
     QTimer::singleShot(0, this, [this]() {
         _shadowSyncQueued = false;
-        synchronizeShadow(true);
+        synchronizeAllShadows(true);
     });
 }
 
@@ -797,19 +901,40 @@ void ThemedMdiArea::reportShadowDiagnostics()
     const double synchronizationAverageMicroseconds = synchronizations.count == 0
         ? 0.0
         : synchronizations.totalNanoseconds / 1000.0 / synchronizations.count;
-    const QSize shadowSize = _shadow ? _shadow->size() : QSize();
-    const qreal dpr = _shadow ? _shadow->devicePixelRatioF() : devicePixelRatioF();
+
+    int shadowCount = 0;
+    int visibleCount = 0;
+    quint64 cachePixelBytes = 0;
+    qulonglong cacheGenerationSum = 0;
+    QSize maximumShadowSize;
+    for (const std::unique_ptr<ShadowEntry>& entry : _shadowEntries) {
+        if (!entry->shadow) {
+            continue;
+        }
+        ++shadowCount;
+        visibleCount += entry->shadow->isVisible() ? 1 : 0;
+        cachePixelBytes += entry->shadow->cachePixelBytes();
+        cacheGenerationSum += entry->shadow->cacheGeneration();
+        maximumShadowSize.setWidth(
+            std::max(maximumShadowSize.width(), entry->shadow->width()));
+        maximumShadowSize.setHeight(
+            std::max(maximumShadowSize.height(), entry->shadow->height()));
+    }
+    const qreal dpr = _trackedViewport
+        ? _trackedViewport->devicePixelRatioF()
+        : devicePixelRatioF();
 
     qInfo().noquote() << QStringLiteral(
-        "[MdiShadowProfile] sampleMs=%1 visibleNow=%2 paints=%3 paintHz=%4 "
-        "paintTotalMs=%5 paintGuiBusyPct=%6 paintAvgUs=%7 paintP50Us=%8 "
-        "paintP95Us=%9 paintP99Us=%10 paintMaxUs=%11 cacheBuilds=%12 "
-        "cacheBuildTotalMs=%13 cacheBuildAvgUs=%14 cachePixelKiB=%15 "
-        "syncs=%16 syncAvgUs=%17 syncP95Us=%18 geometryChanges=%19 maskUpdates=%20 "
-        "invalidations=%21 queuedSyncs=%22 coalescedSyncs=%23 stackUnderCalls=%24 "
-        "cacheGenerationNow=%25 dprNow=%26 shadowSizeNow=%27x%28")
+        "[MdiShadowProfile] sampleMs=%1 shadowCountNow=%2 visibleCountNow=%3 "
+        "paints=%4 paintHz=%5 paintTotalMs=%6 paintGuiBusyPct=%7 paintAvgUs=%8 "
+        "paintP50Us=%9 paintP95Us=%10 paintP99Us=%11 paintMaxUs=%12 "
+        "cacheBuilds=%13 cacheBuildTotalMs=%14 cacheBuildAvgUs=%15 cachePixelKiB=%16 "
+        "syncs=%17 syncAvgUs=%18 syncP95Us=%19 geometryChanges=%20 maskUpdates=%21 "
+        "invalidations=%22 queuedSyncs=%23 coalescedSyncs=%24 stackUnderCalls=%25 "
+        "cacheGenerationSumNow=%26 dprNow=%27 maxShadowSizeNow=%28x%29")
                              .arg(sampleMilliseconds)
-                             .arg(_shadow && _shadow->isVisible() ? 1 : 0)
+                             .arg(shadowCount)
+                             .arg(visibleCount)
                              .arg(paints.count)
                              .arg(paintHz, 0, 'f', 2)
                              .arg(paintTotalMilliseconds, 0, 'f', 3)
@@ -822,7 +947,7 @@ void ThemedMdiArea::reportShadowDiagnostics()
                              .arg(cacheBuilds.count)
                              .arg(cacheBuildTotalMilliseconds, 0, 'f', 3)
                              .arg(cacheBuildAverageMicroseconds, 0, 'f', 2)
-                             .arg(_shadow ? _shadow->cachePixelBytes() / 1024.0 : 0.0, 0, 'f', 2)
+                             .arg(cachePixelBytes / 1024.0, 0, 'f', 2)
                              .arg(synchronizations.count)
                              .arg(synchronizationAverageMicroseconds, 0, 'f', 2)
                              .arg(synchronizations.percentile(0.95) / 1000.0, 0, 'f', 2)
@@ -832,43 +957,59 @@ void ThemedMdiArea::reportShadowDiagnostics()
                              .arg(_shadowDiagnostics->queuedSynchronizations)
                              .arg(_shadowDiagnostics->coalescedSynchronizations)
                              .arg(_shadowDiagnostics->stackUnderCalls)
-                             .arg(_shadow ? _shadow->cacheGeneration() : 0)
+                             .arg(cacheGenerationSum)
                              .arg(dpr, 0, 'f', 2)
-                             .arg(shadowSize.width())
-                             .arg(shadowSize.height());
+                             .arg(maximumShadowSize.width())
+                             .arg(maximumShadowSize.height());
 
     _shadowDiagnostics->resetWindow();
 }
 
-void ThemedMdiArea::hideShadow()
+void ThemedMdiArea::hideShadows()
 {
-    if (_shadow) {
-        _shadow->hide();
+    for (const std::unique_ptr<ShadowEntry>& entry : _shadowEntries) {
+        if (entry->shadow) {
+            entry->shadow->hide();
+        }
     }
 }
 
-bool ThemedMdiArea::canShowShadow() const
+void ThemedMdiArea::hideShadowFor(QMdiSubWindow* target)
 {
-    if (!_shadow || !_shadowTarget || !viewport()) {
+    if (ShadowEntry* entry = shadowEntryFor(target)) {
+        if (entry->shadow) {
+            entry->shadow->hide();
+        }
+    }
+}
+
+bool ThemedMdiArea::canShowShadow(const ShadowEntry& entry) const
+{
+    if (_shadowMode == ShadowMode::Disabled
+        || !entry.shadow || !entry.target || !viewport()) {
+        return false;
+    }
+    if (_shadowMode == ShadowMode::ActiveWindowOnly
+        && activeSubWindow() != entry.target) {
         return false;
     }
     if (viewMode() != QMdiArea::SubWindowView
-        || activeSubWindow() != _shadowTarget
-        || _shadowTarget->parentWidget() != viewport()) {
+        || entry.target->parentWidget() != viewport()) {
         return false;
     }
-    if (!isVisible() || !viewport()->isVisible() || !_shadowTarget->isVisible()
-        || _shadowTarget->isMinimized() || _shadowTarget->isMaximized()) {
+    if (!isVisible() || !viewport()->isVisible() || !entry.target->isVisible()
+        || entry.target->isMinimized() || entry.target->isMaximized()
+        || entry.target->isFullScreen()) {
         return false;
     }
-    if (_shadowTarget->testAttribute(Qt::WA_NativeWindow)
-        || _shadowTarget->testAttribute(Qt::WA_AlwaysStackOnTop)) {
+    if (entry.target->testAttribute(Qt::WA_NativeWindow)
+        || entry.target->testAttribute(Qt::WA_AlwaysStackOnTop)) {
         return false;
     }
-    if (_connectedContainer && !_connectedContainer->content()) {
+    if (entry.container && !entry.container->content()) {
         return false;
     }
-    return _shadowTarget->geometry().isValid();
+    return entry.target->geometry().isValid();
 }
 
 #include "ThemedMdiArea.moc"

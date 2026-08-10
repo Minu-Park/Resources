@@ -2,9 +2,7 @@
 
 ## Unreleased
 
-- Added an opt-in MDI area with a cached active-window shadow that stays separate from embedded content.
-- Added opt-in aggregate profiling for MDI shadow paint, cache, geometry, and synchronization costs.
-- Refined the MDI shadow into a softer hollow silhouette aligned with the frame and content corners.
+- Added opt-in cached MDI shadows for every eligible subwindow, with independent stacking, aggregate profiling, and a compact hollow silhouette aligned with the frame and content corners.
 
 ## v1.1.0
 

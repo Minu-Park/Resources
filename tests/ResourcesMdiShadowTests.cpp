@@ -14,9 +14,20 @@
 
 namespace {
 
-QWidget* shadowWidget(const ThemedMdiArea& area)
+QList<QWidget*> shadowWidgets(const ThemedMdiArea& area)
 {
-    return area.findChild<QWidget*>(QStringLiteral("ThemedMdiShadow"));
+    return area.findChildren<QWidget*>(QStringLiteral("ThemedMdiShadow"));
+}
+
+QWidget* shadowWidgetFor(const ThemedMdiArea& area, const QMdiSubWindow* target)
+{
+    const QList<QWidget*> shadows = shadowWidgets(area);
+    const auto iterator = std::find_if(
+        shadows.cbegin(), shadows.cend(),
+        [target](const QWidget* shadow) {
+            return shadow->property("targetWindow").value<QObject*>() == target;
+        });
+    return iterator == shadows.cend() ? nullptr : *iterator;
 }
 
 QMdiSubWindow* addPlainSubWindow(ThemedMdiArea& area,
@@ -120,6 +131,7 @@ class ResourcesMdiShadowTests final : public QObject {
 private slots:
     void activeShadowTracksGeometryAndContract();
     void activeShadowPreservesStackAndActivation();
+    void allVisibleShadowsTrackGeometryStackAndIsolation();
     void activeShadowTracksStateAttachmentAndLifetime();
     void ignoredCloseRestoresShadow();
     void viewportReplacementRebindsShadow();
@@ -138,7 +150,7 @@ void ResourcesMdiShadowTests::activeShadowTracksGeometryAndContract()
         area, QStringLiteral("TargetWindow"), QRect(120, 90, 300, 220));
     area.setActiveSubWindow(target);
 
-    QWidget* shadow = shadowWidget(area);
+    QPointer<QWidget> shadow = shadowWidgetFor(area, target);
     QVERIFY(shadow);
     QTRY_VERIFY(shadow->isVisible());
     QCOMPARE(area.activeSubWindow(), target);
@@ -174,9 +186,19 @@ void ResourcesMdiShadowTests::activeShadowTracksGeometryAndContract()
 
     target->setGeometry(area.viewport()->rect());
     QTRY_VERIFY(!shadow->isVisible());
+    area.setShadowMode(ThemedMdiArea::ShadowMode::Disabled);
+    QTRY_VERIFY(shadow.isNull());
+    area.setShadowMode(ThemedMdiArea::ShadowMode::ActiveWindowOnly);
+    shadow = shadowWidgetFor(area, target);
+    QVERIFY(shadow);
+    QVERIFY(!shadow->isVisible());
     area.resize(760, 560);
     QTRY_VERIFY(shadow->isVisible());
     QCOMPARE(shadow->geometry(), expectedShadowGeometry(area, *shadow, *target));
+    {
+        const QList<QWidget*> children = directViewportChildren(area);
+        QCOMPARE(children.indexOf(shadow) + 1, children.indexOf(target));
+    }
     area.resize(640, 480);
     QTRY_VERIFY(!shadow->isVisible());
     target->setGeometry(160, 120, 340, 240);
@@ -202,7 +224,8 @@ void ResourcesMdiShadowTests::activeShadowTracksGeometryAndContract()
     QCOMPARE(target->geometry(), QRect(160, 120, 340, 240));
 
     area.setShadowMode(ThemedMdiArea::ShadowMode::Disabled);
-    QVERIFY(!shadow->isVisible());
+    QTRY_VERIFY(shadow.isNull());
+    QVERIFY(shadowWidgets(area).isEmpty());
     QCOMPARE(target->geometry(), QRect(160, 120, 340, 240));
 }
 
@@ -218,13 +241,15 @@ void ResourcesMdiShadowTests::activeShadowPreservesStackAndActivation()
         area, QStringLiteral("SecondWindow"), QRect(90, 80, 320, 240));
     QMdiSubWindow* third = addPlainSubWindow(
         area, QStringLiteral("ThirdWindow"), QRect(120, 100, 320, 240));
-    QWidget* shadow = shadowWidget(area);
-    QVERIFY(shadow);
-
     const auto verifyActivePair = [&](QMdiSubWindow* target) {
         area.setActiveSubWindow(target);
         QTRY_COMPARE(area.activeSubWindow(), target);
+        QWidget* shadow = nullptr;
+        QTRY_VERIFY((shadow = shadowWidgetFor(area, target)) != nullptr);
         QTRY_VERIFY(shadow->isVisible());
+        for (QWidget* candidate : shadowWidgets(area)) {
+            QCOMPARE(candidate->isVisible(), candidate == shadow);
+        }
         const QList<QWidget*> children = directViewportChildren(area);
         const int shadowIndex = children.indexOf(shadow);
         const int targetIndex = children.indexOf(target);
@@ -260,6 +285,148 @@ void ResourcesMdiShadowTests::activeShadowPreservesStackAndActivation()
     verifyActivePair(second);
 }
 
+void ResourcesMdiShadowTests::allVisibleShadowsTrackGeometryStackAndIsolation()
+{
+    ThemedMdiArea area;
+    showArea(area);
+    area.setShadowMode(ThemedMdiArea::ShadowMode::AllVisibleWindows);
+
+    QMdiSubWindow* first = addPlainSubWindow(
+        area, QStringLiteral("AllFirstWindow"), QRect(60, 60, 300, 220));
+    QMdiSubWindow* second = addPlainSubWindow(
+        area, QStringLiteral("AllSecondWindow"), QRect(90, 80, 300, 220));
+    QMdiSubWindow* third = addPlainSubWindow(
+        area, QStringLiteral("AllThirdWindow"), QRect(120, 100, 300, 220), true);
+    area.setActiveSubWindow(second);
+
+    QTRY_COMPARE(shadowWidgets(area).size(), 3);
+    const auto verifyAllPairs = [&]() {
+        const QList<QWidget*> children = directViewportChildren(area);
+        for (QMdiSubWindow* target : area.subWindowList(QMdiArea::StackingOrder)) {
+            QWidget* shadow = shadowWidgetFor(area, target);
+            if (!shadow || !shadow->isVisible()
+                || shadow->geometry() != expectedShadowGeometry(area, *shadow, *target)
+                || children.indexOf(shadow) + 1 != children.indexOf(target)) {
+                return false;
+            }
+            if (!shadow->testAttribute(Qt::WA_TransparentForMouseEvents)
+                || shadow->testAttribute(Qt::WA_NativeWindow)
+                || shadow->focusPolicy() != Qt::NoFocus
+                || shadow->acceptDrops()) {
+                return false;
+            }
+        }
+        return true;
+    };
+    QTRY_VERIFY(verifyAllPairs());
+
+    const QPoint passThroughPoint(
+        second->geometry().left() - 2,
+        second->geometry().center().y());
+    QWidget* passThroughShadow = shadowWidgetFor(area, second);
+    QVERIFY(passThroughShadow);
+    QVERIFY(passThroughShadow->geometry().contains(passThroughPoint));
+    QVERIFY(passThroughShadow->mask().contains(
+        passThroughPoint - passThroughShadow->pos()));
+    QWidget* hitWidget = area.viewport()->childAt(passThroughPoint);
+    while (hitWidget && hitWidget->parentWidget() != area.viewport()) {
+        hitWidget = hitWidget->parentWidget();
+    }
+    QCOMPARE(hitWidget, first);
+    QWidget* globalHitWidget = QApplication::widgetAt(
+        area.viewport()->mapToGlobal(passThroughPoint));
+    while (globalHitWidget && globalHitWidget->parentWidget() != area.viewport()) {
+        globalHitWidget = globalHitWidget->parentWidget();
+    }
+    QCOMPARE(globalHitWidget, first);
+
+    const QList<QMdiSubWindow*> activationOrder = {first, third, second};
+    for (QMdiSubWindow* target : activationOrder) {
+        area.setActiveSubWindow(target);
+        QTRY_COMPARE(area.activeSubWindow(), target);
+        QTRY_VERIFY(verifyAllPairs());
+        QCOMPARE(shadowWidgets(area).size(), 3);
+    }
+
+    first->raise();
+    QTRY_VERIFY(verifyAllPairs());
+    third->lower();
+    QTRY_VERIFY(verifyAllPairs());
+    second->raise();
+    QTRY_VERIFY(verifyAllPairs());
+
+    QWidget* firstShadow = shadowWidgetFor(area, first);
+    QWidget* secondShadow = shadowWidgetFor(area, second);
+    QWidget* thirdShadow = shadowWidgetFor(area, third);
+    QVERIFY(firstShadow);
+    QVERIFY(secondShadow);
+    QVERIFY(thirdShadow);
+    QCOMPARE(firstShadow->property("shadowColor").value<QColor>(), QColor(22, 32, 43, 24));
+    QCOMPARE(firstShadow->property("shadowExtent").toInt(), 8);
+    QCOMPARE(firstShadow->property("offsetX").toInt(), 0);
+    QCOMPARE(firstShadow->property("offsetY").toInt(), 1);
+    const QRect secondShadowGeometry = secondShadow->geometry();
+    const QRect thirdShadowGeometry = thirdShadow->geometry();
+    first->setGeometry(40, 45, 330, 230);
+    QTRY_COMPARE(firstShadow->geometry(), expectedShadowGeometry(area, *firstShadow, *first));
+    QCOMPARE(secondShadow->geometry(), secondShadowGeometry);
+    QCOMPARE(thirdShadow->geometry(), thirdShadowGeometry);
+
+    first->hide();
+    QTRY_VERIFY(!firstShadow->isVisible());
+    QVERIFY(secondShadow->isVisible());
+    QVERIFY(thirdShadow->isVisible());
+    first->show();
+    QTRY_VERIFY(firstShadow->isVisible());
+
+    first->showMinimized();
+    QTRY_VERIFY(!firstShadow->isVisible());
+    QVERIFY(secondShadow->isVisible());
+    QVERIFY(thirdShadow->isVisible());
+    first->showNormal();
+    QTRY_VERIFY(firstShadow->isVisible());
+
+    first->showMaximized();
+    QTRY_VERIFY(!firstShadow->isVisible());
+    QVERIFY(secondShadow->isVisible());
+    QVERIFY(thirdShadow->isVisible());
+    first->showNormal();
+    QTRY_VERIFY(firstShadow->isVisible());
+
+    third->setAttribute(Qt::WA_AlwaysStackOnTop, true);
+    third->move(third->x() + 1, third->y());
+    QTRY_VERIFY(!thirdShadow->isVisible());
+    QVERIFY(firstShadow->isVisible());
+    QVERIFY(secondShadow->isVisible());
+    third->setAttribute(Qt::WA_AlwaysStackOnTop, false);
+    third->move(third->x() - 1, third->y());
+    QTRY_VERIFY(thirdShadow->isVisible());
+
+    QPointer<QMdiSubWindow> thirdGuard(third);
+    QPointer<QWidget> thirdShadowGuard(thirdShadow);
+    third->deleteLater();
+    QTRY_VERIFY(thirdGuard.isNull());
+    QTRY_VERIFY(thirdShadowGuard.isNull());
+    QTRY_COMPARE(shadowWidgets(area).size(), 2);
+    QVERIFY(firstShadow->isVisible());
+    QVERIFY(secondShadow->isVisible());
+
+    area.setActiveSubWindow(second);
+    area.setShadowMode(ThemedMdiArea::ShadowMode::ActiveWindowOnly);
+    QTRY_VERIFY(!firstShadow->isVisible());
+    QTRY_VERIFY(secondShadow->isVisible());
+    area.setShadowMode(ThemedMdiArea::ShadowMode::AllVisibleWindows);
+    QTRY_VERIFY(firstShadow->isVisible());
+    QTRY_VERIFY(secondShadow->isVisible());
+
+    QPointer<QWidget> firstShadowGuard(firstShadow);
+    QPointer<QWidget> secondShadowGuard(secondShadow);
+    area.setShadowMode(ThemedMdiArea::ShadowMode::Disabled);
+    QTRY_VERIFY(firstShadowGuard.isNull());
+    QTRY_VERIFY(secondShadowGuard.isNull());
+    QVERIFY(shadowWidgets(area).isEmpty());
+}
+
 void ResourcesMdiShadowTests::activeShadowTracksStateAttachmentAndLifetime()
 {
     ThemedMdiArea area;
@@ -278,7 +445,7 @@ void ResourcesMdiShadowTests::activeShadowTracksStateAttachmentAndLifetime()
     target->show();
     area.setActiveSubWindow(target);
 
-    QWidget* shadow = shadowWidget(area);
+    QPointer<QWidget> shadow = shadowWidgetFor(area, target);
     QVERIFY(shadow);
     QTRY_VERIFY(shadow->isVisible());
     QTRY_VERIFY(!content->mask().isEmpty());
@@ -307,6 +474,12 @@ void ResourcesMdiShadowTests::activeShadowTracksStateAttachmentAndLifetime()
     QTRY_VERIFY(shadow->isVisible());
     QTRY_VERIFY(!content->mask().isEmpty());
 
+    target->showFullScreen();
+    QTRY_VERIFY(!shadow->isVisible());
+    target->showNormal();
+    area.setActiveSubWindow(target);
+    QTRY_VERIFY(shadow->isVisible());
+
     area.setViewMode(QMdiArea::TabbedView);
     QTRY_VERIFY(!shadow->isVisible());
     area.setViewMode(QMdiArea::SubWindowView);
@@ -327,8 +500,8 @@ void ResourcesMdiShadowTests::activeShadowTracksStateAttachmentAndLifetime()
     QPointer<QMdiSubWindow> guard(target);
     target->close();
     QTRY_VERIFY(guard.isNull());
-    QVERIFY(!shadow->isVisible());
-    QCOMPARE(area.findChildren<QWidget*>(QStringLiteral("ThemedMdiShadow")).size(), 1);
+    QTRY_VERIFY(shadow.isNull());
+    QCOMPARE(shadowWidgets(area).size(), 0);
 }
 
 void ResourcesMdiShadowTests::ignoredCloseRestoresShadow()
@@ -345,7 +518,7 @@ void ResourcesMdiShadowTests::ignoredCloseRestoresShadow()
     target->show();
     area.setActiveSubWindow(target);
 
-    QWidget* shadow = shadowWidget(area);
+    QWidget* shadow = shadowWidgetFor(area, target);
     QVERIFY(shadow);
     QTRY_VERIFY(shadow->isVisible());
     QVERIFY(!target->close());
@@ -358,34 +531,46 @@ void ResourcesMdiShadowTests::viewportReplacementRebindsShadow()
 {
     ViewportReplacingMdiArea area;
     showArea(area);
-    area.setShadowMode(ThemedMdiArea::ShadowMode::ActiveWindowOnly);
+    area.setShadowMode(ThemedMdiArea::ShadowMode::AllVisibleWindows);
     QMdiSubWindow* target = addPlainSubWindow(
         area, QStringLiteral("ViewportTarget"), QRect(100, 80, 320, 240));
+    QMdiSubWindow* secondTarget = addPlainSubWindow(
+        area, QStringLiteral("SecondViewportTarget"), QRect(150, 120, 300, 220));
     area.setActiveSubWindow(target);
 
-    QPointer<QWidget> originalShadow(shadowWidget(area));
+    QPointer<QWidget> originalShadow(shadowWidgetFor(area, target));
+    QPointer<QWidget> originalSecondShadow(shadowWidgetFor(area, secondTarget));
     QVERIFY(originalShadow);
-    QTRY_VERIFY(originalShadow->isVisible());
+    QVERIFY(originalSecondShadow);
+    QTRY_VERIFY(originalShadow->isVisible() && originalSecondShadow->isVisible());
 
     auto* replacement = new QWidget;
     area.replaceViewport(replacement);
     QCOMPARE(area.viewport(), replacement);
     QTRY_VERIFY(originalShadow.isNull());
+    QTRY_VERIFY(originalSecondShadow.isNull());
 
-    QWidget* reboundShadow = shadowWidget(area);
-    QVERIFY(reboundShadow);
+    QWidget* reboundShadow = nullptr;
+    QWidget* reboundSecondShadow = nullptr;
+    QTRY_VERIFY((reboundShadow = shadowWidgetFor(area, target)) != nullptr);
+    QTRY_VERIFY((reboundSecondShadow = shadowWidgetFor(area, secondTarget)) != nullptr);
     QCOMPARE(reboundShadow->parentWidget(), replacement);
+    QCOMPARE(reboundSecondShadow->parentWidget(), replacement);
     QCOMPARE(target->parentWidget(), replacement);
+    QCOMPARE(secondTarget->parentWidget(), replacement);
     QVERIFY(!target->isMinimized());
     QVERIFY(!target->isMaximized());
     QVERIFY(!target->testAttribute(Qt::WA_NativeWindow));
     QVERIFY(!reboundShadow->isVisible());
     target->show();
+    secondTarget->show();
     area.setActiveSubWindow(target);
     QTRY_COMPARE(area.activeSubWindow(), target);
-    QTRY_VERIFY(reboundShadow->isVisible());
+    QTRY_VERIFY(reboundShadow->isVisible() && reboundSecondShadow->isVisible());
     QCOMPARE(reboundShadow->geometry(),
              expectedShadowGeometry(area, *reboundShadow, *target));
+    QCOMPARE(reboundSecondShadow->geometry(),
+             expectedShadowGeometry(area, *reboundSecondShadow, *secondTarget));
 }
 
 void ResourcesMdiShadowTests::qssPropertiesDriveShadowMetricsAndCache()
@@ -407,7 +592,7 @@ void ResourcesMdiShadowTests::qssPropertiesDriveShadowMetricsAndCache()
         area, QStringLiteral("StyledWindow"), QRect(100, 80, 320, 240));
     area.setActiveSubWindow(target);
 
-    QWidget* shadow = shadowWidget(area);
+    QWidget* shadow = shadowWidgetFor(area, target);
     QVERIFY(shadow);
     QTRY_VERIFY(shadow->isVisible());
     QCOMPARE(shadow->property("shadowColor").value<QColor>(), QColor(20, 30, 40, 60));
@@ -465,7 +650,7 @@ void ResourcesMdiShadowTests::frameRadiusDrivesContentAndShadowSilhouettes()
 
     ThemedMdiArea area;
     showArea(area);
-    area.setShadowMode(ThemedMdiArea::ShadowMode::ActiveWindowOnly);
+    area.setShadowMode(ThemedMdiArea::ShadowMode::AllVisibleWindows);
 
     auto* target = new QMdiSubWindow;
     target->setWindowFlags(Qt::SubWindow | Qt::FramelessWindowHint);
@@ -477,22 +662,38 @@ void ResourcesMdiShadowTests::frameRadiusDrivesContentAndShadowSilhouettes()
     target->show();
     area.setActiveSubWindow(target);
 
-    QWidget* shadow = shadowWidget(area);
+    auto* secondTarget = new QMdiSubWindow;
+    secondTarget->setWindowFlags(Qt::SubWindow | Qt::FramelessWindowHint);
+    auto* secondContent = new QWidget;
+    auto* secondContainer = new ThemedMdiContainer(
+        secondTarget, secondContent, new QMenuBar, secondTarget);
+    secondTarget->setWidget(secondContainer);
+    area.addSubWindow(secondTarget);
+    secondTarget->setGeometry(180, 140, 320, 220);
+    secondTarget->show();
+    secondContainer->setFrameCornerRadius(4);
+
+    QWidget* shadow = shadowWidgetFor(area, target);
+    QWidget* secondShadow = shadowWidgetFor(area, secondTarget);
     QVERIFY(shadow);
-    QTRY_VERIFY(shadow->isVisible());
+    QVERIFY(secondShadow);
+    QTRY_VERIFY(shadow->isVisible() && secondShadow->isVisible());
     QTRY_COMPARE(container->frameCornerRadius(), 8);
     QTRY_COMPARE(shadow->property("cornerRadius").toInt(), 8);
+    QTRY_COMPARE(secondShadow->property("cornerRadius").toInt(), 4);
     QTRY_VERIFY(!content->size().isEmpty());
     QTRY_VERIFY(!content->mask().isEmpty());
     QVERIFY(!content->mask().contains(QPoint(0, content->height() - 1)));
 
     container->setFrameCornerRadius(0);
     QTRY_COMPARE(shadow->property("cornerRadius").toInt(), 0);
+    QCOMPARE(secondShadow->property("cornerRadius").toInt(), 4);
     QTRY_VERIFY(content->mask().isEmpty());
     QVERIFY(!shadow->mask().contains(localTargetRect(*shadow, *target).topLeft()));
 
     container->setFrameCornerRadius(7);
     QTRY_COMPARE(shadow->property("cornerRadius").toInt(), 7);
+    QCOMPARE(secondShadow->property("cornerRadius").toInt(), 4);
     QTRY_VERIFY(!content->mask().isEmpty());
     QTRY_VERIFY(shadow->mask().contains(localTargetRect(*shadow, *target).topLeft()));
 
@@ -504,7 +705,13 @@ void ResourcesMdiShadowTests::profilingTracksPaintWithoutRebuildingCache()
     {
         ScopedEnvironmentVariable disabledProfile("RESOURCES_MDI_SHADOW_PROFILE", "0");
         ThemedMdiArea disabledArea;
-        QWidget* disabledShadow = shadowWidget(disabledArea);
+        showArea(disabledArea);
+        disabledArea.setShadowMode(ThemedMdiArea::ShadowMode::ActiveWindowOnly);
+        QMdiSubWindow* disabledTarget = addPlainSubWindow(
+            disabledArea, QStringLiteral("UnprofiledWindow"), QRect(100, 80, 320, 240));
+        disabledArea.setActiveSubWindow(disabledTarget);
+        QWidget* disabledShadow = nullptr;
+        QTRY_VERIFY((disabledShadow = shadowWidgetFor(disabledArea, disabledTarget)) != nullptr);
         QVERIFY(disabledShadow);
         QVERIFY(!disabledShadow->property("profilingEnabled").toBool());
     }
@@ -512,38 +719,49 @@ void ResourcesMdiShadowTests::profilingTracksPaintWithoutRebuildingCache()
     ScopedEnvironmentVariable enabledProfile("RESOURCES_MDI_SHADOW_PROFILE", "1");
     ViewportReplacingMdiArea area;
     showArea(area);
-    area.setShadowMode(ThemedMdiArea::ShadowMode::ActiveWindowOnly);
+    area.setShadowMode(ThemedMdiArea::ShadowMode::AllVisibleWindows);
     QMdiSubWindow* target = addPlainSubWindow(
         area, QStringLiteral("ProfiledWindow"), QRect(100, 80, 320, 240));
+    QMdiSubWindow* secondTarget = addPlainSubWindow(
+        area, QStringLiteral("SecondProfiledWindow"), QRect(150, 120, 300, 220));
     area.setActiveSubWindow(target);
 
-    QWidget* shadow = shadowWidget(area);
+    QWidget* shadow = shadowWidgetFor(area, target);
+    QWidget* secondShadow = shadowWidgetFor(area, secondTarget);
     QVERIFY(shadow);
-    QTRY_VERIFY(shadow->isVisible());
+    QVERIFY(secondShadow);
+    QTRY_VERIFY(shadow->isVisible() && secondShadow->isVisible());
     QVERIFY(shadow->property("profilingEnabled").toBool());
     QTRY_VERIFY(shadow->property("profilePaintCount").toULongLong() > 0);
     QTRY_VERIFY(shadow->property("profileCacheBuildCount").toULongLong() > 0);
 
     const qulonglong firstGeneration = shadow->property("cacheGeneration").toULongLong();
+    const qulonglong secondGeneration = secondShadow->property("cacheGeneration").toULongLong();
     const qulonglong firstPaintCount = shadow->property("profilePaintCount").toULongLong();
     const qulonglong firstCacheBuildCount = shadow->property("profileCacheBuildCount").toULongLong();
     for (int index = 0; index < 20; ++index) {
         shadow->repaint();
+        secondShadow->repaint();
         QCoreApplication::processEvents();
     }
     QTRY_VERIFY(shadow->property("profilePaintCount").toULongLong() > firstPaintCount);
     QCOMPARE(shadow->property("profileCacheBuildCount").toULongLong(), firstCacheBuildCount);
     QCOMPARE(shadow->property("cacheGeneration").toULongLong(), firstGeneration);
+    QCOMPARE(secondShadow->property("cacheGeneration").toULongLong(), secondGeneration);
 
     QPointer<QWidget> originalShadow(shadow);
+    QPointer<QWidget> originalSecondShadow(secondShadow);
     area.replaceViewport(new QWidget);
     QTRY_VERIFY(originalShadow.isNull());
-    QWidget* reboundShadow = shadowWidget(area);
-    QVERIFY(reboundShadow);
+    QTRY_VERIFY(originalSecondShadow.isNull());
+    QWidget* reboundShadow = nullptr;
+    QTRY_VERIFY((reboundShadow = shadowWidgetFor(area, target)) != nullptr);
     QVERIFY(reboundShadow->property("profilingEnabled").toBool());
     target->show();
+    secondTarget->show();
     area.setActiveSubWindow(target);
     QTRY_VERIFY(reboundShadow->isVisible());
+    QTRY_VERIFY(shadowWidgetFor(area, secondTarget)->isVisible());
     const qulonglong reboundPaintCount = reboundShadow->property("profilePaintCount").toULongLong();
     reboundShadow->repaint();
     QCoreApplication::processEvents();
