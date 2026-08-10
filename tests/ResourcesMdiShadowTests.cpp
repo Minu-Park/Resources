@@ -81,6 +81,31 @@ public:
     }
 };
 
+class ScopedEnvironmentVariable final {
+public:
+    ScopedEnvironmentVariable(const char* name, const QByteArray& value)
+        : _name(name)
+        , _wasSet(qEnvironmentVariableIsSet(name))
+        , _previousValue(qgetenv(name))
+    {
+        qputenv(name, value);
+    }
+
+    ~ScopedEnvironmentVariable()
+    {
+        if (_wasSet) {
+            qputenv(_name.constData(), _previousValue);
+        } else {
+            qunsetenv(_name.constData());
+        }
+    }
+
+private:
+    QByteArray _name;
+    bool _wasSet = false;
+    QByteArray _previousValue;
+};
+
 } // namespace
 
 class ResourcesMdiShadowTests final : public QObject {
@@ -93,6 +118,7 @@ private slots:
     void ignoredCloseRestoresShadow();
     void viewportReplacementRebindsShadow();
     void qssPropertiesDriveShadowMetricsAndCache();
+    void profilingTracksPaintWithoutRebuildingCache();
 };
 
 void ResourcesMdiShadowTests::activeShadowTracksGeometryAndContract()
@@ -367,6 +393,57 @@ void ResourcesMdiShadowTests::qssPropertiesDriveShadowMetricsAndCache()
     QTRY_VERIFY(shadow->property("cacheGeneration").toULongLong() > firstGeneration);
 
     qApp->setStyleSheet(previousStyleSheet);
+}
+
+void ResourcesMdiShadowTests::profilingTracksPaintWithoutRebuildingCache()
+{
+    {
+        ScopedEnvironmentVariable disabledProfile("RESOURCES_MDI_SHADOW_PROFILE", "0");
+        ThemedMdiArea disabledArea;
+        QWidget* disabledShadow = shadowWidget(disabledArea);
+        QVERIFY(disabledShadow);
+        QVERIFY(!disabledShadow->property("profilingEnabled").toBool());
+    }
+
+    ScopedEnvironmentVariable enabledProfile("RESOURCES_MDI_SHADOW_PROFILE", "1");
+    ViewportReplacingMdiArea area;
+    showArea(area);
+    area.setShadowMode(ThemedMdiArea::ShadowMode::ActiveWindowOnly);
+    QMdiSubWindow* target = addPlainSubWindow(
+        area, QStringLiteral("ProfiledWindow"), QRect(100, 80, 320, 240));
+    area.setActiveSubWindow(target);
+
+    QWidget* shadow = shadowWidget(area);
+    QVERIFY(shadow);
+    QTRY_VERIFY(shadow->isVisible());
+    QVERIFY(shadow->property("profilingEnabled").toBool());
+    QTRY_VERIFY(shadow->property("profilePaintCount").toULongLong() > 0);
+    QTRY_VERIFY(shadow->property("profileCacheBuildCount").toULongLong() > 0);
+
+    const qulonglong firstGeneration = shadow->property("cacheGeneration").toULongLong();
+    const qulonglong firstPaintCount = shadow->property("profilePaintCount").toULongLong();
+    const qulonglong firstCacheBuildCount = shadow->property("profileCacheBuildCount").toULongLong();
+    for (int index = 0; index < 20; ++index) {
+        shadow->repaint();
+        QCoreApplication::processEvents();
+    }
+    QTRY_VERIFY(shadow->property("profilePaintCount").toULongLong() > firstPaintCount);
+    QCOMPARE(shadow->property("profileCacheBuildCount").toULongLong(), firstCacheBuildCount);
+    QCOMPARE(shadow->property("cacheGeneration").toULongLong(), firstGeneration);
+
+    QPointer<QWidget> originalShadow(shadow);
+    area.replaceViewport(new QWidget);
+    QTRY_VERIFY(originalShadow.isNull());
+    QWidget* reboundShadow = shadowWidget(area);
+    QVERIFY(reboundShadow);
+    QVERIFY(reboundShadow->property("profilingEnabled").toBool());
+    target->show();
+    area.setActiveSubWindow(target);
+    QTRY_VERIFY(reboundShadow->isVisible());
+    const qulonglong reboundPaintCount = reboundShadow->property("profilePaintCount").toULongLong();
+    reboundShadow->repaint();
+    QCoreApplication::processEvents();
+    QTRY_VERIFY(reboundShadow->property("profilePaintCount").toULongLong() > reboundPaintCount);
 }
 
 QTEST_MAIN(ResourcesMdiShadowTests)

@@ -3,6 +3,8 @@
 #include "ThemedMdiContainer.h"
 
 #include <QColor>
+#include <QDebug>
+#include <QElapsedTimer>
 #include <QEvent>
 #include <QImage>
 #include <QMdiSubWindow>
@@ -17,8 +19,80 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
+#include <vector>
 
 namespace {
+
+constexpr int shadowProfileIntervalMs = 5000;
+
+bool environmentFlagEnabled(const char* name)
+{
+    const QByteArray value = qgetenv(name).trimmed().toLower();
+    return value == QByteArrayLiteral("1")
+        || value == QByteArrayLiteral("true")
+        || value == QByteArrayLiteral("on")
+        || value == QByteArrayLiteral("yes");
+}
+
+struct TimingSamples {
+    void add(qint64 nanoseconds)
+    {
+        nanoseconds = std::max<qint64>(nanoseconds, 0);
+        ++count;
+        totalNanoseconds += static_cast<quint64>(nanoseconds);
+        maximumNanoseconds = std::max(maximumNanoseconds, nanoseconds);
+        values.push_back(nanoseconds);
+    }
+
+    [[nodiscard]] qint64 percentile(double fraction) const
+    {
+        if (values.empty()) {
+            return 0;
+        }
+
+        std::vector<qint64> ordered(values);
+        const std::size_t index = std::min(
+            ordered.size() - 1,
+            static_cast<std::size_t>(std::ceil(fraction * ordered.size()) - 1));
+        std::nth_element(ordered.begin(), ordered.begin() + index, ordered.end());
+        return ordered[index];
+    }
+
+    void reset()
+    {
+        count = 0;
+        totalNanoseconds = 0;
+        maximumNanoseconds = 0;
+        values.clear();
+    }
+
+    quint64 count = 0;
+    quint64 totalNanoseconds = 0;
+    qint64 maximumNanoseconds = 0;
+    std::vector<qint64> values;
+};
+
+class ScopedTimingSample {
+public:
+    explicit ScopedTimingSample(TimingSamples* destination)
+        : _destination(destination)
+    {
+        if (_destination) {
+            _timer.start();
+        }
+    }
+
+    ~ScopedTimingSample()
+    {
+        if (_destination) {
+            _destination->add(_timer.nsecsElapsed());
+        }
+    }
+
+private:
+    TimingSamples* _destination = nullptr;
+    QElapsedTimer _timer;
+};
 
 qreal signedDistanceToRoundedRect(const QPointF& point, const QRectF& rect, qreal radius)
 {
@@ -44,6 +118,38 @@ QRgb premultipliedPixel(const QColor& color, int alpha)
 
 } // namespace
 
+class ThemedMdiArea::ShadowDiagnostics {
+public:
+    ShadowDiagnostics()
+    {
+        sampleTimer.start();
+    }
+
+    void resetWindow()
+    {
+        paints.reset();
+        cacheBuilds.reset();
+        synchronizations.reset();
+        geometryChanges = 0;
+        maskUpdates = 0;
+        cacheInvalidations = 0;
+        queuedSynchronizations = 0;
+        coalescedSynchronizations = 0;
+        stackUnderCalls = 0;
+    }
+
+    QElapsedTimer sampleTimer;
+    TimingSamples paints;
+    TimingSamples cacheBuilds;
+    TimingSamples synchronizations;
+    quint64 geometryChanges = 0;
+    quint64 maskUpdates = 0;
+    quint64 cacheInvalidations = 0;
+    quint64 queuedSynchronizations = 0;
+    quint64 coalescedSynchronizations = 0;
+    quint64 stackUnderCalls = 0;
+};
+
 class ThemedMdiShadowWidget final : public QWidget {
     Q_OBJECT
     Q_PROPERTY(QColor shadowColor READ shadowColor WRITE setShadowColor)
@@ -52,10 +158,15 @@ class ThemedMdiShadowWidget final : public QWidget {
     Q_PROPERTY(int offsetX READ offsetX WRITE setOffsetX)
     Q_PROPERTY(int offsetY READ offsetY WRITE setOffsetY)
     Q_PROPERTY(qulonglong cacheGeneration READ cacheGeneration)
+    Q_PROPERTY(bool profilingEnabled READ profilingEnabled)
+    Q_PROPERTY(qulonglong profilePaintCount READ profilePaintCount)
+    Q_PROPERTY(qulonglong profileCacheBuildCount READ profileCacheBuildCount)
 
 public:
-    explicit ThemedMdiShadowWidget(QWidget* parent)
+    explicit ThemedMdiShadowWidget(QWidget* parent,
+                                  ThemedMdiArea::ShadowDiagnostics* diagnostics)
         : QWidget(parent)
+        , _diagnostics(diagnostics)
     {
         setObjectName(QStringLiteral("ThemedMdiShadow"));
         setAttribute(Qt::WA_TransparentForMouseEvents);
@@ -72,6 +183,20 @@ public:
     [[nodiscard]] int offsetX() const noexcept { return _offsetX; }
     [[nodiscard]] int offsetY() const noexcept { return _offsetY; }
     [[nodiscard]] qulonglong cacheGeneration() const noexcept { return _cacheGeneration; }
+    [[nodiscard]] bool profilingEnabled() const noexcept { return _diagnostics != nullptr; }
+    [[nodiscard]] qulonglong profilePaintCount() const noexcept
+    {
+        return _diagnostics ? _diagnostics->paints.count : 0;
+    }
+    [[nodiscard]] qulonglong profileCacheBuildCount() const noexcept
+    {
+        return _diagnostics ? _diagnostics->cacheBuilds.count : 0;
+    }
+    [[nodiscard]] quint64 cachePixelBytes() const noexcept
+    {
+        return static_cast<quint64>(_cache.width())
+            * static_cast<quint64>(_cache.height()) * 4U;
+    }
 
     void setShadowColor(const QColor& color)
     {
@@ -139,6 +264,9 @@ public:
         const QSize previousSize = size();
         if (geometry() != clippedShadowRect) {
             setGeometry(clippedShadowRect);
+            if (_diagnostics) {
+                ++_diagnostics->geometryChanges;
+            }
         }
 
         const QPoint clippedOrigin = clippedShadowRect.topLeft();
@@ -151,6 +279,9 @@ public:
             || previousSize != size()) {
             _fullOutputRect = outputRect;
             _localTargetRect = localTargetRect;
+            if (_diagnostics) {
+                ++_diagnostics->maskUpdates;
+            }
             QRegion shadowRegion(rect());
             shadowRegion -= QRegion(_localTargetRect);
             if (shadowRegion.isEmpty()) {
@@ -167,6 +298,7 @@ protected:
     void paintEvent(QPaintEvent* event) override
     {
         Q_UNUSED(event);
+        ScopedTimingSample paintTiming(_diagnostics ? &_diagnostics->paints : nullptr);
         ensureCache();
         if (_cache.isNull() || !_fullOutputRect.isValid()) {
             return;
@@ -190,6 +322,9 @@ protected:
 private:
     void invalidateCache(bool geometryChanged = false)
     {
+        if (_diagnostics) {
+            ++_diagnostics->cacheInvalidations;
+        }
         _cache = QPixmap();
         _cacheDpr = 0.0;
         update();
@@ -204,6 +339,9 @@ private:
         if (!_cache.isNull() && std::abs(_cacheDpr - currentDpr) < 0.001) {
             return;
         }
+
+        ScopedTimingSample cacheTiming(
+            _diagnostics ? &_diagnostics->cacheBuilds : nullptr);
 
         const int padding = shadowPadding();
         const int logicalMargin = padding + _cornerRadius;
@@ -297,11 +435,25 @@ private:
     int _targetMargin = 0;
     qulonglong _cacheGeneration = 0;
     std::function<void()> _metricsChanged;
+    ThemedMdiArea::ShadowDiagnostics* _diagnostics = nullptr;
 };
 
 ThemedMdiArea::ThemedMdiArea(QWidget* parent)
     : QMdiArea(parent)
 {
+    if (environmentFlagEnabled("RESOURCES_MDI_SHADOW_PROFILE")) {
+        _shadowDiagnostics = std::make_unique<ShadowDiagnostics>();
+        auto* reportTimer = new QTimer(this);
+        reportTimer->setInterval(shadowProfileIntervalMs);
+        reportTimer->setTimerType(Qt::CoarseTimer);
+        connect(reportTimer, &QTimer::timeout,
+                this, &ThemedMdiArea::reportShadowDiagnostics);
+        reportTimer->start();
+        qInfo().noquote() << QStringLiteral(
+            "[MdiShadowProfile] enabled sampleIntervalMs=%1")
+                                 .arg(shadowProfileIntervalMs);
+    }
+
     // QMdiArea already routes viewport child events through eventFilter().
     // Construct the proxy only after every derived member is initialized.
     installShadowOnViewport(viewport());
@@ -431,7 +583,8 @@ void ThemedMdiArea::installShadowOnViewport(QWidget* newViewport)
         return;
     }
 
-    _shadow = new ThemedMdiShadowWidget(_trackedViewport);
+    _shadow = new ThemedMdiShadowWidget(
+        _trackedViewport, _shadowDiagnostics.get());
     _trackedViewport->installEventFilter(this);
     _shadow->setMetricsChangedCallback([this]() {
         scheduleShadowSynchronization();
@@ -487,6 +640,8 @@ void ThemedMdiArea::connectTargetContainer()
 
 void ThemedMdiArea::synchronizeShadow(bool ensureStacking)
 {
+    ScopedTimingSample synchronizationTiming(
+        _shadowDiagnostics ? &_shadowDiagnostics->synchronizations : nullptr);
     if (_shadowMode == ShadowMode::Disabled) {
         hideShadow();
         return;
@@ -525,19 +680,96 @@ void ThemedMdiArea::synchronizeShadow(bool ensureStacking)
     if ((ensureStacking || !wasVisible)
         && _shadow->parentWidget() == _shadowTarget->parentWidget()) {
         _shadow->stackUnder(_shadowTarget);
+        if (_shadowDiagnostics) {
+            ++_shadowDiagnostics->stackUnderCalls;
+        }
     }
 }
 
 void ThemedMdiArea::scheduleShadowSynchronization()
 {
     if (_shadowSyncQueued) {
+        if (_shadowDiagnostics) {
+            ++_shadowDiagnostics->coalescedSynchronizations;
+        }
         return;
+    }
+    if (_shadowDiagnostics) {
+        ++_shadowDiagnostics->queuedSynchronizations;
     }
     _shadowSyncQueued = true;
     QTimer::singleShot(0, this, [this]() {
         _shadowSyncQueued = false;
         synchronizeShadow(true);
     });
+}
+
+void ThemedMdiArea::reportShadowDiagnostics()
+{
+    if (!_shadowDiagnostics) {
+        return;
+    }
+
+    const qint64 sampleMilliseconds = std::max<qint64>(
+        _shadowDiagnostics->sampleTimer.restart(), 1);
+    const TimingSamples& paints = _shadowDiagnostics->paints;
+    const TimingSamples& cacheBuilds = _shadowDiagnostics->cacheBuilds;
+    const TimingSamples& synchronizations = _shadowDiagnostics->synchronizations;
+    const double seconds = sampleMilliseconds / 1000.0;
+    const double paintHz = paints.count / seconds;
+    const double paintTotalMilliseconds = paints.totalNanoseconds / 1000000.0;
+    const double paintGuiBusyPercent = 100.0 * paintTotalMilliseconds / sampleMilliseconds;
+    const double paintAverageMicroseconds = paints.count == 0
+        ? 0.0
+        : paints.totalNanoseconds / 1000.0 / paints.count;
+    const double cacheBuildTotalMilliseconds = cacheBuilds.totalNanoseconds / 1000000.0;
+    const double cacheBuildAverageMicroseconds = cacheBuilds.count == 0
+        ? 0.0
+        : cacheBuilds.totalNanoseconds / 1000.0 / cacheBuilds.count;
+    const double synchronizationAverageMicroseconds = synchronizations.count == 0
+        ? 0.0
+        : synchronizations.totalNanoseconds / 1000.0 / synchronizations.count;
+    const QSize shadowSize = _shadow ? _shadow->size() : QSize();
+    const qreal dpr = _shadow ? _shadow->devicePixelRatioF() : devicePixelRatioF();
+
+    qInfo().noquote() << QStringLiteral(
+        "[MdiShadowProfile] sampleMs=%1 visibleNow=%2 paints=%3 paintHz=%4 "
+        "paintTotalMs=%5 paintGuiBusyPct=%6 paintAvgUs=%7 paintP50Us=%8 "
+        "paintP95Us=%9 paintP99Us=%10 paintMaxUs=%11 cacheBuilds=%12 "
+        "cacheBuildTotalMs=%13 cacheBuildAvgUs=%14 cachePixelKiB=%15 "
+        "syncs=%16 syncAvgUs=%17 syncP95Us=%18 geometryChanges=%19 maskUpdates=%20 "
+        "invalidations=%21 queuedSyncs=%22 coalescedSyncs=%23 stackUnderCalls=%24 "
+        "cacheGenerationNow=%25 dprNow=%26 shadowSizeNow=%27x%28")
+                             .arg(sampleMilliseconds)
+                             .arg(_shadow && _shadow->isVisible() ? 1 : 0)
+                             .arg(paints.count)
+                             .arg(paintHz, 0, 'f', 2)
+                             .arg(paintTotalMilliseconds, 0, 'f', 3)
+                             .arg(paintGuiBusyPercent, 0, 'f', 4)
+                             .arg(paintAverageMicroseconds, 0, 'f', 2)
+                             .arg(paints.percentile(0.50) / 1000.0, 0, 'f', 2)
+                             .arg(paints.percentile(0.95) / 1000.0, 0, 'f', 2)
+                             .arg(paints.percentile(0.99) / 1000.0, 0, 'f', 2)
+                             .arg(paints.maximumNanoseconds / 1000.0, 0, 'f', 2)
+                             .arg(cacheBuilds.count)
+                             .arg(cacheBuildTotalMilliseconds, 0, 'f', 3)
+                             .arg(cacheBuildAverageMicroseconds, 0, 'f', 2)
+                             .arg(_shadow ? _shadow->cachePixelBytes() / 1024.0 : 0.0, 0, 'f', 2)
+                             .arg(synchronizations.count)
+                             .arg(synchronizationAverageMicroseconds, 0, 'f', 2)
+                             .arg(synchronizations.percentile(0.95) / 1000.0, 0, 'f', 2)
+                             .arg(_shadowDiagnostics->geometryChanges)
+                             .arg(_shadowDiagnostics->maskUpdates)
+                             .arg(_shadowDiagnostics->cacheInvalidations)
+                             .arg(_shadowDiagnostics->queuedSynchronizations)
+                             .arg(_shadowDiagnostics->coalescedSynchronizations)
+                             .arg(_shadowDiagnostics->stackUnderCalls)
+                             .arg(_shadow ? _shadow->cacheGeneration() : 0)
+                             .arg(dpr, 0, 'f', 2)
+                             .arg(shadowSize.width())
+                             .arg(shadowSize.height());
+
+    _shadowDiagnostics->resetWindow();
 }
 
 void ThemedMdiArea::hideShadow()
