@@ -59,6 +59,12 @@ QRect expectedShadowGeometry(const ThemedMdiArea& area,
         .intersected(area.viewport()->rect());
 }
 
+QRect localTargetRect(const QWidget& shadow, const QMdiSubWindow& target)
+{
+    return QRect(target.geometry().topLeft() - shadow.geometry().topLeft(),
+                 target.size());
+}
+
 QList<QWidget*> directViewportChildren(const ThemedMdiArea& area)
 {
     return area.viewport()->findChildren<QWidget*>(
@@ -118,6 +124,7 @@ private slots:
     void ignoredCloseRestoresShadow();
     void viewportReplacementRebindsShadow();
     void qssPropertiesDriveShadowMetricsAndCache();
+    void frameRadiusDrivesContentAndShadowSilhouettes();
     void profilingTracksPaintWithoutRebuildingCache();
 };
 
@@ -143,8 +150,13 @@ void ResourcesMdiShadowTests::activeShadowTracksGeometryAndContract()
     QVERIFY(target->graphicsEffect() == nullptr);
     QCOMPARE(shadow->geometry(), expectedShadowGeometry(area, *shadow, *target));
 
-    const QPoint localTargetCenter = target->geometry().center() - shadow->geometry().topLeft();
+    const QRect targetRect = localTargetRect(*shadow, *target);
+    const QPoint localTargetCenter = targetRect.center();
     QVERIFY(!shadow->mask().contains(localTargetCenter));
+    QVERIFY(shadow->property("cornerRadius").toInt() > 0);
+    QVERIFY(shadow->mask().contains(targetRect.topLeft()));
+    QVERIFY(!shadow->mask().contains(QPoint(targetRect.center().x(), targetRect.top())));
+    QVERIFY(!shadow->mask().contains(QPoint(targetRect.left(), targetRect.center().y())));
 
     target->setGeometry(160, 120, 340, 240);
     QTRY_COMPARE(shadow->geometry(), expectedShadowGeometry(area, *shadow, *target));
@@ -167,6 +179,21 @@ void ResourcesMdiShadowTests::activeShadowTracksGeometryAndContract()
     QCOMPARE(shadow->geometry(), expectedShadowGeometry(area, *shadow, *target));
     area.resize(640, 480);
     QTRY_VERIFY(!shadow->isVisible());
+    target->setGeometry(160, 120, 340, 240);
+    QTRY_VERIFY(shadow->isVisible());
+
+    const QList<QRect> clippedTargetGeometries = {
+        QRect(-20, 80, 340, 240),
+        QRect(140, -20, 340, 240),
+        QRect(area.viewport()->width() - 320, 80, 340, 240),
+        QRect(140, area.viewport()->height() - 220, 340, 240),
+        QRect(-20, -20, 340, 240)};
+    for (const QRect& geometry : clippedTargetGeometries) {
+        target->setGeometry(geometry);
+        QTRY_VERIFY(shadow->isVisible());
+        QTRY_COMPARE(shadow->geometry(), expectedShadowGeometry(area, *shadow, *target));
+        QVERIFY(!shadow->mask().isEmpty());
+    }
     target->setGeometry(160, 120, 340, 240);
     QTRY_VERIFY(shadow->isVisible());
 
@@ -254,18 +281,31 @@ void ResourcesMdiShadowTests::activeShadowTracksStateAttachmentAndLifetime()
     QWidget* shadow = shadowWidget(area);
     QVERIFY(shadow);
     QTRY_VERIFY(shadow->isVisible());
+    QTRY_VERIFY(!content->mask().isEmpty());
 
     QWidget* detachedContent = container->takeContent();
     QCOMPARE(detachedContent, content);
     QVERIFY(!shadow->isVisible());
+    QVERIFY(detachedContent->mask().isEmpty());
     container->restoreContent(detachedContent);
     QTRY_VERIFY(shadow->isVisible());
+    QTRY_VERIFY(!content->mask().isEmpty());
 
     target->showMaximized();
     QTRY_VERIFY(!shadow->isVisible());
+    QTRY_VERIFY(content->mask().isEmpty());
     target->showNormal();
     area.setActiveSubWindow(target);
     QTRY_VERIFY(shadow->isVisible());
+    QTRY_VERIFY(!content->mask().isEmpty());
+
+    target->showMinimized();
+    QTRY_VERIFY(!shadow->isVisible());
+    QTRY_VERIFY(content->mask().isEmpty());
+    target->showNormal();
+    area.setActiveSubWindow(target);
+    QTRY_VERIFY(shadow->isVisible());
+    QTRY_VERIFY(!content->mask().isEmpty());
 
     area.setViewMode(QMdiArea::TabbedView);
     QTRY_VERIFY(!shadow->isVisible());
@@ -379,6 +419,26 @@ void ResourcesMdiShadowTests::qssPropertiesDriveShadowMetricsAndCache()
     QTRY_VERIFY(shadow->property("cacheGeneration").toULongLong() > 0);
     const qulonglong firstGeneration = shadow->property("cacheGeneration").toULongLong();
 
+    const QRect firstTargetRect = localTargetRect(*shadow, *target);
+    QVERIFY(shadow->mask().contains(firstTargetRect.topLeft()));
+    QTRY_VERIFY(shadow->property("cacheCornerAlpha").toInt() > 0);
+    QCOMPARE(shadow->property("cacheInteriorAlpha").toInt(), 0);
+
+    qApp->setStyleSheet(QStringLiteral(
+        "QWidget#ThemedMdiShadow {"
+        " qproperty-shadowColor: rgba(20, 30, 40, 60);"
+        " qproperty-shadowExtent: 18;"
+        " qproperty-cornerRadius: 0;"
+        " qproperty-offsetX: 2;"
+        " qproperty-offsetY: 4;"
+        " }"));
+    QTRY_COMPARE(shadow->property("cornerRadius").toInt(), 0);
+    shadow->update();
+    QCoreApplication::processEvents();
+    QTRY_VERIFY(shadow->property("cacheGeneration").toULongLong() > firstGeneration);
+    QVERIFY(!shadow->mask().contains(localTargetRect(*shadow, *target).topLeft()));
+
+    const qulonglong secondGeneration = shadow->property("cacheGeneration").toULongLong();
     qApp->setStyleSheet(QStringLiteral(
         "QWidget#ThemedMdiShadow {"
         " qproperty-shadowColor: rgba(20, 30, 40, 60);"
@@ -388,9 +448,53 @@ void ResourcesMdiShadowTests::qssPropertiesDriveShadowMetricsAndCache()
         " qproperty-offsetY: 4;"
         " }"));
     QTRY_COMPARE(shadow->property("cornerRadius").toInt(), 7);
+    QTRY_VERIFY(shadow->mask().contains(localTargetRect(*shadow, *target).topLeft()));
     shadow->update();
     QCoreApplication::processEvents();
-    QTRY_VERIFY(shadow->property("cacheGeneration").toULongLong() > firstGeneration);
+    QTRY_VERIFY(shadow->property("cacheGeneration").toULongLong() > secondGeneration);
+
+    qApp->setStyleSheet(previousStyleSheet);
+}
+
+void ResourcesMdiShadowTests::frameRadiusDrivesContentAndShadowSilhouettes()
+{
+    const QString previousStyleSheet = qApp->styleSheet();
+    qApp->setStyleSheet(QStringLiteral(
+        "QWidget#ThemedMdiContainer { qproperty-frameCornerRadius: 8; }"
+        "QWidget#ThemedMdiShadow { qproperty-cornerRadius: 12; }"));
+
+    ThemedMdiArea area;
+    showArea(area);
+    area.setShadowMode(ThemedMdiArea::ShadowMode::ActiveWindowOnly);
+
+    auto* target = new QMdiSubWindow;
+    target->setWindowFlags(Qt::SubWindow | Qt::FramelessWindowHint);
+    auto* content = new QWidget;
+    auto* container = new ThemedMdiContainer(target, content, new QMenuBar, target);
+    target->setWidget(container);
+    area.addSubWindow(target);
+    target->setGeometry(100, 80, 360, 260);
+    target->show();
+    area.setActiveSubWindow(target);
+
+    QWidget* shadow = shadowWidget(area);
+    QVERIFY(shadow);
+    QTRY_VERIFY(shadow->isVisible());
+    QTRY_COMPARE(container->frameCornerRadius(), 8);
+    QTRY_COMPARE(shadow->property("cornerRadius").toInt(), 8);
+    QTRY_VERIFY(!content->size().isEmpty());
+    QTRY_VERIFY(!content->mask().isEmpty());
+    QVERIFY(!content->mask().contains(QPoint(0, content->height() - 1)));
+
+    container->setFrameCornerRadius(0);
+    QTRY_COMPARE(shadow->property("cornerRadius").toInt(), 0);
+    QTRY_VERIFY(content->mask().isEmpty());
+    QVERIFY(!shadow->mask().contains(localTargetRect(*shadow, *target).topLeft()));
+
+    container->setFrameCornerRadius(7);
+    QTRY_COMPARE(shadow->property("cornerRadius").toInt(), 7);
+    QTRY_VERIFY(!content->mask().isEmpty());
+    QTRY_VERIFY(shadow->mask().contains(localTargetRect(*shadow, *target).topLeft()));
 
     qApp->setStyleSheet(previousStyleSheet);
 }

@@ -12,6 +12,8 @@
 #include <QStyleOption>
 #include <QResizeEvent>
 
+#include <algorithm>
+
 ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, QMenuBar* menuBar, QWidget* parent)
     : QWidget(parent)
     , _subWin(subWin)
@@ -60,6 +62,24 @@ ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, 
 QWidget* ThemedMdiContainer::content() const noexcept
 {
     return _content;
+}
+
+int ThemedMdiContainer::frameCornerRadius() const noexcept
+{
+    return _frameCornerRadius;
+}
+
+void ThemedMdiContainer::setFrameCornerRadius(int radius)
+{
+    radius = std::clamp(radius, 0, 64);
+    if (_frameCornerRadius == radius)
+    {
+        return;
+    }
+
+    _frameCornerRadius = radius;
+    updateContentMask();
+    emit frameCornerRadiusChanged(_frameCornerRadius);
 }
 
 QWidget* ThemedMdiContainer::takeContent()
@@ -111,6 +131,7 @@ void ThemedMdiContainer::restoreContent(QWidget* content)
     {
         _subWin->setMinimumSize(minimumSizeHint());
     }
+    updateContentMask();
     updateGeometry();
     emit contentAttachmentChanged(true);
 }
@@ -299,6 +320,7 @@ void ThemedMdiContainer::handleWindowStateChange()
     if (!_subWin || !_content || !_titleBar) return;
 
     if (_subWin->isMinimized()) {
+        _content->clearMask();
         emit minimizeRequested(_subWin);
         return;
     }
@@ -318,9 +340,7 @@ void ThemedMdiContainer::handleWindowStateChange()
     _titleBar->setProperty("maximized", maximized);
     _titleBar->style()->unpolish(_titleBar);
     _titleBar->style()->polish(_titleBar);
-    if (maximized) {
-        _content->clearMask();
-    }
+    updateContentMask();
     update();
 
     if (QMdiArea* mdi = _subWin->mdiArea()) {
@@ -341,23 +361,47 @@ void ThemedMdiContainer::hideEvent(QHideEvent* event)
 void ThemedMdiContainer::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    if (_content && !_subWin->isMaximized() && !_subWin->isMinimized()) {
-        QBitmap bmp(_content->size());
-        if (!bmp.isNull()) {
-            bmp.clear();
-            QPainter p(&bmp);
-            p.setRenderHint(QPainter::Antialiasing, true);
-            p.setBrush(Qt::color1);
-            p.setPen(Qt::NoPen);
-            p.drawRoundedRect(bmp.rect(), 11, 11);
-            p.drawRect(0, 0, bmp.width(), 11);
-            p.end();
-            _content->setMask(bmp);
-        }
-    } else if (_content) {
-        _content->clearMask();
-    }
+    updateContentMask();
     updateResizeHandleGeometry();
+}
+
+void ThemedMdiContainer::updateContentMask()
+{
+    if (!_content)
+    {
+        return;
+    }
+    if (!_subWin || _subWin->isMaximized() || _subWin->isMinimized())
+    {
+        _content->clearMask();
+        return;
+    }
+
+    // The content sits one pixel inside the framed container, so its bottom
+    // curve follows the same silhouette with the border inset removed.
+    const int innerRadius = std::max(_frameCornerRadius - 1, 0);
+    if (innerRadius == 0 || _content->size().isEmpty())
+    {
+        _content->clearMask();
+        return;
+    }
+
+    QBitmap bitmap(_content->size());
+    if (bitmap.isNull())
+    {
+        _content->clearMask();
+        return;
+    }
+
+    bitmap.clear();
+    QPainter painter(&bitmap);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setBrush(Qt::color1);
+    painter.setPen(Qt::NoPen);
+    painter.drawRoundedRect(bitmap.rect(), innerRadius, innerRadius);
+    painter.drawRect(0, 0, bitmap.width(), innerRadius);
+    painter.end();
+    _content->setMask(bitmap);
 }
 
 void ThemedMdiContainer::beginResize(const int resizeMode, const QPoint& globalPosition)

@@ -47,6 +47,7 @@ private:
     QPointer<QMdiSubWindow> _shadowTarget;
     QPointer<ThemedMdiContainer> _connectedContainer;
     QMetaObject::Connection _contentAttachmentConnection;
+    QMetaObject::Connection _cornerRadiusConnection;
     std::unique_ptr<ShadowDiagnostics> _shadowDiagnostics;
     ShadowMode _shadowMode = ShadowMode::Disabled;
     bool _shadowSyncQueued = false;

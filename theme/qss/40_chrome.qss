@@ -92,14 +92,15 @@ QPushButton#MainCloseButton:pressed {
 
 /* MDI SubWindow Custom Container */
 QWidget#ThemedMdiShadow {
-    qproperty-shadowColor: rgba(8, 20, 35, 54);
-    qproperty-shadowExtent: 14;
+    qproperty-shadowColor: rgba(22, 32, 43, 30);
+    qproperty-shadowExtent: 10;
     qproperty-cornerRadius: 12;
     qproperty-offsetX: 0;
-    qproperty-offsetY: 3;
+    qproperty-offsetY: 2;
 }
 
 QWidget#ThemedMdiContainer {
+    qproperty-frameCornerRadius: 12;
     background-color: #ffffff;
     border: 1px solid #d9e1ea;
     border-radius: 12px;
