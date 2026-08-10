@@ -4,6 +4,8 @@
 #include <QMetaObject>
 #include <QPointer>
 
+#include <memory>
+
 class QEvent;
 class QMdiSubWindow;
 class ThemedMdiContainer;
@@ -28,11 +30,15 @@ protected:
     void setupViewport(QWidget* viewport) override;
 
 private:
+    class ShadowDiagnostics;
+    friend class ThemedMdiShadowWidget;
+
     void installShadowOnViewport(QWidget* viewport);
     void setShadowTarget(QMdiSubWindow* target);
     void connectTargetContainer();
     void synchronizeShadow(bool ensureStacking);
     void scheduleShadowSynchronization();
+    void reportShadowDiagnostics();
     void hideShadow();
     [[nodiscard]] bool canShowShadow() const;
 
@@ -41,6 +47,7 @@ private:
     QPointer<QMdiSubWindow> _shadowTarget;
     QPointer<ThemedMdiContainer> _connectedContainer;
     QMetaObject::Connection _contentAttachmentConnection;
+    std::unique_ptr<ShadowDiagnostics> _shadowDiagnostics;
     ShadowMode _shadowMode = ShadowMode::Disabled;
     bool _shadowSyncQueued = false;
 };
