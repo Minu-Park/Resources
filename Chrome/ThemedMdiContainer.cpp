@@ -464,6 +464,7 @@ void ThemedMdiContainer::beginResize(const int resizeMode, const QPoint& globalP
     }
     _resizeMode = resizeMode;
     _dragStartPos = globalPosition;
+    _dragStartGeometry = _subWin->geometry();
 }
 
 void ThemedMdiContainer::resizeFromGlobalPosition(const QPoint& globalPosition)
@@ -473,7 +474,7 @@ void ThemedMdiContainer::resizeFromGlobalPosition(const QPoint& globalPosition)
     }
 
     const QPoint delta = globalPosition - _dragStartPos;
-    const QRect geom = _subWin->geometry();
+    const QRect geom = _dragStartGeometry;
     int left = geom.left();
     int right = geom.x() + geom.width();
     int top = geom.top();
@@ -488,7 +489,6 @@ void ThemedMdiContainer::resizeFromGlobalPosition(const QPoint& globalPosition)
     if (_resizeMode & ResizeBottom) bottom = qMax(bottom + delta.y(), top + minH);
 
     _subWin->setGeometry(left, top, right - left, bottom - top);
-    _dragStartPos = globalPosition;
 }
 
 void ThemedMdiContainer::finishResize()
