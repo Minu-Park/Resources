@@ -6,6 +6,7 @@
 #include <QColor>
 #include <QCloseEvent>
 #include <QMenuBar>
+#include <QMouseEvent>
 #include <QMdiSubWindow>
 #include <QPointer>
 #include <QTest>
@@ -29,6 +30,47 @@ QWidget* shadowWidgetFor(const ThemedMdiArea& area, const QMdiSubWindow* target)
             return shadow->property("targetWindow").value<QObject*>() == target;
         });
     return iterator == shadows.cend() ? nullptr : *iterator;
+}
+
+constexpr int kResizeLeft = 1;
+constexpr int kResizeRight = 2;
+constexpr int kResizeTop = 4;
+constexpr int kResizeBottom = 8;
+
+class FixedMinimumContent final : public QWidget {
+public:
+    QSize minimumSizeHint() const override
+    {
+        return QSize(280, 180);
+    }
+};
+
+QWidget* resizeHandleFor(ThemedMdiContainer& container, const int resizeMode)
+{
+    const QList<QWidget*> handles = container.findChildren<QWidget*>(
+        QStringLiteral("ThemedMdiResizeHandle"), Qt::FindDirectChildrenOnly);
+    const auto iterator = std::find_if(
+        handles.cbegin(), handles.cend(),
+        [resizeMode](const QWidget* handle) {
+            return handle->property("resizeMode").toInt() == resizeMode;
+        });
+    return iterator == handles.cend() ? nullptr : *iterator;
+}
+
+void sendMouseEvent(QWidget& widget,
+                    const QEvent::Type type,
+                    const QPoint& globalPosition,
+                    const Qt::MouseButton button,
+                    const Qt::MouseButtons buttons)
+{
+    const QPoint localPosition = widget.mapFromGlobal(globalPosition);
+    QMouseEvent event(type,
+                      localPosition,
+                      globalPosition,
+                      button,
+                      buttons,
+                      Qt::NoModifier);
+    QCoreApplication::sendEvent(&widget, &event);
 }
 
 QMdiSubWindow* addPlainSubWindow(ThemedMdiArea& area,
@@ -130,6 +172,8 @@ class ResourcesMdiShadowTests final : public QObject {
     Q_OBJECT
 
 private slots:
+    void minimumSizeDragKeepsPointerAnchor_data();
+    void minimumSizeDragKeepsPointerAnchor();
     void activeShadowTracksGeometryAndContract();
     void activeShadowPreservesStackAndActivation();
     void allVisibleShadowsTrackGeometryStackAndIsolation();
@@ -141,6 +185,144 @@ private slots:
     void profilingTracksPaintWithoutRebuildingCache();
     void installedThemeKeepsMdiRadiusConsistent();
 };
+
+void ResourcesMdiShadowTests::minimumSizeDragKeepsPointerAnchor_data()
+{
+    QTest::addColumn<int>("resizeMode");
+
+    QTest::newRow("left") << kResizeLeft;
+    QTest::newRow("right") << kResizeRight;
+    QTest::newRow("top") << kResizeTop;
+    QTest::newRow("bottom") << kResizeBottom;
+    QTest::newRow("top-left") << (kResizeTop | kResizeLeft);
+    QTest::newRow("top-right") << (kResizeTop | kResizeRight);
+    QTest::newRow("bottom-left") << (kResizeBottom | kResizeLeft);
+    QTest::newRow("bottom-right") << (kResizeBottom | kResizeRight);
+}
+
+void ResourcesMdiShadowTests::minimumSizeDragKeepsPointerAnchor()
+{
+    QFETCH(const int, resizeMode);
+
+    ThemedMdiArea area;
+    showArea(area);
+
+    auto* target = new QMdiSubWindow;
+    target->setWindowFlags(Qt::SubWindow | Qt::FramelessWindowHint);
+    auto* content = new FixedMinimumContent;
+    auto* container = new ThemedMdiContainer(
+        target, content, new QMenuBar, target);
+    target->setWidget(container);
+    area.addSubWindow(target);
+    target->setGeometry(40, 40, 520, 360);
+    target->show();
+    area.setActiveSubWindow(target);
+    QCoreApplication::processEvents();
+
+    const QRect initialGeometry = target->geometry();
+    const QSize minimumHint = container->minimumSizeHint();
+    const int minimumWidth = qMax(250, minimumHint.width());
+    const int minimumHeight = qMax(150, minimumHint.height());
+    QVERIFY(initialGeometry.width() > minimumWidth);
+    QVERIFY(initialGeometry.height() > minimumHeight);
+
+    QWidget* handle = resizeHandleFor(*container, resizeMode);
+    QVERIFY(handle);
+    const QPoint pressPosition = handle->mapToGlobal(handle->rect().center());
+
+    const bool shrinksFromLeft = resizeMode & kResizeLeft;
+    const bool growsToRight = resizeMode & kResizeRight;
+    const bool shrinksFromTop = resizeMode & kResizeTop;
+    const bool growsToBottom = resizeMode & kResizeBottom;
+    const int widthShrink = initialGeometry.width() - minimumWidth;
+    const int heightShrink = initialGeometry.height() - minimumHeight;
+    constexpr int overshoot = 40;
+    constexpr int reverseDistance = 10;
+    constexpr int growth = 12;
+
+    const QPoint shrinkDirection(
+        shrinksFromLeft ? 1 : (growsToRight ? -1 : 0),
+        shrinksFromTop ? 1 : (growsToBottom ? -1 : 0));
+    const QPoint growDirection(-shrinkDirection.x(), -shrinkDirection.y());
+    const QPoint minimumPosition = pressPosition
+        + QPoint(shrinkDirection.x() * widthShrink,
+                 shrinkDirection.y() * heightShrink);
+    const QPoint overshotPosition = minimumPosition
+        + QPoint(shrinkDirection.x() * overshoot,
+                 shrinkDirection.y() * overshoot);
+    const QPoint reversedPosition = overshotPosition
+        - QPoint(shrinkDirection.x() * reverseDistance,
+                 shrinkDirection.y() * reverseDistance);
+    const QPoint grownPosition = minimumPosition
+        + QPoint(growDirection.x() * growth,
+                 growDirection.y() * growth);
+
+    sendMouseEvent(*handle,
+                   QEvent::MouseButtonPress,
+                   pressPosition,
+                   Qt::LeftButton,
+                   Qt::LeftButton);
+    sendMouseEvent(*handle,
+                   QEvent::MouseMove,
+                   overshotPosition,
+                   Qt::NoButton,
+                   Qt::LeftButton);
+
+    QRect expectedMinimum = initialGeometry;
+    if (shrinksFromLeft) {
+        expectedMinimum.setLeft(initialGeometry.right() - minimumWidth + 1);
+    }
+    if (growsToRight) {
+        expectedMinimum.setRight(initialGeometry.left() + minimumWidth - 1);
+    }
+    if (shrinksFromTop) {
+        expectedMinimum.setTop(initialGeometry.bottom() - minimumHeight + 1);
+    }
+    if (growsToBottom) {
+        expectedMinimum.setBottom(initialGeometry.top() + minimumHeight - 1);
+    }
+    QCOMPARE(target->geometry(), expectedMinimum);
+
+    sendMouseEvent(*handle,
+                   QEvent::MouseMove,
+                   reversedPosition,
+                   Qt::NoButton,
+                   Qt::LeftButton);
+    QCOMPARE(target->geometry(), expectedMinimum);
+
+    sendMouseEvent(*handle,
+                   QEvent::MouseMove,
+                   minimumPosition,
+                   Qt::NoButton,
+                   Qt::LeftButton);
+    QCOMPARE(target->geometry(), expectedMinimum);
+
+    QRect expectedGrowth = expectedMinimum;
+    if (shrinksFromLeft) {
+        expectedGrowth.setLeft(expectedMinimum.left() - growth);
+    }
+    if (growsToRight) {
+        expectedGrowth.setRight(expectedMinimum.right() + growth);
+    }
+    if (shrinksFromTop) {
+        expectedGrowth.setTop(expectedMinimum.top() - growth);
+    }
+    if (growsToBottom) {
+        expectedGrowth.setBottom(expectedMinimum.bottom() + growth);
+    }
+    sendMouseEvent(*handle,
+                   QEvent::MouseMove,
+                   grownPosition,
+                   Qt::NoButton,
+                   Qt::LeftButton);
+    QCOMPARE(target->geometry(), expectedGrowth);
+
+    sendMouseEvent(*handle,
+                   QEvent::MouseButtonRelease,
+                   grownPosition,
+                   Qt::LeftButton,
+                   Qt::NoButton);
+}
 
 void ResourcesMdiShadowTests::activeShadowTracksGeometryAndContract()
 {
