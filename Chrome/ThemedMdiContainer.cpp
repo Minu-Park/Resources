@@ -100,6 +100,9 @@ QWidget* ThemedMdiContainer::takeContent()
     // GraphicsEngine must not retain the old MDI-size clipping region when it
     // is reparented into an HMI wrapper.
     content->clearMask();
+    _contentMaskSize = {};
+    _contentMaskRadius = -1;
+    _contentMaskApplied = false;
     content->setParent(nullptr);
     if (_subWin)
     {
@@ -121,6 +124,9 @@ void ThemedMdiContainer::restoreContent(QWidget* content)
     }
 
     _content = content;
+    _contentMaskSize = {};
+    _contentMaskRadius = -1;
+    _contentMaskApplied = false;
     content->setParent(this);
     content->installEventFilter(this);
     if (layout())
@@ -311,6 +317,9 @@ bool ThemedMdiContainer::eventFilter(QObject* watched, QEvent* event)
                 }
             }
         }
+        if (event->type() == QEvent::Resize) {
+            updateContentMask();
+        }
     }
     return QWidget::eventFilter(watched, event);
 }
@@ -320,7 +329,7 @@ void ThemedMdiContainer::handleWindowStateChange()
     if (!_subWin || !_content || !_titleBar) return;
 
     if (_subWin->isMinimized()) {
-        _content->clearMask();
+        updateContentMask();
         emit minimizeRequested(_subWin);
         return;
     }
@@ -373,7 +382,12 @@ void ThemedMdiContainer::updateContentMask()
     }
     if (!_subWin || _subWin->isMaximized() || _subWin->isMinimized())
     {
-        _content->clearMask();
+        if (_contentMaskApplied || !_content->mask().isEmpty()) {
+            _content->clearMask();
+        }
+        _contentMaskSize = {};
+        _contentMaskRadius = -1;
+        _contentMaskApplied = false;
         return;
     }
 
@@ -382,7 +396,20 @@ void ThemedMdiContainer::updateContentMask()
     const int innerRadius = std::max(_frameCornerRadius - 1, 0);
     if (innerRadius == 0 || _content->size().isEmpty())
     {
-        _content->clearMask();
+        if (_contentMaskApplied || !_content->mask().isEmpty()) {
+            _content->clearMask();
+        }
+        _contentMaskSize = {};
+        _contentMaskRadius = -1;
+        _contentMaskApplied = false;
+        return;
+    }
+
+    if (_contentMaskApplied
+        && _contentMaskSize == _content->size()
+        && _contentMaskRadius == innerRadius
+        && !_content->mask().isEmpty())
+    {
         return;
     }
 
@@ -390,6 +417,9 @@ void ThemedMdiContainer::updateContentMask()
     if (bitmap.isNull())
     {
         _content->clearMask();
+        _contentMaskSize = {};
+        _contentMaskRadius = -1;
+        _contentMaskApplied = false;
         return;
     }
 
@@ -402,6 +432,9 @@ void ThemedMdiContainer::updateContentMask()
     painter.drawRect(0, 0, bitmap.width(), innerRadius);
     painter.end();
     _content->setMask(bitmap);
+    _contentMaskSize = _content->size();
+    _contentMaskRadius = innerRadius;
+    _contentMaskApplied = true;
 }
 
 void ThemedMdiContainer::beginResize(const int resizeMode, const QPoint& globalPosition)
