@@ -428,8 +428,27 @@ void ThemedMdiContainer::updateContentMask()
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setBrush(Qt::color1);
     painter.setPen(Qt::NoPen);
-    painter.drawRoundedRect(bitmap.rect(), innerRadius, innerRadius);
-    painter.drawRect(0, 0, bitmap.width(), innerRadius);
+
+    // QWidget::setMask(QBitmap) becomes a binary QRegion.  If the rounded
+    // content reaches the exact inner QSS curve, those whole logical pixels
+    // can cover the parent's antialiased border.  Keep a one-DIP guard only
+    // in the bottom corner arcs; the parent frame then owns the visible AA
+    // edge while the straight content area remains flush with the frame.
+    const int guard = innerRadius > 1 ? 1 : 0;
+    const int guardedRadius = innerRadius - guard;
+    const QRect guardedRect = bitmap.rect().adjusted(
+        guard, guard, -guard, -guard);
+    painter.drawRoundedRect(guardedRect, guardedRadius, guardedRadius);
+    painter.fillRect(QRect(0, 0, bitmap.width(),
+                           qMax(0, bitmap.height() - innerRadius)),
+                     Qt::color1);
+    const int straightWidth = bitmap.width() - 2 * innerRadius;
+    if (straightWidth > 0) {
+        painter.fillRect(QRect(innerRadius,
+                               qMax(0, bitmap.height() - innerRadius),
+                               straightWidth, innerRadius),
+                         Qt::color1);
+    }
     painter.end();
     _content->setMask(bitmap);
     _contentMaskSize = _content->size();
