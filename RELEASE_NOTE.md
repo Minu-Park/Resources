@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Added opt-in cached MDI shadows for every eligible subwindow, with independent stacking, aggregate profiling, a lighter compact silhouette, and resize-stable rounded content corners.
+- Added opt-in cached MDI shadows for every eligible subwindow, with independent stacking, aggregate profiling, a lighter compact shadow, and a consistent 12px frame/title/content silhouette with resize-stable bottom corners.
 
 ## v1.1.0
 
