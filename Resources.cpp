@@ -861,12 +861,6 @@ void installResources(QApplication& app)
         "    border-bottom-left-radius: 7px;\n"
         "    border-bottom-right-radius: 7px;\n"
         "}\n"
-        "QWidget#ThemedMdiContainer { border-radius: 8px; qproperty-frameCornerRadius: 8; }\n"
-        "QWidget#ThemedMdiShadow { qproperty-cornerRadius: 8; }\n"
-        "QWidget#ThemedMdiTitleBar {\n"
-        "    border-top-left-radius: 8px;\n"
-        "    border-top-right-radius: 8px;\n"
-        "}\n"
     );
 #endif
     app.setStyleSheet(styleSheet);

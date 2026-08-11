@@ -1,5 +1,6 @@
 #include "Chrome/ThemedMdiArea.h"
 #include "Chrome/ThemedMdiContainer.h"
+#include "Resources.h"
 
 #include <QApplication>
 #include <QColor>
@@ -138,6 +139,7 @@ private slots:
     void qssPropertiesDriveShadowMetricsAndCache();
     void frameRadiusDrivesContentAndShadowSilhouettes();
     void profilingTracksPaintWithoutRebuildingCache();
+    void installedThemeKeepsMdiRadiusConsistent();
 };
 
 void ResourcesMdiShadowTests::activeShadowTracksGeometryAndContract()
@@ -792,6 +794,35 @@ void ResourcesMdiShadowTests::profilingTracksPaintWithoutRebuildingCache()
     reboundShadow->repaint();
     QCoreApplication::processEvents();
     QTRY_VERIFY(reboundShadow->property("profilePaintCount").toULongLong() > reboundPaintCount);
+}
+
+void ResourcesMdiShadowTests::installedThemeKeepsMdiRadiusConsistent()
+{
+    const QString previousStyleSheet = qApp->styleSheet();
+    Resources::installResources(*qApp);
+
+    ThemedMdiArea area;
+    showArea(area);
+    area.setShadowMode(ThemedMdiArea::ShadowMode::AllVisibleWindows);
+
+    auto* target = new QMdiSubWindow;
+    target->setWindowFlags(Qt::SubWindow | Qt::FramelessWindowHint);
+    auto* content = new QWidget;
+    auto* container = new ThemedMdiContainer(target, content, new QMenuBar, target);
+    target->setWidget(container);
+    area.addSubWindow(target);
+    target->setGeometry(100, 80, 360, 260);
+    target->show();
+    area.setActiveSubWindow(target);
+
+    QWidget* shadow = nullptr;
+    QTRY_VERIFY((shadow = shadowWidgetFor(area, target)) != nullptr);
+    QTRY_VERIFY(shadow->isVisible());
+    QTRY_COMPARE(container->frameCornerRadius(), 12);
+    QTRY_COMPARE(shadow->property("cornerRadius").toInt(), 12);
+    QTRY_VERIFY(!content->mask().isEmpty());
+
+    qApp->setStyleSheet(previousStyleSheet);
 }
 
 QTEST_MAIN(ResourcesMdiShadowTests)
