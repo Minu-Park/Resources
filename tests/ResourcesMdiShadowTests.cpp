@@ -333,12 +333,15 @@ void ResourcesMdiShadowTests::allVisibleShadowsTrackGeometryStackAndIsolation()
         hitWidget = hitWidget->parentWidget();
     }
     QCOMPARE(hitWidget, first);
-    QWidget* globalHitWidget = QApplication::widgetAt(
-        area.viewport()->mapToGlobal(passThroughPoint));
-    while (globalHitWidget && globalHitWidget->parentWidget() != area.viewport()) {
-        globalHitWidget = globalHitWidget->parentWidget();
-    }
-    QCOMPARE(globalHitWidget, first);
+    const auto globalViewportChildAt = [&]() {
+        QWidget* candidate = QApplication::widgetAt(
+            area.viewport()->mapToGlobal(passThroughPoint));
+        while (candidate && candidate->parentWidget() != area.viewport()) {
+            candidate = candidate->parentWidget();
+        }
+        return candidate;
+    };
+    QTRY_COMPARE(globalViewportChildAt(), static_cast<QWidget*>(first));
 
     const QList<QMdiSubWindow*> activationOrder = {first, third, second};
     for (QMdiSubWindow* target : activationOrder) {
@@ -361,10 +364,11 @@ void ResourcesMdiShadowTests::allVisibleShadowsTrackGeometryStackAndIsolation()
     QVERIFY(firstShadow);
     QVERIFY(secondShadow);
     QVERIFY(thirdShadow);
-    QCOMPARE(firstShadow->property("shadowColor").value<QColor>(), QColor(22, 32, 43, 24));
-    QCOMPARE(firstShadow->property("shadowExtent").toInt(), 8);
+    QCOMPARE(firstShadow->property("shadowColor").value<QColor>(), QColor(22, 32, 43, 14));
+    QCOMPARE(firstShadow->property("shadowExtent").toInt(), 6);
     QCOMPARE(firstShadow->property("offsetX").toInt(), 0);
     QCOMPARE(firstShadow->property("offsetY").toInt(), 1);
+    QTRY_VERIFY(firstShadow->property("cacheGeneration").toULongLong() > 0);
     const QRect secondShadowGeometry = secondShadow->geometry();
     const QRect thirdShadowGeometry = thirdShadow->geometry();
     first->setGeometry(40, 45, 330, 230);
@@ -684,6 +688,28 @@ void ResourcesMdiShadowTests::frameRadiusDrivesContentAndShadowSilhouettes()
     QTRY_VERIFY(!content->size().isEmpty());
     QTRY_VERIFY(!content->mask().isEmpty());
     QVERIFY(!content->mask().contains(QPoint(0, content->height() - 1)));
+
+    const QSize resizedContentSize(
+        std::max(content->width() - 24, 32),
+        std::max(content->height() - 24, 32));
+    content->resize(resizedContentSize);
+    QCOMPARE(content->size(), resizedContentSize);
+    QCOMPARE(content->mask().boundingRect(), content->rect());
+    QVERIFY(!content->mask().contains(QPoint(0, content->height() - 1)));
+    QVERIFY(!content->mask().contains(
+        QPoint(content->width() - 1, content->height() - 1)));
+    QVERIFY(content->mask().contains(
+        QPoint(content->width() / 2, content->height() - 1)));
+
+    const QSize grownContentSize = resizedContentSize + QSize(12, 12);
+    content->resize(grownContentSize);
+    QCOMPARE(content->size(), grownContentSize);
+    QCOMPARE(content->mask().boundingRect(), content->rect());
+    QVERIFY(!content->mask().contains(QPoint(0, content->height() - 1)));
+    QVERIFY(!content->mask().contains(
+        QPoint(content->width() - 1, content->height() - 1)));
+    QVERIFY(content->mask().contains(
+        QPoint(content->width() / 2, content->height() - 1)));
 
     container->setFrameCornerRadius(0);
     QTRY_COMPARE(shadow->property("cornerRadius").toInt(), 0);

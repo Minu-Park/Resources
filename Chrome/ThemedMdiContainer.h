@@ -62,5 +62,8 @@ private:
     QRect _dragStartGeometry;
     int _resizeMode = ResizeNone;
     int _frameCornerRadius = 12;
+    QSize _contentMaskSize;
+    int _contentMaskRadius = -1;
+    bool _contentMaskApplied = false;
     QList<QWidget*> _resizeHandles;
 };

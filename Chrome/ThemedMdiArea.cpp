@@ -482,8 +482,8 @@ private:
         }
     }
 
-    QColor _shadowColor = QColor(22, 32, 43, 24);
-    int _shadowExtent = 8;
+    QColor _shadowColor = QColor(22, 32, 43, 14);
+    int _shadowExtent = 6;
     int _cornerRadius = 12;
     int _offsetX = 0;
     int _offsetY = 1;
