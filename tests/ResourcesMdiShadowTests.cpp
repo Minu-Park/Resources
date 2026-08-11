@@ -821,6 +821,10 @@ void ResourcesMdiShadowTests::installedThemeKeepsMdiRadiusConsistent()
     QTRY_COMPARE(container->frameCornerRadius(), 12);
     QTRY_COMPARE(shadow->property("cornerRadius").toInt(), 12);
     QTRY_VERIFY(!content->mask().isEmpty());
+    QVERIFY(content->width() > 16);
+    const int bottomArcRow = content->height() - 2;
+    QVERIFY(!content->mask().contains(QPoint(7, bottomArcRow)));
+    QVERIFY(content->mask().contains(QPoint(8, bottomArcRow)));
 
     qApp->setStyleSheet(previousStyleSheet);
 }
