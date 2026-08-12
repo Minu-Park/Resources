@@ -1,7 +1,8 @@
 /* theme/qss/50_static_image.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
 
-/* QStaticImageControlWidget */
-QStaticImageControlWidget {
+/* Static image and 3D Data source controls */
+QStaticImageControlWidget,
+QStatic3DDataControlWidget {
     background: #ffffff;
 }
 
@@ -10,7 +11,8 @@ QStaticImageControlWidget QLabel {
     color: #2a3a4b;
 }
 
-QStaticImageControlWidget QToolButton {
+QStaticImageControlWidget QToolButton,
+QStatic3DDataControlWidget QToolButton {
     min-width: 20px;
     min-height: 20px;
     max-width: 20px;
@@ -19,24 +21,28 @@ QStaticImageControlWidget QToolButton {
     border-radius: 8px;
 }
 
-QStaticImageControlWidget QListWidget {
+QStaticImageControlWidget QListWidget,
+QStatic3DDataControlWidget QListWidget {
     background-color: #ffffff;
     border: 1px solid #d9e1ea;
     border-radius: 8px;
     padding: 4px;
 }
 
-QStaticImageControlWidget QListWidget::item {
+QStaticImageControlWidget QListWidget::item,
+QStatic3DDataControlWidget QListWidget::item {
     padding: 6px 10px;
     border-radius: 6px;
     color: #16202b;
 }
 
-QStaticImageControlWidget QListWidget::item:hover {
+QStaticImageControlWidget QListWidget::item:hover,
+QStatic3DDataControlWidget QListWidget::item:hover {
     background-color: #f3f3f3;
 }
 
-QStaticImageControlWidget QListWidget::item:selected {
+QStaticImageControlWidget QListWidget::item:selected,
+QStatic3DDataControlWidget QListWidget::item:selected {
     background-color: #f0f0f0;
     color: #16202b;
     font-weight: 600;
