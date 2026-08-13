@@ -1,99 +1,53 @@
-# 🎨 Resources Module
+# Resources
 
-[![C++ Standard](https://img.shields.io/badge/C%2B%2B-17%20%2F%2020-blue.svg?style=flat-square)](https://en.cppreference.com/w/cpp/compiler_support)
-[![Qt Version](https://img.shields.io/badge/Qt-6.4%20%2B-green.svg?style=flat-square)](https://www.qt.io/)
-[![Theme](https://img.shields.io/badge/Theme-Premium%20Light-orange.svg?style=flat-square)](#)
-[![Deployment](https://img.shields.io/badge/Asset-QRC%20Compiled-blueviolet.svg?style=flat-square)](#)
+Resources is a standalone Qt 6 resource, theme, and reusable window-chrome library. It registers compiled assets and installs one ordered QSS theme into a consumer-owned `QApplication`.
 
-Playground 애플리케이션의 시각적 일관성을 확보하고, 라이트 테마 QSS, 공용 아이콘, 로고 에셋들을 효율적으로 배포하고 전역 관리하기 위한 Qt 리소스 전용 공통 모듈입니다.
+## Capabilities
 
----
+- Compile icons, images, and ordered `theme/qss/*.qss` fragments into a Qt resource collection.
+- Install the resource collection and stylesheet through `Resources::installResources()`.
+- Provide reusable main-window, MDI, dock, dialog, file-dialog, message-box, splash, loading, and progress chrome.
+- Expose an opt-in cached MDI shadow implementation with a focused offscreen test target.
 
-## 🚀 Key Features
+The module owns presentation only. It must not own device, session, acquisition, or renderer behavior, and its controls must remain functionally usable when a consumer does not install the theme.
 
-* **전역 일관성 테마 (QSS)**: 현재 단일 테마를 `theme/qss/*.qss` 파트로 나누어 관리하고, `Resources::installResources(app)`가 정해진 순서로 합쳐 적용합니다.
-* **단일화된 에셋 파이프라인**: 모든 애플리케이션 아이콘 및 브랜드 로고 자원이 `:/Resources` 가상 QRC 경로로 컴파일되어 파일 시스템 결합 없이 임베디드 배포됩니다.
-* **원클릭 스타일 설치 API**: `Resources::installResources(app)` 호출을 통해 별도의 리소스 번들 로딩 코드 작성 없이 QSS 적용, 번들 리소스 등록, 앱 아이콘 지정을 한 번에 수행할 수 있습니다.
-* **Reusable chrome widgets**: `Chrome/ThemedMainWindow`, `Chrome/ThemedMainTitleBar`, `Chrome/ThemedMdiContainer`, and `Chrome/ThemedDockTitleBar` provide reusable frameless-window presentation without depending on host session classes.
-* **State visualization style contract**: Camera and Gocator status indicators share one dynamic CSS property (`status`) and color map for `Idle`, `Disconnected`, `Connected`, and `Live` states.
-* **Neutral source-control styling**: `QStaticImageControlWidget` tool buttons, FPS input, and list selection use compact neutral styling aligned with the Camera/Gocator control-panel tone.
+## Requirements
 
----
+- CMake 3.21 or newer and a C++17 compiler.
+- Qt 6.4 or newer with Core and Widgets.
+- Qt Test only when `RESOURCES_BUILD_MDI_SHADOW_TESTS=ON`.
 
-## 📦 Asset Architecture
-
-Resources 모듈이 호스트 프로그램에 바인딩되고 스타일시트가 주입되는 아키텍처 흐름입니다.
-
-```mermaid
-graph TD
-    HostApp[Host Application] -->|1. installResources| ResAPI[Resources Module API]
-    ResAPI -->|2. Register QRC| QtEngine[Qt Resource System]
-    ResAPI -->|3. Concatenate ordered theme/qss parts| QSS[QSS Engine]
-    QtEngine -->|Expose Assets| Path[Virtual Paths: :/Resources/Icons/*]
-    QSS -->|Apply Stylesheet| Widget[All Qt Widgets & Dynamic States]
-```
-
----
-
-## 🛠️ Requirements & Dependencies
-
-| Requirement | Description |
-| :--- | :--- |
-| **OS Support** | Qt6를 지원하는 모든 OS 공통 (macOS / Windows / Linux) |
-| **C++ Standard** | C++17 이상 필수 |
-| **Qt SDK** | Qt 6.4 이상 개발 환경 권장 (CMake 3.16+ 필요) |
-
----
-
-## 💻 Quick Start
-
-### 1. CMake Integration
-상위 프로젝트 CMakeLists.txt에 서브프로젝트로 연동하여 링크합니다.
+## Integration
 
 ```cmake
-# Add module target
-add_subdirectory(modules/Resources)
-
-# Link to host target
-target_link_libraries(YourHostApp PRIVATE Resources::Resources)
+add_subdirectory(path/to/Resources Resources-build)
+target_link_libraries(consumer PRIVATE Resources::Resources)
 ```
 
-### 2. Basic Example
+Install the resources once from the application entry point:
+
 ```cpp
 #include "Resources.h"
 #include <QApplication>
-#include <QMainWindow>
 
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
-
-    // 공용 리소스 등록 및 테마 스타일시트(QSS) 전역 적용
     Resources::installResources(app);
-
-    QMainWindow mainWindow;
-    mainWindow.show();
-
     return app.exec();
 }
 ```
 
----
+Use virtual paths such as `:/Resources/Icons/...`; never depend on a source-tree path at runtime.
 
-## ⚠️ Development Notes
+## Theme Contract
 
-> [!IMPORTANT]
-> **모듈 단일 책임 원칙 (SRP)**
-> 이 모듈은 시각적 리소스(QSS, 아이콘 이미지, 로고, 리소스 로드 헬퍼)와 재사용 가능한 chrome 위젯만 전담해야 합니다. 센서 구동 백엔드 로직이나 시각화 렌더링, 특정 세션 생명주기 로직은 절대 여기에 포함하지 말아야 합니다.
+Consumers expose semantic dynamic properties such as `status`, `state`, or `messageState`, plus stable role-oriented object names only when Qt lacks a suitable semantic selector. The QSS owns colors, spacing, radii, weights, and icon variants. After changing a dynamic property, repolish the widget when an immediate visual update is required.
 
-> [!WARNING]
-> **가상 경로 사용 필수**
-> 아이콘이나 스타일 파일 참조 시 로컬 파일 시스템 경로(예: `C:/Project/style.qss`) 대신 항상 Qt 리소스 시스템에 컴파일된 가상 경로인 `:/Resources/Icons/[아이콘이름].png` 또는 `:/Resources/theme/qss/[파일명].qss` 형식을 사용해야 크로스 플랫폼 호환성이 깨지지 않습니다.
+Legacy consumer-specific object-name selectors remain in the current theme for compatibility. New selectors must use generic widget defaults or documented semantic roles; expanding the legacy set would make this module dependent on an unknown consumer topology.
 
-> [!TIP]
-> **Dynamic QSS Properties**
-> 특정 위젯에 상태별 dynamic styling(예: 커넥션 정상 녹색 점멸, 에러 적색 점멸)을 적용할 때, 코드 내에 CSS 색상값을 하드코딩하지 마십시오. 대신 `widget->setProperty("status", "live")` 또는 `widget->setProperty("messageState", "error")`와 같이 QSS dynamic property를 지정하고 `style()->unpolish()`/`polish()`를 실행해 QSS에 미리 선언된 스타일로 렌더링되게 설계하는 것을 강력히 권장합니다.
+See [theme/README.md](theme/README.md) for file ordering and extension rules.
 
-> [!TIP]
-> **Test image controls**
-> `QStaticImageControlWidget` sizing and selection tone live in `theme/qss/50_static_image.qss`: its playback buttons and FPS field align with device controls, and selected files use neutral gray emphasis rather than a device-specific accent color.
+## Validation
+
+For shadow changes, configure `RESOURCES_BUILD_MDI_SHADOW_TESTS=ON` and run `ResourcesMdiShadowTests` with the offscreen Qt platform. Automated tests do not replace visual checks for native window composition, fractional scaling, and platform-specific chrome.

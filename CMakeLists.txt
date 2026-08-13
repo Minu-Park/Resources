@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(Resources
     VERSION 0.1.0
-    DESCRIPTION "Shared Qt resource bundle for Playground modules."
+    DESCRIPTION "Reusable Qt resources, theme, and window chrome."
     LANGUAGES CXX
 )
 
