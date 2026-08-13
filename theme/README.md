@@ -1,11 +1,12 @@
-# Resources Theme
+# Theme Layout
 
-현재 Resources는 단일 테마만 제공합니다.
+`Resources::installResources()` loads every `qss/*.qss` fragment in the order declared by the resource installer. Qt QSS has no import mechanism, so ordering is part of the theme contract.
 
-- `qss/`: `Resources::installResources(app)`가 정해진 순서로 합쳐 적용하는 QSS 파트.
-- 아이콘과 로고는 아직 `:/Resources/Icons/*`, `:/Resources/BASLER_Logo.png` 경로를 유지합니다.
-- 모듈 단독 실행성을 지키기 위해 Camera, Gocator, GraphicsEngine이 Resources API를 직접 호출하지 않습니다.
-- 호스트 애플리케이션만 `Resources::installResources(app)`를 호출해 외형을 입힙니다.
-- 모듈은 `status`, `messageState`, objectName 같은 의미 정보만 노출하고 색상/여백/굵기는 이 테마가 소유합니다.
+- Put generic widget defaults in the lowest-numbered files.
+- Put semantic role and state selectors after their defaults.
+- Use dynamic properties such as `status`, `state`, and `messageState` for reusable states.
+- Add an object-name selector only when Qt cannot express the role semantically and document that exception.
+- Keep icons and images under stable `:/Resources/...` virtual paths.
+- Do not call `Resources::installResources()` from a reusable library; the consuming application installs the theme once.
 
-테마를 추가로 분기해야 할 때만 이 디렉터리 아래에 이름 있는 테마 구조를 도입합니다.
+The current theme retains some consumer-specific object-name selectors for compatibility. Treat them as migration debt: replace them with neutral roles when the corresponding widgets can expose an equivalent semantic contract.

@@ -550,14 +550,20 @@ private:
                  name == QLatin1String("GraphicsSettingsRangePageLayout")) {
             setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 12);
         }
-        else if (name == QLatin1String("GraphicsSettingsSurfaceMappingLayout") ||
+        else if (name == QLatin1String("GraphicsSettingsMeasurementUnitLayout") ||
+                 name == QLatin1String("GraphicsSettingsColorMappingLayout") ||
+                 name == QLatin1String("GraphicsSettingsRainbowRangeLayout") ||
+                 name == QLatin1String("GraphicsSettingsSurfaceMappingLayout") ||
                  name == QLatin1String("GraphicsSettingsPointCloudMappingLayout") ||
                  name == QLatin1String("GraphicsSettingsRangeMappingLayout") ||
                  name == QLatin1String("GraphicsSettingsSurfaceRenderingLayout") ||
                  name == QLatin1String("GraphicsSettingsPointCloudRenderingLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
         }
-        else if (name == QLatin1String("GraphicsSettingsSurfaceMappingFormLayout") ||
+        else if (name == QLatin1String("GraphicsSettingsMeasurementUnitFormLayout") ||
+                 name == QLatin1String("GraphicsSettingsColorMappingFormLayout") ||
+                 name == QLatin1String("GraphicsSettingsRainbowRangeFormLayout") ||
+                 name == QLatin1String("GraphicsSettingsSurfaceMappingFormLayout") ||
                  name == QLatin1String("GraphicsSettingsPointCloudMappingFormLayout") ||
                  name == QLatin1String("GraphicsSettingsRangeMappingFormLayout") ||
                  name == QLatin1String("GraphicsSettingsSurfaceRenderingFormLayout") ||

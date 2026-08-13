@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replaced corrupted consumer-specific documentation with a standalone theme and integration contract.
+- Unified Graphics Settings Display section and form layout metrics with the Surface and Point Cloud rendering tabs by removing nested default margins.
 - Applied the shared static-source control presentation to 3D Data panels, including compact action buttons and themed file lists.
 - Registered the front-view icon in the shared resource catalog for 3D Data sessions.
 - Fixed manual MDI edge and corner resizing so a pointer that overshoots the dynamic minimum boundary returns to the clamped frame before growth resumes.
