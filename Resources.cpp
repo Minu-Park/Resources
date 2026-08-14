@@ -538,6 +538,9 @@ private:
         else if (name == QLatin1String("AnalysisPanelRootLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
         }
+        else if (name == QLatin1String("AnalysisStatisticsTableLayout")) {
+            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 0);
+        }
         else if (name == QLatin1String("GraphicsSettingsPanelRootLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
         }
