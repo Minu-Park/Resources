@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Registered the cursor and text-cursor icons for profiling mode controls.
 - Added a shared compact plot-action role for 20px profiling mode, clear, zoom, and fit controls, including the checked-mode state.
 - Added the `AnalysisStatisticsTableLayout` theme role with a 12px content inset for table panels.
 - Replaced corrupted consumer-specific documentation with a standalone theme and integration contract.
