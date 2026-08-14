@@ -256,3 +256,24 @@ QToolButton#PlotViewActionButton {
     background: transparent;
     border: none;
 }
+
+QToolButton[plotActionRole="action"] {
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+QToolButton[plotActionRole="action"]:checked {
+    background: #e8f0f8;
+    border: 1px solid #bfd1e2;
+    border-radius: 6px;
+}
+
+QToolButton[plotActionRole="action"]:disabled {
+    background: transparent;
+    border: none;
+}

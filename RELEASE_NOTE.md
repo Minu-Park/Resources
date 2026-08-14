@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added a shared compact plot-action role for 20px profiling mode, clear, zoom, and fit controls, including the checked-mode state.
+- Added the `AnalysisStatisticsTableLayout` theme role with a 12px content inset for table panels.
 - Replaced corrupted consumer-specific documentation with a standalone theme and integration contract.
 - Unified Graphics Settings Display section and form layout metrics with the Surface and Point Cloud rendering tabs by removing nested default margins.
 - Applied the shared static-source control presentation to 3D Data panels, including compact action buttons and themed file lists.
