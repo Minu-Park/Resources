@@ -1,6 +1,6 @@
 # Resources Release Note
 
-## Unreleased
+## v1.2.0
 
 - Added the light translucent rounded presentation for the profiling Y-axis range editor popup.
 - Kept the Y-axis range editor frame background and border transparent so its custom-painted rounded shell remains the single visible surface.
