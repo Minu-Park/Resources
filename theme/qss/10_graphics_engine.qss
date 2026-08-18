@@ -273,7 +273,38 @@ QToolButton[plotActionRole="action"]:checked {
     border-radius: 6px;
 }
 
+QToolButton#PlotViewActionButton:hover,
+QToolButton[plotActionRole="action"]:hover {
+    background: #f4f8fc;
+    border: 1px solid #d5e1ed;
+    border-radius: 6px;
+}
+
+QToolButton#PlotViewActionButton:checked:hover,
+QToolButton[plotActionRole="action"]:checked:hover {
+    background: #e1edf7;
+    border: 1px solid #a6c3dc;
+    border-radius: 6px;
+}
+
 QToolButton[plotActionRole="action"]:disabled {
     background: transparent;
     border: none;
+}
+
+QFrame#PlotViewYRangePopup {
+    background: transparent;
+    border: none;
+}
+
+QFrame#PlotViewYRangePopup QLabel {
+    background: transparent;
+    color: #24364a;
+}
+
+QLabel#PlotViewYRangePopupTitle {
+    min-height: 20px;
+    background: transparent;
+    color: #24364a;
+    font-weight: 700;
 }
