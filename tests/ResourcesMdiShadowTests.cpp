@@ -174,6 +174,7 @@ class ResourcesMdiShadowTests final : public QObject {
 private slots:
     void minimumSizeDragKeepsPointerAnchor_data();
     void minimumSizeDragKeepsPointerAnchor();
+    void minimumSizeRemainsValidDuringMinimize();
     void activeShadowTracksGeometryAndContract();
     void activeShadowPreservesStackAndActivation();
     void allVisibleShadowsTrackGeometryStackAndIsolation();
@@ -322,6 +323,32 @@ void ResourcesMdiShadowTests::minimumSizeDragKeepsPointerAnchor()
                    grownPosition,
                    Qt::LeftButton,
                    Qt::NoButton);
+}
+
+void ResourcesMdiShadowTests::minimumSizeRemainsValidDuringMinimize()
+{
+    ThemedMdiArea area;
+    showArea(area);
+
+    auto* target = new QMdiSubWindow;
+    target->setWindowFlags(Qt::SubWindow | Qt::FramelessWindowHint);
+    auto* container = new ThemedMdiContainer(
+        target, new QWidget, new QMenuBar, target);
+    target->setWidget(container);
+    area.addSubWindow(target);
+    target->setGeometry(40, 40, 520, 360);
+    target->show();
+    QCoreApplication::processEvents();
+
+    target->showMinimized();
+    QCoreApplication::processEvents();
+    QVERIFY(target->minimumSize().width() >= 0);
+    QVERIFY(target->minimumSize().height() >= 0);
+
+    target->showNormal();
+    QCoreApplication::processEvents();
+    QVERIFY(target->minimumSize().width() >= 0);
+    QVERIFY(target->minimumSize().height() >= 0);
 }
 
 void ResourcesMdiShadowTests::activeShadowTracksGeometryAndContract()

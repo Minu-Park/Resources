@@ -1,4 +1,5 @@
 #include "Chrome/ThemedFileDialog.h"
+#include "Chrome/ThemedMessageBox.h"
 
 #include <QCoreApplication>
 #include <QDialog>
@@ -74,6 +75,7 @@ ThemedFileDialog::ThemedFileDialog(
     const QString& filter,
     Mode mode)
     : ThemedDialog(title, parent)
+    , _mode(mode)
 {
     contentLayout()->setContentsMargins(0, 0, 0, 0);
     contentLayout()->setSpacing(0);
@@ -103,7 +105,9 @@ ThemedFileDialog::ThemedFileDialog(
     case Mode::Save:
         _fileDialog->setFileMode(QFileDialog::AnyFile);
         _fileDialog->setAcceptMode(QFileDialog::AcceptSave);
-        _fileDialog->setOption(QFileDialog::DontConfirmOverwrite, false);
+        // QFileDialog's built-in overwrite prompt bypasses the application theme.
+        // The outer themed dialog confirms the selected path instead.
+        _fileDialog->setOption(QFileDialog::DontConfirmOverwrite, true);
         break;
     }
 
@@ -208,7 +212,7 @@ ThemedFileDialog::ThemedFileDialog(
     #endif
 
     contentLayout()->addWidget(_fileDialog);
-    connect(_fileDialog, &QFileDialog::accepted, this, &QDialog::accept);
+    connect(_fileDialog, &QFileDialog::accepted, this, &ThemedFileDialog::handleAccepted);
     connect(_fileDialog, &QFileDialog::rejected, this, &QDialog::reject);
 
     // QFileDialog's size hint expands with the current folder's view state.
@@ -218,6 +222,31 @@ ThemedFileDialog::ThemedFileDialog(
         applyBottomCornerMask();
         scheduleActionButtonAlignment();
     });
+}
+
+void ThemedFileDialog::handleAccepted()
+{
+    if (_mode == Mode::Save)
+    {
+        // QFileDialog hides its embedded widget before emitting accepted().
+        // Restore it before opening the modal overwrite question so the
+        // themed dialog keeps its file-list content visible behind the box.
+        _fileDialog->show();
+        _fileDialog->raise();
+
+        const QString selectedFile = _fileDialog->selectedFiles().value(0);
+        if (!selectedFile.isEmpty() && QFileInfo::exists(selectedFile))
+        {
+            const QString message = tr("%1 already exists.\nDo you want to replace it?")
+                .arg(QFileInfo(selectedFile).fileName());
+            if (!ThemedMessageBox::question(this, tr("Confirm Overwrite"), message))
+            {
+                return;
+            }
+        }
+    }
+
+    accept();
 }
 
 bool ThemedFileDialog::eventFilter(QObject* watched, QEvent* event)

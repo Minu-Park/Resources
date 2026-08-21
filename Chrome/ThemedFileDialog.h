@@ -41,6 +41,11 @@ private:
     void applyBottomCornerMask();
     void scheduleActionButtonAlignment();
     void alignActionButtons();
+    /**
+     * @brief Confirms an existing save target through the themed question box.
+     * @note The outer dialog remains open when the user chooses No.
+     */
+    void handleAccepted();
 
     enum class Mode {
         OpenOne,
@@ -56,6 +61,7 @@ private:
         const QString& filter,
         Mode mode);
 
+    Mode _mode;
     QFileDialog* _fileDialog = nullptr;
     QDialogButtonBox* _buttonBox = nullptr;
     QLineEdit* _fileNameEdit = nullptr;
