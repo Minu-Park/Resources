@@ -1,5 +1,11 @@
 # Resources Release Note
 
+## Unreleased
+
+- Replaced save-file overwrite confirmation with the themed message box, added themed Yes/No question buttons, and kept the embedded file list visible while confirming.
+- Guarded MDI minimum-size updates against transient invalid viewport sizes.
+- Added regression coverage for MDI minimum-size validity across minimize and restore transitions.
+
 ## v1.2.0
 
 - Added the light translucent rounded presentation for the profiling Y-axis range editor popup.

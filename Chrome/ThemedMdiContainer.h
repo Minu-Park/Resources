@@ -39,6 +39,12 @@ protected:
 
 private:
     void handleWindowStateChange();
+    /**
+     * @brief Applies a valid minimum size to the wrapped MDI subwindow.
+     * @note Transient invalid MDI viewport dimensions are ignored while a
+     *       subwindow changes state, so Qt never receives a negative size.
+     */
+    void updateSubWindowMinimumSize();
     void updateContentMask();
     void beginResize(int resizeMode, const QPoint& globalPosition);
     void resizeFromGlobalPosition(const QPoint& globalPosition);

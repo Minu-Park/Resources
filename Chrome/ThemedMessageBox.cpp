@@ -6,7 +6,12 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-ThemedMessageBox::ThemedMessageBox(Icon icon, const QString& title, const QString& text, QWidget* parent)
+ThemedMessageBox::ThemedMessageBox(
+    Icon icon,
+    const QString& title,
+    const QString& text,
+    QWidget* parent,
+    const bool question)
     : ThemedDialog(title, parent)
 {
     auto* body = new QHBoxLayout();
@@ -42,12 +47,30 @@ ThemedMessageBox::ThemedMessageBox(Icon icon, const QString& title, const QStrin
 
     auto* buttonLayout = new QHBoxLayout();
     buttonLayout->addStretch();
-    auto* okButton = new QPushButton(tr("OK"), this);
-    okButton->setObjectName(QStringLiteral("ThemedMessageBoxOkButton"));
-    okButton->setDefault(true);
-    okButton->setMinimumWidth(80);
-    connect(okButton, &QPushButton::clicked, this, &QDialog::accept);
-    buttonLayout->addWidget(okButton);
+    if (question)
+    {
+        auto* noButton = new QPushButton(tr("No"), this);
+        noButton->setObjectName(QStringLiteral("ThemedMessageBoxNoButton"));
+        noButton->setMinimumWidth(80);
+        connect(noButton, &QPushButton::clicked, this, &QDialog::reject);
+        buttonLayout->addWidget(noButton);
+
+        auto* yesButton = new QPushButton(tr("Yes"), this);
+        yesButton->setObjectName(QStringLiteral("ThemedMessageBoxYesButton"));
+        yesButton->setDefault(true);
+        yesButton->setMinimumWidth(80);
+        connect(yesButton, &QPushButton::clicked, this, &QDialog::accept);
+        buttonLayout->addWidget(yesButton);
+    }
+    else
+    {
+        auto* okButton = new QPushButton(tr("OK"), this);
+        okButton->setObjectName(QStringLiteral("ThemedMessageBoxOkButton"));
+        okButton->setDefault(true);
+        okButton->setMinimumWidth(80);
+        connect(okButton, &QPushButton::clicked, this, &QDialog::accept);
+        buttonLayout->addWidget(okButton);
+    }
     contentLayout()->addLayout(buttonLayout);
 
     setMinimumWidth(360);
@@ -70,4 +93,10 @@ void ThemedMessageBox::information(QWidget* parent, const QString& title, const 
 {
     ThemedMessageBox box(Information, title, text, parent);
     box.exec();
+}
+
+bool ThemedMessageBox::question(QWidget* parent, const QString& title, const QString& text)
+{
+    ThemedMessageBox box(Warning, title, text, parent, true);
+    return box.exec() == QDialog::Accepted;
 }

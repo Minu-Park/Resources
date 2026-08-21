@@ -55,7 +55,7 @@ ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, 
         _content->installEventFilter(this);
     }
     if (_subWin) {
-        _subWin->setMinimumSize(minimumSizeHint());
+        updateSubWindowMinimumSize();
     }
 }
 
@@ -106,7 +106,7 @@ QWidget* ThemedMdiContainer::takeContent()
     content->setParent(nullptr);
     if (_subWin)
     {
-        _subWin->setMinimumSize(minimumSizeHint());
+        updateSubWindowMinimumSize();
     }
     emit contentAttachmentChanged(false);
     return content;
@@ -135,7 +135,7 @@ void ThemedMdiContainer::restoreContent(QWidget* content)
     }
     if (_subWin)
     {
-        _subWin->setMinimumSize(minimumSizeHint());
+        updateSubWindowMinimumSize();
     }
     updateContentMask();
     updateGeometry();
@@ -154,6 +154,48 @@ QSize ThemedMdiContainer::minimumSizeHint() const
         return QSize(contentMin.width() + 2, contentMin.height() + titleHeight + 2);
     }
     return QWidget::minimumSizeHint();
+}
+
+void ThemedMdiContainer::updateSubWindowMinimumSize()
+{
+    if (!_subWin)
+    {
+        return;
+    }
+
+    if (_subWin->isMinimized() || _subWin->isMaximized())
+    {
+        if (_subWin->minimumSize() != QSize(0, 0))
+        {
+            _subWin->setMinimumSize(QSize(0, 0));
+        }
+        return;
+    }
+
+    QSize targetMin = minimumSizeHint();
+    targetMin.setWidth(qMax(0, targetMin.width()));
+    targetMin.setHeight(qMax(0, targetMin.height()));
+
+    if (auto* mdi = _subWin->mdiArea())
+    {
+        if (auto* viewport = mdi->viewport())
+        {
+            const QSize viewportSize = viewport->size();
+            if (viewportSize.width() >= 0)
+            {
+                targetMin.setWidth(qMin(targetMin.width(), viewportSize.width()));
+            }
+            if (viewportSize.height() >= 0)
+            {
+                targetMin.setHeight(qMin(targetMin.height(), viewportSize.height()));
+            }
+        }
+    }
+
+    if (_subWin->minimumSize() != targetMin)
+    {
+        _subWin->setMinimumSize(targetMin);
+    }
 }
 
 void ThemedMdiContainer::mousePressEvent(QMouseEvent* event)
@@ -272,50 +314,12 @@ bool ThemedMdiContainer::eventFilter(QObject* watched, QEvent* event)
             handleWindowStateChange();
         }
         else if (event->type() == QEvent::Resize) {
-            if (!_subWin->isMinimized() && !_subWin->isMaximized()) {
-                QSize minHint = minimumSizeHint();
-                QMdiArea* mdi = _subWin->mdiArea();
-                QSize targetMin;
-                if (mdi && mdi->viewport()) {
-                    QSize mdiSize = mdi->viewport()->size();
-                    int finalW = qMin(minHint.width(), mdiSize.width());
-                    int finalH = qMin(minHint.height(), mdiSize.height());
-                    targetMin = QSize(finalW, finalH);
-                } else {
-                    targetMin = minHint;
-                }
-                if (_subWin->minimumSize() != targetMin) {
-                    _subWin->setMinimumSize(targetMin);
-                }
-            } else {
-                if (_subWin->minimumSize() != QSize(0, 0)) {
-                    _subWin->setMinimumSize(QSize(0, 0));
-                }
-            }
+            updateSubWindowMinimumSize();
         }
     }
     if (watched == _content && (event->type() == QEvent::LayoutRequest || event->type() == QEvent::Resize)) {
         if (_subWin) {
-            if (!_subWin->isMinimized() && !_subWin->isMaximized()) {
-                QSize minHint = minimumSizeHint();
-                QMdiArea* mdi = _subWin->mdiArea();
-                QSize targetMin;
-                if (mdi && mdi->viewport()) {
-                    QSize mdiSize = mdi->viewport()->size();
-                    int finalW = qMin(minHint.width(), mdiSize.width());
-                    int finalH = qMin(minHint.height(), mdiSize.height());
-                    targetMin = QSize(finalW, finalH);
-                } else {
-                    targetMin = minHint;
-                }
-                if (_subWin->minimumSize() != targetMin) {
-                    _subWin->setMinimumSize(targetMin);
-                }
-            } else {
-                if (_subWin->minimumSize() != QSize(0, 0)) {
-                    _subWin->setMinimumSize(QSize(0, 0));
-                }
-            }
+            updateSubWindowMinimumSize();
         }
         if (event->type() == QEvent::Resize) {
             updateContentMask();
