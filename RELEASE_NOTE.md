@@ -1,7 +1,8 @@
 # Resources Release Note
 
-## Unreleased
+## v1.2.1
 
+- Fixed popup corner clipping by aligning the binary mask with the full painted widget bounds.
 - Removed obsolete Heliotis feature-tab selectors now that its controls use one unified feature tree.
 - Added a semantic native-tile status rule that changes only the GraphicsEngine summary bubble border to blue after a completed native tile is displayed.
 - Replaced save-file overwrite confirmation with the themed message box, added themed Yes/No question buttons, and kept the embedded file list visible while confirming.
