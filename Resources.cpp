@@ -742,6 +742,13 @@ private:
         }
     }
 
+    /**
+     * @brief Applies the binary mask that clips a popup to its painted shell.
+     * @param widget Popup widget whose mask is being updated.
+     * @param allRounded Whether all four popup corners are rounded.
+     * @note The mask uses the same logical extent as the painter's QRectF so
+     *       the right and bottom antialiased edges are not clipped early.
+     */
     static void applyPopupMask(QWidget* widget, bool allRounded)
     {
         QBitmap bmp(widget->size());
@@ -752,7 +759,8 @@ private:
         painter.setPen(Qt::NoPen);
 
         if (allRounded) {
-            painter.drawRoundedRect(widget->rect(), 9.0, 9.0);
+            painter.drawRoundedRect(
+                QRectF(0.0, 0.0, widget->width(), widget->height()), 9.0, 9.0);
         } else {
             const int w = widget->width();
             const int h = widget->height();
