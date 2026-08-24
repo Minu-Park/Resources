@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added a semantic native-tile status rule that changes only the GraphicsEngine summary bubble border to blue after a completed native tile is displayed.
 - Replaced save-file overwrite confirmation with the themed message box, added themed Yes/No question buttons, and kept the embedded file list visible while confirming.
 - Guarded MDI minimum-size updates against transient invalid viewport sizes.
 - Added regression coverage for MDI minimum-size validity across minimize and restore transitions.

@@ -61,6 +61,10 @@ QLabel#MainLogErrorLabel {
     color: #425467;
 }
 
+QLabel#EngineStatusSummary[performancePath="native-tile"] {
+    border-color: #1565c0;
+}
+
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton,
 QToolButton#ProcessingEnableToggle {
