@@ -7,8 +7,7 @@ QHeliotisC4Widget {
     background: #ffffff;
 }
 
-QTabWidget#FramegrabberControlTabs::pane,
-QTabWidget#HeliotisC4ControlTabs::pane {
+QTabWidget#FramegrabberControlTabs::pane {
     background: transparent;
     border: none;
     border-top: 1px solid #d9e1ea;
@@ -16,8 +15,7 @@ QTabWidget#HeliotisC4ControlTabs::pane {
     top: 0;
 }
 
-QTabWidget#FramegrabberControlTabs > QTabBar,
-QTabWidget#HeliotisC4ControlTabs > QTabBar {
+QTabWidget#FramegrabberControlTabs > QTabBar {
     background: transparent;
     border-top: none;
     padding-top: 0;
@@ -61,7 +59,6 @@ QGocatorWidget QLabel#GocatorStatusLabel:hover,
 QHeliotisC4Widget QLabel#HeliotisC4StatusLabel:hover {
     background: #ffffff;
 }
-
 
 
 
