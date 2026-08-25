@@ -8,10 +8,16 @@
 #include <QtGlobal>
 #include <cmath>
 
+/**
+ * @brief Paints a compact themed determinate or indeterminate progress bar.
+ * @note The widget owns only its geometry and paint behavior; colors remain local
+ *       fallback values because this custom-painted surface is not QSS-stylable.
+ */
 class ThemedProgressBar : public QWidget
 {
     Q_OBJECT
 public:
+    /** @brief Creates a progress bar with an expanding width and compact height. */
     explicit ThemedProgressBar(QWidget* parent = nullptr) : QWidget(parent) {
         setFixedHeight(8);
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -25,19 +31,37 @@ public:
         _animationTimer.start();
     }
 
+    /** @brief Enables or disables the animated busy presentation. */
     void setBusy(bool on) {
         _busy = on;
         update();
     }
 
+    /**
+     * @brief Sets the determinate progress value.
+     * @param value Value in the inclusive 0-100 range; values outside it are clamped.
+     */
     void setValue(int value) {
         _value = qBound(_min, value, _max);
         update();
     }
 
+    /** @brief Returns the current clamped determinate progress value. */
     int getValue() const { return _value; }
 
+    /**
+     * @brief Configures a rounded trailing cap for the determinate fill.
+     * @param enabled Whether the leading edge of the filled portion is rounded.
+     * @note A narrow fill becomes a compact pill so the cap remains antialiased at
+     *       the beginning of a download.
+     */
+    void setRoundedEnd(bool enabled) {
+        _roundedEnd = enabled;
+        update();
+    }
+
 protected:
+    /** @brief Paints the track, progress fill, animated shine, and outline. */
     void paintEvent(QPaintEvent*) override
     {
         QPainter p(this);
@@ -62,6 +86,24 @@ protected:
 
         const QRectF paintRect = fill;
 
+        QPainterPath progressPath;
+        if (fill.width() > 0.0 && _roundedEnd) {
+            if (fill.width() <= 2.0 * radius) {
+                progressPath.addRoundedRect(fill, fill.width() / 2.0, fill.width() / 2.0);
+            } else {
+                const qreal capLeft = fill.right() - 2.0 * radius;
+                progressPath.moveTo(fill.left(), fill.top());
+                progressPath.lineTo(fill.right() - radius, fill.top());
+                progressPath.arcTo(QRectF(capLeft, fill.top(), 2.0 * radius, 2.0 * radius),
+                                   90.0,
+                                   -180.0);
+                progressPath.lineTo(fill.left(), fill.bottom());
+                progressPath.closeSubpath();
+            }
+        } else {
+            progressPath.addRect(fill);
+        }
+
         // Fill gradient (mapped across full width for smooth transitions)
         QLinearGradient g(r.topLeft(), r.topRight());
         g.setColorAt(0.0, _startColor);
@@ -75,7 +117,7 @@ protected:
         p.setClipPath(clip);
 
         p.setBrush(g);
-        p.drawRect(paintRect);
+        p.drawPath(progressPath);
 
         const qreal w = paintRect.width();
         if (w > 1.0) {
@@ -90,9 +132,12 @@ protected:
             shine.setColorAt(0.5, QColor(255, 255, 255, _busy ? 90 : 70));
             shine.setColorAt(1.0, QColor(255, 255, 255, 0));
 
+            p.save();
+            p.setClipPath(progressPath, Qt::IntersectClip);
             p.setCompositionMode(QPainter::CompositionMode_Screen);
             p.setBrush(shine);
             p.drawRect(paintRect);
+            p.restore();
         }
 
         p.restore();
@@ -108,6 +153,7 @@ private:
     int _value = 0;
 
     bool _busy = false;
+    bool _roundedEnd = false;
     QTimer _animationTimer;
     QColor _startColor = QColor(0x1e5ea6);
     QColor _endColor   = QColor(0x0f3259);
