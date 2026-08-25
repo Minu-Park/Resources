@@ -1,5 +1,9 @@
 # Resources Release Note
 
+## Unreleased
+
+- Added an optional rounded trailing cap to the custom progress bar so download progress ends with a smooth `)` edge instead of a flat cutoff.
+
 ## v1.2.1
 
 - Fixed popup corner clipping by aligning the binary mask with the full painted widget bounds.
