@@ -24,6 +24,7 @@ qt_add_library(PlaygroundResources STATIC
     Resources.qrc
     Resources.h
     Resources.cpp
+    Chrome/ThemedTreeWidget.h
     Chrome/ThemedMdiTitleBar.h
     Chrome/ThemedMdiTitleBar.cpp
     Chrome/ThemedDockTitleBar.h

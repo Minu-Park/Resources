@@ -262,15 +262,34 @@ QTableCornerButton::section {
 QTableWidget::item,
 QTreeWidget::item {
     border: none;
+    margin: 2px 4px;
+    border-radius: 8px;
 }
 
 QTableWidget::item:hover,
 QTreeWidget::item:hover {
     background: #f5f5f5;
+    border-radius: 8px;
+}
+
+QTableWidget::item:selected,
+QTreeWidget::item:selected {
+    background: #efefef;
+    border-radius: 8px;
 }
 
 QTreeWidget::item:selected {
     color: #16202b;
+}
+
+QTreeWidget[interactionMode="row"]::item,
+QTreeWidget[interactionMode="row"]::item:hover,
+QTreeWidget[interactionMode="row"]::item:selected {
+    background: transparent;
+}
+
+QTreeWidget[interactionMode="row"] {
+    selection-background-color: #f5f5f5;
 }
 
 QTreeView::branch:has-children:closed,

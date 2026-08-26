@@ -1,0 +1,189 @@
+/* theme/qss/70_plugin_manager.qss: compact plugin package actions. */
+
+QToolButton#PluginDownloadButton,
+QToolButton#PluginUpdateButton,
+QToolButton#PluginRemoveButton {
+    min-width: 22px;
+    max-width: 22px;
+    min-height: 22px;
+    max-height: 22px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    background: transparent;
+    qproperty-iconSize: 14px 14px;
+}
+
+QToolButton#PluginDownloadButton {
+    qproperty-icon: url(:/Resources/Icons/icons8-download-48.png);
+}
+
+QToolButton#PluginUpdateButton {
+    qproperty-icon: url(:/Resources/Icons/icons8-downloading-updates-48.png);
+}
+
+QToolButton#PluginRemoveButton {
+    qproperty-icon: url(:/Resources/Icons/icons8-trash-48.png);
+}
+
+QToolButton#PluginDownloadButton:hover,
+QToolButton#PluginDownloadButton:pressed,
+QToolButton#PluginDownloadButton:focus,
+QToolButton#PluginDownloadButton:checked,
+QToolButton#PluginUpdateButton:hover,
+QToolButton#PluginUpdateButton:pressed,
+QToolButton#PluginUpdateButton:focus,
+QToolButton#PluginUpdateButton:checked,
+QToolButton#PluginRemoveButton:hover,
+QToolButton#PluginRemoveButton:pressed,
+QToolButton#PluginRemoveButton:focus,
+QToolButton#PluginRemoveButton:checked {
+    background: transparent;
+    border-color: transparent;
+}
+
+QToolButton#PluginDownloadButton:disabled,
+QToolButton#PluginUpdateButton:disabled,
+QToolButton#PluginRemoveButton:disabled {
+    background: transparent;
+    border-color: transparent;
+}
+
+QWidget#PluginNameCell,
+QWidget#PluginStatusCell,
+QWidget#PluginStatusWidget,
+QWidget#PluginVersionWidget,
+QLabel#PluginNameLabel,
+QLabel#PluginStatusLabel,
+QLabel#PluginInstalledVersionLabel,
+QLabel#PluginAvailableVersionLabel {
+    background: transparent;
+    border: none;
+}
+
+QLabel#PluginNameLabel {
+    padding: 0 0 0 6px;
+    font-weight: 700;
+}
+
+QLabel#PluginStatusLabel {
+    min-height: 24px;
+    max-height: 24px;
+    padding: 0 8px;
+    color: #516476;
+    font-weight: 600;
+}
+
+QLabel#PluginStatusLabel[installationState="installed"] {
+    color: #16202b;
+}
+
+QLabel#PluginStatusLabel[installationState="update-available"] {
+    color: #3f7656;
+}
+
+QLabel#PluginStatusLabel[installationState="not-installed"] {
+    color: #416f9a;
+}
+
+QLabel#PluginStatusLabel[installationState="unavailable"] {
+    color: #7f8b97;
+}
+
+QLabel#PluginInstalledVersionLabel,
+QLabel#PluginAvailableVersionLabel {
+    padding: 0 4px;
+    color: #516476;
+    font-size: 12px;
+}
+
+QTreeWidget[treeRole="PluginManagerTree"][interactionMode="row"]::item,
+QTreeWidget[treeRole="PluginManagerTree"][interactionMode="row"]::item:hover,
+QTreeWidget[treeRole="PluginManagerTree"][interactionMode="row"]::item:selected {
+    margin: 0 4px;
+}
+
+QLabel#PluginInstalledVersionLabel {
+    font-weight: 600;
+}
+
+QLabel#PluginAvailableVersionLabel {
+    color: #8593a1;
+    font-weight: 500;
+}
+
+QLabel#PluginAvailableVersionLabel[versionState="update"] {
+    color: #2f80c9;
+    font-weight: 700;
+}
+
+QProgressBar#PluginStatusProgress {
+    min-height: 2px;
+    max-height: 2px;
+    margin: 0 8px;
+    padding: 0;
+    border: none;
+    border-radius: 1px;
+    background: transparent;
+}
+
+QProgressBar#PluginStatusProgress[active="true"] {
+    background: #e2eaf2;
+}
+
+QProgressBar#PluginStatusProgress::chunk {
+    border-radius: 1px;
+    background: #2f80c9;
+}
+
+/* Host update discovery notification. */
+QFrame#UpdateNotificationPopup {
+    min-width: 250px;
+    max-width: 360px;
+    padding: 8px 10px;
+    background-color: #ffffff;
+    border: 1px solid #cfd9e4;
+    border-radius: 12px;
+}
+
+QFrame#UpdateNotificationPopup:hover {
+    background-color: #f8fafc;
+    border-color: #b7c7d8;
+}
+
+QLabel#UpdateNotificationTitle {
+    min-height: 0;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    color: #16202b;
+    font-weight: 700;
+}
+
+QLabel#UpdateNotificationMessage {
+    min-height: 0;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    color: #516476;
+}
+
+QToolButton#UpdateNotificationCloseButton {
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #7f8b97;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+QToolButton#UpdateNotificationCloseButton:hover,
+QToolButton#UpdateNotificationCloseButton:pressed {
+    background: transparent;
+    color: #16202b;
+}

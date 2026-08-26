@@ -1,4 +1,5 @@
 #include "Resources.h"
+#include "Chrome/ThemedTreeWidget.h"
 
 #include <QApplication>
 #include <QFile>
@@ -27,6 +28,7 @@
 #include <QRubberBand>
 #include <QPalette>
 #include <QColor>
+#include <QCursor>
 #include <QEvent>
 #include <QMouseEvent>
 #include <QDebug>
@@ -77,6 +79,200 @@ public:
 private:
     QTreeWidget* _tree = nullptr;
 };
+
+/**
+ * @brief Checks whether two model indexes identify cells in the same row.
+ * @param lhs First model index.
+ * @param rhs Second model index.
+ * @return `true` when both indexes are valid and share a parent and row.
+ */
+static bool isSameTreeRow(const QModelIndex& lhs, const QModelIndex& rhs)
+{
+    return lhs.isValid()
+        && rhs.isValid()
+        && lhs.row() == rhs.row()
+        && lhs.parent() == rhs.parent();
+}
+
+/**
+ * @brief Paints row-mode cells without covering the shared row surface.
+ */
+class RoundedTreeItemDelegate final : public QStyledItemDelegate
+{
+public:
+    /**
+     * @brief Creates a delegate associated with a tree view.
+     * @param tree Tree whose viewport supplies the full visible row bounds.
+     */
+    explicit RoundedTreeItemDelegate(QTreeWidget* tree)
+        : QStyledItemDelegate(tree),
+          _tree(tree)
+    {
+    }
+
+    /**
+     * @brief Paints item contents without duplicating the row-mode surface.
+     * @param painter Painter supplied by the item view.
+     * @param option Cell paint options supplied by the item view.
+     * @param index Model index of the cell being painted.
+     */
+    void paint(QPainter* painter,
+               const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override
+    {
+        if (_tree == nullptr
+            || painter == nullptr
+            || _tree->property("interactionMode").toString() != QLatin1String("row")) {
+            QStyledItemDelegate::paint(painter, option, index);
+            return;
+        }
+
+        QStyleOptionViewItem cellOption(option);
+        initStyleOption(&cellOption, index);
+        cellOption.state &= ~QStyle::State_MouseOver;
+        cellOption.state &= ~QStyle::State_Selected;
+        const QWidget* widget = cellOption.widget;
+        QStyle* style = widget ? widget->style() : QApplication::style();
+
+        if (cellOption.checkState != Qt::Unchecked
+            && cellOption.checkState != Qt::Checked
+            && cellOption.checkState != Qt::PartiallyChecked) {
+            cellOption.checkState = Qt::Unchecked;
+        } else {
+            QStyleOptionViewItem checkOption(cellOption);
+            checkOption.rect = style->subElementRect(
+                QStyle::SE_ItemViewItemCheckIndicator,
+                &cellOption,
+                widget);
+            if (!checkOption.rect.isEmpty()) {
+                style->drawPrimitive(
+                    QStyle::PE_IndicatorItemViewItemCheck,
+                    &checkOption,
+                    painter,
+                    widget);
+            }
+        }
+
+        if (!cellOption.icon.isNull()) {
+            const QRect decorationRect = style->subElementRect(
+                QStyle::SE_ItemViewItemDecoration,
+                &cellOption,
+                widget);
+            if (!decorationRect.isEmpty()) {
+                const QIcon::Mode iconMode =
+                    cellOption.state & QStyle::State_Enabled
+                        ? QIcon::Normal
+                        : QIcon::Disabled;
+                cellOption.icon.paint(
+                    painter,
+                    decorationRect,
+                    cellOption.decorationAlignment,
+                    iconMode,
+                    QIcon::Off);
+            }
+        }
+
+        if (!cellOption.text.isEmpty()) {
+            QRect textRect = style->subElementRect(
+                QStyle::SE_ItemViewItemText,
+                &cellOption,
+                widget);
+            if (textRect.isEmpty()) {
+                textRect = cellOption.rect.adjusted(6, 0, -6, 0);
+            }
+            textRect.adjust(3, 0, -3, 0);
+            const QFontMetrics metrics(cellOption.font);
+            const QString text = metrics.elidedText(
+                cellOption.text,
+                Qt::ElideRight,
+                textRect.width());
+            style->drawItemText(
+                painter,
+                textRect,
+                cellOption.displayAlignment,
+                cellOption.palette,
+                cellOption.state & QStyle::State_Enabled,
+                text,
+                QPalette::Text);
+        }
+    }
+
+private:
+    QTreeWidget* _tree = nullptr;
+};
+
+ThemedTreeWidget::ThemedTreeWidget(QWidget* parent)
+    : QTreeWidget(parent)
+{
+    setMouseTracking(true);
+    viewport()->setMouseTracking(true);
+    setInteractionMode(InteractionMode::Cell);
+    setItemDelegate(new RoundedTreeItemDelegate(this));
+}
+
+void ThemedTreeWidget::setInteractionMode(InteractionMode mode)
+{
+    const bool rowMode = mode == InteractionMode::Row;
+    setProperty("interactionMode", rowMode ? QStringLiteral("row") : QStringLiteral("cell"));
+    setSelectionBehavior(rowMode
+        ? QAbstractItemView::SelectRows
+        : QAbstractItemView::SelectItems);
+    viewport()->update();
+}
+
+void ThemedTreeWidget::drawRow(QPainter* painter,
+                               const QStyleOptionViewItem& option,
+                               const QModelIndex& index) const
+{
+    if (painter != nullptr
+        && property("interactionMode").toString() == QLatin1String("row")) {
+        const QPoint cursorPosition = viewport()->mapFromGlobal(QCursor::pos());
+        const QModelIndex hoveredIndex = indexAt(cursorPosition);
+        const bool hoveredRow = (option.state & QStyle::State_MouseOver)
+            || isSameTreeRow(index, hoveredIndex);
+        const bool selectedRow = selectionModel()
+            && selectionModel()->isRowSelected(index.row(), index.parent());
+
+        if (hoveredRow || selectedRow) {
+            // QSS item selectors are cell-scoped, so the row boundary owns this shared surface.
+            QRect surfaceRect = option.rect;
+            surfaceRect.setLeft(viewport()->rect().left());
+            surfaceRect.setRight(viewport()->rect().right());
+            // Match the header's horizontal extent; retain only the vertical breathing room.
+            surfaceRect.adjust(0, 2, 0, -2);
+
+            painter->save();
+            painter->setRenderHint(QPainter::Antialiasing, true);
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(palette().highlight());
+            painter->drawRoundedRect(surfaceRect, 9, 9);
+            painter->restore();
+        }
+    }
+
+    if (painter == nullptr || model() == nullptr) {
+        return;
+    }
+
+    // Paint the cell contents directly because calling the base drawRow would repaint
+    // opaque per-cell backgrounds over the shared row surface.
+    const int columnCount = model()->columnCount(index.parent());
+    for (int column = 0; column < columnCount; ++column) {
+        const QModelIndex cellIndex = index.siblingAtColumn(column);
+        const QRect cellRect = visualRect(cellIndex);
+        if (!cellIndex.isValid() || !cellRect.intersects(option.rect)) {
+            continue;
+        }
+        const QAbstractItemDelegate* delegate = itemDelegate(cellIndex);
+        if (delegate == nullptr) {
+            continue;
+        }
+
+        QStyleOptionViewItem cellOption(option);
+        cellOption.rect = cellRect;
+        delegate->paint(painter, cellOption, cellIndex);
+    }
+}
 
 // ---------------------------------------------------------------------------
 static bool isDeviceFeatureTreeViewport(const QObject* object)
@@ -845,7 +1041,8 @@ void installResources(QApplication& app)
         QStringLiteral(":/Resources/theme/qss/30_device_controls.qss"),
         QStringLiteral(":/Resources/theme/qss/40_chrome.qss"),
         QStringLiteral(":/Resources/theme/qss/50_static_image.qss"),
-        QStringLiteral(":/Resources/theme/qss/60_processing.qss")
+        QStringLiteral(":/Resources/theme/qss/60_processing.qss"),
+        QStringLiteral(":/Resources/theme/qss/70_plugin_manager.qss")
     };
 
     QString styleSheet;
