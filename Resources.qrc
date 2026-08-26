@@ -12,12 +12,15 @@
         <file>theme/qss/40_chrome.qss</file>
         <file>theme/qss/50_static_image.qss</file>
         <file>theme/qss/60_processing.qss</file>
+        <file>theme/qss/70_plugin_manager.qss</file>
         <file>Icons/icons8-zoom-out-48.png</file>
         <file>Icons/icons8-zoom-in-48.png</file>
         <file>Icons/icons8-warning-96.png</file>
         <file>Icons/icons8-virtual-machine-48.png</file>
         <file>Icons/icons8-view-48.png</file>
         <file>Icons/icons8-script-48.png</file>
+        <file>Icons/icons8-download-48.png</file>
+        <file>Icons/icons8-downloading-updates-48.png</file>
         <file>Icons/icons8-update-48.png</file>
         <file>Icons/icons8-unchecked-checkbox-48.png</file>
         <file>Icons/icons8-toggle-full-screen-48.png</file>
@@ -126,6 +129,7 @@
         <file>Icons/icons8-clear-48.png</file>
         <file>Icons/icons8-cursor-48.png</file>
         <file>Icons/icons8-delete-48.png</file>
+        <file>Icons/icons8-trash-48.png</file>
         <file>Icons/icons8-ai-48.png</file>
         <file>Icons/icons8-plus-60.png</file>
         <file>Icons/icons8-subtract-60.png</file>
