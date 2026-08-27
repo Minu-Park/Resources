@@ -29,6 +29,7 @@
 #include <QPalette>
 #include <QColor>
 #include <QCursor>
+#include <QTableWidget>
 #include <QEvent>
 #include <QMouseEvent>
 #include <QDebug>
@@ -200,6 +201,161 @@ public:
 private:
     QTreeWidget* _tree = nullptr;
 };
+
+/**
+ * @brief Paints a QTableWidget row as one continuous interaction surface.
+ *
+ * QSS item selectors are cell-scoped. The delegate therefore draws the same
+ * full-row surface from every visible cell's clipped paint region and then
+ * paints only the cell contents, avoiding gaps between selected cells.
+ */
+class RoundedTableItemDelegate final : public QStyledItemDelegate
+{
+public:
+    /**
+     * @brief Creates a row-surface delegate for a table.
+     * @param table Table whose viewport supplies the visible row bounds.
+     */
+    explicit RoundedTableItemDelegate(QTableWidget* table)
+        : QStyledItemDelegate(table)
+        , _table(table)
+    {
+    }
+
+    /**
+     * @brief Paints one table cell without duplicating the row surface.
+     * @param painter Painter supplied by the item view.
+     * @param option Cell paint options supplied by the item view.
+     * @param index Model index of the cell being painted.
+     */
+    void paint(QPainter* painter,
+               const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override
+    {
+        if (_table == nullptr
+            || painter == nullptr
+            || _table->property("interactionMode").toString() != QLatin1String("row")) {
+            QStyledItemDelegate::paint(painter, option, index);
+            return;
+        }
+
+        const QPoint cursorPosition = _table->viewport()->mapFromGlobal(QCursor::pos());
+        const QModelIndex hoveredIndex = _table->indexAt(cursorPosition);
+        const bool hoveredRow = hoveredIndex.isValid()
+            && hoveredIndex.row() == index.row()
+            && hoveredIndex.parent() == index.parent();
+        const bool selectedRow = _table->selectionModel()
+            && _table->selectionModel()->isRowSelected(index.row(), index.parent());
+
+        if (hoveredRow || selectedRow)
+        {
+            QRect surfaceRect = option.rect;
+            surfaceRect.setLeft(_table->viewport()->rect().left());
+            surfaceRect.setRight(_table->viewport()->rect().right());
+            surfaceRect.adjust(0, 2, 0, -2);
+
+            painter->save();
+            painter->setRenderHint(QPainter::Antialiasing, true);
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(_table->palette().highlight());
+            painter->drawRoundedRect(surfaceRect, 9, 9);
+            painter->restore();
+        }
+
+        QStyleOptionViewItem cellOption(option);
+        initStyleOption(&cellOption, index);
+        cellOption.state &= ~QStyle::State_MouseOver;
+        cellOption.state &= ~QStyle::State_Selected;
+        const QWidget* widget = cellOption.widget;
+        QStyle* style = widget != nullptr ? widget->style() : QApplication::style();
+
+        if (cellOption.checkState != Qt::Unchecked
+            && cellOption.checkState != Qt::Checked
+            && cellOption.checkState != Qt::PartiallyChecked) {
+            cellOption.checkState = Qt::Unchecked;
+        }
+        else if (cellOption.checkState != Qt::Unchecked) {
+            QStyleOptionViewItem checkOption(cellOption);
+            checkOption.rect = style->subElementRect(
+                QStyle::SE_ItemViewItemCheckIndicator,
+                &cellOption,
+                widget);
+            if (!checkOption.rect.isEmpty()) {
+                style->drawPrimitive(
+                    QStyle::PE_IndicatorItemViewItemCheck,
+                    &checkOption,
+                    painter,
+                    widget);
+            }
+        }
+
+        if (!cellOption.icon.isNull())
+        {
+            const QRect decorationRect = style->subElementRect(
+                QStyle::SE_ItemViewItemDecoration,
+                &cellOption,
+                widget);
+            if (!decorationRect.isEmpty())
+            {
+                const QIcon::Mode iconMode = cellOption.state & QStyle::State_Enabled
+                    ? QIcon::Normal
+                    : QIcon::Disabled;
+                cellOption.icon.paint(
+                    painter,
+                    decorationRect,
+                    cellOption.decorationAlignment,
+                    iconMode,
+                    QIcon::Off);
+            }
+        }
+
+        if (!cellOption.text.isEmpty())
+        {
+            QRect textRect = style->subElementRect(
+                QStyle::SE_ItemViewItemText,
+                &cellOption,
+                widget);
+            if (textRect.isEmpty())
+            {
+                textRect = cellOption.rect.adjusted(6, 0, -6, 0);
+            }
+            textRect.adjust(3, 0, -3, 0);
+            const QFontMetrics metrics(cellOption.font);
+            const QString text = metrics.elidedText(
+                cellOption.text,
+                Qt::ElideRight,
+                textRect.width());
+            style->drawItemText(
+                painter,
+                textRect,
+                cellOption.displayAlignment,
+                cellOption.palette,
+                cellOption.state & QStyle::State_Enabled,
+                text,
+                QPalette::Text);
+        }
+    }
+
+private:
+    QTableWidget* _table = nullptr;
+};
+
+/**
+ * @brief Installs the shared row-surface delegate on an opt-in table.
+ * @param table Table that exposes `interactionMode="row"`.
+ */
+static void applyRowTableStyle(QTableWidget* table)
+{
+    if (table == nullptr
+        || table->property("interactionMode").toString() != QLatin1String("row")
+        || table->property("_roundedRowDelegateInstalled").toBool()) {
+        return;
+    }
+
+    table->setItemDelegate(new RoundedTableItemDelegate(table));
+    table->setProperty("_roundedRowDelegateInstalled", true);
+    table->viewport()->update();
+}
 
 ThemedTreeWidget::ThemedTreeWidget(QWidget* parent)
     : QTreeWidget(parent)
@@ -514,6 +670,9 @@ protected:
                 if (auto* button = qobject_cast<QToolButton*>(widget);
                     button && button->objectName() == QLatin1String("AnalysisTabCloseButton")) {
                     applyAnalysisTabCloseButtonIcon(button, false);
+                }
+                else if (auto* table = qobject_cast<QTableWidget*>(widget)) {
+                    applyRowTableStyle(table);
                 }
                 else if (widget->inherits("QComboBoxPrivateContainer") ||
                     (widget->windowFlags() & Qt::Popup && widget->parent() && widget->parent()->inherits("QComboBox")) ||

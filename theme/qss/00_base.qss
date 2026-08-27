@@ -278,6 +278,14 @@ QTreeWidget::item:selected {
     border-radius: 8px;
 }
 
+QTableWidget[interactionMode="row"]::item,
+QTableWidget[interactionMode="row"]::item:hover,
+QTableWidget[interactionMode="row"]::item:selected {
+    background: transparent;
+    border-radius: 0;
+    margin: 0;
+}
+
 QTreeWidget::item:selected {
     color: #16202b;
 }
