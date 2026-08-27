@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added the shared in-plot Readout surface styling for profiling values and comparison summaries.
+
 - Added the rounded host update-discovery notification shell and its dismiss-button styling.
 - Made update-notification text labels transparent so the rounded surface has no rectangular white patches.
 - Tightened Runtime Paths form label spacing and kept its status message at the bottom of the properties panel.
@@ -26,6 +28,7 @@
 - Added an opt-in row-mode tree widget that paints one header-aligned rounded interaction surface across all visible columns while preserving the default cell mode and specialized device-feature tree presentation.
 - Aligned row-mode text insets and horizontal bounds with the shared header geometry while retaining a small vertical hover gap.
 - Added an optional rounded trailing cap to the custom progress bar so download progress ends with a smooth `)` edge instead of a flat cutoff.
+- Added opt-in row-mode QTableWidget painting so Measure-style tables use one continuous rounded surface across the full single-line row.
 
 ## v1.2.1
 
