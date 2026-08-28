@@ -29,6 +29,8 @@
 - Aligned row-mode text insets and horizontal bounds with the shared header geometry while retaining a small vertical hover gap.
 - Added an optional rounded trailing cap to the custom progress bar so download progress ends with a smooth `)` edge instead of a flat cutoff.
 - Added opt-in row-mode QTableWidget painting so Measure-style tables use one continuous rounded surface across the full single-line row.
+- Kept row-mode table text readable while the shared hover surface is active.
+- Fixed row-mode hover and selection surfaces from covering text in preceding cells while preserving the continuous row shape.
 
 ## v1.2.1
 
