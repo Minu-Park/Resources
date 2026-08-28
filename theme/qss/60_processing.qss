@@ -209,8 +209,8 @@ QCheckBox#ProcessingParamCheckBox {
     padding-left: 3px;
 }
 
-/* QCodeEditor Line Number Gutter */
-QWidget#ProcessingLineNumberArea {
+/* Code editor line number gutter */
+QWidget#CodeEditorLineNumberArea {
     background-color: transparent;
 }
 

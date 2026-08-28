@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Added the shared in-plot Readout surface styling for profiling values and comparison summaries.
+- Renamed the code editor gutter selector to `CodeEditorLineNumberArea` so the editor widget keeps its own object name.
+
 
 - Added the rounded host update-discovery notification shell and its dismiss-button styling.
 - Made update-notification text labels transparent so the rounded surface has no rectangular white patches.
