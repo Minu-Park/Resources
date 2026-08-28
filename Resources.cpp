@@ -247,6 +247,9 @@ public:
         const bool selectedRow = _table->selectionModel()
             && _table->selectionModel()->isRowSelected(index.row(), index.parent());
 
+        // Paint the same row shape from every cell, but constrain each draw to
+        // that cell before painting its text. The cell segments join into one
+        // continuous row surface without later cells covering earlier text.
         if (hoveredRow || selectedRow)
         {
             QRect surfaceRect = option.rect;
@@ -255,6 +258,7 @@ public:
             surfaceRect.adjust(0, 2, 0, -2);
 
             painter->save();
+            painter->setClipRect(option.rect, Qt::IntersectClip);
             painter->setRenderHint(QPainter::Antialiasing, true);
             painter->setPen(Qt::NoPen);
             painter->setBrush(_table->palette().highlight());
