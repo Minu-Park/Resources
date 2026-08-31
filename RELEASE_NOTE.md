@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Renamed the code editor gutter selector to `CodeEditorLineNumberArea` so the editor widget keeps its own object name.
+- Updated row-mode tree painting to use the current Qt per-index delegate lookup API.
 
 
 - Added the rounded host update-discovery notification shell and its dismiss-button styling.
