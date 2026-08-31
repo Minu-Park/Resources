@@ -423,7 +423,7 @@ void ThemedTreeWidget::drawRow(QPainter* painter,
         if (!cellIndex.isValid() || !cellRect.intersects(option.rect)) {
             continue;
         }
-        const QAbstractItemDelegate* delegate = itemDelegate(cellIndex);
+        const QAbstractItemDelegate* delegate = itemDelegateForIndex(cellIndex);
         if (delegate == nullptr) {
             continue;
         }
