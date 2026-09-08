@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Renamed the static image/3D source control QSS class selectors to `StaticImageControlWidget` and `Static3DDataControlWidget`.
 - Renamed the code editor gutter selector to `CodeEditorLineNumberArea` so the editor widget keeps its own object name.
 - Updated row-mode tree painting to use the current Qt per-index delegate lookup API.
 
