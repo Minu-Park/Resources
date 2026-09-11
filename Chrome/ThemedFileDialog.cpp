@@ -372,8 +372,17 @@ QString ThemedFileDialog::getSaveFileName(
     QWidget* parent,
     const QString& title,
     const QString& filePath,
-    const QString& filter)
+    const QString& filter,
+    QString* selectedFilter)
 {
     ThemedFileDialog dialog(parent, title, filePath, filter, Mode::Save);
-    return dialog.exec() == QDialog::Accepted ? dialog._fileDialog->selectedFiles().value(0) : QString{};
+    if (dialog.exec() != QDialog::Accepted)
+    {
+        return {};
+    }
+    if (selectedFilter)
+    {
+        *selectedFilter = dialog._fileDialog->selectedNameFilter();
+    }
+    return dialog._fileDialog->selectedFiles().value(0);
 }
