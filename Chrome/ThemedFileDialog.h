@@ -32,7 +32,8 @@ public:
         QWidget* parent,
         const QString& title,
         const QString& filePath = {},
-        const QString& filter = {});
+        const QString& filter = {},
+        QString* selectedFilter = nullptr);
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
