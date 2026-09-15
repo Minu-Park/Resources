@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Registered the GenICam icon in the shared Qt resource catalog.
 - Return the active file-type filter from themed Save dialogs for format-aware consumers.
 - Renamed the static image/3D source control QSS class selectors to `StaticImageControlWidget` and `Static3DDataControlWidget`.
 - Renamed the code editor gutter selector to `CodeEditorLineNumberArea` so the editor widget keeps its own object name.
