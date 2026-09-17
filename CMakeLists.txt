@@ -13,7 +13,9 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Core Widgets)
 
 option(RESOURCES_BUILD_MDI_SHADOW_TESTS
     "Build focused MDI shadow lifecycle and stacking tests." OFF)
-if(RESOURCES_BUILD_MDI_SHADOW_TESTS)
+option(RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS
+    "Build focused loading-window and menu activation tests." OFF)
+if(RESOURCES_BUILD_MDI_SHADOW_TESTS OR RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS)
     find_package(Qt6 6.4 REQUIRED COMPONENTS Test)
     if(PROJECT_IS_TOP_LEVEL)
         enable_testing()
@@ -65,6 +67,20 @@ target_include_directories(PlaygroundResources
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
+
+if(RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS)
+    qt_add_executable(ResourcesTransientWindowTests tests/ResourcesTransientWindowTests.cpp)
+    target_link_libraries(ResourcesTransientWindowTests PRIVATE Resources::Resources Qt6::Test)
+    set_target_properties(ResourcesTransientWindowTests PROPERTIES WIN32_EXECUTABLE FALSE)
+    if(WIN32)
+        add_test(NAME ResourcesTransientWindowTests COMMAND ${CMAKE_COMMAND} -E env
+            "PATH=$<TARGET_FILE_DIR:Qt6::Core>;$ENV{PATH}" "QT_QPA_PLATFORM=offscreen"
+            $<TARGET_FILE:ResourcesTransientWindowTests>)
+    else()
+        add_test(NAME ResourcesTransientWindowTests COMMAND ResourcesTransientWindowTests)
+        set_tests_properties(ResourcesTransientWindowTests PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+    endif()
+endif()
 
 if(RESOURCES_BUILD_MDI_SHADOW_TESTS)
     qt_add_executable(ResourcesMdiShadowTests

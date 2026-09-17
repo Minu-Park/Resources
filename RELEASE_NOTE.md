@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Hide non-modal always-on-top loading windows while the application is inactive, restoring only requested windows on return; dismiss open menus on application deactivation.
+
 - Use Inter for visualization statusbar controls and summaries; retain JetBrains Mono for pointer coordinates/color values, zoom percentages, and FPS.
 
 - Remove status-dependent font colors while preserving existing statusbar backgrounds, borders, geometry, and font weights.

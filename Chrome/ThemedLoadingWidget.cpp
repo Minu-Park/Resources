@@ -1,4 +1,6 @@
 #include "ThemedLoadingWidget.h"
+#include <QApplication>
+#include <QCloseEvent>
 
 ThemedLoadingWidget::ThemedLoadingWidget(QWidget* parent)
     : QWidget(parent)
@@ -6,6 +8,14 @@ ThemedLoadingWidget::ThemedLoadingWidget(QWidget* parent)
     setAttribute(Qt::WA_TranslucentBackground);
     setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::NoDropShadowWindowHint);
     setWindowModality(Qt::NonModal);
+    _applicationActive = qApp->applicationState() == Qt::ApplicationActive;
+    connect(qApp, &QGuiApplication::applicationStateChanged, this,
+            [this](Qt::ApplicationState state) {
+        _applicationActive = state == Qt::ApplicationActive;
+        // Bypass the override so app switching does not change the owner's request.
+        QWidget::setVisible(_requestedVisible && _applicationActive);
+        if (isVisible()) raise();
+    });
 
     auto* layoutOuter = new QVBoxLayout(this);
     layoutOuter->setContentsMargins(18, 18, 18, 18);
@@ -61,6 +71,12 @@ ThemedLoadingWidget::ThemedLoadingWidget(QWidget* parent)
     setBusy(true);
 }
 
+void ThemedLoadingWidget::setVisible(bool visible)
+{
+    _requestedVisible = visible;
+    QWidget::setVisible(visible && _applicationActive);
+}
+
 void ThemedLoadingWidget::setValue(int v)
 {
     _progress->setBusy(false);
@@ -69,6 +85,12 @@ void ThemedLoadingWidget::setValue(int v)
     int pct = qBound(0, v, 100);
     _labelPercent->setText(QStringLiteral(" %1%").arg(pct));
     _lastProgress = pct;
+}
+
+void ThemedLoadingWidget::closeEvent(QCloseEvent* e)
+{
+    QWidget::closeEvent(e);
+    if (e->isAccepted()) _requestedVisible = false;
 }
 
 void ThemedLoadingWidget::setText(const QString& text)
@@ -134,4 +156,3 @@ void ThemedLoadingWidget::showEvent(QShowEvent* e)
     QWidget::showEvent(e);
     centerInParent();
 }
-
