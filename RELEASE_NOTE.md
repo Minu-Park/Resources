@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Use Inter for visualization statusbar controls and summaries; retain JetBrains Mono for pointer coordinates/color values, zoom percentages, and FPS.
+
+- Remove status-dependent font colors while preserving existing statusbar backgrounds, borders, geometry, and font weights.
+
 - Registered the GenICam icon in the shared Qt resource catalog.
 - Return the active file-type filter from themed Save dialogs for format-aware consumers.
 - Renamed the static image/3D source control QSS class selectors to `StaticImageControlWidget` and `Static3DDataControlWidget`.

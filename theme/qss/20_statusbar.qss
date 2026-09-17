@@ -103,7 +103,6 @@ QStatusBar QLabel[statusRole="message"] {
 }
 
 QStatusBar QLabel[statusRole="message"][messageState="error"] {
-    color: #c62828;
     font-weight: 700;
 }
 
@@ -115,11 +114,14 @@ QLabel[statusRole="fps"] {
 QLabel#EngineStatusMode,
 QLabel#EngineStatusSummary,
 QLabel#EngineStatusRenderPath,
-QLabel#EngineStatusPointer,
-QLabel#EngineStatusZoom,
-QLabel#EngineStatusFps,
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
+    font-family: "Inter";
+}
+
+QLabel#EngineStatusPointer,
+QLabel#EngineStatusZoom,
+QLabel#EngineStatusFps {
     font-family: "JetBrains Mono";
 }
 
@@ -152,34 +154,6 @@ QToolButton#EngineStatusModeButton::menu-indicator,
 QToolButton#EngineStatusViewButton::menu-indicator {
     image: none;
     width: 0px;
-}
-
-QLabel#CameraStatusLabel[status="connected"],
-QLabel#FramegrabberStatusLabel[status="connected"],
-QLabel#GocatorStatusLabel[status="connected"],
-QLabel#HeliotisC4StatusLabel[status="connected"] {
-    color: #2e7d32;
-}
-
-QLabel#CameraStatusLabel[status="idle"],
-QLabel#FramegrabberStatusLabel[status="idle"],
-QLabel#GocatorStatusLabel[status="idle"],
-QLabel#HeliotisC4StatusLabel[status="idle"] {
-    color: #5c6b7a;
-}
-
-QLabel#CameraStatusLabel[status="disconnected"],
-QLabel#FramegrabberStatusLabel[status="disconnected"],
-QLabel#GocatorStatusLabel[status="disconnected"],
-QLabel#HeliotisC4StatusLabel[status="disconnected"] {
-    color: #c62828;
-}
-
-QLabel#CameraStatusLabel[status="grabbing"],
-QLabel#FramegrabberStatusLabel[status="grabbing"],
-QLabel#GocatorStatusLabel[status="grabbing"],
-QLabel#HeliotisC4StatusLabel[status="grabbing"] {
-    color: #1565c0;
 }
 
 QPushButton#MainLogToggleBtn {
@@ -242,17 +216,15 @@ QPushButton#MainLogToggleBtn:checked:hover {
 QPushButton#MainLogToggleBtn[logState="warning"] {
     background: #fff3e0;
     border-color: #ffb74d;
-    color: #e65100;
 }
 
 QPushButton#MainLogToggleBtn[logState="warning"]:hover {
     background: #ffe0b2;
     border-color: #fb8c00;
-    color: #e65100;
 }
 
 QLabel#MainLogErrorLabel {
-    color: #c62828;
+    color: #425467;
     font-weight: 700;
     font-size: 11px;
 }

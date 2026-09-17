@@ -358,31 +358,16 @@ QFrame#EditorStatusBar QLabel {
 
 /* Save State Styles */
 QFrame#EditorStatusBar QLabel#EditorStatusSaveStatus[saveState="modified"] {
-    color: #b45309; /* warm orange/amber */
     font-weight: 600;
-}
-
-QFrame#EditorStatusBar QLabel#EditorStatusSaveStatus[saveState="saved"] {
-    color: #10b981; /* green */
 }
 
 /* Clangd State Styles */
 QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="ready"] {
-    color: #10b981; /* green (connected) */
     font-weight: 600;
-}
-
-QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="starting"] {
-    color: #3b82f6; /* blue (initial/starting) */
 }
 
 QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="error"] {
-    color: #ef4444; /* red (error) */
     font-weight: 600;
-}
-
-QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="offline"] {
-    color: #ef4444; /* red (offline) */
 }
 
 /* Code Editor Signature Help */
