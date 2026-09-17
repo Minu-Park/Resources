@@ -578,7 +578,18 @@ static void paintGraphicsSettingsTabScrollerButton(QToolButton* button)
 class ResourceStyleFilter : public QObject
 {
 public:
-    explicit ResourceStyleFilter(QObject* parent = nullptr) : QObject(parent) {}
+    explicit ResourceStyleFilter(QObject* parent = nullptr) : QObject(parent)
+    {
+        connect(qApp, &QGuiApplication::applicationStateChanged, this,
+                [](Qt::ApplicationState state) {
+            if (state == Qt::ApplicationActive) return;
+            for (QWidget* widget : QApplication::topLevelWidgets()) {
+                if (auto* menu = qobject_cast<QMenu*>(widget); menu && menu->isVisible()) {
+                    menu->close();
+                }
+            }
+        });
+    }
 
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
