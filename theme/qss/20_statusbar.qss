@@ -65,6 +65,10 @@ QLabel#EngineStatusSummary[performancePath="native-tile"] {
     border-color: #1565c0;
 }
 
+QLabel#EngineStatusSummary[performancePath="fit-sampling"] {
+    border-color: #edb078;
+}
+
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton,
 QToolButton#ProcessingEnableToggle {
