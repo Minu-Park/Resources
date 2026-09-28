@@ -3,11 +3,14 @@
 QFramegrabberWidget,
 QCameraWidget,
 QGocatorWidget,
-QHeliotisC4Widget {
+QHeliotisC4Widget,
+QOneGenWidget,
+QOneGenDeviceWidget {
     background: #ffffff;
 }
 
-QTabWidget#FramegrabberControlTabs::pane {
+QTabWidget#FramegrabberControlTabs::pane,
+QTabWidget[tabRole="DeviceControls"]::pane {
     background: transparent;
     border: none;
     border-top: 1px solid #d9e1ea;
@@ -15,7 +18,8 @@ QTabWidget#FramegrabberControlTabs::pane {
     top: 0;
 }
 
-QTabWidget#FramegrabberControlTabs > QTabBar {
+QTabWidget#FramegrabberControlTabs > QTabBar,
+QTabWidget[tabRole="DeviceControls"] > QTabBar {
     background: transparent;
     border-top: none;
     padding-top: 0;
@@ -24,7 +28,9 @@ QTabWidget#FramegrabberControlTabs > QTabBar {
 QFramegrabberWidget QToolButton,
 QCameraWidget QToolButton,
 QGocatorWidget QToolButton,
-QHeliotisC4Widget QToolButton {
+QHeliotisC4Widget QToolButton,
+QOneGenWidget QToolButton,
+QOneGenDeviceWidget QToolButton {
     min-width: 20px;
     min-height: 20px;
     max-width: 20px;
@@ -34,6 +40,7 @@ QHeliotisC4Widget QToolButton {
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"] {
+    padding-bottom: 9px;
     background: #ffffff;
     alternate-background-color: #ffffff;
     selection-background-color: #ffffff;

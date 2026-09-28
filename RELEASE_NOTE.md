@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Register OneGen controls with shared compact device styling, reuse flat device tab panes, and inset feature-tree content above rounded bottom corners.
+
 - Hide non-modal always-on-top loading windows while the application is inactive, restoring only requested windows on return; dismiss open menus on application deactivation.
 
 - Use Inter for visualization statusbar controls and summaries; retain JetBrains Mono for pointer coordinates/color values, zoom percentages, and FPS.
