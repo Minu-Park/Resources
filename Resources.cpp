@@ -818,7 +818,8 @@ private:
         tree->setItemDelegate(new DeviceFeatureTreeDelegate(tree));
 
         QHeaderView* header = tree->header();
-        header->setStretchLastSection(true);
+        // Explicit Stretch mode lets Value shrink without retaining its previous width.
+        header->setStretchLastSection(false);
         header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
         header->setSectionResizeMode(0, QHeaderView::Interactive);
         header->setSectionResizeMode(1, QHeaderView::Stretch);

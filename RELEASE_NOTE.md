@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Let feature-tree Value columns shrink with their viewport instead of preserving an old width and forcing horizontal scrollbars.
+
+- Register enabled UI tests when built as a subdirectory as well as standalone.
+
 - Register OneGen controls with shared compact device styling, reuse flat device tab panes, and inset feature-tree content above rounded bottom corners.
 
 - Hide non-modal always-on-top loading windows while the application is inactive, restoring only requested windows on return; dismiss open menus on application deactivation.

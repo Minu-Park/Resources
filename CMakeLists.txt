@@ -17,9 +17,7 @@ option(RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS
     "Build focused loading-window and menu activation tests." OFF)
 if(RESOURCES_BUILD_MDI_SHADOW_TESTS OR RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS)
     find_package(Qt6 6.4 REQUIRED COMPONENTS Test)
-    if(PROJECT_IS_TOP_LEVEL)
-        enable_testing()
-    endif()
+    enable_testing()
 endif()
 
 qt_add_library(PlaygroundResources STATIC
