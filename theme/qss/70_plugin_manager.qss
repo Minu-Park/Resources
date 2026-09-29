@@ -1,139 +1,180 @@
-/* theme/qss/70_plugin_manager.qss: compact plugin package actions. */
-
-QToolButton#PluginDownloadButton,
-QToolButton#PluginUpdateButton,
-QToolButton#PluginRemoveButton {
-    min-width: 22px;
-    max-width: 22px;
-    min-height: 22px;
-    max-height: 22px;
+/* Compact plugin list, details, and semantic action states. */
+QWidget#PluginMarketplaceContent * {
+    font-size: 11px;
+}
+QWidget#PluginMarketplaceContent QLabel {
+    min-height: 0;
+}
+QWidget#PluginMarketplaceContent QPushButton,
+QWidget#PluginMarketplaceContent QComboBox {
+    min-height: 18px;
+    max-height: 18px;
+}
+QWidget#PluginMarketplaceContent QPushButton {
+    border-radius: 6px;
+    padding-left: 8px;
+    padding-right: 8px;
+    qproperty-iconSize: 12px 12px;
+}
+QTreeWidget[treeRole="PluginMarketplaceList"] {
+    border: 1px solid #dbe3ec;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 4px;
+}
+QTreeWidget[treeRole="PluginMarketplaceList"][interactionMode="row"]::item {
+    margin: 2px 0;
     padding: 0;
-    margin: 0;
-    border: 1px solid transparent;
-    border-radius: 11px;
-    background: transparent;
-    qproperty-iconSize: 14px 14px;
 }
-
-QToolButton#PluginDownloadButton {
-    qproperty-icon: url(:/Resources/Icons/icons8-download-48.png);
-}
-
-QToolButton#PluginUpdateButton {
-    qproperty-icon: url(:/Resources/Icons/icons8-downloading-updates-48.png);
-}
-
-QToolButton#PluginRemoveButton {
-    qproperty-icon: url(:/Resources/Icons/icons8-trash-48.png);
-}
-
-QToolButton#PluginDownloadButton:hover,
-QToolButton#PluginDownloadButton:pressed,
-QToolButton#PluginDownloadButton:focus,
-QToolButton#PluginDownloadButton:checked,
-QToolButton#PluginUpdateButton:hover,
-QToolButton#PluginUpdateButton:pressed,
-QToolButton#PluginUpdateButton:focus,
-QToolButton#PluginUpdateButton:checked,
-QToolButton#PluginRemoveButton:hover,
-QToolButton#PluginRemoveButton:pressed,
-QToolButton#PluginRemoveButton:focus,
-QToolButton#PluginRemoveButton:checked {
-    background: transparent;
-    border-color: transparent;
-}
-
-QToolButton#PluginDownloadButton:disabled,
-QToolButton#PluginUpdateButton:disabled,
-QToolButton#PluginRemoveButton:disabled {
-    background: transparent;
-    border-color: transparent;
-}
-
-QWidget#PluginNameCell,
-QWidget#PluginStatusCell,
-QWidget#PluginStatusWidget,
-QWidget#PluginVersionWidget,
-QLabel#PluginNameLabel,
-QLabel#PluginStatusLabel,
-QLabel#PluginInstalledVersionLabel,
-QLabel#PluginAvailableVersionLabel {
+QWidget#PluginMarketplaceCard,
+QLabel#PluginMarketplaceCardIcon,
+QLabel#PluginMarketplaceCardName,
+QLabel#PluginMarketplaceCardStatus,
+QLabel#PluginMarketplaceUpdateIcon {
     background: transparent;
     border: none;
+    padding: 0;
 }
-
-QLabel#PluginNameLabel {
-    padding: 0 0 0 6px;
-    font-weight: 700;
+QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceCardIcon {
+    min-width: 18px;
+    max-width: 18px;
+    min-height: 18px;
+    max-height: 18px;
 }
-
-QLabel#PluginStatusLabel {
-    min-height: 24px;
-    max-height: 24px;
-    padding: 0 8px;
-    color: #516476;
-    font-weight: 600;
-}
-
-QLabel#PluginStatusLabel[installationState="installed"] {
+QLabel#PluginMarketplaceCardName {
     color: #16202b;
-}
-
-QLabel#PluginStatusLabel[installationState="update-available"] {
-    color: #3f7656;
-}
-
-QLabel#PluginStatusLabel[installationState="not-installed"] {
-    color: #416f9a;
-}
-
-QLabel#PluginStatusLabel[installationState="unavailable"] {
-    color: #7f8b97;
-}
-
-QLabel#PluginInstalledVersionLabel,
-QLabel#PluginAvailableVersionLabel {
-    padding: 0 4px;
-    color: #516476;
     font-size: 12px;
-}
-
-QTreeWidget[treeRole="PluginManagerTree"][interactionMode="row"]::item,
-QTreeWidget[treeRole="PluginManagerTree"][interactionMode="row"]::item:hover,
-QTreeWidget[treeRole="PluginManagerTree"][interactionMode="row"]::item:selected {
-    margin: 0 4px;
-}
-
-QLabel#PluginInstalledVersionLabel {
     font-weight: 600;
 }
-
-QLabel#PluginAvailableVersionLabel {
-    color: #8593a1;
+QLabel#PluginMarketplaceCardStatus {
+    color: #516476;
+    font-size: 10px;
+}
+QLabel#PluginMarketplaceCardStatus[installationState="update"] {
+    color: #596574;
     font-weight: 500;
 }
-
-QLabel#PluginAvailableVersionLabel[versionState="update"] {
-    color: #2f80c9;
-    font-weight: 700;
+QLabel#PluginMarketplaceUpdateIcon {
+    min-width: 12px;
+    max-width: 12px;
+    min-height: 12px;
+    max-height: 12px;
+    color: #596574;
 }
-
-QProgressBar#PluginStatusProgress {
-    min-height: 2px;
-    max-height: 2px;
-    margin: 0 8px;
-    padding: 0;
+QFrame#PluginMarketplaceDetailShell {
+    border: 1px solid #dbe3ec;
+    border-radius: 8px;
+    background: #ffffff;
+}
+QScrollArea#PluginMarketplaceDetailsScroll,
+QScrollArea#PluginMarketplaceDetailsScroll > QWidget > QWidget,
+QFrame#PluginMarketplaceDetails {
+    background: transparent;
     border: none;
-    border-radius: 1px;
+}
+QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceDetailIcon {
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
     background: transparent;
 }
-
-QProgressBar#PluginStatusProgress[active="true"] {
+QLabel#PluginMarketplaceDetailName {
+    color: #16202b;
+    font-size: 16px;
+    font-weight: 700;
+    background: transparent;
+}
+QLabel#PluginMarketplaceDetailId {
+    color: #8593a1;
+    font-size: 10px;
+    background: transparent;
+}
+QLabel#PluginMarketplacePackageStatus {
+    color: #416f9a;
+    font-weight: 600;
+    background: transparent;
+}
+QLabel#PluginMarketplaceDescription {
+    color: #354657;
+    background: transparent;
+}
+QLabel#PluginMarketplaceSectionLabel {
+    color: #16202b;
+    font-weight: 600;
+    background: transparent;
+}
+QLabel#PluginMarketplaceSummary,
+QLabel#PluginMarketplaceCompatibility,
+QLabel#PluginMarketplaceHistoryStatus,
+QLabel#PluginMarketplaceActivationNote,
+QLabel#PluginMarketplaceEmpty,
+QLabel#PluginMarketplaceResult,
+QLabel#PluginMarketplaceOperationStatus {
+    color: #6b7c8d;
+    background: transparent;
+}
+QLabel#PluginMarketplaceSummary,
+QLabel#PluginMarketplaceHistoryStatus,
+QLabel#PluginMarketplaceActivationNote {
+    font-size: 10px;
+}
+QLabel#PluginMarketplaceResult[messageState="error"],
+QLabel#PluginMarketplaceCompatibility[messageState="error"] {
+    color: #b44747;
+}
+QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"] {
+    background: #ffffff;
+    color: #24303c;
+    border-color: #bcc6d0;
+    font-weight: 600;
+}
+QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:hover {
+    background: #f3f5f7;
+    border-color: #a6b2be;
+}
+QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:pressed {
+    background: #e8edf2;
+    border-color: #97a4b2;
+}
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove {
+    color: #65707c;
+    border-color: #d8dee5;
+    font-weight: 500;
+}
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:hover {
+    background: #f3f5f7;
+    color: #424c58;
+    border-color: #bcc6d0;
+}
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:pressed {
+    background: #e8edf2;
+    color: #24303c;
+    border-color: #a6b2be;
+}
+QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:focus,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:focus {
+    border-color: #7890a6;
+}
+QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:disabled,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:disabled {
+    background: #f7f8f9;
+    border-color: #dee3e9;
+    color: #97a0aa;
+}
+QSplitter#PluginMarketplaceSplitter::handle {
+    background: transparent;
+    width: 6px;
+}
+QProgressBar#PluginMarketplaceProgress {
+    min-height: 6px;
+    max-height: 6px;
+    border: none;
+    border-radius: 3px;
     background: #e2eaf2;
 }
-
-QProgressBar#PluginStatusProgress::chunk {
-    border-radius: 1px;
+QProgressBar#PluginMarketplaceProgress::chunk {
+    border-radius: 3px;
     background: #2f80c9;
 }
 

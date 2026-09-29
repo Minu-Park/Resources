@@ -30,7 +30,8 @@ QCameraWidget QToolButton,
 QGocatorWidget QToolButton,
 QHeliotisC4Widget QToolButton,
 QOneGenWidget QToolButton,
-QOneGenDeviceWidget QToolButton {
+QOneGenDeviceWidget QToolButton,
+OneGenFeatureTree QToolButton#DeviceFeatureFavoritesOnly {
     min-width: 20px;
     min-height: 20px;
     max-width: 20px;
@@ -69,3 +70,86 @@ QHeliotisC4Widget QLabel#HeliotisC4StatusLabel:hover {
 
 
 
+
+/* Search uses the feature header surface with a compact, softly lifted frame. */
+OneGenFeatureTree {
+    qproperty-searchInset: 10;
+    qproperty-searchMaximumWidth: 440;
+    qproperty-favoriteColor: #00457c;
+    qproperty-searchShadowBlur: 14;
+    qproperty-searchShadowOffset: 2;
+    qproperty-searchShadowColor: rgba(22, 32, 43, 42);
+}
+
+/* Border, white surface and corner geometry are shared with QHeaderView in 00_base.qss. */
+QFrame#DeviceFeatureSearchBubble {
+    padding: 0 7px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    margin: 0 2px 0 0;
+    color: #425467;
+}
+
+QLineEdit#DeviceFeatureSearchInput,
+QLineEdit#DeviceFeatureSearchInput:hover,
+QLineEdit#DeviceFeatureSearchInput:focus {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    min-height: 22px;
+    max-height: 22px;
+    selection-background-color: #dceaf5;
+    selection-color: #16202b;
+}
+
+QLabel#DeviceFeatureSearchCount {
+    background: transparent;
+    border: none;
+    color: #65788a;
+    font-size: 10px;
+}
+
+QToolButton#DeviceFeatureSearchClear {
+    qproperty-icon: url(:/Resources/Icons/search-clear.svg);
+    qproperty-iconSize: 16px 16px;
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 5px;
+}
+
+QToolButton#DeviceFeatureSearchClear:hover {
+    background: #eef3f8;
+}
+
+QToolButton#DeviceFeatureSearchClear:pressed {
+    background: #e2e9f0;
+}
+
+QToolButton#DeviceFeatureSearchClear:focus {
+    border-color: #8badc7;
+}
+
+QToolButton#DeviceFeatureFavoritesOnly {
+    background: transparent;
+    border-color: transparent;
+    color: #65788a;
+    font-size: 18px;
+}
+
+QToolButton#DeviceFeatureFavoritesOnly:hover,
+QToolButton#DeviceFeatureFavoritesOnly:pressed,
+QToolButton#DeviceFeatureFavoritesOnly:checked {
+    background: transparent;
+    border-color: transparent;
+}
+
+QToolButton#DeviceFeatureFavoritesOnly:checked {
+    color: #00457c;
+}

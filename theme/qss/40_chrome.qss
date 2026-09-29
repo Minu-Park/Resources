@@ -310,11 +310,6 @@ QDockWidget[floatingState="true"] QFrame#DockContainerWidget > QWidget {
     border-bottom-right-radius: 10px;
 }
 
-QFrame#DockContainerWidget QTextEdit,
-QFrame#DockContainerWidget QAbstractScrollArea {
-    background-color: #ffffff;
-}
-
 QRubberBand {
     background-color: rgba(255, 255, 255, 220);
     border: 1px solid #d9e1ea;

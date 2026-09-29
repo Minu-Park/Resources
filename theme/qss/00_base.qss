@@ -220,7 +220,8 @@ QTreeWidget::viewport {
     background: transparent;
 }
 
-QHeaderView {
+QHeaderView,
+QFrame#DeviceFeatureSearchBubble {
     background: #ffffff;
     border: 1px solid #d6e0ea;
     border-radius: 9px;
@@ -378,10 +379,15 @@ QComboBox:on {
     border: 1px solid #8badc7;
 }
 
-QComboBox:on {
+QComboBox[popupDirection="below"] {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    border-bottom: none;
+    border-bottom: 1px solid #ffffff;
+}
+QComboBox[popupDirection="above"] {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top: 1px solid #ffffff;
 }
 
 
@@ -414,17 +420,10 @@ QComboBox::down-arrow {
 }
 
 QComboBox QAbstractItemView {
-    border-left: 1px solid #8badc7;
-    border-right: 1px solid #8badc7;
-    border-bottom: 1px solid #8badc7;
-    border-top: none;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border: none;
     selection-background-color: #efefef;
     selection-color: #16202b;
-    background: #ffffff;
+    background: transparent;
     padding: 2px;
     margin: 0;
     outline: 0px;
