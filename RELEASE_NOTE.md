@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Indicate log warnings and errors through orange and red status-button borders only, preserving the normal surface and text styling.
+
 - Keep the feature-search favorites button background and border transparent in all interaction states; selection fills only its star.
 
 - Add a centered, padded vector X and compact hover/pressed states for the feature-search clear control.
