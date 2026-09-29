@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Keep the feature-search favorites button background and border transparent in all interaction states; selection fills only its star.
+
+- Add a centered, padded vector X and compact hover/pressed states for the feature-search clear control.
+
+- Remove dock scroll-area background overrides that covered combo popup shells. Prepare every opening, including existing/replaced views, and retain masks after resize; cover device selectors and feature editors.
+
+- Use neutral update indicators and outlined primary/secondary plugin actions with subdued hover, focus, and disabled states.
+
+- Join combo popups with one border, direction-aware corners, and restored closed geometry; preserve this behavior for compact controls.
+
+- Match the search surface to the feature-header white background, border and 9px corners; retain its 24px content height and compact controls, with a subtle theme-controlled shadow and no surrounding gradient/blur.
+
+- Style compact plugin list/detail panels, version controls, install actions, and progress; centralize tighter outer/card/detail spacing and smaller fonts, icons, and controls.
+
 - Let feature-tree Value columns shrink with their viewport instead of preserving an old width and forcing horizontal scrollbars.
 
 - Register enabled UI tests when built as a subdirectory as well as standalone.

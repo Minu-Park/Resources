@@ -557,9 +557,8 @@ static void paintGraphicsSettingsTabScrollerButton(QToolButton* button)
 // ResourceStyleFilter: handles runtime style geometry that QSS cannot express
 // reliably. Installed once via installResources().
 //
-// Removes the native popup frame so QSS border is the only visible outline.
-// Saves and restores popup geometry because setWindowFlag() recreates the
-// native window and loses the original popup position.
+// Removes native popup frames; Resources paints combo shells independently
+// of the item view. Preserves geometry when window flags recreate a popup.
 //
 // Also repositions QComboBox dropdown popups to appear flush below (or above
 // when space is insufficient) the combo widget, giving a connected in-place
@@ -594,6 +593,12 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+        if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
+            if (auto* widget = qobject_cast<QWidget*>(obj); comboPopupOwner(widget)) {
+                prepareComboPopup(widget);
+            }
+        }
+
         if (event->type() == QEvent::Show
             || event->type() == QEvent::Resize
             || event->type() == QEvent::LayoutRequest)
@@ -637,8 +642,9 @@ protected:
                     widget->objectName() == QLatin1String("SignatureHelpLabel") ||
                     widget->inherits("QTipLabel")) {
                     paintPopupRoundedRect(widget, true);
-                } else if (widget->property("_popupStyled").toBool()) {
+                } else if (comboPopupOwner(widget) || widget->property("_popupStyled").toBool()) {
                     paintPopupRoundedRect(widget, false);
+                    if (comboPopupOwner(widget)) return true;
                 }
             }
         }
@@ -652,8 +658,12 @@ protected:
                     widget->objectName() == QLatin1String("SignatureHelpLabel") ||
                     widget->inherits("QTipLabel")) {
                     applyPopupMask(widget, true);
-                } else if (widget->property("_popupStyled").toBool()) {
+                } else if (comboPopupOwner(widget) || widget->property("_popupStyled").toBool()) {
                     applyPopupMask(widget, false);
+                    if (event->type() == QEvent::Resize && comboPopupOwner(widget) && widget->isVisible()) {
+                        // Qt's container resize handler clears its mask after application filters.
+                        QTimer::singleShot(0, widget, [widget]() { applyPopupMask(widget, false); });
+                    }
                 }
             }
         }
@@ -667,15 +677,7 @@ protected:
             }
             else if (auto* combo = qobject_cast<QComboBox*>(obj)) {
                 if (auto* view = combo->view()) {
-                    if (auto* popup = view->parentWidget()) {
-                        popup->setWindowFlags(popup->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
-                        popup->setAttribute(Qt::WA_TranslucentBackground, true);
-                        if (auto* frame = qobject_cast<QFrame*>(popup)) {
-                            frame->setFrameShape(QFrame::NoFrame);
-                        }
-                        popup->setContentsMargins(0, 0, 0, 0);
-                        popup->setProperty("_popupStyled", true);
-                    }
+                    prepareComboPopup(view->window());
                 }
             }
             else if (auto* rubberBand = qobject_cast<QRubberBand*>(obj)) {
@@ -689,9 +691,7 @@ protected:
                 else if (auto* table = qobject_cast<QTableWidget*>(widget)) {
                     applyRowTableStyle(table);
                 }
-                else if (widget->inherits("QComboBoxPrivateContainer") ||
-                    (widget->windowFlags() & Qt::Popup && widget->parent() && widget->parent()->inherits("QComboBox")) ||
-                    widget->objectName() == QLatin1String("AutoCompletePopup")) {
+                else if (widget->objectName() == QLatin1String("AutoCompletePopup")) {
                     widget->setWindowFlags(widget->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
                     widget->setAttribute(Qt::WA_TranslucentBackground, true);
                     if (auto* frame = qobject_cast<QFrame*>(widget)) {
@@ -730,6 +730,21 @@ protected:
             }
         }
 
+        if (event->type() == QEvent::Polish || event->type() == QEvent::PaletteChange) {
+            if (auto* label = qobject_cast<QLabel*>(obj);
+                label && label->objectName() == QLatin1String("PluginMarketplaceUpdateIcon")) {
+                applyPluginUpdateIcon(label);
+            }
+        }
+
+        if (event->type() == QEvent::Hide) {
+            if (auto* popup = qobject_cast<QWidget*>(obj); popup && popup->property("_popupStyled").toBool()) {
+                if (auto* combo = qobject_cast<QComboBox*>(popup->parentWidget())) {
+                    setComboPopupDirection(combo, {});
+                }
+            }
+        }
+
         if (event->type() == QEvent::Show || event->type() == QEvent::LayoutRequest) {
             if (auto* widget = qobject_cast<QWidget*>(obj)) {
                 if (widget->objectName() == QLatin1String("RuntimePathsFormContainer")) {
@@ -739,7 +754,11 @@ protected:
                     if (auto* combo = qobject_cast<QComboBox*>(widget->parent())) {
                         QRect geo = widget->geometry();
                         geo = repositionComboPopup(combo, widget, geo);
+                        const bool above = geo.top() < combo->mapToGlobal(QPoint()).y();
+                        setComboPopupDirection(combo, above ? QStringLiteral("above") : QStringLiteral("below"));
+                        prepareComboPopup(widget);
                         widget->setGeometry(geo);
+                        applyPopupMask(widget, false);
                     }
                 }
             }
@@ -749,6 +768,52 @@ protected:
     }
 
 private:
+    /** @brief Identifies standard combo popup windows through their public widget ownership. */
+    static QComboBox* comboPopupOwner(QWidget* widget)
+    {
+        return widget && widget->windowType() == Qt::Popup
+            ? qobject_cast<QComboBox*>(widget->parentWidget()) : nullptr;
+    }
+
+    /** @brief Applies a combo shell at polish and every opening, including existing or replaced views. */
+    static void prepareComboPopup(QWidget* popup)
+    {
+        if (!comboPopupOwner(popup)) return;
+        popup->setProperty("_popupStyled", true);
+        const auto flags = popup->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint;
+        const QRect geometry = popup->geometry();
+        const bool visible = popup->isVisible();
+        if (popup->windowFlags() != flags) popup->setWindowFlags(flags);
+        popup->setAttribute(Qt::WA_TranslucentBackground, true);
+        if (auto* frame = qobject_cast<QFrame*>(popup)) frame->setFrameShape(QFrame::NoFrame);
+        popup->setContentsMargins(0, 0, 0, 0);
+        if (popup->geometry() != geometry) popup->setGeometry(geometry);
+        if (visible && !popup->isVisible()) popup->show();
+    }
+
+    /** @brief Renders the existing update glyph in the indicator's theme color. */
+    static void applyPluginUpdateIcon(QLabel* label)
+    {
+        QPixmap icon = QIcon(QStringLiteral(":/Resources/Icons/icons8-update-48.png"))
+            .pixmap(QSize(12, 12), label->devicePixelRatioF());
+        if (icon.isNull()) return;
+        QPainter painter(&icon);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(icon.rect(), label->palette().color(QPalette::WindowText));
+        painter.end();
+        label->setPixmap(icon);
+    }
+
+    /** @brief Keeps the combo's joined corners synchronized with its visible popup. */
+    static void setComboPopupDirection(QComboBox* combo, const QString& direction)
+    {
+        if (combo->property("popupDirection").toString() == direction) return;
+        combo->setProperty("popupDirection", direction);
+        combo->style()->unpolish(combo);
+        combo->style()->polish(combo);
+        combo->update();
+    }
+
     static void applyAnalysisTabCloseButtonIcon(QToolButton* button, const bool hover)
     {
         if (!button) return;
@@ -876,7 +941,36 @@ private:
         if (!layout) return;
 
         const QString name = layout->objectName();
-        if (name == QLatin1String("DeviceRootLayout")) {
+        if (name == QLatin1String("PluginMarketplaceRootLayout")) {
+            setLayoutMetrics(layout, QMargins(8, 8, 8, 8), 6);
+        }
+        else if (name == QLatin1String("PluginMarketplaceToolbarLayout")
+            || name == QLatin1String("PluginMarketplaceActionsLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 6);
+        }
+        else if (name == QLatin1String("PluginMarketplaceListLayout")
+                 || name == QLatin1String("PluginMarketplaceShellLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 4);
+        }
+        else if (name == QLatin1String("PluginMarketplaceCardLayout")) {
+            setLayoutMetrics(layout, QMargins(6, 5, 6, 5), 6);
+        }
+        else if (name == QLatin1String("PluginMarketplaceCardTextLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 1);
+        }
+        else if (name == QLatin1String("PluginMarketplaceCardStatusLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 4);
+        }
+        else if (name == QLatin1String("PluginMarketplaceDetailsLayout")) {
+            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 8);
+        }
+        else if (name == QLatin1String("PluginMarketplaceIdentityLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
+        }
+        else if (name == QLatin1String("PluginMarketplaceTextLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 2);
+        }
+        else if (name == QLatin1String("DeviceRootLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
         }
         else if (name == QLatin1String("DeviceTopBarLayout")) {
@@ -890,6 +984,9 @@ private:
         }
         else if (name == QLatin1String("DeviceInfoLayout")) {
             setLayoutMetrics(layout, QMargins(12, 0, 12, 12), 0);
+        }
+        else if (name == QLatin1String("DeviceFeatureSearchLayout")) {
+            setLayoutMetrics(layout, QMargins(7, 0, 7, 0), 6);
         }
         else if (name == QLatin1String("DeviceTreePanelLayout")) {
             setLayoutMetrics(layout, QMargins(12, 0, 12, 12), 8);
@@ -1019,11 +1116,12 @@ private:
 
     static QRect repositionComboPopup(QComboBox* combo, QWidget* popup, QRect geo)
     {
+        Q_UNUSED(popup);
         const QPoint comboGlobal = combo->mapToGlobal(QPoint(0, 0));
         const int comboW = combo->width();
         const int comboH = combo->height();
 
-        // Container QFrame draws its own 1px border inside its geometry.
+        // Resources paints the container's 1px border inside its geometry.
         // To align outer edges with combo (which also has 1px border),
         // position container at combo's left edge and match full width.
         const int containerW = comboW;
@@ -1052,12 +1150,18 @@ private:
         const int w = widget->width();
         const int h = widget->height();
         QPainter painter(widget);
+        const auto* combo = qobject_cast<QComboBox*>(widget->parentWidget());
+        const QColor borderColor(combo ? QStringLiteral("#8badc7") : QStringLiteral("#d9e1ea"));
+        if (!allRounded && combo && combo->property("popupDirection") == QStringLiteral("above")) {
+            painter.translate(w, h);
+            painter.rotate(180);
+        }
 
         if (allRounded) {
             painter.setRenderHint(QPainter::Antialiasing, false);
             painter.setCompositionMode(QPainter::CompositionMode_Source);
             painter.setPen(Qt::NoPen);
-            painter.setBrush(QColor(QStringLiteral("#d9e1ea")));
+            painter.setBrush(borderColor);
             painter.drawRoundedRect(QRectF(0.0, 0.0, w, h), 9.0, 9.0);
 
             painter.setBrush(Qt::white);
@@ -1065,7 +1169,7 @@ private:
 
             painter.setRenderHint(QPainter::Antialiasing, true);
             painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-            painter.setPen(QPen(QColor(QStringLiteral("#d9e1ea")), 1.0));
+            painter.setPen(QPen(borderColor, 1.0));
             painter.setBrush(Qt::NoBrush);
             painter.drawRoundedRect(QRectF(0.5, 0.5, w - 1.0, h - 1.0), 8.0, 8.0);
         } else {
@@ -1091,7 +1195,7 @@ private:
             painter.setRenderHint(QPainter::Antialiasing, false);
             painter.setCompositionMode(QPainter::CompositionMode_Source);
             painter.setPen(Qt::NoPen);
-            painter.setBrush(QColor(QStringLiteral("#d9e1ea")));
+            painter.setBrush(borderColor);
             painter.drawPath(outerPath);
 
             painter.setBrush(Qt::white);
@@ -1099,11 +1203,10 @@ private:
 
             painter.setRenderHint(QPainter::Antialiasing, true);
             painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-            painter.setPen(QPen(QColor(QStringLiteral("#d9e1ea")), 1.0));
+            painter.setPen(QPen(borderColor, 1.0));
             painter.setBrush(Qt::NoBrush);
             QPainterPath borderPath;
-            borderPath.moveTo(0.5, 0);
-            borderPath.lineTo(w - 0.5, 0);
+            borderPath.moveTo(w - 0.5, 0);
             borderPath.lineTo(w - 0.5, h - 8.5);
             borderPath.arcTo(QRectF(w - 16.5, h - 16.5, 16.0, 16.0), 0, -90);
             borderPath.lineTo(8.5, h - 0.5);
@@ -1125,6 +1228,13 @@ private:
         QBitmap bmp(widget->size());
         bmp.fill(Qt::color0);
         QPainter painter(&bmp);
+        if (!allRounded) {
+            if (const auto* combo = qobject_cast<QComboBox*>(widget->parentWidget());
+                combo && combo->property("popupDirection") == QStringLiteral("above")) {
+                painter.translate(widget->width(), widget->height());
+                painter.rotate(180);
+            }
+        }
         painter.setRenderHint(QPainter::Antialiasing, false);
         painter.setBrush(Qt::color1);
         painter.setPen(Qt::NoPen);

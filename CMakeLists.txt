@@ -14,7 +14,7 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Core Widgets)
 option(RESOURCES_BUILD_MDI_SHADOW_TESTS
     "Build focused MDI shadow lifecycle and stacking tests." OFF)
 option(RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS
-    "Build focused loading-window and menu activation tests." OFF)
+    "Build focused loading-window, menu, and combo-popup lifecycle tests." OFF)
 if(RESOURCES_BUILD_MDI_SHADOW_TESTS OR RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS)
     find_package(Qt6 6.4 REQUIRED COMPONENTS Test)
     enable_testing()
