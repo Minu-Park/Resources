@@ -48,8 +48,7 @@ QLabel#EngineStatusSummary,
 QLabel#EngineStatusRenderPath,
 QLabel#EngineStatusPointer,
 QLabel#EngineStatusZoom,
-QLabel#EngineStatusFps,
-QLabel#MainLogErrorLabel {
+QLabel#EngineStatusFps {
     background: #ffffff;
     border: 1px solid #d7dee6;
     border-radius: 9px;
@@ -218,19 +217,19 @@ QPushButton#MainLogToggleBtn:checked:hover {
 }
 
 QPushButton#MainLogToggleBtn[logState="warning"] {
-    background: #fff3e0;
     border-color: #ffb74d;
 }
 
 QPushButton#MainLogToggleBtn[logState="warning"]:hover {
-    background: #ffe0b2;
     border-color: #fb8c00;
 }
 
-QLabel#MainLogErrorLabel {
-    color: #425467;
-    font-weight: 700;
-    font-size: 11px;
+QPushButton#MainLogToggleBtn[logState="error"] {
+    border-color: #ef4444;
+}
+
+QPushButton#MainLogToggleBtn[logState="error"]:hover {
+    border-color: #dc2626;
 }
 
 QWidget#MinimizedSessionIndicator {
