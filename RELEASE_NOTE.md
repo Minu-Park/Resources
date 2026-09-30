@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Overlap combo popup connecting borders by two logical pixels in both opening directions, covering the border and one raster guard row so native rounding cannot expose a gap.
+
+- Clip feature-tree content inside the shared lower corner arcs so rows and search shadows cannot erase the antialiased frame, without adding a bottom padding band.
+
+- Remove bottom padding from tree views while retaining header spacing. Remove vertical padding and duplicate document margins from themed editor/log surfaces, preserving horizontal text gutters.
+
+- Render combo popup corners with concentric antialiased alpha fills instead of binary underpainting and native masks; remove platform-installed widget shadows that contaminate the shell outline. Validate both outer arcs and native desktop composition across popup contexts and display scales.
+
 - Provide a reusable bold section-title label role for borderless sections.
 - Add muted `description` and `caption` label text roles for introductory and status text.
 

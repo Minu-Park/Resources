@@ -12,9 +12,13 @@
 #include <QFrame>
 #include <QLayout>
 #include <QGridLayout>
+#include <QGraphicsDropShadowEffect>
 #include <QComboBox>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPlainTextEdit>
+#include <QTextEdit>
+#include <QTextDocument>
 #include <QPushButton>
 #include <QTabBar>
 #include <QToolButton>
@@ -38,6 +42,7 @@
 #include <QPen>
 #include <QBitmap>
 #include <QRegion>
+#include <QRegularExpression>
 
 #ifdef Q_OS_WIN
 #include <dwmapi.h>
@@ -603,6 +608,26 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+        if (event->type() == QEvent::DevicePixelRatioChange) {
+            if (auto* widget = qobject_cast<QWidget*>(obj)) {
+                if (isDeviceFeatureTreeViewport(widget)) applyFeatureTreeViewportMask(widget);
+                for (auto* tree : widget->findChildren<QTreeWidget*>()) {
+                    if (isDeviceFeatureTreeViewport(tree->viewport())) applyFeatureTreeViewportMask(tree->viewport());
+                }
+            }
+        }
+#endif
+        if (event->type() == QEvent::Show || event->type() == QEvent::Resize
+            || event->type() == QEvent::Move || event->type() == QEvent::StyleChange) {
+            if (auto* viewport = qobject_cast<QWidget*>(obj); isDeviceFeatureTreeViewport(viewport)) {
+                applyFeatureTreeViewportMask(viewport);
+            }
+        }
+        if (event->type() == QEvent::Polish || event->type() == QEvent::Show
+            || event->type() == QEvent::StyleChange) {
+            if (auto* widget = qobject_cast<QWidget*>(obj)) applyTextDocumentTheme(widget);
+        }
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
             if (auto* widget = qobject_cast<QWidget*>(obj); comboPopupOwner(widget)) {
                 prepareComboPopup(widget);
@@ -670,10 +695,6 @@ protected:
                     applyPopupMask(widget, true);
                 } else if (comboPopupOwner(widget) || widget->property("_popupStyled").toBool()) {
                     applyPopupMask(widget, false);
-                    if (event->type() == QEvent::Resize && comboPopupOwner(widget) && widget->isVisible()) {
-                        // Qt's container resize handler clears its mask after application filters.
-                        QTimer::singleShot(0, widget, [widget]() { applyPopupMask(widget, false); });
-                    }
                 }
             }
         }
@@ -778,6 +799,59 @@ protected:
     }
 
 private:
+    /** @brief Clips feature content inside the shared frame without restoring bottom padding. */
+    static void applyFeatureTreeViewportMask(QWidget* viewport)
+    {
+        const auto* tree = qobject_cast<const QTreeWidget*>(viewport->parentWidget());
+        if (!tree || viewport->size().isEmpty()) return;
+        // Read the common frame metric from its owning QSS rather than duplicating
+        // a presentation constant in a device module or runtime hook.
+        static const QSize metrics = [] {
+            QFile file(QStringLiteral(":/Resources/theme/qss/00_base.qss"));
+            if (!file.open(QIODevice::ReadOnly)) return QSize(0, 0);
+            const auto block = QRegularExpression(QStringLiteral("QTreeWidget\\s*\\{([^}]*)\\}"))
+                .match(QString::fromUtf8(file.readAll()));
+            const QString rule = block.captured(1);
+            const auto radius = QRegularExpression(QStringLiteral("border-radius:\\s*(\\d+)px")).match(rule);
+            const auto border = QRegularExpression(QStringLiteral("border:\\s*(\\d+)px")).match(rule);
+            return QSize(radius.captured(1).toInt(), border.captured(1).toInt());
+        }();
+        const int radius = metrics.width();
+        if (radius <= 0) { viewport->clearMask(); return; }
+        // A binary child mask must stay inside the parent's antialiased border.
+        // Whole logical pixel squares need two DIPs of arc clearance at fractional
+        // scales. Guard only the corner arcs; the straight bottom remains flush.
+        const int inset = metrics.height() + 2;
+        QPainterPath outline;
+        outline.addRoundedRect(QRectF(tree->rect()).adjusted(inset, inset, -inset, -inset),
+                               qMax(0, radius - inset), qMax(0, radius - inset));
+        QRegion region(outline.toFillPolygon().toPolygon());
+        region += QRect(0, 0, tree->width(), qMax(0, tree->height() - radius));
+        region += QRect(radius, qMax(0, tree->height() - radius),
+                        qMax(0, tree->width() - 2 * radius), radius);
+        region.translate(-viewport->pos());
+        region &= viewport->rect();
+        // A fractional backing-store row can straddle the straight QSS border.
+        // Keep that binary paint row in the frame, without changing layout.
+        const qreal dpr = viewport->devicePixelRatioF();
+        if (!qFuzzyCompare(dpr, qRound(dpr))) {
+            region &= QRect(0, 0, viewport->width(), qMax(0, viewport->height() - 1));
+        }
+        if (viewport->mask() != region) viewport->setMask(region);
+    }
+
+    /** @brief Gives themed editor/log surfaces one QSS-owned content gutter without a document inset. */
+    static void applyTextDocumentTheme(QWidget* widget)
+    {
+        const QString name = widget->objectName();
+        if (name != QLatin1String("ProcessingConsoleLog") && name != QLatin1String("ProcessingParamEditor")
+            && name != QLatin1String("SystemLogViewer")) return;
+        QTextDocument* document = nullptr;
+        if (auto* plain = qobject_cast<QPlainTextEdit*>(widget)) document = plain->document();
+        else if (auto* rich = qobject_cast<QTextEdit*>(widget)) document = rich->document();
+        if (document && document->documentMargin() != 0) document->setDocumentMargin(0);
+    }
+
     /** @brief Identifies standard combo popup windows through their public widget ownership. */
     static QComboBox* comboPopupOwner(QWidget* widget)
     {
@@ -795,6 +869,10 @@ private:
         const bool visible = popup->isVisible();
         if (popup->windowFlags() != flags) popup->setWindowFlags(flags);
         popup->setAttribute(Qt::WA_TranslucentBackground, true);
+        // Windows' Qt style can install a widget effect despite NoDropShadowWindowHint.
+        // The shared shell owns the outline; a second shadow pollutes its alpha edge.
+        if (qobject_cast<QGraphicsDropShadowEffect*>(popup->graphicsEffect())) popup->setGraphicsEffect(nullptr);
+        popup->clearMask();
         if (auto* frame = qobject_cast<QFrame*>(popup)) frame->setFrameShape(QFrame::NoFrame);
         popup->setContentsMargins(0, 0, 0, 0);
         if (popup->geometry() != geometry) popup->setGeometry(geometry);
@@ -1124,6 +1202,7 @@ private:
         }
     }
 
+    /** @brief Overlaps the connecting border so native rounding cannot separate the two shells. */
     static QRect repositionComboPopup(QComboBox* combo, QWidget* popup, QRect geo)
     {
         Q_UNUSED(popup);
@@ -1136,7 +1215,12 @@ private:
         // position container at combo's left edge and match full width.
         const int containerW = comboW;
         const int containerX = comboGlobal.x();
-        const int containerY = comboGlobal.y() + comboH;
+        // The control retains a white 1px connecting border to keep its size.
+        // Cover that row with the popup's straight side borders. An exact edge
+        // adjacency can expose a physical-pixel gap after native DPI rounding.
+        // One additional logical row covers fractional border rasterization.
+        const int joinOverlap = 2;
+        const int containerY = comboGlobal.y() + comboH - joinOverlap;
 
         geo.setWidth(containerW);
         geo.setHeight(geo.height());
@@ -1144,7 +1228,7 @@ private:
         if (auto* screen = combo->screen()) {
             const QRect screenGeo = screen->availableGeometry();
             if (containerY + geo.height() > screenGeo.bottom()) {
-                geo.moveTo(containerX, comboGlobal.y() - geo.height());
+                geo.moveTo(containerX, comboGlobal.y() - geo.height() + joinOverlap);
             } else {
                 geo.moveTo(containerX, containerY);
             }
@@ -1183,46 +1267,31 @@ private:
             painter.setBrush(Qt::NoBrush);
             painter.drawRoundedRect(QRectF(0.5, 0.5, w - 1.0, h - 1.0), 8.0, 8.0);
         } else {
-            // Bottom-only rounded: top edge is straight (connects flush to combo)
-            QPainterPath outerPath;
-            outerPath.moveTo(0, 0);
-            outerPath.lineTo(w, 0);
-            outerPath.lineTo(w, h - 9.0);
-            outerPath.arcTo(QRectF(w - 18.0, h - 18.0, 18.0, 18.0), 0, -90);
-            outerPath.lineTo(9.0, h);
-            outerPath.arcTo(QRectF(0, h - 18.0, 18.0, 18.0), -90, -90);
-            outerPath.lineTo(0, 0);
-
-            QPainterPath innerPath;
-            innerPath.moveTo(1, 0);
-            innerPath.lineTo(w - 1.0, 0);
-            innerPath.lineTo(w - 1.0, h - 9.0);
-            innerPath.arcTo(QRectF(w - 17.0, h - 17.0, 16.0, 16.0), 0, -90);
-            innerPath.lineTo(9.0, h - 1.0);
-            innerPath.arcTo(QRectF(1.0, h - 17.0, 16.0, 16.0), -90, -90);
-            innerPath.lineTo(1, 0);
-
-            painter.setRenderHint(QPainter::Antialiasing, false);
+            // Clear old edge coverage before repainting a resized translucent shell.
             painter.setCompositionMode(QPainter::CompositionMode_Source);
-            painter.setPen(Qt::NoPen);
-            painter.setBrush(borderColor);
-            painter.drawPath(outerPath);
-
-            painter.setBrush(Qt::white);
-            painter.drawPath(innerPath);
-
+            painter.fillRect(QRectF(0, 0, w, h), Qt::transparent);
             painter.setRenderHint(QPainter::Antialiasing, true);
             painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-            painter.setPen(QPen(borderColor, 1.0));
-            painter.setBrush(Qt::NoBrush);
-            QPainterPath borderPath;
-            borderPath.moveTo(w - 0.5, 0);
-            borderPath.lineTo(w - 0.5, h - 8.5);
-            borderPath.arcTo(QRectF(w - 16.5, h - 16.5, 16.0, 16.0), 0, -90);
-            borderPath.lineTo(8.5, h - 0.5);
-            borderPath.arcTo(QRectF(0.5, h - 16.5, 16.0, 16.0), -90, -90);
-            borderPath.lineTo(0.5, 0);
-            painter.drawPath(borderPath);
+            // Concentric antialiased fills preserve complete coverage at the
+            // tangent. A separately antialiased fill and stroke can leave a gap.
+            const auto shellPath = [w, h](qreal inset) {
+                const qreal radius = 8.5 - inset;
+                const qreal diameter = radius * 2;
+                QPainterPath path;
+                path.moveTo(w - inset, 0);
+                path.lineTo(w - inset, h - 8.5);
+                path.arcTo(QRectF(w - 8.5 - radius, h - 8.5 - radius, diameter, diameter), 0, -90);
+                path.lineTo(8.5, h - inset);
+                path.arcTo(QRectF(inset, h - 8.5 - radius, diameter, diameter), -90, -90);
+                path.lineTo(inset, 0);
+                path.closeSubpath();
+                return path;
+            };
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(borderColor);
+            painter.drawPath(shellPath(0));
+            painter.setBrush(Qt::white);
+            painter.drawPath(shellPath(1));
         }
     }
 
@@ -1235,6 +1304,11 @@ private:
      */
     static void applyPopupMask(QWidget* widget, bool allRounded)
     {
+        if (comboPopupOwner(widget)) {
+            // Translucent combo shells preserve fractional alpha at every DPR.
+            widget->clearMask();
+            return;
+        }
         QBitmap bmp(widget->size());
         bmp.fill(Qt::color0);
         QPainter painter(&bmp);
