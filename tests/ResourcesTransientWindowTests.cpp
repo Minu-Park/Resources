@@ -1,6 +1,7 @@
 #include "Chrome/ThemedLoadingWidget.h"
 #include "Chrome/ThemedDockTitleBar.h"
 #include "Chrome/ThemedMainWindow.h"
+#include "Chrome/ThemedTreeWidget.h"
 #include "Resources.h"
 
 #include <QApplication>
@@ -15,6 +16,7 @@
 #include <QProcess>
 #include <QScreen>
 #include <QSignalSpy>
+#include <QStyle>
 #include <QTest>
 #include <QTreeWidget>
 #include <QVBoxLayout>
@@ -23,6 +25,61 @@ class ResourcesTransientWindowTests : public QObject
 {
     Q_OBJECT
 private slots:
+    void treeBranchesSurviveRowPainting()
+    {
+        class BranchProbe : public ThemedTreeWidget {
+        public:
+            int branchPaints = 0;
+        protected:
+            void drawBranches(QPainter* painter, const QRect& rect, const QModelIndex& index) const override {
+                if (rect.width() > 0) ++const_cast<BranchProbe*>(this)->branchPaints;
+                ThemedTreeWidget::drawBranches(painter, rect, index);
+            }
+        };
+        Resources::installResources(*qApp);
+        for (const auto direction : {Qt::LeftToRight, Qt::RightToLeft}) {
+            BranchProbe tree;
+            tree.setLayoutDirection(direction);
+            tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Row);
+            tree.setHeaderLabels({QStringLiteral("Source"), QStringLiteral("Path")});
+            auto* root = new QTreeWidgetItem(&tree, {QStringLiteral("Root")});
+            new QTreeWidgetItem(root, {QStringLiteral("Child")});
+            tree.resize(400, 200);
+            tree.show();
+            tree.grab();
+            QVERIFY(tree.branchPaints > 0);
+            root->setExpanded(true);
+            tree.branchPaints = 0;
+            tree.grab();
+            QVERIFY(tree.branchPaints > 0);
+            QCOMPARE(tree.selectionBehavior(), QAbstractItemView::SelectRows);
+        }
+    }
+
+    void treeBranchKeepsRoundedRowCorner()
+    {
+        Resources::installResources(*qApp);
+        ThemedTreeWidget tree;
+        tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Row);
+        tree.setHeaderLabels({QStringLiteral("Source"), QStringLiteral("Path")});
+        auto* root = new QTreeWidgetItem(&tree, {QStringLiteral("Root"), QStringLiteral("/Library")});
+        new QTreeWidgetItem(root, {QString(), QStringLiteral("Child.cti")});
+        tree.resize(400, 200);
+        tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        tree.setCurrentItem(root);
+
+        const QImage image = tree.viewport()->grab().toImage();
+        const qreal ratio = image.devicePixelRatio();
+        const QRect row = tree.visualItemRect(root);
+        const auto pixel = [&](int x, int y) { return image.pixelColor(qRound(x * ratio), qRound(y * ratio)); };
+        const QColor base = pixel(tree.viewport()->width() / 2, tree.viewport()->height() - 2);
+        QCOMPARE(pixel(0, row.top()), base);
+        QCOMPARE(pixel(0, row.top() + 2), base);
+        QCOMPARE(pixel(0, row.bottom() - 2), base);
+        QCOMPARE(tree.style()->styleHint(QStyle::SH_ItemView_ShowDecorationSelected, nullptr, &tree), 0);
+    }
+
     void comboPopupLifecycle_data()
     {
         QTest::addColumn<bool>("compact");

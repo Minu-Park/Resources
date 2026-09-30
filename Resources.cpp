@@ -414,6 +414,16 @@ void ThemedTreeWidget::drawRow(QPainter* painter,
         return;
     }
 
+    // Direct cell painting must retain Qt's branch geometry and QSS indicators.
+    const int branchColumn = treePosition() < 0 ? header()->logicalIndex(0) : treePosition();
+    const QRect cell = visualRect(index.siblingAtColumn(branchColumn));
+    const int sectionLeft = header()->sectionViewportPosition(branchColumn);
+    const int sectionRight = sectionLeft + header()->sectionSize(branchColumn);
+    const QRect branches = isRightToLeft()
+        ? QRect(cell.right() + 1, option.rect.top(), sectionRight - cell.right() - 1, option.rect.height())
+        : QRect(sectionLeft, option.rect.top(), cell.left() - sectionLeft, option.rect.height());
+    if (branches.width() > 0) drawBranches(painter, branches, index);
+
     // Paint the cell contents directly because calling the base drawRow would repaint
     // opaque per-cell backgrounds over the shared row surface.
     const int columnCount = model()->columnCount(index.parent());
@@ -1055,7 +1065,7 @@ private:
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 16);
         }
         else if (name == QLatin1String("RuntimePathsLeftPanelLayout")) {
-            setLayoutMetrics(layout, QMargins(8, 12, 8, 8), 8);
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
         }
         else if (name == QLatin1String("RuntimePathsListButtonsLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
@@ -1065,23 +1075,23 @@ private:
         }
         else if (name == QLatin1String("RuntimePathsFormGridLayout")) {
             if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
-                setGridLayoutMetrics(grid, QMargins(8, 12, 8, 8), 8, 8);
+                setGridLayoutMetrics(grid, QMargins(0, 0, 0, 0), 8, 8);
             } else {
-                setLayoutMetrics(layout, QMargins(8, 12, 8, 8), 8);
+                setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
             }
         }
         else if (name == QLatin1String("RuntimePathsBottomLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
         }
         else if (name == QLatin1String("RuntimePathEntriesConfiguredLayout")) {
-            setLayoutMetrics(layout, QMargins(8, 12, 8, 8), 8);
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
         }
         else if (name == QLatin1String("RuntimePathEntriesConfiguredActionsLayout") ||
                  name == QLatin1String("RuntimePathEntriesActionsLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
         }
         else if (name == QLatin1String("RuntimePathEntriesAddLayout")) {
-            setLayoutMetrics(layout, QMargins(8, 12, 8, 8), 8);
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
         }
 
         for (int i = 0; i < layout->count(); ++i) {

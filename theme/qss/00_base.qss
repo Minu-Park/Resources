@@ -227,6 +227,18 @@ QFrame#DeviceFeatureSearchBubble {
     border-radius: 9px;
 }
 
+QLabel[textRole="sectionTitle"] {
+    font-weight: 700;
+}
+
+QLabel[textRole="description"] {
+    color: #425467;
+}
+
+QLabel[textRole="caption"] {
+    color: #64748b;
+}
+
 QHeaderView::section {
     background: transparent;
     color: #000000;
@@ -300,6 +312,8 @@ QTreeWidget[interactionMode="row"]::item:selected {
 
 QTreeWidget[interactionMode="row"] {
     selection-background-color: #f5f5f5;
+    /* The rounded row surface owns hover/selection; a decorated branch panel is square. */
+    show-decoration-selected: 0;
 }
 
 QTreeView::branch:has-children:closed,

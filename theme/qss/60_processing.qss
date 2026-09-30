@@ -1,38 +1,6 @@
 /* theme/qss/60_processing.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
 
-/* Runtime path dialog */
-QListWidget#RuntimePathsListWidget,
-QListWidget#RuntimePathEntriesList {
-    border: 1px solid #cfd9e4;
-    border-radius: 8px;
-    padding: 4px;
-    background-color: #ffffff;
-    outline: none;
-    qproperty-iconSize: 8px 8px;
-}
-
-
-
-QListWidget#RuntimePathsListWidget::item,
-QListWidget#RuntimePathEntriesList::item {
-    padding: 6px 8px;
-    border-radius: 4px;
-    color: #334155;
-    margin-bottom: 2px;
-}
-
-QListWidget#RuntimePathsListWidget::item:hover,
-QListWidget#RuntimePathEntriesList::item:hover {
-    background-color: #f8fafc;
-    color: #0f172a;
-}
-
-QListWidget#RuntimePathsListWidget::item:selected,
-QListWidget#RuntimePathEntriesList::item:selected {
-    background-color: #e2e8f0;
-    color: #0f172a;
-    font-weight: 600;
-}
+/* Runtime path lists reuse the base themed tree and row interaction surface. */
 
 QLabel#RuntimePathsDescription {
     color: #425467;

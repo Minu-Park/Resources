@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Provide a reusable bold section-title label role for borderless sections.
+- Add muted `description` and `caption` label text roles for introductory and status text.
+
+- Restore themed expand/collapse indicators when tree rows use direct cell painting.
+- Stop row-mode tree branch areas from painting a square hover/selection fill over the rounded row surface.
+- Flatten runtime-path layout metrics and retire duplicated list styling in favor of the shared tree template.
+
 - Indicate log warnings and errors through orange and red status-button borders only, preserving the normal surface and text styling.
 
 - Keep the feature-search favorites button background and border transparent in all interaction states; selection fills only its star.
