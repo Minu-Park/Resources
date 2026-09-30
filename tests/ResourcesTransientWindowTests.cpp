@@ -17,6 +17,8 @@
 #include <QScreen>
 #include <QSignalSpy>
 #include <QStyle>
+#include <QStyledItemDelegate>
+#include <QStyleOptionViewItem>
 #include <QTest>
 #include <QTreeWidget>
 #include <QVBoxLayout>
@@ -99,6 +101,80 @@ class ResourcesTransientWindowTests : public QObject
 {
     Q_OBJECT
 private slots:
+    void rowTreeCheckIndicatorsAreVisible()
+    {
+        Resources::installResources(*qApp);
+        ThemedTreeWidget tree;
+        tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Row);
+        auto* item = new QTreeWidgetItem(&tree, {QString()});
+        item->setCheckState(0, Qt::Unchecked);
+        tree.resize(300, 160);
+        tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        QTest::mouseMove(tree.viewport(), QPoint(250, 120));
+        struct Probe : QStyledItemDelegate {
+            using QStyledItemDelegate::initStyleOption;
+        } probe;
+        QStyleOptionViewItem option;
+        option.initFrom(&tree);
+        option.widget = &tree;
+        option.rect = tree.visualItemRect(item);
+        probe.initStyleOption(&option, tree.indexFromItem(item));
+        const QRect indicator = tree.style()->subElementRect(
+            QStyle::SE_ItemViewItemCheckIndicator, &option, &tree);
+        QVERIFY(!indicator.isEmpty());
+        const auto capture = [&] {
+            const QImage image = tree.viewport()->grab().toImage();
+            const qreal ratio = image.devicePixelRatio();
+            return image.copy(QRect(qRound(indicator.x() * ratio), qRound(indicator.y() * ratio),
+                                    qRound(indicator.width() * ratio), qRound(indicator.height() * ratio)));
+        };
+        const QImage unchecked = capture();
+        item->setCheckState(0, Qt::Checked);
+        const QImage checked = capture();
+        item->setCheckState(0, Qt::PartiallyChecked);
+        const QImage partial = capture();
+        QVERIFY(checked != unchecked);
+        QVERIFY(partial != checked);
+        QVERIFY(partial != unchecked);
+        item->setData(0, Qt::CheckStateRole, QVariant());
+        const QImage absent = capture();
+        QVERIFY(unchecked != absent);
+        QVERIFY(checked != absent);
+        QVERIFY(partial != absent);
+        item->setCheckState(0, Qt::Checked);
+        QTest::mouseClick(tree.viewport(), Qt::LeftButton, Qt::NoModifier, indicator.center());
+        QCOMPARE(item->checkState(0), Qt::Unchecked);
+    }
+
+    void treeHoverIncludesBranches()
+    {
+        Resources::installResources(*qApp);
+        for (const auto direction : {Qt::LeftToRight, Qt::RightToLeft}) {
+            ThemedTreeWidget tree;
+            tree.setLayoutDirection(direction);
+            tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Row);
+            tree.setHeaderLabels({QStringLiteral("Source"), QStringLiteral("Status")});
+            auto* root = new QTreeWidgetItem(&tree, {QStringLiteral("Root"), QStringLiteral("2 producers")});
+            new QTreeWidgetItem(root, {QStringLiteral("Child.cti")});
+            tree.resize(450, 200);
+            tree.show();
+            QVERIFY(QTest::qWaitForWindowExposed(&tree));
+            for (const bool expanded : {false, true}) {
+                root->setExpanded(expanded);
+                const QRect row = tree.visualItemRect(root);
+                const int edge = direction == Qt::LeftToRight ? 1 : tree.viewport()->width() - 2;
+                for (const int x : {tree.viewport()->width() / 2, edge + (direction == Qt::LeftToRight ? 9 : -9)}) {
+                    QTest::mouseMove(tree.viewport(), QPoint(x, row.center().y()));
+                    const QImage image = tree.viewport()->grab().toImage();
+                    const qreal ratio = image.devicePixelRatio();
+                    QCOMPARE(image.pixelColor(qRound(edge * ratio), qRound(row.center().y() * ratio)),
+                             tree.palette().highlight().color());
+                }
+            }
+        }
+    }
+
     void treeBranchesSurviveRowPainting()
     {
         class BranchProbe : public ThemedTreeWidget {

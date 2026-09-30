@@ -140,12 +140,13 @@ public:
         const QWidget* widget = cellOption.widget;
         QStyle* style = widget ? widget->style() : QApplication::style();
 
-        if (cellOption.checkState != Qt::Unchecked
-            && cellOption.checkState != Qt::Checked
-            && cellOption.checkState != Qt::PartiallyChecked) {
-            cellOption.checkState = Qt::Unchecked;
-        } else {
+        if (cellOption.features & QStyleOptionViewItem::HasCheckIndicator) {
             QStyleOptionViewItem checkOption(cellOption);
+            // Primitive painting reads state flags, not the model's checkState.
+            checkOption.state &= ~(QStyle::State_On | QStyle::State_Off | QStyle::State_NoChange);
+            checkOption.state |= cellOption.checkState == Qt::Checked ? QStyle::State_On
+                : cellOption.checkState == Qt::PartiallyChecked ? QStyle::State_NoChange
+                : QStyle::State_Off;
             checkOption.rect = style->subElementRect(
                 QStyle::SE_ItemViewItemCheckIndicator,
                 &cellOption,
@@ -447,6 +448,27 @@ void ThemedTreeWidget::drawRow(QPainter* painter,
         cellOption.rect = cellRect;
         delegate->paint(painter, cellOption, cellIndex);
     }
+}
+
+void ThemedTreeWidget::drawBranches(QPainter* painter, const QRect& rect, const QModelIndex& index) const
+{
+    if (property("interactionMode").toString() != QLatin1String("row")) {
+        QTreeWidget::drawBranches(painter, rect, index);
+        return;
+    }
+    if (!painter || !index.isValid() || !model()->hasChildren(index)
+        || (model()->flags(index) & Qt::ItemNeverHasChildren)) return;
+    // Native QSS branch drawing first paints a rectangular row panel on Windows.
+    // The shared rounded surface already owns that background; paint only its glyph.
+    const int width = qMin(indentation(), rect.width());
+    const QRect indicator(isRightToLeft() ? rect.left() : rect.right() - width + 1,
+                          rect.top(), width, rect.height());
+    const QIcon icon(isExpanded(index)
+        ? QStringLiteral(":/Resources/Icons/icons8-tree-expand-arrow-48.png")
+        : QStringLiteral(":/Resources/Icons/icons8-tree-forward-48.png"));
+    icon.paint(painter, indicator.adjusted((width - 16) / 2, (rect.height() - 16) / 2,
+               -(width - 16) / 2, -(rect.height() - 16) / 2), Qt::AlignCenter,
+               isEnabled() ? QIcon::Normal : QIcon::Disabled);
 }
 
 // ---------------------------------------------------------------------------
