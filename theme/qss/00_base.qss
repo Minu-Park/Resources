@@ -220,6 +220,11 @@ QTreeWidget::viewport {
     background: transparent;
 }
 
+QTreeView,
+QTreeWidget {
+    padding-bottom: 0;
+}
+
 QHeaderView,
 QFrame#DeviceFeatureSearchBubble {
     background: #ffffff;

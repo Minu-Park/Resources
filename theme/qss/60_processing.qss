@@ -136,8 +136,8 @@ QPlainTextEdit#ProcessingCodeEditor {
     border-bottom-right-radius: 0px;
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    padding-top: 0px;
+    padding-bottom: 0px;
     padding-left: 0px;
     padding-right: 4px;
     font-family: "JetBrains Mono";
@@ -154,7 +154,7 @@ QTextEdit#ProcessingParamEditor {
     color: #1e293b;
     border: 1px solid #cfd9e4;
     border-radius: 8px;
-    padding: 4px;
+    padding: 0px 8px;
     font-family: "JetBrains Mono";
     font-size: 11px;
 }
@@ -264,7 +264,7 @@ QPlainTextEdit#ProcessingConsoleLog {
     border-bottom-right-radius: 8px;
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
-    padding: 8px;
+    padding: 0px 12px;
     font-family: "JetBrains Mono";
     font-size: 11px;
 }
