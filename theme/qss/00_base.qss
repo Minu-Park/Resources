@@ -321,6 +321,24 @@ QTreeWidget[interactionMode="row"] {
     show-decoration-selected: 0;
 }
 
+QTreeWidget[interactionMode="row"]::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #8badc7;
+    border-radius: 4px;
+    background: #ffffff;
+}
+
+QTreeWidget[interactionMode="row"]::indicator:checked {
+    image: url(:/Resources/Icons/icons8-check-48.png);
+    background: #f7fbff;
+}
+
+QTreeWidget[interactionMode="row"]::indicator:indeterminate {
+    image: url(:/Resources/Icons/icons8-subtract-60.png);
+    background: #f7fbff;
+}
+
 QTreeView::branch:has-children:closed,
 QTreeWidget::branch:has-children:closed {
     image: url(:/Resources/Icons/icons8-tree-forward-48.png);

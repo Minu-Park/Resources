@@ -8,7 +8,11 @@
 
 - Remove bottom padding from tree views while retaining header spacing. Remove vertical padding and duplicate document margins from themed editor/log surfaces, preserving horizontal text gutters.
 
+- Map checked, unchecked, and partial tree item states to indicator flags; theme row-mode checkboxes with outlined borders and existing check/minus assets so every state remains visible and distinguishable.
+
 - Render combo popup corners with concentric antialiased alpha fills instead of binary underpainting and native masks; remove platform-installed widget shadows that contaminate the shell outline. Validate both outer arcs and native desktop composition across popup contexts and display scales.
+
+- Paint only branch glyphs in row mode so native branch panels cannot cover the rounded hover surface or its corners.
 
 - Provide a reusable bold section-title label role for borderless sections.
 - Add muted `description` and `caption` label text roles for introductory and status text.
