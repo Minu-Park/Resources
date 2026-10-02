@@ -71,7 +71,7 @@ QHeliotisC4Widget QLabel#HeliotisC4StatusLabel:hover {
 
 
 /* Search uses the feature header surface with a compact, softly lifted frame. */
-OneGenFeatureTree {
+SearchableTreeSurface {
     qproperty-searchInset: 10;
     qproperty-searchMaximumWidth: 440;
     qproperty-favoriteColor: #00457c;
