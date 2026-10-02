@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Preserve the latest scroll request during deferred search-surface layout so scrolling to the final row is not undone.
+
+- Add SearchableTreeController to attach shared search/favorites to existing QTreeWidget instances, preserving consumer delegates, editor signals, metadata and intrinsic row visibility; keep SearchableTreeWidget as its inheritance adapter.
+
+- Add the Qt-only Resources::Widgets target and reusable SearchableTreeWidget with stable-key favorites, local name/category filtering, editor-preserving state restoration, and a frame-anchored search overlay independent of scrollbar visibility.
+
 - Overlap combo popup connecting borders by two logical pixels in both opening directions, covering the border and one raster guard row so native rounding cannot expose a gap.
 
 - Clip feature-tree content inside the shared lower corner arcs so rows and search shadows cannot erase the antialiased frame, without adding a bottom padding band.
