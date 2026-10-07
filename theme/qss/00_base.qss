@@ -630,6 +630,31 @@ QCheckBox::indicator:checked:hover {
     background: #eef5fc;
 }
 
+/* Native checkbox semantics with an opt-in switch presentation. */
+QCheckBox[controlRole="switch"]::indicator,
+QCheckBox[controlRole="switch"]::indicator:hover,
+QCheckBox[controlRole="switch"]::indicator:checked:hover {
+    width: 32px;
+    height: 18px;
+    border: none;
+    background: transparent;
+    image: url(:/Resources/Icons/switch-off.svg);
+}
+
+QCheckBox[controlRole="switch"]::indicator:checked,
+QCheckBox[controlRole="switch"]::indicator:checked:hover {
+    image: url(:/Resources/Icons/switch-on.svg);
+}
+
+QCheckBox[controlRole="switch"]::indicator:disabled {
+    image: url(:/Resources/Icons/switch-off-disabled.svg);
+}
+
+QCheckBox[controlRole="switch"]::indicator:checked:disabled,
+QCheckBox[controlRole="switch"]::indicator:checked:disabled:hover {
+    image: url(:/Resources/Icons/switch-on-disabled.svg);
+}
+
 QGraphicsView {
     background: #ffffff;
     border: none;
