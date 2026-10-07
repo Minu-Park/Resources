@@ -1,5 +1,9 @@
 <RCC>
     <qresource prefix="/Resources">
+        <file>Icons/switch-off.svg</file>
+        <file>Icons/switch-on.svg</file>
+        <file>Icons/switch-off-disabled.svg</file>
+        <file>Icons/switch-on-disabled.svg</file>
         <file>Icon.ico</file>
         <file>Icon.png</file>
         <file>AppIcons/AppIcon.png</file>

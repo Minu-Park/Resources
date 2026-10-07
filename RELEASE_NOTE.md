@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add an opt-in `controlRole="switch"` presentation for native checkboxes, with
+  scalable on/off indicators and disabled states.
+
 - Preserve the latest scroll request during deferred search-surface layout so scrolling to the final row is not undone.
 
 - Add SearchableTreeController to attach shared search/favorites to existing QTreeWidget instances, preserving consumer delegates, editor signals, metadata and intrinsic row visibility; keep SearchableTreeWidget as its inheritance adapter.
