@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(Resources
-    VERSION 0.1.0
+    VERSION 1.3.0
     DESCRIPTION "Reusable Qt resources, theme, and window chrome."
     LANGUAGES CXX
 )
