@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.3.0 (2026-10-08)
+
 - Add an opt-in `controlRole="switch"` presentation for native checkboxes, with
   scalable on/off indicators and disabled states.
 
