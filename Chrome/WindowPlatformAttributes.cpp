@@ -15,7 +15,7 @@ void applyWindowPlatformAttributes(QWidget* window)
         // 33: DWMWA_WINDOW_CORNER_PREFERENCE, 2: DWMWCP_ROUND
         DWORD cornerPreference = 2;
         DwmSetWindowAttribute(hwnd, 33, &cornerPreference, sizeof(cornerPreference));
-        
+
         MARGINS margins = {-1, -1, -1, -1};
         DwmExtendFrameIntoClientArea(hwnd, &margins);
     }
