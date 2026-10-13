@@ -13,6 +13,7 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Core Widgets)
 
 option(RESOURCES_BUILD_WIDGET_TESTS
     "Build reusable Qt widget behavior and geometry tests." OFF)
+option(RESOURCES_BUILD_THEME "Build resource assets and window chrome." ON)
 option(RESOURCES_BUILD_MDI_SHADOW_TESTS
     "Build focused MDI shadow lifecycle and stacking tests." OFF)
 option(RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS
@@ -32,7 +33,28 @@ add_library(Resources::Widgets ALIAS ResourcesWidgets)
 target_compile_features(ResourcesWidgets PUBLIC cxx_std_17)
 target_link_libraries(ResourcesWidgets PUBLIC Qt6::Widgets)
 target_include_directories(ResourcesWidgets PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include/Resources>)
+set_target_properties(ResourcesWidgets PROPERTIES EXPORT_NAME Widgets
+    VERSION ${PROJECT_VERSION} POSITION_INDEPENDENT_CODE ON)
+install(TARGETS ResourcesWidgets EXPORT ResourcesWidgetsTargets
+    ARCHIVE DESTINATION lib COMPONENT PluginSDK EXCLUDE_FROM_ALL)
+install(FILES Widgets/SearchableTreeWidget.h Widgets/SearchableTreeController.h
+    DESTINATION include/Resources/Widgets COMPONENT PluginSDK EXCLUDE_FROM_ALL)
+install(EXPORT ResourcesWidgetsTargets NAMESPACE Resources::
+    DESTINATION lib/cmake/ResourcesWidgets COMPONENT PluginSDK EXCLUDE_FROM_ALL)
+include(CMakePackageConfigHelpers)
+configure_package_config_file(cmake/ResourcesWidgetsConfig.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/ResourcesWidgetsConfig.cmake"
+    INSTALL_DESTINATION lib/cmake/ResourcesWidgets)
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/ResourcesWidgetsConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ResourcesWidgetsConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/ResourcesWidgetsConfigVersion.cmake"
+    DESTINATION lib/cmake/ResourcesWidgets COMPONENT PluginSDK EXCLUDE_FROM_ALL)
+if(NOT RESOURCES_BUILD_THEME)
+    return()
+endif()
 
 qt_add_library(PlaygroundResources STATIC
     Resources.qrc
