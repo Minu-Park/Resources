@@ -1516,23 +1516,6 @@ void paintMainWindowBorder(QWidget* window, QPainter& painter, bool maximized, b
     painter.drawRoundedRect(QRectF(0.5, 0.5, window->width() - 1.0, window->height() - 1.0), innerRadius, innerRadius);
 }
 
-void applyWindowPlatformAttributes(QWidget* window)
-{
-#ifdef Q_OS_WIN
-    if (!window) return;
-    HWND hwnd = (HWND)window->winId();
-    if (hwnd) {
-        // 33: DWMWA_WINDOW_CORNER_PREFERENCE, 2: DWMWCP_ROUND
-        DWORD cornerPreference = 2;
-        DwmSetWindowAttribute(hwnd, 33, &cornerPreference, sizeof(cornerPreference));
-        
-        MARGINS margins = {-1, -1, -1, -1};
-        DwmExtendFrameIntoClientArea(hwnd, &margins);
-    }
-#endif
-    Q_UNUSED(window);
-}
-
 void getPlatformWindowRadius(qreal& outer, qreal& inner)
 {
 #ifdef Q_OS_WIN
