@@ -52,6 +52,24 @@ write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/ResourcesWidgetsCo
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ResourcesWidgetsConfig.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/ResourcesWidgetsConfigVersion.cmake"
     DESTINATION lib/cmake/ResourcesWidgets COMPONENT PluginSDK EXCLUDE_FROM_ALL)
+qt_add_library(ResourcesDialogs STATIC
+    Chrome/ThemedDialog.h Chrome/ThemedDialog.cpp
+    Chrome/ThemedFileDialog.h Chrome/ThemedFileDialog.cpp
+    Chrome/ThemedMessageBox.h Chrome/ThemedMessageBox.cpp
+    Chrome/WindowPlatformAttributes.h Chrome/WindowPlatformAttributes.cpp)
+add_library(Resources::Dialogs ALIAS ResourcesDialogs)
+set_target_properties(ResourcesDialogs PROPERTIES EXPORT_NAME Dialogs
+    POSITION_INDEPENDENT_CODE ON)
+target_compile_features(ResourcesDialogs PUBLIC cxx_std_17)
+target_include_directories(ResourcesDialogs PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<INSTALL_INTERFACE:include/Resources>)
+target_link_libraries(ResourcesDialogs PUBLIC Qt6::Widgets
+    PRIVATE $<$<PLATFORM_ID:Windows>:dwmapi>)
+install(TARGETS ResourcesDialogs EXPORT ResourcesWidgetsTargets
+    ARCHIVE DESTINATION lib COMPONENT PluginSDK EXCLUDE_FROM_ALL)
+install(FILES Chrome/ThemedDialog.h Chrome/ThemedFileDialog.h Chrome/ThemedMessageBox.h
+    Chrome/WindowPlatformAttributes.h DESTINATION include/Resources/Chrome
+    COMPONENT PluginSDK EXCLUDE_FROM_ALL)
 if(NOT RESOURCES_BUILD_THEME)
     return()
 endif()
@@ -71,12 +89,6 @@ qt_add_library(PlaygroundResources STATIC
     Chrome/ThemedMdiContainer.cpp
     Chrome/ThemedMdiArea.h
     Chrome/ThemedMdiArea.cpp
-    Chrome/ThemedDialog.h
-    Chrome/ThemedDialog.cpp
-    Chrome/ThemedFileDialog.h
-    Chrome/ThemedFileDialog.cpp
-    Chrome/ThemedMessageBox.h
-    Chrome/ThemedMessageBox.cpp
     Chrome/ThemedSplashWidget.h
     Chrome/ThemedSplashWidget.cpp
     Chrome/ThemedLoadingWidget.h
@@ -94,6 +106,7 @@ target_link_libraries(PlaygroundResources
     PUBLIC
         Qt6::Widgets
         Resources::Widgets
+        Resources::Dialogs
     PRIVATE
         $<$<PLATFORM_ID:Windows>:dwmapi>
 )

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtGlobal>
+#include "Chrome/WindowPlatformAttributes.h"
 
 #ifdef Q_OS_WIN
 #define PLATFORM_RADIUS(defaultVal, winVal) (winVal)
@@ -27,11 +28,6 @@ void installResources(QApplication& app);
  * @brief Renders the frameless main window border and background with correct rounded edges.
  */
 void paintMainWindowBorder(QWidget* window, QPainter& painter, bool maximized, bool forceRounded);
-
-/**
- * @brief Applies platform-specific window rendering attributes (e.g., DWM rounded corners and extend frame on Windows).
- */
-void applyWindowPlatformAttributes(QWidget* window);
 
 /**
  * @brief Retrieves the outer and inner corner radius based on the current operating system.

@@ -1,5 +1,5 @@
 #include "ThemedDialog.h"
-#include "Resources.h"
+#include "WindowPlatformAttributes.h"
 
 #include <QHBoxLayout>
 #include <QIcon>
