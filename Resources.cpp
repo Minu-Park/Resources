@@ -12,6 +12,8 @@
 #include <QFrame>
 #include <QLayout>
 #include <QGridLayout>
+#include <QFormLayout>
+#include <QFontMetrics>
 #include <QGraphicsDropShadowEffect>
 #include <QComboBox>
 #include <QLabel>
@@ -1131,25 +1133,26 @@ private:
                  name == QLatin1String("GraphicsSettingsRangePageLayout")) {
             setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 12);
         }
-        else if (name == QLatin1String("GraphicsSettingsMeasurementUnitLayout") ||
-                 name == QLatin1String("GraphicsSettingsColorMappingLayout") ||
-                 name == QLatin1String("GraphicsSettingsRainbowRangeLayout") ||
-                 name == QLatin1String("GraphicsSettingsSurfaceMappingLayout") ||
-                 name == QLatin1String("GraphicsSettingsPointCloudMappingLayout") ||
-                 name == QLatin1String("GraphicsSettingsRangeMappingLayout") ||
-                 name == QLatin1String("GraphicsSettingsSurfaceRenderingLayout") ||
-                 name == QLatin1String("GraphicsSettingsPointCloudRenderingLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
+        else if (layout->property("graphicsSettingsRole").toString() == QLatin1String("section")) {
+            setLayoutMetrics(layout, QMargins(8, 8, 8, 8), 8);
         }
-        else if (name == QLatin1String("GraphicsSettingsMeasurementUnitFormLayout") ||
-                 name == QLatin1String("GraphicsSettingsColorMappingFormLayout") ||
-                 name == QLatin1String("GraphicsSettingsRainbowRangeFormLayout") ||
-                 name == QLatin1String("GraphicsSettingsSurfaceMappingFormLayout") ||
-                 name == QLatin1String("GraphicsSettingsPointCloudMappingFormLayout") ||
-                 name == QLatin1String("GraphicsSettingsRangeMappingFormLayout") ||
-                 name == QLatin1String("GraphicsSettingsSurfaceRenderingFormLayout") ||
-                 name == QLatin1String("GraphicsSettingsPointCloudRenderingFormLayout")) {
+        else if (layout->property("graphicsSettingsRole").toString() == QLatin1String("form")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
+            if (auto* form = qobject_cast<QFormLayout*>(layout)) {
+                form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+                form->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
+                form->setHorizontalSpacing(8);
+                for (int row = 0; row < form->rowCount(); ++row) {
+                    auto* item = form->itemAt(row, QFormLayout::LabelRole);
+                    auto* label = item ? qobject_cast<QLabel*>(item->widget()) : nullptr;
+                    if (!label) continue;
+                    // A font-relative shared column keeps independent sections aligned.
+                    const int width = label->fontMetrics().horizontalAdvance(
+                        QStringLiteral("Minimum (mm)"));
+                    label->setFixedWidth(width);
+                    label->setWordWrap(true);
+                }
+            }
         }
         else if (name == QLatin1String("ProcessingInteractiveGroupLayout")) {
             setLayoutMetrics(layout, QMargins(12, 14, 12, 12), 8);
