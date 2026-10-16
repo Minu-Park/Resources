@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Apply common graphics settings group-box insets, spacing and font-relative label columns across all sections, including narrow panels.
+
 - Export reusable dialog support without theme assets, preserving the existing platform window behavior.
 
 - Export Resources::Widgets as an installed Qt-only package; allow consumers to omit theme assets and window chrome.
