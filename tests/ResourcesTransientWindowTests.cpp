@@ -9,6 +9,7 @@
 #include <QComboBox>
 #include <QDir>
 #include <QGraphicsDropShadowEffect>
+#include <QHeaderView>
 #include <QDockWidget>
 #include <QMenu>
 #include <QListView>
@@ -22,6 +23,7 @@
 #include <QStyleOptionViewItem>
 #include <QTest>
 #include <QTreeWidget>
+#include <QTableWidget>
 #include <QVBoxLayout>
 #ifdef Q_OS_WIN
 #include <qt_windows.h>
@@ -133,9 +135,14 @@ private slots:
             if (selection >= 0) menu.setActiveAction(menu.actions()[selection]);
             QCoreApplication::processEvents();
             QVERIFY(menu.mask().isEmpty());
-            QVERIFY(!qobject_cast<QGraphicsDropShadowEffect*>(menu.graphicsEffect()));
+            QVERIFY(menu.graphicsEffect()->property("resourcesMenuShadow").toBool());
             const QImage image = menu.grab().toImage();
+            QCOMPARE(menu.graphicsEffect()->boundingRect(), QRectF(menu.rect()));
             const int extent = qCeil(8 * image.devicePixelRatio());
+            const int gutter = qRound(12 * image.devicePixelRatio());
+            QVERIFY(!menu.actionAt(QPoint(2, menu.height() / 2)));
+            const int shadowAlpha = image.pixelColor(image.width() / 2, image.height() - gutter + 2).alpha();
+            QVERIFY2(shadowAlpha > 0 && shadowAlpha <= 36, "Missing or overly dark external menu shadow.");
             for (const bool bottom : {false, true}) {
                 for (const bool right : {false, true}) {
                     int partial = 0;
@@ -143,11 +150,13 @@ private slots:
                                               bottom ? image.height() - 1 : 0).alpha(), 0);
                     for (int y = 0; y < extent; ++y) {
                         for (int x = 0; x < extent; ++x) {
-                            const QColor pixel = image.pixelColor(right ? image.width() - 1 - x : x,
-                                                                  bottom ? image.height() - 1 - y : y);
+                            const QColor pixel = image.pixelColor(right ? image.width() - 1 - gutter - x : gutter + x,
+                                                                  bottom ? image.height() - 1 - gutter - y : gutter + y);
                             if (pixel.alpha() > 0 && pixel.alpha() < 255) ++partial;
-                            if (pixel.alpha() > 32) {
-                                QVERIFY2(pixel.red() > 170 && pixel.green() > 170 && pixel.blue() > 170,
+                            if (pixel.alpha() > 36) {
+                                // Fractional border coverage composites over at most 36/255 shadow alpha.
+                                const int minimum = 217 - (217 - 32) * 36 / pixel.alpha() - 8;
+                                QVERIFY2(pixel.red() >= minimum && pixel.green() >= minimum && pixel.blue() >= minimum,
                                          "A dark widget-shadow wedge contaminated the menu corner.");
                             }
                         }
@@ -165,13 +174,22 @@ private slots:
         }
     }
 
+    void menuStyleAndKeyboardLifecycle_data()
+    {
+        QTest::addColumn<bool>("rtl");
+        QTest::newRow("ltr") << false;
+        QTest::newRow("rtl") << true;
+    }
+
     void menuStyleAndKeyboardLifecycle()
     {
+        QFETCH(bool, rtl);
         Resources::installResources(*qApp);
         QWidget owner;
         owner.resize(500, 300);
         owner.show();
         QMenu menu(&owner);
+        menu.setLayoutDirection(rtl ? Qt::RightToLeft : Qt::LeftToRight);
         auto* submenu = menu.addMenu(QStringLiteral("Analysis"));
         QAction* action = submenu->addAction(QStringLiteral("Measure"));
         QSignalSpy triggered(action, &QAction::triggered);
@@ -180,24 +198,101 @@ private slots:
         menu.setGraphicsEffect(new QGraphicsDropShadowEffect(&menu));
         menu.popup(owner.mapToGlobal(QPoint(20, 20)));
         QTRY_VERIFY(menu.isVisible());
-        QVERIFY(!menu.graphicsEffect());
+        QVERIFY(menu.graphicsEffect()->property("resourcesMenuShadow").toBool());
         const QRect geometry = menu.geometry();
         menu.setGraphicsEffect(new QGraphicsDropShadowEffect(&menu));
         QEvent styleChange(QEvent::StyleChange);
         QApplication::sendEvent(&menu, &styleChange);
-        QVERIFY(!menu.graphicsEffect());
+        QVERIFY(menu.graphicsEffect()->property("resourcesMenuShadow").toBool());
         QCOMPARE(menu.geometry(), geometry);
         QVERIFY(menu.isVisible());
         menu.setActiveAction(submenu->menuAction());
-        QTest::keyClick(&menu, Qt::Key_Right);
+        QTest::keyClick(&menu, rtl ? Qt::Key_Left : Qt::Key_Right);
         QTRY_VERIFY(submenu->isVisible());
         QVERIFY(submenu->mask().isEmpty());
-        QVERIFY(!qobject_cast<QGraphicsDropShadowEffect*>(submenu->graphicsEffect()));
+        QVERIFY(submenu->graphicsEffect()->property("resourcesMenuShadow").toBool());
+        const int parentActionY = menu.mapToGlobal(menu.actionGeometry(submenu->menuAction()).topLeft()).y();
+        const int childActionY = submenu->mapToGlobal(submenu->actionGeometry(action).topLeft()).y();
+        QVERIFY2(qAbs(parentActionY - childActionY) <= 1, "Shadow gutter shifted the submenu's action anchor.");
+        const QString captures = qEnvironmentVariable("RESOURCES_MENU_SCREENSHOTS");
+        if (!captures.isEmpty()) {
+            QVERIFY(QDir().mkpath(captures));
+            QVERIFY(submenu->grab().save(QDir(captures).filePath(QStringLiteral("%1-submenu.png")
+                .arg(QString::fromLatin1(QTest::currentDataTag())))));
+        }
         submenu->setActiveAction(action);
         QTest::keyClick(submenu, Qt::Key_Return);
         QCOMPARE(triggered.count(), 1);
         QTRY_VERIFY(!menu.isVisible());
         QTRY_VERIFY(!submenu->isVisible());
+        menu.popup(owner.mapToGlobal(QPoint(20, 20)));
+        QTRY_VERIFY(menu.isVisible());
+        QTest::mouseClick(&menu, Qt::LeftButton, Qt::NoModifier, QPoint(2, 2));
+        QTRY_VERIFY(!menu.isVisible());
+        QCOMPARE(triggered.count(), 1);
+    }
+
+    void menuCheckIndicatorsKeepToolbarIcons()
+    {
+        Resources::installResources(*qApp);
+        QWidget owner;
+        owner.resize(400, 250);
+        owner.show();
+        QMenu menu(&owner);
+        const QIcon icon(QStringLiteral(":/Resources/Icons/icons8-image-48.png"));
+        QVERIFY(!icon.isNull());
+        auto* action = menu.addAction(icon, QStringLiteral("Checkable action"));
+        action->setIconVisibleInMenu(true);
+        const qint64 key = action->icon().cacheKey();
+        action->setCheckable(true);
+        action->setChecked(true);
+        auto* command = menu.addAction(icon, QStringLiteral("Normal command"));
+        command->setIconVisibleInMenu(true);
+        menu.popup(owner.mapToGlobal(QPoint(20, 20)));
+        QTRY_VERIFY(menu.isVisible());
+        QVERIFY(!action->isIconVisibleInMenu());
+        QCOMPARE(action->icon().cacheKey(), key);
+        QVERIFY(command->isIconVisibleInMenu());
+        QSignalSpy triggered(action, &QAction::triggered);
+        menu.setActiveAction(action);
+        QTest::keyClick(&menu, Qt::Key_Return);
+        QCOMPARE(triggered.count(), 1);
+        QVERIFY(!action->isChecked());
+        QTRY_VERIFY(!menu.isVisible());
+        action->setCheckable(false);
+        QVERIFY(action->isIconVisibleInMenu());
+        action->setIconVisibleInMenu(false);
+        action->setCheckable(true);
+        action->setCheckable(false);
+        QVERIFY(!action->isIconVisibleInMenu());
+        QCOMPARE(action->icon().cacheKey(), key);
+        menu.close();
+    }
+
+    void menuShadowScreenEdges()
+    {
+        Resources::installResources(*qApp);
+        const QRect bounds = QGuiApplication::primaryScreen()->availableGeometry();
+        for (bool rtl : {false, true}) {
+            for (const QPoint anchor : {bounds.topLeft(), bounds.topRight(), bounds.bottomLeft(), bounds.bottomRight()}) {
+                QMenu menu;
+                menu.setLayoutDirection(rtl ? Qt::RightToLeft : Qt::LeftToRight);
+                auto* submenu = menu.addMenu(QStringLiteral("Analysis"));
+                auto* action = submenu->addAction(QStringLiteral("Measure"));
+                QSignalSpy triggered(action, &QAction::triggered);
+                menu.popup(anchor);
+                QTRY_VERIFY(menu.isVisible());
+                QVERIFY(bounds.contains(menu.geometry()));
+                menu.setActiveAction(submenu->menuAction());
+                QTest::keyClick(&menu, rtl ? Qt::Key_Left : Qt::Key_Right);
+                QTRY_VERIFY(submenu->isVisible());
+                QVERIFY(bounds.contains(submenu->geometry()));
+                QTest::mouseClick(submenu, Qt::LeftButton, Qt::NoModifier,
+                                  submenu->actionGeometry(action).center());
+                QCOMPARE(triggered.count(), 1);
+                QTRY_VERIFY(!menu.isVisible());
+            }
+        }
     }
 
     void rowTreeCheckIndicatorsAreVisible()
@@ -244,6 +339,125 @@ private slots:
         item->setCheckState(0, Qt::Checked);
         QTest::mouseClick(tree.viewport(), Qt::LeftButton, Qt::NoModifier, indicator.center());
         QCOMPARE(item->checkState(0), Qt::Unchecked);
+    }
+
+    void diagnosticsDividersStayInsideColumns()
+    {
+        Resources::installResources(*qApp);
+        QTableWidget table(3, 2);
+        table.setObjectName(QStringLiteral("GraphicsSettingsPresentationStatsTable"));
+        table.setHorizontalHeaderLabels({QStringLiteral("Counter"), QStringLiteral("Value")});
+        table.verticalHeader()->hide();
+        table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        table.setSelectionMode(QAbstractItemView::NoSelection);
+        for (int row = 0; row < table.rowCount(); ++row)
+            for (int column = 0; column < table.columnCount(); ++column)
+                table.setItem(row, column, new QTableWidgetItem);
+        for (int width : {320, 321, 480}) {
+            table.resize(width, 180);
+            table.show();
+            QVERIFY(QTest::qWaitForWindowExposed(&table));
+            QCoreApplication::processEvents();
+            auto* header = table.horizontalHeader();
+            QVERIFY(!table.showGrid());
+            const QImage headerImage = header->grab().toImage();
+            bool bubbleBorderVisible = false;
+            for (int y = 0; y < qCeil(2 * headerImage.devicePixelRatio()); ++y) {
+                const QColor pixel = headerImage.pixelColor(headerImage.width() / 4, y);
+                bubbleBorderVisible |= pixel.red() < 230 && pixel.blue() > pixel.red() + 5;
+            }
+            QVERIFY2(bubbleBorderVisible, "The shared bubble header outline must remain visible");
+            QCOMPARE(header->sectionViewportPosition(1), table.columnViewportPosition(1));
+            const QImage image = table.viewport()->grab().toImage();
+            const qreal dpr = image.devicePixelRatio();
+            const auto hasDivider = [&](int logicalX, int logicalY) {
+                const int y = qRound(logicalY * dpr);
+                for (int x = qFloor(logicalX * dpr) - 1;
+                     x <= qCeil((logicalX + 1) * dpr); ++x) {
+                    if (x < 0 || x >= image.width()) continue;
+                    const QColor pixel = image.pixelColor(x, y);
+                    if (pixel.red() < 250 && pixel.blue() > pixel.red() + 3)
+                        return true;
+                }
+                return false;
+            };
+            const QRect first = table.visualItemRect(table.item(0, 0));
+            const QRect last = table.visualItemRect(table.item(0, 1));
+            QVERIFY(hasDivider(first.right(), first.top() + 4));
+            QVERIFY(!hasDivider(last.right(), last.top() + 4));
+            const QImage whole = table.grab().toImage();
+            const int dividerX = table.viewport()->mapTo(&table, first.topRight()).x();
+            const auto dividerCenter = [&](int logicalY) {
+                qreal weightedX = 0;
+                int weight = 0;
+                for (int x = qFloor((dividerX - 2) * dpr);
+                     x <= qCeil((dividerX + 3) * dpr); ++x) {
+                    const QColor pixel = whole.pixelColor(x, qRound(logicalY * dpr));
+                    const int ink = qMax(0, pixel.blue() - pixel.red());
+                    weightedX += x * ink;
+                    weight += ink;
+                }
+                return weight ? weightedX / weight : qreal(-1);
+            };
+            const qreal headerLine = dividerCenter(header->geometry().center().y());
+            const qreal bodyLine = dividerCenter(table.viewport()->mapTo(
+                &table, QPoint(0, first.top() + 4)).y());
+            QVERIFY(headerLine >= 0);
+            QVERIFY(bodyLine >= 0);
+            QVERIFY2(qAbs(headerLine - bodyLine) <= 0.5,
+                     qPrintable(QStringLiteral("Header/body divider raster: %1 / %2")
+                                    .arg(headerLine).arg(bodyLine)));
+        }
+        QTableWidget ordinary(1, 2);
+        ordinary.ensurePolished();
+        QVERIFY(ordinary.showGrid());
+    }
+
+    void rowTableCheckIndicatorsAreVisible()
+    {
+        Resources::installResources(*qApp);
+        QTableWidget table(1, 1);
+        table.setProperty("interactionMode", QStringLiteral("row"));
+        auto* item = new QTableWidgetItem;
+        item->setCheckState(Qt::Unchecked);
+        table.setItem(0, 0, item);
+        table.resize(320, 160);
+        table.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&table));
+        QTest::mouseMove(table.viewport(), QPoint(260, 120));
+        struct Probe : QStyledItemDelegate { using QStyledItemDelegate::initStyleOption; } probe;
+        QStyleOptionViewItem option;
+        option.initFrom(&table);
+        option.widget = &table;
+        option.rect = table.visualItemRect(item);
+        probe.initStyleOption(&option, table.model()->index(0, 0));
+        const QRect indicator = table.style()->subElementRect(
+            QStyle::SE_ItemViewItemCheckIndicator, &option, &table);
+        QVERIFY(indicator.width() >= 32);
+        QVERIFY(indicator.height() >= 18);
+        const auto capture = [&] {
+            QCoreApplication::processEvents();
+            const QImage image = table.viewport()->grab().toImage();
+            const qreal dpr = image.devicePixelRatio();
+            return image.copy(QRect(qRound(indicator.x() * dpr), qRound(indicator.y() * dpr),
+                                    qRound(indicator.width() * dpr), qRound(indicator.height() * dpr)));
+        };
+        const QImage unchecked = capture();
+        item->setCheckState(Qt::Checked);
+        const QImage checked = capture();
+        item->setCheckState(Qt::PartiallyChecked);
+        const QImage partial = capture();
+        item->setData(Qt::CheckStateRole, QVariant());
+        const QImage absent = capture();
+        QVERIFY(unchecked != checked);
+        QVERIFY(unchecked != partial);
+        QVERIFY(checked != partial);
+        QVERIFY(unchecked != absent);
+        QVERIFY(checked != absent);
+        QVERIFY(partial != absent);
+        item->setCheckState(Qt::Checked);
+        QTest::mouseClick(table.viewport(), Qt::LeftButton, Qt::NoModifier, indicator.center());
+        QCOMPARE(item->checkState(), Qt::Unchecked);
     }
 
     void treeHoverIncludesBranches()

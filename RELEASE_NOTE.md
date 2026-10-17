@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Align presentation diagnostics header/body dividers and draw only internal grid lines, preserving the shared bubble header and rounded table shell.
+
+- Give default list items 3px vertical padding so switch indicators remain separated between rows, while retaining dedicated combo and file-list spacing.
+
+- Unify standalone, item-view, group-box, and menu check indicators as switches, including mixed/disabled states and focus treatment, while preserving native input, state, and selection semantics.
+
+- Use a short left-side menu hover indicator with dedicated icon spacing, and keep menu-bar hover and open states free of fills, outlines, and underlines.
+
+- Add a subtle menu-only shadow inside a transparent stylesheet gutter, retaining smooth shell corners and submenu action alignment; keep native layered-window updates within that padded extent.
+
 - Render menus through one antialiased QSS shell without binary corner masks or native-style widget shadows, preventing dark corner wedges and preserving smooth curves at fractional display scales.
 
 - Apply common graphics settings group-box insets, spacing and font-relative label columns across all sections, including narrow panels.
