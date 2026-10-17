@@ -9,6 +9,7 @@
 #include <QFontDatabase>
 #include <QFont>
 #include <QMenu>
+#include <QMenuBar>
 #include <QFrame>
 #include <QLayout>
 #include <QGridLayout>
@@ -56,6 +57,9 @@ inline void initResourcesHelper()
 {
     Q_INIT_RESOURCE(Resources);
 }
+
+// Shared by popup geometry/effects and the installed QSS token.
+static constexpr int MenuShadowGutter = 12;
 
 // ---------------------------------------------------------------------------
 class DeviceFeatureTreeDelegate : public QStyledItemDelegate
@@ -386,11 +390,14 @@ public:
         // Include the header viewport inset when sharing its painted section boundary.
         // Filled strips match QSS border coverage at fractional display scales.
         painter->setRenderHint(QPainter::Antialiasing, true);
-        if (index.column() > 0) {
+        for (int column = 1; column < _table->columnCount(); ++column) {
             auto* header = _table->horizontalHeader();
             const int boundary = header->viewport()->mapTo(_table,
-                QPoint(header->sectionViewportPosition(index.column()) - 1, 0)).x()
+                QPoint(header->sectionViewportPosition(column) - 1, 0)).x()
                 - _table->viewport()->pos().x();
+            // Paint with the cell that owns this pixel, including partial viewport updates.
+            if (_table->columnAt(boundary) != index.column())
+                continue;
             painter->fillRect(QRectF(boundary, option.rect.top(), 1,
                                     _table->rowHeight(index.row())), gridColor);
         }
@@ -897,40 +904,55 @@ private:
         }
     }
 
-    /** @brief Reads the transparent shadow gutter from the owning menu stylesheet. */
-    static int menuShadowGutter()
-    {
-        static const int gutter = [] {
-            QFile file(QStringLiteral(":/Resources/theme/qss/00_base.qss"));
-            if (!file.open(QIODevice::ReadOnly)) return 0;
-            const auto block = QRegularExpression(QStringLiteral("QMenu\\s*\\{([^}]*)\\}"))
-                .match(QString::fromUtf8(file.readAll()));
-            return QRegularExpression(QStringLiteral("margin:\\s*(\\d+)px"))
-                .match(block.captured(1)).captured(1).toInt();
-        }();
-        return gutter;
-    }
-
     /** @brief Keeps the visible shell at the requested anchor while reserving an external shadow gutter. */
     static void positionMenuShell(QMenu* menu)
     {
-        bool submenu = false;
+        QMenu* parentMenu = nullptr;
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             auto* parent = qobject_cast<QMenu*>(widget);
             if (parent && parent != menu && parent->isVisible() && parent->activeAction()
                 && parent->activeAction()->menu() == menu) {
-                submenu = true;
+                parentMenu = parent;
                 break;
             }
         }
-        const int gutter = menuShadowGutter();
+        const int gutter = MenuShadowGutter;
+        const QRect geometry = menu->geometry();
+        bool opensLeft = menu->isRightToLeft();
+        bool opensUp = false;
+        if (parentMenu) {
+            opensLeft = geometry.center().x() < parentMenu->geometry().center().x();
+        } else if (const QScreen* screen = menu->screen()) {
+            const QRect bounds = screen->availableGeometry();
+            const int frame = menu->style()->pixelMetric(QStyle::PM_MenuDesktopFrameWidth, nullptr, menu);
+            const QPoint cursor = QCursor::pos();
+            // Qt snaps cursor popups above the cursor or clamps programmatic popups to the screen.
+            const bool cursorAtRight = qAbs(geometry.right() + 1 - cursor.x()) <= 3
+                && cursor.y() >= geometry.top() - 3 && cursor.y() <= geometry.bottom() + 3;
+            const bool cursorAtBottom = qAbs(geometry.bottom() + 1 + frame - cursor.y()) <= 3
+                && cursor.x() >= geometry.left() - 3 && cursor.x() <= geometry.right() + 3;
+            opensLeft = geometry.right() >= bounds.right() - frame - 1 || cursorAtRight;
+            if (geometry.left() <= bounds.left() + frame + 1) opensLeft = false;
+            opensUp = geometry.bottom() >= bounds.bottom() - frame - 1 || cursorAtBottom;
+            // Menu-bar popups may be opened by keyboard, away from the cursor.
+            for (QObject* object : menu->menuAction()->associatedObjects()) {
+                if (auto* bar = qobject_cast<QMenuBar*>(object); bar && bar->isVisible()) {
+                    const QRect action = bar->actionGeometry(menu->menuAction());
+                    opensLeft = geometry.center().x() < bar->mapToGlobal(action.center()).x();
+                    break;
+                }
+            }
+        }
         // Qt already aligns a submenu's first action vertically with its parent action.
-        QPoint position = menu->pos() + QPoint(menu->isRightToLeft() ? gutter : -gutter,
-                                               submenu ? 0 : -gutter);
+        QPoint position = menu->pos() + QPoint(opensLeft ? gutter : -gutter,
+                                               parentMenu ? 0 : (opensUp ? gutter : -gutter));
         if (const QScreen* screen = menu->screen()) {
             const QRect bounds = screen->availableGeometry();
-            position.setX(qBound(bounds.left(), position.x(), qMax(bounds.left(), bounds.right() - menu->width() + 1)));
-            position.setY(qBound(bounds.top(), position.y(), qMax(bounds.top(), bounds.bottom() - menu->height() + 1)));
+            // Keep the visible shell on-screen; transparent shadow gutters may cross an edge.
+            position.setX(qBound(bounds.left() - gutter, position.x(),
+                                qMax(bounds.left() - gutter, bounds.right() - menu->width() + gutter + 1)));
+            position.setY(qBound(bounds.top() - gutter, position.y(),
+                                qMax(bounds.top() - gutter, bounds.bottom() - menu->height() + gutter + 1)));
         }
         menu->move(position);
     }
@@ -953,7 +975,7 @@ private:
             shadow->setProperty("resourcesMenuShadow", true);
             menu->setGraphicsEffect(shadow);
         }
-        shadow->setBlurRadius(menuShadowGutter());
+        shadow->setBlurRadius(MenuShadowGutter);
         shadow->setOffset(0, 2);
         shadow->setColor(QColor(32, 42, 56, 36));
         menu->clearMask(); // Preserve the stylesheet's fractional edge coverage at every DPR.
@@ -1586,6 +1608,7 @@ void installResources(QApplication& app)
             styleSheet += QLatin1Char('\n');
         }
     }
+    styleSheet.replace(QStringLiteral("@MENU_SHADOW_GUTTER@"), QString::number(MenuShadowGutter));
 #ifdef Q_OS_WIN
     styleSheet += QStringLiteral(
         "\nQWidget#ThemedDialogContainer { border-radius: 8px; }\n"

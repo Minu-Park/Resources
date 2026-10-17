@@ -755,7 +755,7 @@ QScrollBar#ImageViewOverlayScrollBar::sub-page {
 }
 
 QMenu {
-    margin: 12px;
+    margin: @MENU_SHADOW_GUTTER@px;
     border: 1px solid #d9e1ea;
     border-radius: 8px;
     background-color: #ffffff;
@@ -787,6 +787,28 @@ QMenu::item:disabled {
 
 QMenu::indicator {
     left: 9px;
+}
+
+QMenu::indicator:exclusive {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #cfd9e4;
+    border-radius: 9px;
+    background: #ffffff;
+    image: none;
+}
+
+QMenu::indicator:exclusive:checked {
+    image: url(:/Resources/Icons/radio-selected.svg);
+}
+
+QMenu::indicator:exclusive:disabled {
+    border-color: #dce5ee;
+    image: none;
+}
+
+QMenu::indicator:exclusive:checked:disabled {
+    image: url(:/Resources/Icons/radio-selected-disabled.svg);
 }
 
 QMenu::separator {

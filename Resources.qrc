@@ -1,6 +1,8 @@
 <RCC>
     <qresource prefix="/Resources">
         <file>Icons/menu-hover-indicator.svg</file>
+        <file>Icons/radio-selected.svg</file>
+        <file>Icons/radio-selected-disabled.svg</file>
         <file>Icons/switch-off.svg</file>
         <file>Icons/switch-on.svg</file>
         <file>Icons/switch-mixed.svg</file>
