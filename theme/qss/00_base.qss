@@ -790,6 +790,8 @@ QMenu::indicator {
 }
 
 QMenu::indicator:exclusive {
+    /* Match the switch image edge beyond its transparent padding/border gutter. */
+    left: 11px;
     width: 16px;
     height: 16px;
     padding: 0;
