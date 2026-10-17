@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Render menus through one antialiased QSS shell without binary corner masks or native-style widget shadows, preventing dark corner wedges and preserving smooth curves at fractional display scales.
+
 - Apply common graphics settings group-box insets, spacing and font-relative label columns across all sections, including narrow panels.
 
 - Export reusable dialog support without theme assets, preserving the existing platform window behavior.

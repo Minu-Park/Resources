@@ -8,6 +8,7 @@
 #include <QAbstractItemView>
 #include <QComboBox>
 #include <QDir>
+#include <QGraphicsDropShadowEffect>
 #include <QDockWidget>
 #include <QMenu>
 #include <QListView>
@@ -101,6 +102,104 @@ class ResourcesTransientWindowTests : public QObject
 {
     Q_OBJECT
 private slots:
+    void menuShellCorners_data()
+    {
+        QTest::addColumn<bool>("rtl");
+        QTest::addColumn<int>("selection");
+        QTest::newRow("plain") << false << -1;
+        QTest::newRow("first-selected") << false << 0;
+        QTest::newRow("last-selected") << false << 2;
+        QTest::newRow("rtl") << true << -1;
+    }
+
+    void menuShellCorners()
+    {
+        QFETCH(bool, rtl);
+        QFETCH(int, selection);
+        Resources::installResources(*qApp);
+        QWidget owner;
+        owner.resize(500, 300);
+        owner.show();
+        QMenu menu(&owner);
+        menu.setLayoutDirection(rtl ? Qt::RightToLeft : Qt::LeftToRight);
+        menu.addAction(QStringLiteral("Open image"));
+        menu.addSeparator();
+        menu.addAction(QStringLiteral("Live analysis"))->setCheckable(true);
+        menu.actions().last()->setChecked(true);
+        for (int opening = 0; opening != 2; ++opening) {
+            menu.popup(owner.mapToGlobal(QPoint(20, 20)));
+            QTRY_VERIFY(menu.isVisible());
+            if (opening == 1) menu.resize(menu.width() + 37, menu.height() + 11);
+            if (selection >= 0) menu.setActiveAction(menu.actions()[selection]);
+            QCoreApplication::processEvents();
+            QVERIFY(menu.mask().isEmpty());
+            QVERIFY(!qobject_cast<QGraphicsDropShadowEffect*>(menu.graphicsEffect()));
+            const QImage image = menu.grab().toImage();
+            const int extent = qCeil(8 * image.devicePixelRatio());
+            for (const bool bottom : {false, true}) {
+                for (const bool right : {false, true}) {
+                    int partial = 0;
+                    QCOMPARE(image.pixelColor(right ? image.width() - 1 : 0,
+                                              bottom ? image.height() - 1 : 0).alpha(), 0);
+                    for (int y = 0; y < extent; ++y) {
+                        for (int x = 0; x < extent; ++x) {
+                            const QColor pixel = image.pixelColor(right ? image.width() - 1 - x : x,
+                                                                  bottom ? image.height() - 1 - y : y);
+                            if (pixel.alpha() > 0 && pixel.alpha() < 255) ++partial;
+                            if (pixel.alpha() > 32) {
+                                QVERIFY2(pixel.red() > 170 && pixel.green() > 170 && pixel.blue() > 170,
+                                         "A dark widget-shadow wedge contaminated the menu corner.");
+                            }
+                        }
+                    }
+                    QVERIFY2(partial > 0, "Menu corner lost its antialiased alpha coverage.");
+                }
+            }
+            const QString captures = qEnvironmentVariable("RESOURCES_MENU_SCREENSHOTS");
+            if (!captures.isEmpty()) {
+                QVERIFY(QDir().mkpath(captures));
+                QVERIFY(image.save(QDir(captures).filePath(QStringLiteral("%1-%2.png")
+                    .arg(QString::fromLatin1(QTest::currentDataTag())).arg(opening))));
+            }
+            menu.close();
+        }
+    }
+
+    void menuStyleAndKeyboardLifecycle()
+    {
+        Resources::installResources(*qApp);
+        QWidget owner;
+        owner.resize(500, 300);
+        owner.show();
+        QMenu menu(&owner);
+        auto* submenu = menu.addMenu(QStringLiteral("Analysis"));
+        QAction* action = submenu->addAction(QStringLiteral("Measure"));
+        QSignalSpy triggered(action, &QAction::triggered);
+        menu.ensurePolished();
+        // Model the effect installed by a native style after the Resources polish filter.
+        menu.setGraphicsEffect(new QGraphicsDropShadowEffect(&menu));
+        menu.popup(owner.mapToGlobal(QPoint(20, 20)));
+        QTRY_VERIFY(menu.isVisible());
+        QVERIFY(!menu.graphicsEffect());
+        const QRect geometry = menu.geometry();
+        menu.setGraphicsEffect(new QGraphicsDropShadowEffect(&menu));
+        QEvent styleChange(QEvent::StyleChange);
+        QApplication::sendEvent(&menu, &styleChange);
+        QVERIFY(!menu.graphicsEffect());
+        QCOMPARE(menu.geometry(), geometry);
+        QVERIFY(menu.isVisible());
+        menu.setActiveAction(submenu->menuAction());
+        QTest::keyClick(&menu, Qt::Key_Right);
+        QTRY_VERIFY(submenu->isVisible());
+        QVERIFY(submenu->mask().isEmpty());
+        QVERIFY(!qobject_cast<QGraphicsDropShadowEffect*>(submenu->graphicsEffect()));
+        submenu->setActiveAction(action);
+        QTest::keyClick(submenu, Qt::Key_Return);
+        QCOMPARE(triggered.count(), 1);
+        QTRY_VERIFY(!menu.isVisible());
+        QTRY_VERIFY(!submenu->isVisible());
+    }
+
     void rowTreeCheckIndicatorsAreVisible()
     {
         Resources::installResources(*qApp);
