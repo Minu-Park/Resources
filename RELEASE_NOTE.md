@@ -4,6 +4,8 @@
 
 - Preserve diagnostics dividers during individual-cell repaints, share one menu shadow metric with QSS, correct flipped popup shell anchors, and keep exclusive menu choices as radio indicators.
 
+- Keep exclusive menu radio indicators circular by clearing inherited switch padding; verify rendered diameter and corner pixels across display scales.
+
 - Align presentation diagnostics header/body dividers and draw only internal grid lines, preserving the shared bubble header and rounded table shell.
 
 - Give default list items 3px vertical padding so switch indicators remain separated between rows, while retaining dedicated combo and file-list spacing.

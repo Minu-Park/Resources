@@ -792,6 +792,7 @@ QMenu::indicator {
 QMenu::indicator:exclusive {
     width: 16px;
     height: 16px;
+    padding: 0;
     border: 1px solid #cfd9e4;
     border-radius: 9px;
     background: #ffffff;

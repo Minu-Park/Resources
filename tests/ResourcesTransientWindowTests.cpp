@@ -364,6 +364,31 @@ private slots:
             return menu.grab().toImage();
         };
         const QImage exclusive = capture();
+        const qreal dpr = exclusive.devicePixelRatio();
+        const QRect firstRow = menu.actionGeometry(first);
+        QRect outline;
+        for (int y = qFloor(firstRow.top() * dpr); y < qCeil((firstRow.bottom() + 1) * dpr); ++y) {
+            for (int x = qFloor(firstRow.left() * dpr);
+                 x < qCeil((firstRow.left() + 64) * dpr) && x < exclusive.width(); ++x) {
+                const QColor pixel = exclusive.pixelColor(x, y);
+                if (pixel.red() > 180 && pixel.red() < 249
+                    && pixel.green() - pixel.red() >= 5 && pixel.blue() - pixel.green() >= 5)
+                    outline = outline.united(QRect(x, y, 1, 1));
+            }
+        }
+        QVERIFY(!outline.isEmpty());
+        QVERIFY2(qAbs(outline.width() - qRound(18 * dpr)) <= 1,
+                 qPrintable(QStringLiteral("Radio outline width %1 at DPR %2").arg(outline.width()).arg(dpr)));
+        QVERIFY(qAbs(outline.height() - qRound(18 * dpr)) <= 1);
+        for (const QPoint corner : {outline.topLeft(), outline.topRight(), outline.bottomLeft(), outline.bottomRight()}) {
+            const QColor pixel = exclusive.pixelColor(corner);
+            QVERIFY(pixel.red() > 245 && pixel.green() > 245 && pixel.blue() > 245);
+        }
+        const QString captures = qEnvironmentVariable("RESOURCES_MENU_SCREENSHOTS");
+        if (!captures.isEmpty()) {
+            QVERIFY(QDir().mkpath(captures));
+            QVERIFY(exclusive.save(QDir(captures).filePath(QStringLiteral("exclusive-menu-indicators.png"))));
+        }
         group.removeAction(first);
         const QImage independent = capture();
         QVERIFY(exclusive != independent);
