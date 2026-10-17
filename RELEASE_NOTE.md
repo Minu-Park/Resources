@@ -6,6 +6,8 @@
 
 - Keep exclusive menu radio indicators circular by clearing inherited switch padding; verify rendered diameter and corner pixels across display scales.
 
+- Align visible menu radio/switch left edges and row centers while retaining their separate native label offsets.
+
 - Align presentation diagnostics header/body dividers and draw only internal grid lines, preserving the shared bubble header and rounded table shell.
 
 - Give default list items 3px vertical padding so switch indicators remain separated between rows, while retaining dedicated combo and file-list spacing.

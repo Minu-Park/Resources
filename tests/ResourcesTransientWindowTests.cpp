@@ -366,16 +366,20 @@ private slots:
         const QImage exclusive = capture();
         const qreal dpr = exclusive.devicePixelRatio();
         const QRect firstRow = menu.actionGeometry(first);
-        QRect outline;
-        for (int y = qFloor(firstRow.top() * dpr); y < qCeil((firstRow.bottom() + 1) * dpr); ++y) {
-            for (int x = qFloor(firstRow.left() * dpr);
-                 x < qCeil((firstRow.left() + 64) * dpr) && x < exclusive.width(); ++x) {
-                const QColor pixel = exclusive.pixelColor(x, y);
-                if (pixel.red() > 180 && pixel.red() < 249
-                    && pixel.green() - pixel.red() >= 5 && pixel.blue() - pixel.green() >= 5)
-                    outline = outline.united(QRect(x, y, 1, 1));
+        const auto indicatorOutline = [&](const QRect& row) {
+            QRect result;
+            for (int y = qFloor(row.top() * dpr); y < qCeil((row.bottom() + 1) * dpr); ++y) {
+                for (int x = qFloor(row.left() * dpr);
+                     x < qCeil((row.left() + 64) * dpr) && x < exclusive.width(); ++x) {
+                    const QColor pixel = exclusive.pixelColor(x, y);
+                    if (pixel.red() > 180 && pixel.red() < 249
+                        && pixel.green() - pixel.red() >= 5 && pixel.blue() - pixel.green() >= 5)
+                        result = result.united(QRect(x, y, 1, 1));
+                }
             }
-        }
+            return result;
+        };
+        const QRect outline = indicatorOutline(firstRow);
         QVERIFY(!outline.isEmpty());
         QVERIFY2(qAbs(outline.width() - qRound(18 * dpr)) <= 1,
                  qPrintable(QStringLiteral("Radio outline width %1 at DPR %2").arg(outline.width()).arg(dpr)));
@@ -384,6 +388,18 @@ private slots:
             const QColor pixel = exclusive.pixelColor(corner);
             QVERIFY(pixel.red() > 245 && pixel.green() > 245 && pixel.blue() > 245);
         }
+        const QRect toggleRow = menu.actionGeometry(toggle);
+        const QRect track = indicatorOutline(toggleRow);
+        QVERIFY(!track.isEmpty());
+        QVERIFY2(qAbs(outline.left() - track.left()) <= 1,
+                 qPrintable(QStringLiteral("Radio/switch visible left edges: %1 / %2")
+                                .arg(outline.left()).arg(track.left())));
+        QVERIFY(qAbs(track.height() - outline.height()) <= 1);
+        const auto centerOffset = [dpr](const QRect& pixels, const QRect& row) {
+            return (pixels.top() + pixels.bottom() + 1) / (2 * dpr)
+                - (row.top() + row.bottom() + 1) / 2.0;
+        };
+        QVERIFY(qAbs(centerOffset(outline, firstRow) - centerOffset(track, toggleRow)) <= 1 / dpr);
         const QString captures = qEnvironmentVariable("RESOURCES_MENU_SCREENSHOTS");
         if (!captures.isEmpty()) {
             QVERIFY(QDir().mkpath(captures));
