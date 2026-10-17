@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Align embedded editable combo text with read-only controls, use left indicators for combo popup hover/selection, and remove unused switch columns from non-checkable menu commands.
+
 - Preserve diagnostics dividers during individual-cell repaints, share one menu shadow metric with QSS, correct flipped popup shell anchors, and keep exclusive menu choices as radio indicators.
 
 - Keep exclusive menu radio indicators circular by clearing inherited switch padding; verify rendered diameter and corner pixels across display scales.

@@ -14,7 +14,9 @@
 #include <QDockWidget>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMouseEvent>
 #include <QListView>
+#include <QLineEdit>
 #include <QPainter>
 #include <QPushButton>
 #include <QProcess>
@@ -30,6 +32,19 @@
 #ifdef Q_OS_WIN
 #include <qt_windows.h>
 #endif
+
+static QRect darkTextBounds(const QImage& image, const QRect& area, int threshold = 100)
+{
+    QRect result;
+    for (int y = area.top(); y <= area.bottom(); ++y) {
+        for (int x = area.left(); x <= area.right(); ++x) {
+            const QColor pixel = image.pixelColor(x, y);
+            if (pixel.alpha() > 200 && pixel.red() < threshold - 30 && pixel.green() < threshold - 15 && pixel.blue() < threshold)
+                result = result.united(QRect(x, y, 1, 1));
+        }
+    }
+    return result;
+}
 
 // Check the visible silhouette rather than only the straight border midpoints.
 // A quarter circle must have fractional coverage, with no opaque pixels outside
@@ -676,6 +691,124 @@ private slots:
         QCOMPARE(pixel(0, row.top() + 2), base);
         QCOMPARE(pixel(0, row.bottom() - 2), base);
         QCOMPARE(tree.style()->styleHint(QStyle::SH_ItemView_ShowDecorationSelected, nullptr, &tree), 0);
+    }
+
+    void editableComboTextInsets()
+    {
+        Resources::installResources(*qApp);
+        for (bool compact : {false, true}) {
+            for (bool rtl : {false, true}) {
+                QWidget owner;
+                if (compact) owner.setObjectName(QStringLiteral("PluginMarketplaceContent"));
+                owner.setLayoutDirection(rtl ? Qt::RightToLeft : Qt::LeftToRight);
+                QComboBox plain(&owner), editable(&owner);
+                plain.addItem(QStringLiteral("MMMMMMMM"));
+                editable.addItem(QStringLiteral("MMMMMMMM"));
+                editable.setEditable(true);
+                const int height = compact ? 20 : 24;
+                plain.setGeometry(10, 10, 280, height);
+                editable.setGeometry(10, 50, 280, height);
+                owner.resize(320, 110);owner.show();
+                QVERIFY(QTest::qWaitForWindowExposed(&owner));
+                editable.lineEdit()->deselect();editable.clearFocus();plain.clearFocus();
+                QCoreApplication::processEvents();
+                const QImage a = plain.grab().toImage(), b = editable.grab().toImage();
+                const qreal dpr = a.devicePixelRatio();
+                const QRect scan(qRound((rtl ? 24 : 2) * dpr), qRound(2 * dpr),
+                                 qRound(252 * dpr), qRound((height - 4) * dpr));
+                const QRect plainText = darkTextBounds(a, scan.intersected(a.rect()), 160);
+                const QRect editableText = darkTextBounds(b, scan.intersected(b.rect()), 160);
+                QVERIFY(!plainText.isEmpty());QVERIFY(!editableText.isEmpty());
+                const int difference = rtl ? plainText.right() - editableText.right()
+                                           : plainText.left() - editableText.left();
+                QVERIFY2(qAbs(difference) <= qCeil(dpr),
+                         qPrintable(QStringLiteral("Text difference %1 DPR %2 compact %3 RTL %4: %5/%6")
+                                        .arg(difference).arg(dpr).arg(compact).arg(rtl)
+                                        .arg(plainText.left()).arg(editableText.left())));
+                QCOMPARE(editable.size(), plain.size());
+                QVERIFY(editable.lineEdit()->height() <= editable.height());
+                QSignalSpy edited(editable.lineEdit(), &QLineEdit::textEdited);
+                editable.lineEdit()->setFocus();editable.lineEdit()->selectAll();
+                QTest::keyClicks(editable.lineEdit(), "Custom");
+                QCOMPARE(editable.currentText(), QStringLiteral("Custom"));
+                QVERIFY(!edited.isEmpty());
+            }
+        }
+    }
+
+    void comboPopupUsesLeftIndicator()
+    {
+        Resources::installResources(*qApp);
+        for (bool editable : {false, true}) {
+            QComboBox combo;
+            combo.setEditable(editable);
+            combo.addItems({QStringLiteral("First option"), QStringLiteral("Second option"), QStringLiteral("Third option")});
+            combo.setCurrentIndex(1);combo.resize(280, 24);combo.show();
+            QVERIFY(QTest::qWaitForWindowExposed(&combo));
+            combo.showPopup();QTRY_VERIFY(combo.view()->isVisible());
+            auto* view = combo.view();
+            const auto verifyRow = [&](int row) {
+                QCoreApplication::processEvents();
+                const QRect logical = view->visualRect(combo.model()->index(row, 0));
+                const QImage image = view->viewport()->grab().toImage();
+                const qreal dpr = image.devicePixelRatio();
+                bool marker = false;
+                for (int y = qCeil(logical.top() * dpr); y < qFloor((logical.bottom() + 1) * dpr); ++y)
+                    for (int x = qFloor(logical.left() * dpr); x < qCeil((logical.left() + 5) * dpr); ++x) {
+                        const QColor pixel = image.pixelColor(x, y);
+                        marker |= pixel.red() < 40 && pixel.green() > 50 && pixel.blue() > 90;
+                    }
+                const QColor background = image.pixelColor(qRound((logical.right() - 16) * dpr),
+                                                           qRound(logical.center().y() * dpr));
+                return marker && (background.alpha() == 0
+                    || (background.red() > 245 && background.green() > 245 && background.blue() > 245));
+            };
+            QVERIFY(verifyRow(1));
+            const QPoint hover = view->visualRect(combo.model()->index(2, 0)).center();
+            QMouseEvent move(QEvent::MouseMove, hover, view->viewport()->mapToGlobal(hover),
+                             Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+            QApplication::sendEvent(view->viewport(), &move);
+            QCOMPARE(view->currentIndex().row(), 2);
+            QVERIFY(verifyRow(2));
+            QSignalSpy activated(&combo, qOverload<int>(&QComboBox::activated));
+            QTest::keyClick(view, Qt::Key_Return);
+            QTRY_VERIFY(!view->isVisible());
+            QCOMPARE(combo.currentIndex(), 2);
+            QCOMPARE(activated.count(), 1);
+        }
+    }
+
+    void menuCommandsDoNotInheritSwitchColumn()
+    {
+        Resources::installResources(*qApp);
+        int pureTextLeft = -1;
+        for (int mode : {0, 1, 2}) {
+            QMenu menu;
+            auto* text = menu.addAction(QStringLiteral("MMMM text"));
+            QAction* icon = nullptr;
+            if (mode == 2) {
+                icon = menu.addAction(QIcon(QStringLiteral(":/Resources/Icons/icons8-image-48.png")), QStringLiteral("MMMM icon"));
+                icon->setIconVisibleInMenu(true);
+            }
+            if (mode > 0) {
+                auto* check = menu.addAction(QStringLiteral("MMMM switch"));
+                check->setCheckable(true);check->setChecked(true);
+            }
+            menu.popup(QPoint(180, 180));QTRY_VERIFY(menu.isVisible());
+            const QImage image = menu.grab().toImage();
+            const qreal dpr = image.devicePixelRatio();
+            const auto textLeft = [&](QAction* action) {
+                const QRect rect = menu.actionGeometry(action);
+                return darkTextBounds(image, QRect(qRound(rect.left() * dpr), qRound(rect.top() * dpr),
+                    qRound(rect.width() * dpr), qRound(rect.height() * dpr)).intersected(image.rect())).left();
+            };
+            if (!mode) pureTextLeft = textLeft(text);
+            if (mode == 1) QCOMPARE(textLeft(text), pureTextLeft);
+            if (icon) QVERIFY(qAbs(textLeft(text) - textLeft(icon)) <= 1);
+            QSignalSpy triggered(text, &QAction::triggered);
+            menu.setActiveAction(text);QTest::keyClick(&menu, Qt::Key_Return);
+            QCOMPARE(triggered.count(), 1);QTRY_VERIFY(!menu.isVisible());
+        }
     }
 
     void comboPopupLifecycle_data()

@@ -793,6 +793,15 @@ protected:
             }
         }
 
+        if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
+            if (auto* editor = qobject_cast<QLineEdit*>(obj);
+                editor && qobject_cast<QComboBox*>(editor->parentWidget()) && editor->styleSheet().isEmpty()) {
+                // Qt excludes embedded editors from application QSS unless they have a local sheet.
+                // Opt in to the shared rule without overriding a consumer's explicit editor theme.
+                editor->setStyleSheet(QStringLiteral("/* Resources: style the embedded combo editor. */"));
+            }
+        }
+
         if (event->type() == QEvent::Polish) {
             if (auto* combo = qobject_cast<QComboBox*>(obj)) {
                 if (auto* view = combo->view()) {
