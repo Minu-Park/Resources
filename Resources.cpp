@@ -281,13 +281,13 @@ public:
         const QWidget* widget = cellOption.widget;
         QStyle* style = widget != nullptr ? widget->style() : QApplication::style();
 
-        if (cellOption.checkState != Qt::Unchecked
-            && cellOption.checkState != Qt::Checked
-            && cellOption.checkState != Qt::PartiallyChecked) {
-            cellOption.checkState = Qt::Unchecked;
-        }
-        else if (cellOption.checkState != Qt::Unchecked) {
+        if (cellOption.features & QStyleOptionViewItem::HasCheckIndicator) {
             QStyleOptionViewItem checkOption(cellOption);
+            // Item primitives read style flags, including the unchecked and mixed states.
+            checkOption.state &= ~(QStyle::State_On | QStyle::State_Off | QStyle::State_NoChange);
+            checkOption.state |= cellOption.checkState == Qt::Checked ? QStyle::State_On
+                : cellOption.checkState == Qt::PartiallyChecked ? QStyle::State_NoChange
+                : QStyle::State_Off;
             checkOption.rect = style->subElementRect(
                 QStyle::SE_ItemViewItemCheckIndicator,
                 &cellOption,
@@ -367,6 +367,53 @@ static void applyRowTableStyle(QTableWidget* table)
     table->setItemDelegate(new RoundedTableItemDelegate(table));
     table->setProperty("_roundedRowDelegateInstalled", true);
     table->viewport()->update();
+}
+
+/** @brief Paints only internal diagnostics cell dividers, using the themed grid color. */
+class DiagnosticsTableItemDelegate final : public QStyledItemDelegate
+{
+public:
+    explicit DiagnosticsTableItemDelegate(QTableWidget* table)
+        : QStyledItemDelegate(table), _table(table) {}
+
+    void paint(QPainter* painter, const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override
+    {
+        QStyledItemDelegate::paint(painter, option, index);
+        painter->save();
+        const QColor gridColor = QColor::fromRgba(static_cast<QRgb>(
+            _table->style()->styleHint(QStyle::SH_Table_GridLineColor, &option, _table)));
+        // Include the header viewport inset when sharing its painted section boundary.
+        // Filled strips match QSS border coverage at fractional display scales.
+        painter->setRenderHint(QPainter::Antialiasing, true);
+        if (index.column() > 0) {
+            auto* header = _table->horizontalHeader();
+            const int boundary = header->viewport()->mapTo(_table,
+                QPoint(header->sectionViewportPosition(index.column()) - 1, 0)).x()
+                - _table->viewport()->pos().x();
+            painter->fillRect(QRectF(boundary, option.rect.top(), 1,
+                                    _table->rowHeight(index.row())), gridColor);
+        }
+        if (index.row() > 0)
+            painter->fillRect(QRectF(option.rect.left(),
+                                    option.rect.top(),
+                                    _table->columnWidth(index.column()), 1), gridColor);
+        painter->restore();
+    }
+
+private:
+    QTableWidget* _table;
+};
+
+/** @brief Keeps the read-only diagnostics grid inside its shared table shell. */
+static void applyDiagnosticsTableStyle(QTableWidget* table)
+{
+    if (table->objectName() != QLatin1String("GraphicsSettingsPresentationStatsTable")
+        || table->property("_diagnosticsDelegateInstalled").toBool())
+        return;
+    table->setShowGrid(false);
+    table->setItemDelegate(new DiagnosticsTableItemDelegate(table));
+    table->setProperty("_diagnosticsDelegateInstalled", true);
 }
 
 ThemedTreeWidget::ThemedTreeWidget(QWidget* parent)
@@ -613,6 +660,17 @@ static void paintGraphicsSettingsTabScrollerButton(QToolButton* button)
 // geometry. Modules expose semantic layout object names while Resources owns
 // the shared layout metrics.
 // ---------------------------------------------------------------------------
+/** @brief Bounds menu shadow updates to the transparent gutter of the native popup window. */
+class MenuDropShadowEffect final : public QGraphicsDropShadowEffect
+{
+public:
+    using QGraphicsDropShadowEffect::QGraphicsDropShadowEffect;
+
+protected:
+    /** @brief Keeps layered-window dirty rectangles within the already padded source extent. */
+    QRectF boundingRectFor(const QRectF& sourceRect) const override { return sourceRect; }
+};
+
 class ResourceStyleFilter : public QObject
 {
 public:
@@ -632,6 +690,9 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+        if (event->type() == QEvent::ActionAdded || event->type() == QEvent::ActionChanged) {
+            if (auto* menu = qobject_cast<QMenu*>(obj)) prepareMenuCheckIndicators(menu);
+        }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
         if (event->type() == QEvent::DevicePixelRatioChange) {
             if (auto* widget = qobject_cast<QWidget*>(obj)) {
@@ -660,7 +721,10 @@ protected:
 
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show
             || event->type() == QEvent::StyleChange) {
-            if (auto* menu = qobject_cast<QMenu*>(obj)) prepareMenuPopup(menu);
+            if (auto* menu = qobject_cast<QMenu*>(obj)) {
+                prepareMenuPopup(menu);
+                if (event->type() == QEvent::Show) positionMenuShell(menu);
+            }
         }
 
         if (event->type() == QEvent::Show
@@ -738,6 +802,7 @@ protected:
                 }
                 else if (auto* table = qobject_cast<QTableWidget*>(widget)) {
                     applyRowTableStyle(table);
+                    applyDiagnosticsTableStyle(table);
                 }
                 else if (widget->objectName() == QLatin1String("AutoCompletePopup")) {
                     widget->setWindowFlags(widget->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
@@ -816,9 +881,64 @@ protected:
     }
 
 private:
-    /** @brief Keeps QSS as the sole menu shell painter across native-style polish and reopening. */
+    /** @brief Reserves Qt's shared menu icon/check slot for switches without changing toolbar icons. */
+    static void prepareMenuCheckIndicators(QMenu* menu)
+    {
+        for (QAction* action : menu->actions()) {
+            const QVariant original = action->property("resourcesMenuIconVisibility");
+            if (action->isCheckable()) {
+                if (!original.isValid())
+                    action->setProperty("resourcesMenuIconVisibility", action->isIconVisibleInMenu());
+                if (action->isIconVisibleInMenu()) action->setIconVisibleInMenu(false);
+            } else if (original.isValid()) {
+                action->setProperty("resourcesMenuIconVisibility", QVariant());
+                action->setIconVisibleInMenu(original.toBool());
+            }
+        }
+    }
+
+    /** @brief Reads the transparent shadow gutter from the owning menu stylesheet. */
+    static int menuShadowGutter()
+    {
+        static const int gutter = [] {
+            QFile file(QStringLiteral(":/Resources/theme/qss/00_base.qss"));
+            if (!file.open(QIODevice::ReadOnly)) return 0;
+            const auto block = QRegularExpression(QStringLiteral("QMenu\\s*\\{([^}]*)\\}"))
+                .match(QString::fromUtf8(file.readAll()));
+            return QRegularExpression(QStringLiteral("margin:\\s*(\\d+)px"))
+                .match(block.captured(1)).captured(1).toInt();
+        }();
+        return gutter;
+    }
+
+    /** @brief Keeps the visible shell at the requested anchor while reserving an external shadow gutter. */
+    static void positionMenuShell(QMenu* menu)
+    {
+        bool submenu = false;
+        for (QWidget* widget : QApplication::topLevelWidgets()) {
+            auto* parent = qobject_cast<QMenu*>(widget);
+            if (parent && parent != menu && parent->isVisible() && parent->activeAction()
+                && parent->activeAction()->menu() == menu) {
+                submenu = true;
+                break;
+            }
+        }
+        const int gutter = menuShadowGutter();
+        // Qt already aligns a submenu's first action vertically with its parent action.
+        QPoint position = menu->pos() + QPoint(menu->isRightToLeft() ? gutter : -gutter,
+                                               submenu ? 0 : -gutter);
+        if (const QScreen* screen = menu->screen()) {
+            const QRect bounds = screen->availableGeometry();
+            position.setX(qBound(bounds.left(), position.x(), qMax(bounds.left(), bounds.right() - menu->width() + 1)));
+            position.setY(qBound(bounds.top(), position.y(), qMax(bounds.top(), bounds.bottom() - menu->height() + 1)));
+        }
+        menu->move(position);
+    }
+
+    /** @brief Gives the single QSS shell a bounded Resources-owned shadow across native-style polish. */
     static void prepareMenuPopup(QMenu* menu)
     {
+        prepareMenuCheckIndicators(menu);
         const auto flags = menu->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint;
         const QRect geometry = menu->geometry();
         const bool visible = menu->isVisible();
@@ -826,8 +946,16 @@ private:
         menu->setAttribute(Qt::WA_TranslucentBackground, true);
         menu->setAttribute(Qt::WA_OpaquePaintEvent, false);
         // Qt's Windows 11 style installs a widget shadow even with NoDropShadowWindowHint.
-        // With a tight popup extent, that shifted effect survives only as dark corner wedges.
-        if (qobject_cast<QGraphicsDropShadowEffect*>(menu->graphicsEffect())) menu->setGraphicsEffect(nullptr);
+        // Replace it with a centered, low-opacity effect whose full extent fits the QSS gutter.
+        auto* shadow = qobject_cast<QGraphicsDropShadowEffect*>(menu->graphicsEffect());
+        if (!shadow || !shadow->property("resourcesMenuShadow").toBool()) {
+            shadow = new MenuDropShadowEffect(menu);
+            shadow->setProperty("resourcesMenuShadow", true);
+            menu->setGraphicsEffect(shadow);
+        }
+        shadow->setBlurRadius(menuShadowGutter());
+        shadow->setOffset(0, 2);
+        shadow->setColor(QColor(32, 42, 56, 36));
         menu->clearMask(); // Preserve the stylesheet's fractional edge coverage at every DPR.
         if (menu->geometry() != geometry) menu->setGeometry(geometry);
         if (visible && !menu->isVisible()) menu->show();
