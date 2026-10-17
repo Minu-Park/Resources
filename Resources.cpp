@@ -658,6 +658,11 @@ protected:
             }
         }
 
+        if (event->type() == QEvent::Polish || event->type() == QEvent::Show
+            || event->type() == QEvent::StyleChange) {
+            if (auto* menu = qobject_cast<QMenu*>(obj)) prepareMenuPopup(menu);
+        }
+
         if (event->type() == QEvent::Show
             || event->type() == QEvent::Resize
             || event->type() == QEvent::LayoutRequest)
@@ -687,10 +692,7 @@ protected:
         }
 
         if (event->type() == QEvent::Paint) {
-            if (auto* menu = qobject_cast<QMenu*>(obj)) {
-                paintPopupRoundedRect(menu, true);
-            }
-            else if (auto* widget = qobject_cast<QWidget*>(obj)) {
+            if (auto* widget = qobject_cast<QWidget*>(obj); widget && !qobject_cast<QMenu*>(obj)) {
                 if (auto* button = qobject_cast<QToolButton*>(widget);
                     button && isGraphicsSettingsTabScrollerButton(button)
                     && button->isEnabled() && (button->underMouse() || button->isDown())) {
@@ -709,10 +711,7 @@ protected:
         }
 
         if (event->type() == QEvent::Show || event->type() == QEvent::Resize) {
-            if (auto* menu = qobject_cast<QMenu*>(obj)) {
-                applyPopupMask(menu, true);
-            }
-            else if (auto* widget = qobject_cast<QWidget*>(obj)) {
+            if (auto* widget = qobject_cast<QWidget*>(obj); widget && !qobject_cast<QMenu*>(obj)) {
                 if (widget->objectName() == QLatin1String("AutoCompletePopup") ||
                     widget->objectName() == QLatin1String("SignatureHelpLabel") ||
                     widget->inherits("QTipLabel")) {
@@ -724,13 +723,7 @@ protected:
         }
 
         if (event->type() == QEvent::Polish) {
-            if (auto* menu = qobject_cast<QMenu*>(obj)) {
-                // Window flags first (single call to avoid multiple native window recreations),
-                // then translucent attribute last so it applies to the final native window.
-                menu->setWindowFlags(menu->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
-                menu->setAttribute(Qt::WA_TranslucentBackground, true);
-            }
-            else if (auto* combo = qobject_cast<QComboBox*>(obj)) {
+            if (auto* combo = qobject_cast<QComboBox*>(obj)) {
                 if (auto* view = combo->view()) {
                     prepareComboPopup(view->window());
                 }
@@ -823,6 +816,23 @@ protected:
     }
 
 private:
+    /** @brief Keeps QSS as the sole menu shell painter across native-style polish and reopening. */
+    static void prepareMenuPopup(QMenu* menu)
+    {
+        const auto flags = menu->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint;
+        const QRect geometry = menu->geometry();
+        const bool visible = menu->isVisible();
+        if (menu->windowFlags() != flags) menu->setWindowFlags(flags);
+        menu->setAttribute(Qt::WA_TranslucentBackground, true);
+        menu->setAttribute(Qt::WA_OpaquePaintEvent, false);
+        // Qt's Windows 11 style installs a widget shadow even with NoDropShadowWindowHint.
+        // With a tight popup extent, that shifted effect survives only as dark corner wedges.
+        if (qobject_cast<QGraphicsDropShadowEffect*>(menu->graphicsEffect())) menu->setGraphicsEffect(nullptr);
+        menu->clearMask(); // Preserve the stylesheet's fractional edge coverage at every DPR.
+        if (menu->geometry() != geometry) menu->setGeometry(geometry);
+        if (visible && !menu->isVisible()) menu->show();
+    }
+
     /** @brief Clips feature content inside the shared frame without restoring bottom padding. */
     static void applyFeatureTreeViewportMask(QWidget* viewport)
     {
