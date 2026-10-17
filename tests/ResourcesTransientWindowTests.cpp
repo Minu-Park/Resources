@@ -5,6 +5,7 @@
 #include "Resources.h"
 
 #include <QApplication>
+#include <QActionGroup>
 #include <QAbstractItemView>
 #include <QComboBox>
 #include <QDir>
@@ -12,6 +13,7 @@
 #include <QHeaderView>
 #include <QDockWidget>
 #include <QMenu>
+#include <QMenuBar>
 #include <QListView>
 #include <QPainter>
 #include <QPushButton>
@@ -140,6 +142,10 @@ private slots:
             QCOMPARE(menu.graphicsEffect()->boundingRect(), QRectF(menu.rect()));
             const int extent = qCeil(8 * image.devicePixelRatio());
             const int gutter = qRound(12 * image.devicePixelRatio());
+            QVERIFY(!qApp->styleSheet().contains(QStringLiteral("@MENU_SHADOW_GUTTER@")));
+            QCOMPARE(qobject_cast<QGraphicsDropShadowEffect*>(menu.graphicsEffect())->blurRadius(), qreal(12));
+            QVERIFY(image.pixelColor(gutter - 1, image.height() / 2).alpha() <= 36);
+            QVERIFY(image.pixelColor(gutter + 1, image.height() / 2).alpha() > 180);
             QVERIFY(!menu.actionAt(QPoint(2, menu.height() / 2)));
             const int shadowAlpha = image.pixelColor(image.width() / 2, image.height() - gutter + 2).alpha();
             QVERIFY2(shadowAlpha > 0 && shadowAlpha <= 36, "Missing or overly dark external menu shadow.");
@@ -273,6 +279,7 @@ private slots:
     {
         Resources::installResources(*qApp);
         const QRect bounds = QGuiApplication::primaryScreen()->availableGeometry();
+        const QPoint oldCursor = QCursor::pos();
         for (bool rtl : {false, true}) {
             for (const QPoint anchor : {bounds.topLeft(), bounds.topRight(), bounds.bottomLeft(), bounds.bottomRight()}) {
                 QMenu menu;
@@ -280,19 +287,93 @@ private slots:
                 auto* submenu = menu.addMenu(QStringLiteral("Analysis"));
                 auto* action = submenu->addAction(QStringLiteral("Measure"));
                 QSignalSpy triggered(action, &QAction::triggered);
+                QCursor::setPos(anchor);
+                QCoreApplication::processEvents();
                 menu.popup(anchor);
                 QTRY_VERIFY(menu.isVisible());
-                QVERIFY(bounds.contains(menu.geometry()));
+                const QRect shell = menu.geometry().adjusted(12, 12, -12, -12);
+                QVERIFY(bounds.contains(shell));
+                const int tolerance = menu.style()->pixelMetric(QStyle::PM_MenuDesktopFrameWidth, nullptr, &menu) + 2;
+                QVERIFY2(qMin(qAbs(shell.left() - anchor.x()), qAbs(shell.right() + 1 - anchor.x())) <= tolerance,
+                         qPrintable(QStringLiteral("Horizontal shell/anchor gap: %1..%2 / %3")
+                                        .arg(shell.left()).arg(shell.right()).arg(anchor.x())));
+                QVERIFY2(qMin(qAbs(shell.top() - anchor.y()), qAbs(shell.bottom() + 1 - anchor.y())) <= tolerance,
+                         qPrintable(QStringLiteral("Vertical shell/anchor gap: %1..%2 / %3")
+                                        .arg(shell.top()).arg(shell.bottom()).arg(anchor.y())));
                 menu.setActiveAction(submenu->menuAction());
                 QTest::keyClick(&menu, rtl ? Qt::Key_Left : Qt::Key_Right);
                 QTRY_VERIFY(submenu->isVisible());
-                QVERIFY(bounds.contains(submenu->geometry()));
+                QVERIFY(bounds.contains(submenu->geometry().adjusted(12, 12, -12, -12)));
                 QTest::mouseClick(submenu, Qt::LeftButton, Qt::NoModifier,
                                   submenu->actionGeometry(action).center());
                 QCOMPARE(triggered.count(), 1);
                 QTRY_VERIFY(!menu.isVisible());
             }
         }
+        QCursor::setPos(oldCursor);
+    }
+
+    void menuBarShellAnchor()
+    {
+        Resources::installResources(*qApp);
+        for (bool rtl : {false, true}) {
+            QWidget window;
+            window.setLayoutDirection(rtl ? Qt::RightToLeft : Qt::LeftToRight);
+            auto* layout = new QVBoxLayout(&window);
+            auto* bar = new QMenuBar;
+            bar->setNativeMenuBar(false);
+            layout->setMenuBar(bar);
+            auto* menu = bar->addMenu(QStringLiteral("Analysis"));
+            menu->addAction(QStringLiteral("Measure"));
+            const QRect bounds = QGuiApplication::primaryScreen()->availableGeometry();
+            const int width = qMin(500, bounds.width() - 40);
+            window.resize(width, 180);
+            window.move(bounds.center() - QPoint(width / 2, 90));
+            window.show();
+            QVERIFY(QTest::qWaitForWindowExposed(&window));
+            const QRect action = bar->actionGeometry(menu->menuAction());
+            QTest::mouseClick(bar, Qt::LeftButton, Qt::NoModifier, action.center());
+            QTRY_VERIFY(menu->isVisible());
+            const QRect shell = menu->geometry().adjusted(12, 12, -12, -12);
+            const int edge = rtl ? shell.right() + 1 : shell.left();
+            const int anchor = bar->mapToGlobal(rtl ? action.topRight() + QPoint(1, 0) : action.topLeft()).x();
+            QVERIFY2(qAbs(edge - anchor) <= 3, qPrintable(QStringLiteral("Menu-bar shell/anchor: %1 / %2")
+                                                             .arg(edge).arg(anchor)));
+            menu->close();
+        }
+    }
+
+    void exclusiveMenuIndicatorsRemainRadioButtons()
+    {
+        Resources::installResources(*qApp);
+        QMenu menu;
+        QActionGroup group(&menu);
+        auto* first = menu.addAction(QStringLiteral("First mode"));
+        auto* second = menu.addAction(QStringLiteral("Second mode"));
+        for (auto* action : {first, second}) {
+            action->setCheckable(true);
+            group.addAction(action);
+        }
+        first->setChecked(true);
+        auto* toggle = menu.addAction(QStringLiteral("Independent option"));
+        toggle->setCheckable(true);
+        menu.popup(QPoint(180, 180));
+        QTRY_VERIFY(menu.isVisible());
+        const auto capture = [&] {
+            QCoreApplication::processEvents();
+            return menu.grab().toImage();
+        };
+        const QImage exclusive = capture();
+        group.removeAction(first);
+        const QImage independent = capture();
+        QVERIFY(exclusive != independent);
+        group.addAction(first);
+        first->setChecked(true);
+        menu.setActiveAction(second);
+        QTest::keyClick(&menu, Qt::Key_Return);
+        QVERIFY(second->isChecked());
+        QVERIFY(!first->isChecked());
+        QVERIFY(!toggle->isChecked());
     }
 
     void rowTreeCheckIndicatorsAreVisible()
@@ -370,12 +451,12 @@ private slots:
             QCOMPARE(header->sectionViewportPosition(1), table.columnViewportPosition(1));
             const QImage image = table.viewport()->grab().toImage();
             const qreal dpr = image.devicePixelRatio();
-            const auto hasDivider = [&](int logicalX, int logicalY) {
+            const auto hasDivider = [&](const QImage& pixels, int logicalX, int logicalY) {
                 const int y = qRound(logicalY * dpr);
                 for (int x = qFloor(logicalX * dpr) - 1;
                      x <= qCeil((logicalX + 1) * dpr); ++x) {
                     if (x < 0 || x >= image.width()) continue;
-                    const QColor pixel = image.pixelColor(x, y);
+                    const QColor pixel = pixels.pixelColor(x, y);
                     if (pixel.red() < 250 && pixel.blue() > pixel.red() + 3)
                         return true;
                 }
@@ -383,8 +464,21 @@ private slots:
             };
             const QRect first = table.visualItemRect(table.item(0, 0));
             const QRect last = table.visualItemRect(table.item(0, 1));
-            QVERIFY(hasDivider(first.right(), first.top() + 4));
-            QVERIFY(!hasDivider(last.right(), last.top() + 4));
+            QVERIFY(hasDivider(image, first.right(), first.top() + 4));
+            QVERIFY(!hasDivider(image, last.right(), last.top() + 4));
+            // Repaint each cell independently into the existing backing image. A full grab
+            // would repaint both columns and conceal a divider drawn by the wrong cell.
+            for (int column : {0, 1}) {
+                const QRect dirty(table.columnViewportPosition(column), table.rowViewportPosition(0),
+                                  table.columnWidth(column), table.rowHeight(0));
+                QImage partial = image;
+                QPainter painter(&partial);
+                painter.fillRect(dirty, Qt::white);
+                table.viewport()->render(&painter, dirty.topLeft(), QRegion(dirty));
+                painter.end();
+                QVERIFY(hasDivider(partial, first.right(), first.top() + 4));
+                QVERIFY(!hasDivider(partial, last.right(), last.top() + 4));
+            }
             const QImage whole = table.grab().toImage();
             const int dividerX = table.viewport()->mapTo(&table, first.topRight()).x();
             const auto dividerCenter = [&](int logicalY) {
