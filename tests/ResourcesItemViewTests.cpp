@@ -50,6 +50,103 @@ class ResourcesItemViewTests : public QObject
     Q_OBJECT
   private slots:
     void initTestCase() { Resources::installResources(*qApp); }
+    void joinedOnlyKeepsAdjacentCellsContinuous()
+    {
+        QTableWidget table(2, 3);
+        table.setShowGrid(false);
+        table.setSelectionMode(QAbstractItemView::ExtendedSelection);
+        table.resize(450, 180);
+        table.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&table));
+        table.activateWindow();
+        table.setFocus();
+        table.selectAll();
+        table.selectionModel()->setCurrentIndex(table.model()->index(0, 1), QItemSelectionModel::NoUpdate);
+        Resources::setItemSelectionAppearance(&table, Resources::ItemSelectionAppearance::JoinedOnly);
+        const auto sample = [](const QImage& image, QPoint p) {
+            return image.pixelColor(qRound(p.x() * image.devicePixelRatio()),
+                                    qRound(p.y() * image.devicePixelRatio()));
+        };
+        auto image = table.viewport()->grab().toImage();
+        for (int column = 0; column < 3; ++column)
+        {
+            const QRect rect = table.visualRect(table.model()->index(0, column));
+            QCOMPARE(sample(image, rect.center()), table.palette().highlight().color());
+            if (column < 2)
+                QCOMPARE(sample(image, QPoint(rect.right(), rect.center().y())), table.palette().highlight().color());
+        }
+        Resources::setItemSelectionAppearance(&table, Resources::ItemSelectionAppearance::CurrentCell);
+        image = table.viewport()->grab().toImage();
+        QCOMPARE(sample(image, table.visualRect(table.currentIndex()).center()), QColor("#C1D9EB"));
+        QCOMPARE(table.selectionModel()->selectedIndexes().size(), 6);
+    }
+    void unselectedKeyboardCurrentRemainsVisible_data()
+    {
+        QTest::addColumn<bool>("ctrlClick");
+        QTest::newRow("ctrl-arrow") << false;
+        QTest::newRow("ctrl-click-deselect") << true;
+    }
+    void joinedOnlyTreeAndList_data()
+    {
+        QTest::addColumn<bool>("tree");
+        QTest::newRow("tree") << true;
+        QTest::newRow("list") << false;
+    }
+    void joinedOnlyTreeAndList()
+    {
+        QFETCH(bool, tree);
+        QStandardItemModel model(2, 3);
+        std::unique_ptr<QAbstractItemView> view(tree
+            ? static_cast<QAbstractItemView*>(new QTreeView)
+            : static_cast<QAbstractItemView*>(new QListView));
+        view->setModel(&model);
+        view->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        if (auto* treeView = qobject_cast<QTreeView*>(view.get()))
+            treeView->setRootIsDecorated(false);
+        view->resize(450, 180);
+        view->show();
+        QVERIFY(QTest::qWaitForWindowExposed(view.get()));
+        view->activateWindow();
+        view->setFocus();
+        view->selectAll();
+        view->selectionModel()->setCurrentIndex(model.index(0, 0), QItemSelectionModel::NoUpdate);
+        Resources::setItemSelectionAppearance(view.get(), Resources::ItemSelectionAppearance::JoinedOnly);
+        const auto image = view->viewport()->grab().toImage();
+        for (int row = 0; row < 2; ++row)
+        {
+            const QPoint p = view->visualRect(model.index(row, 0)).center();
+            QCOMPARE(image.pixelColor(qRound(p.x() * image.devicePixelRatio()),
+                                      qRound(p.y() * image.devicePixelRatio())),
+                     view->palette().highlight().color());
+        }
+    }
+    void unselectedKeyboardCurrentRemainsVisible()
+    {
+        QFETCH(bool, ctrlClick);
+        QTableWidget table(1, 3);
+        table.setShowGrid(false);
+        table.setSelectionMode(QAbstractItemView::ExtendedSelection);
+        table.resize(450, 160);
+        table.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&table));
+        table.activateWindow();
+        table.setFocus();
+        const auto first = table.model()->index(0, 0);
+        table.selectionModel()->setCurrentIndex(first, QItemSelectionModel::ClearAndSelect);
+        if (ctrlClick)
+            QTest::mouseClick(table.viewport(), Qt::LeftButton, Qt::ControlModifier, table.visualRect(first).center());
+        else
+            QTest::keyClick(&table, Qt::Key_Right, Qt::ControlModifier);
+        QVERIFY(table.currentIndex().isValid());
+        QVERIFY(!table.selectionModel()->isSelected(table.currentIndex()));
+        const QRect rect = table.visualRect(table.currentIndex());
+        const auto image = table.viewport()->grab().toImage();
+        const qreal dpr = image.devicePixelRatio();
+        const QColor edge = image.pixelColor(qRound(rect.center().x() * dpr), qRound((rect.top() + 1) * dpr));
+        QVERIFY2(edge.blue() > edge.red() + 10, qPrintable(edge.name()));
+        const QColor center = image.pixelColor(qRound(rect.center().x() * dpr), qRound(rect.center().y() * dpr));
+        QVERIFY(center != QColor("#C1D9EB"));
+    }
     void currentCellIsFilledWithinJoinedSelection_data()
     {
         QTest::addColumn<bool>("treeView");

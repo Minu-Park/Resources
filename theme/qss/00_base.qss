@@ -300,6 +300,7 @@ QWidget#ResourcesItemSelectionSurface {
     qproperty-radius: 12;
     qproperty-hoverColor: #f4f8fb;
     qproperty-currentColor: #C1D9EB;
+    qproperty-focusColor: #8BADC7;
 }
 QTableView QLabel { background: transparent; }
 
