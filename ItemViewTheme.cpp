@@ -22,6 +22,7 @@ class ResourcesItemSelectionSurface final : public QWidget
     Q_PROPERTY(qreal radius MEMBER radius)
     Q_PROPERTY(QColor hoverColor MEMBER hoverColor)
     Q_PROPERTY(QColor currentColor MEMBER currentColor)
+    Q_PROPERTY(QColor focusColor MEMBER focusColor)
   public:
     explicit ResourcesItemSelectionSurface(QWidget *parent) : QWidget(parent)
     {
@@ -31,6 +32,7 @@ class ResourcesItemSelectionSurface final : public QWidget
     qreal radius = 0;
     QColor hoverColor;
     QColor currentColor;
+    QColor focusColor;
 };
 
 namespace
@@ -141,7 +143,8 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
             painter->restore();
         }
         auto contents = option;
-        if (selected && index == view_->currentIndex() && view_->hasFocus())
+        const bool current = index == view_->currentIndex() && view_->hasFocus();
+        if (selected && current && !view_->property("joinedSelectionOnly").toBool())
         {
             const QRectF rect(view_->visualRect(index));
             const qreal radius = qMin(surface_->radius, qMin(rect.width(), rect.height()) / 2.0);
@@ -156,6 +159,18 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
             contents.features &= ~QStyleOptionViewItem::Alternate;
         contents.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver | QStyle::State_HasFocus);
         source_->paint(painter, contents, index);
+        if (!selected && current)
+        {
+            // Ctrl navigation can move the keyboard cursor outside the selection.
+            const QRectF rect = QRectF(view_->visualRect(index)).adjusted(1, 1, -1, -1);
+            const qreal radius = qMin(surface_->radius, qMin(rect.width(), rect.height()) / 2.0);
+            painter->save();
+            painter->setRenderHint(QPainter::Antialiasing);
+            painter->setPen(QPen(surface_->focusColor, 1));
+            painter->setBrush(Qt::NoBrush);
+            painter->drawRoundedRect(rect, radius, radius);
+            painter->restore();
+        }
     }
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
     {
@@ -259,6 +274,14 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
     ResourcesItemSelectionSurface *surface_;
 };
 } // namespace
+
+void Resources::setItemSelectionAppearance(QAbstractItemView *view, ItemSelectionAppearance appearance)
+{
+    if (!view)
+        return;
+    view->setProperty("joinedSelectionOnly", appearance == ItemSelectionAppearance::JoinedOnly);
+    view->viewport()->update();
+}
 
 void Resources::applyItemViewTheme(QAbstractItemView *view)
 {
