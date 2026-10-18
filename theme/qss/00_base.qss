@@ -279,13 +279,13 @@ QTableCornerButton::section {
 
 /* Shared item surfaces are joined in visual coordinates by the installed delegate. */
 QTreeView, QListView, QTableView {
-    selection-background-color: #edf5fb;
+    selection-background-color: #DDEAF4;
     selection-color: #16202b;
     show-decoration-selected: 0;
 }
 QTreeView::item, QListView::item, QTableView::item {
     min-height: 22px;
-    padding: 1px 2px;
+    padding: 1px 10px;
     margin: 0;
     border: none;
     border-radius: 0;
@@ -297,9 +297,9 @@ QTreeView::item:selected, QListView::item:selected, QTableView::item:selected {
     color: #16202b;
 }
 QWidget#ResourcesItemSelectionSurface {
-    qproperty-radius: 9;
+    qproperty-radius: 12;
     qproperty-hoverColor: #f4f8fb;
-    qproperty-focusColor: #8badc7;
+    qproperty-currentColor: #C1D9EB;
 }
 QTableView QLabel { background: transparent; }
 
@@ -626,6 +626,17 @@ QAbstractItemView::indicator:checked:hover,
 QGroupBox::indicator:checked,
 QGroupBox::indicator:checked:hover {
     image: url(:/Resources/Icons/switch-on.svg);
+}
+
+/* Keep item switches close to the leading capsule edge without moving text. */
+QAbstractItemView::indicator {
+    position: relative;
+    left: -12px;
+}
+QComboBox QAbstractItemView::indicator,
+QCalendarWidget QAbstractItemView::indicator,
+#AutoCompletePopup::indicator {
+    left: 0;
 }
 
 QCheckBox::indicator:indeterminate,
@@ -1066,3 +1077,4 @@ QCalendarWidget QToolButton { background: transparent; color: #16202b; border: n
 QCalendarWidget QToolButton#qt_calendar_prevmonth { qproperty-icon: url(:/Resources/Icons/menu-chevron-left-idle.png); icon-size: 12px; }
 QCalendarWidget QToolButton#qt_calendar_nextmonth { qproperty-icon: url(:/Resources/Icons/menu-chevron-right-idle.png); icon-size: 12px; }
 QCalendarWidget QAbstractItemView { background: #ffffff; selection-background-color: #edf5fb; selection-color: #16202b; color: #243546; outline: 0; }
+QCalendarWidget QAbstractItemView::item { padding: 1px 2px; }

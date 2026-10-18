@@ -21,7 +21,7 @@ class ResourcesItemSelectionSurface final : public QWidget
     Q_OBJECT
     Q_PROPERTY(qreal radius MEMBER radius)
     Q_PROPERTY(QColor hoverColor MEMBER hoverColor)
-    Q_PROPERTY(QColor focusColor MEMBER focusColor)
+    Q_PROPERTY(QColor currentColor MEMBER currentColor)
   public:
     explicit ResourcesItemSelectionSurface(QWidget *parent) : QWidget(parent)
     {
@@ -30,7 +30,7 @@ class ResourcesItemSelectionSurface final : public QWidget
     }
     qreal radius = 0;
     QColor hoverColor;
-    QColor focusColor;
+    QColor currentColor;
 };
 
 namespace
@@ -131,6 +131,9 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
                 path.lineTo(x, y);
             path.closeSubpath();
             painter->save();
+            // Seam overlap belongs to this cell's raster clip. Otherwise a later
+            // neighbor can erase the current capsule's right or bottom curve.
+            painter->setClipRect(rect, Qt::IntersectClip);
             painter->setRenderHint(QPainter::Antialiasing);
             painter->setPen(Qt::NoPen);
             painter->setBrush(selected ? option.palette.highlight() : QBrush(surface_->hoverColor));
@@ -138,21 +141,21 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
             painter->restore();
         }
         auto contents = option;
+        if (selected && index == view_->currentIndex() && view_->hasFocus())
+        {
+            const QRectF rect(view_->visualRect(index));
+            const qreal radius = qMin(surface_->radius, qMin(rect.width(), rect.height()) / 2.0);
+            painter->save();
+            painter->setRenderHint(QPainter::Antialiasing);
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(surface_->currentColor);
+            painter->drawRoundedRect(rect, radius, radius);
+            painter->restore();
+        }
         if (selected)
             contents.features &= ~QStyleOptionViewItem::Alternate;
         contents.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver | QStyle::State_HasFocus);
         source_->paint(painter, contents, index);
-        if (view_->selectionMode() != QAbstractItemView::NoSelection &&
-            (option.state & QStyle::State_HasFocus) && view_->hasFocus())
-        {
-            painter->save();
-            painter->setRenderHint(QPainter::Antialiasing);
-            painter->setPen(QPen(surface_->focusColor, 1));
-            painter->setBrush(Qt::NoBrush);
-            painter->drawRoundedRect(QRectF(view_->visualRect(index)).adjusted(.5, .5, -.5, -.5),
-                                     surface_->radius, surface_->radius);
-            painter->restore();
-        }
     }
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
     {
@@ -236,13 +239,19 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
         if (selection_ == view_->selectionModel())
             return;
         QObject::disconnect(selectionConnection_);
+        QObject::disconnect(currentConnection_);
         selection_ = view_->selectionModel();
         if (selection_)
+        {
             selectionConnection_ = QObject::connect(selection_, &QItemSelectionModel::selectionChanged,
                                                     view_->viewport(), qOverload<>(&QWidget::update));
+            currentConnection_ = QObject::connect(selection_, &QItemSelectionModel::currentChanged,
+                                                  view_->viewport(), qOverload<>(&QWidget::update));
+        }
     }
     mutable QPointer<QItemSelectionModel> selection_;
     mutable QMetaObject::Connection selectionConnection_;
+    mutable QMetaObject::Connection currentConnection_;
     mutable QSet<QWidget *> forwardedEditors_;
     QPersistentModelIndex hoveredRow_;
     QAbstractItemView *view_;
