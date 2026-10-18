@@ -927,6 +927,8 @@ private:
             if (menu->testAttribute(Qt::WA_WState_Polished)) {
                 menu->style()->unpolish(menu);
                 menu->style()->polish(menu);
+                // Direct style polish can reinstall a native effect without sending a style event.
+                prepareMenuPopup(menu);
                 menu->updateGeometry();
                 menu->update();
             }
