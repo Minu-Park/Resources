@@ -1,8 +1,31 @@
 #include "Resources.h"
+#include "ItemViewTheme.h"
 #include "Widgets/SearchableTreeWidget.h"
 #include <QSignalSpy>
 #include <QTest>
 #include <QtWidgets>
+#include <memory>
+
+namespace
+{
+void movePointer(QWidget *target, const QPoint &position)
+{
+    static QPointer<QWidget> previous;
+    if (previous && previous != target)
+    {
+        QEvent leave(QEvent::Leave);
+        QApplication::sendEvent(previous, &leave);
+    }
+    QCursor::setPos(target->mapToGlobal(position));
+    QTest::mouseMove(target->window()->windowHandle(), target->mapTo(target->window(), position));
+    // Replay platform enter/hover delivery for headless and unattended window systems.
+    QEnterEvent enter(position, target->mapTo(target->window(), position), target->mapToGlobal(position));
+    QApplication::sendEvent(target, &enter);
+    QHoverEvent hover(QEvent::HoverMove, position, target->mapToGlobal(position), QPointF(-1, -1));
+    QApplication::sendEvent(target, &hover);
+    previous = target;
+}
+}
 
 class TrackingDelegate final : public QStyledItemDelegate
 {
@@ -126,11 +149,11 @@ class ResourcesItemViewTests : public QObject
             return image.pixelColor(qRound(p.x() * image.devicePixelRatio()),
                                     qRound(p.y() * image.devicePixelRatio()));
         };
-        QTest::mouseMove(table.viewport(), QPoint(410, 150));
+        movePointer(table.viewport(), QPoint(table.viewport()->width() - 8, table.viewport()->height() - 8));
         const QColor base = sample(table.viewport()->grab().toImage(), 0, 0);
         for (int r = 0; r < 2; ++r)
         {
-            QTest::mouseMove(table.viewport(), table.visualItemRect(table.item(r, 1)).center());
+            movePointer(table.viewport(), table.visualItemRect(table.item(r, 1)).center());
             QCoreApplication::processEvents();
             const auto image = table.viewport()->grab().toImage();
             const QColor hover = sample(image, r, 1);
@@ -141,11 +164,105 @@ class ResourcesItemViewTests : public QObject
                 QCOMPARE(sample(image, 1 - r, c), base);
             }
         }
-        QTest::mouseMove(&table, QPoint(1, 1));
+        movePointer(&table, QPoint(1, 1));
         QCoreApplication::processEvents();
         const auto cleared = table.viewport()->grab().toImage();
         for (int r = 0; r < 2; ++r)
             QCOMPARE(sample(cleared, r, 1), base);
+    }
+    void rowHoverClearsWhenCovered_data()
+    {
+        QTest::addColumn<bool>("popup");
+        QTest::newRow("window") << false;
+        QTest::newRow("popup") << true;
+    }
+    void rowHoverClearsWhenCovered()
+    {
+        QFETCH(bool, popup);
+        QTableWidget table(1, 3);
+        table.setSelectionBehavior(QAbstractItemView::SelectRows);
+        table.setShowGrid(false);
+        for (int c = 0; c < 3; ++c)
+            table.setItem(0, c, new QTableWidgetItem);
+        table.resize(430, 180);
+        table.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&table));
+        table.clearFocus();
+        const QPoint sample = table.visualItemRect(table.item(0, 0)).center();
+        const auto color = [&]
+        {
+            const auto image = table.viewport()->grab().toImage();
+            return image.pixelColor(qRound(sample.x() * image.devicePixelRatio()),
+                                    qRound(sample.y() * image.devicePixelRatio()));
+        };
+        movePointer(table.viewport(), QPoint(table.viewport()->width() - 8, table.viewport()->height() - 8));
+        const QColor base = color();
+        const QPoint hover = table.visualItemRect(table.item(0, 1)).center();
+        movePointer(table.viewport(), hover);
+        QTRY_VERIFY(table.viewport()->underMouse());
+        QVERIFY(color() != base);
+        const QPoint cursor = QCursor::pos();
+        QWidget cover(nullptr, popup ? Qt::Popup : Qt::Window | Qt::FramelessWindowHint);
+        cover.resize(100, 80);
+        cover.move(cursor - QPoint(40, 30));
+        cover.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&cover));
+        movePointer(&cover, cover.mapFromGlobal(cursor));
+        // Replay the window-system leave even on headless platforms without native occlusion events.
+        QEvent leave(QEvent::Leave);
+        QApplication::sendEvent(table.viewport(), &leave);
+        QTRY_VERIFY(!table.viewport()->underMouse());
+        QCOMPARE(QCursor::pos(), cursor);
+        QVERIFY(table.viewport()->rect().contains(table.viewport()->mapFromGlobal(cursor)));
+        QCOMPARE(color(), base);
+        cover.hide();
+        movePointer(table.viewport(), QPoint(table.viewport()->width() - 8, table.viewport()->height() - 8));
+        movePointer(table.viewport(), hover);
+        QTRY_VERIFY(table.viewport()->underMouse());
+        QVERIFY(color() != base);
+    }
+    void themePreservesMouseTracking_data()
+    {
+        QTest::addColumn<int>("kind");
+        QTest::addColumn<bool>("tracking");
+        for (int kind = 0; kind < 3; ++kind)
+            for (bool tracking : {false, true})
+                QTest::newRow(qPrintable(QString("%1-%2").arg(kind).arg(tracking))) << kind << tracking;
+    }
+    void themePreservesMouseTracking()
+    {
+        QFETCH(int, kind);
+        QFETCH(bool, tracking);
+        std::unique_ptr<QAbstractItemView> view;
+        if (kind == 0)
+            view = std::make_unique<QTableView>();
+        else if (kind == 1)
+            view = std::make_unique<QTreeView>();
+        else
+            view = std::make_unique<QListView>();
+        QStandardItemModel model(2, 2);
+        model.setData(model.index(0, 0), "Status", Qt::StatusTipRole);
+        view->setModel(&model);
+        view->setMouseTracking(tracking);
+        QSignalSpy entered(view.get(), &QAbstractItemView::entered);
+        view->resize(320, 180);
+        view->show();
+        QVERIFY(QTest::qWaitForWindowExposed(view.get()));
+        // Isolate delegate installation from QSS polish, which has its own native tracking policy.
+        auto *source = new QStyledItemDelegate(view.get());
+        view->setItemDelegate(source);
+        view->setMouseTracking(tracking);
+        view->viewport()->setMouseTracking(tracking);
+        Resources::applyItemViewTheme(view.get());
+        QVERIFY(view->itemDelegate() != source);
+        QCOMPARE(view->hasMouseTracking(), tracking);
+        QCOMPARE(view->viewport()->hasMouseTracking(), tracking);
+        movePointer(view->viewport(), QPoint(view->viewport()->width() - 8, view->viewport()->height() - 8));
+        entered.clear();
+        movePointer(view->viewport(), view->visualRect(model.index(0, 0)).center());
+        QCoreApplication::processEvents();
+        if (!tracking)
+            QCOMPARE(entered.count(), 0);
     }
     void nestedFavoriteDelegateCommitsOnce_data()
     {

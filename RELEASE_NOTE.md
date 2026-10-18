@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Clear row hover when another window or popup covers the viewport, and preserve consumer mouse-tracking settings.
+
 - Preserve full-row table hover and commit editors exactly once when consumer delegates call through the shared surface delegate.
 
 - Join adjacent tree, list, and table selections into one rounded surface; retain consumer delegates, editors, and dedicated popup behavior.
