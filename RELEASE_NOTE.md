@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Restore the shared menu shadow, flags, and mask immediately after live menu-column repolish.
+
 - Use inset popup dots, lightweight menu check marks, shared mixed-menu label columns, and rounded directional submenu chevrons. Keep widget switches and exclusive menu radios.
 
 - Align embedded editable combo text with read-only controls and keep text-only menus free of unused leading columns.

@@ -821,17 +821,39 @@ private slots:
     {
         Resources::installResources(*qApp);
         QMenu menu;
-        menu.addAction(QStringLiteral("MMMM command"));
+        auto* command = menu.addAction(QStringLiteral("MMMM command"));
         menu.popup(QPoint(180, 180));QTRY_VERIFY(menu.isVisible());
+        const auto ownsPopupShell = [&menu] {
+            auto* shadow = qobject_cast<QGraphicsDropShadowEffect*>(menu.graphicsEffect());
+            return menu.isVisible() && shadow && shadow->property("resourcesMenuShadow").toBool()
+                && shadow->blurRadius() == 12 && shadow->offset() == QPointF(0, 2)
+                && menu.windowFlags().testFlag(Qt::FramelessWindowHint)
+                && menu.windowFlags().testFlag(Qt::NoDropShadowWindowHint)
+                && menu.mask().isEmpty() && menu.testAttribute(Qt::WA_TranslucentBackground);
+        };
+        QVERIFY(ownsPopupShell());
         QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());
         auto* check = menu.addAction(QStringLiteral("MMMM choice"));check->setCheckable(true);
-        QVERIFY(menu.property("resourcesMenuHasLeadingColumn").toBool());
-        check->setVisible(false);QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());
-        check->setVisible(true);QVERIFY(menu.property("resourcesMenuHasLeadingColumn").toBool());
-        menu.removeAction(check);QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());
+        QVERIFY(menu.property("resourcesMenuHasLeadingColumn").toBool());QVERIFY(ownsPopupShell());
+        check->setVisible(false);
+        QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());QVERIFY(ownsPopupShell());
+        check->setVisible(true);
+        QVERIFY(menu.property("resourcesMenuHasLeadingColumn").toBool());QVERIFY(ownsPopupShell());
+        check->setCheckable(false);
+        QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());QVERIFY(ownsPopupShell());
+        check->setCheckable(true);
+        QVERIFY(menu.property("resourcesMenuHasLeadingColumn").toBool());QVERIFY(ownsPopupShell());
+        menu.removeAction(check);
+        QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());QVERIFY(ownsPopupShell());
         delete check;
+        command->setIconVisibleInMenu(true);
+        command->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-gears-48.png")));
+        QVERIFY(menu.property("resourcesMenuHasLeadingColumn").toBool());QVERIFY(ownsPopupShell());
+        command->setIcon(QIcon());
+        QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());QVERIFY(ownsPopupShell());
         menu.setLayoutDirection(Qt::RightToLeft);
         QCOMPARE(menu.property("resourcesMenuDirection").toString(), QStringLiteral("rtl"));
+        QVERIFY(ownsPopupShell());
     }
 
     void comboPopupLifecycle_data()
