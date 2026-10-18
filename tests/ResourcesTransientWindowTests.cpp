@@ -385,7 +385,7 @@ private slots:
             QRect result;
             for (int y = qFloor(row.top() * dpr); y < qCeil((row.bottom() + 1) * dpr); ++y) {
                 for (int x = qFloor(row.left() * dpr);
-                     x < qCeil((row.left() + 64) * dpr) && x < exclusive.width(); ++x) {
+                     x < qCeil((row.left() + 35) * dpr) && x < exclusive.width(); ++x) {
                     const QColor pixel = exclusive.pixelColor(x, y);
                     if (pixel.red() > 180 && pixel.red() < 249
                         && pixel.green() - pixel.red() >= 5 && pixel.blue() - pixel.green() >= 5)
@@ -404,17 +404,19 @@ private slots:
             QVERIFY(pixel.red() > 245 && pixel.green() > 245 && pixel.blue() > 245);
         }
         const QRect toggleRow = menu.actionGeometry(toggle);
-        const QRect track = indicatorOutline(toggleRow);
-        QVERIFY(!track.isEmpty());
-        QVERIFY2(qAbs(outline.left() - track.left()) <= 1,
-                 qPrintable(QStringLiteral("Radio/switch visible left edges: %1 / %2")
-                                .arg(outline.left()).arg(track.left())));
-        QVERIFY(qAbs(track.height() - outline.height()) <= 1);
-        const auto centerOffset = [dpr](const QRect& pixels, const QRect& row) {
-            return (pixels.top() + pixels.bottom() + 1) / (2 * dpr)
-                - (row.top() + row.bottom() + 1) / 2.0;
-        };
-        QVERIFY(qAbs(centerOffset(outline, firstRow) - centerOffset(track, toggleRow)) <= 1 / dpr);
+        toggle->setChecked(true);
+        const QImage checkedMenu = capture();
+        QRect checkInk;
+        for (int y = qFloor(toggleRow.top() * dpr); y < qCeil((toggleRow.bottom() + 1) * dpr); ++y)
+            for (int x = qFloor(toggleRow.left() * dpr); x < qCeil((toggleRow.left() + 28) * dpr); ++x) {
+                const QColor pixel = checkedMenu.pixelColor(x, y);
+                if (pixel.red() < 50 && pixel.green() < 110 && pixel.blue() > 70 && pixel.blue() < 180)
+                    checkInk = checkInk.united(QRect(x, y, 1, 1));
+            }
+        QVERIFY(!checkInk.isEmpty());
+        QVERIFY(checkInk.width() <= qCeil(16 * dpr));
+        QVERIFY(checkInk.height() <= qCeil(16 * dpr));
+        toggle->setChecked(false);
         const QString captures = qEnvironmentVariable("RESOURCES_MENU_SCREENSHOTS");
         if (!captures.isEmpty()) {
             QVERIFY(QDir().mkpath(captures));
@@ -754,7 +756,7 @@ private slots:
                 const qreal dpr = image.devicePixelRatio();
                 bool marker = false;
                 for (int y = qCeil(logical.top() * dpr); y < qFloor((logical.bottom() + 1) * dpr); ++y)
-                    for (int x = qFloor(logical.left() * dpr); x < qCeil((logical.left() + 5) * dpr); ++x) {
+                    for (int x = qFloor(logical.left() * dpr); x < qCeil((logical.left() + 18) * dpr); ++x) {
                         const QColor pixel = image.pixelColor(x, y);
                         marker |= pixel.red() < 40 && pixel.green() > 50 && pixel.blue() > 90;
                     }
@@ -778,37 +780,58 @@ private slots:
         }
     }
 
-    void menuCommandsDoNotInheritSwitchColumn()
+    void mixedMenuLabelsShareOneColumn()
     {
         Resources::installResources(*qApp);
-        int pureTextLeft = -1;
-        for (int mode : {0, 1, 2}) {
+        for (bool icons : {false, true}) for (bool rtl : {false, true}) {
             QMenu menu;
-            auto* text = menu.addAction(QStringLiteral("MMMM text"));
-            QAction* icon = nullptr;
-            if (mode == 2) {
-                icon = menu.addAction(QIcon(QStringLiteral(":/Resources/Icons/icons8-image-48.png")), QStringLiteral("MMMM icon"));
-                icon->setIconVisibleInMenu(true);
-            }
-            if (mode > 0) {
-                auto* check = menu.addAction(QStringLiteral("MMMM switch"));
-                check->setCheckable(true);check->setChecked(true);
-            }
+            menu.setLayoutDirection(rtl ? Qt::RightToLeft : Qt::LeftToRight);
+            QList<QAction*> actions;
+            if (icons) actions << menu.addAction(QIcon(QStringLiteral(":/Resources/Icons/icons8-gears-48.png")), QStringLiteral("MMMM command"));
+            actions << menu.addAction(QStringLiteral("MMMM command"));
+            auto* check = menu.addAction(QStringLiteral("MMMM command"));
+            check->setCheckable(true);check->setChecked(true);actions << check;
+            QActionGroup group(&menu);
+            auto* radio = menu.addAction(QStringLiteral("MMMM command"));
+            radio->setCheckable(true);group.addAction(radio);radio->setChecked(true);actions << radio;
+            auto* child = menu.addMenu(QStringLiteral("MMMM command"));
+            child->addAction(QStringLiteral("MMMM child"));actions << child->menuAction();
             menu.popup(QPoint(180, 180));QTRY_VERIFY(menu.isVisible());
+            QVERIFY(menu.property("resourcesMenuHasLeadingColumn").toBool());
+            QCOMPARE(menu.property("resourcesMenuDirection").toString(), rtl ? QStringLiteral("rtl") : QStringLiteral("ltr"));
             const QImage image = menu.grab().toImage();
-            const qreal dpr = image.devicePixelRatio();
-            const auto textLeft = [&](QAction* action) {
-                const QRect rect = menu.actionGeometry(action);
-                return darkTextBounds(image, QRect(qRound(rect.left() * dpr), qRound(rect.top() * dpr),
-                    qRound(rect.width() * dpr), qRound(rect.height() * dpr)).intersected(image.rect())).left();
-            };
-            if (!mode) pureTextLeft = textLeft(text);
-            if (mode == 1) QCOMPARE(textLeft(text), pureTextLeft);
-            if (icon) QVERIFY(qAbs(textLeft(text) - textLeft(icon)) <= 1);
-            QSignalSpy triggered(text, &QAction::triggered);
-            menu.setActiveAction(text);QTest::keyClick(&menu, Qt::Key_Return);
-            QCOMPARE(triggered.count(), 1);QTRY_VERIFY(!menu.isVisible());
+            const qreal dpr = image.devicePixelRatio();int first = -1;
+            for (auto* action : actions) {
+                const QRect row = menu.actionGeometry(action);
+                const QRect scan(qRound(row.left() * dpr), qRound(row.top() * dpr),
+                                 qRound(row.width() * dpr), qRound(row.height() * dpr));
+                const QRect ink = darkTextBounds(image, scan.intersected(image.rect()));
+                QVERIFY(!ink.isEmpty());
+                if (first < 0) first = ink.left();
+                QVERIFY2(qAbs(ink.left() - first) <= qCeil(dpr), qPrintable(QStringLiteral("%1 icons=%2 rtl=%3 left=%4 first=%5").arg(action->text()).arg(icons).arg(rtl).arg(ink.left()).arg(first)));
+            }
+            menu.setActiveAction(child->menuAction());QTest::keyClick(&menu, rtl ? Qt::Key_Left : Qt::Key_Right);
+            QTRY_VERIFY(child->isVisible());
+            QVERIFY(!child->property("resourcesMenuHasLeadingColumn").toBool());
+            child->close();menu.close();
         }
+    }
+
+    void menuColumnTracksVisibleActions()
+    {
+        Resources::installResources(*qApp);
+        QMenu menu;
+        menu.addAction(QStringLiteral("MMMM command"));
+        menu.popup(QPoint(180, 180));QTRY_VERIFY(menu.isVisible());
+        QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());
+        auto* check = menu.addAction(QStringLiteral("MMMM choice"));check->setCheckable(true);
+        QVERIFY(menu.property("resourcesMenuHasLeadingColumn").toBool());
+        check->setVisible(false);QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());
+        check->setVisible(true);QVERIFY(menu.property("resourcesMenuHasLeadingColumn").toBool());
+        menu.removeAction(check);QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());
+        delete check;
+        menu.setLayoutDirection(Qt::RightToLeft);
+        QCOMPARE(menu.property("resourcesMenuDirection").toString(), QStringLiteral("rtl"));
     }
 
     void comboPopupLifecycle_data()

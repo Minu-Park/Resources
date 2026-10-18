@@ -2,21 +2,23 @@
 
 ## Unreleased
 
-- Align embedded editable combo text with read-only controls, use left indicators for combo popup hover/selection, and remove unused switch columns from non-checkable menu commands.
+- Use inset popup dots, lightweight menu check marks, shared mixed-menu label columns, and rounded directional submenu chevrons. Keep widget switches and exclusive menu radios.
+
+- Align embedded editable combo text with read-only controls and keep text-only menus free of unused leading columns.
 
 - Preserve diagnostics dividers during individual-cell repaints, share one menu shadow metric with QSS, correct flipped popup shell anchors, and keep exclusive menu choices as radio indicators.
 
 - Keep exclusive menu radio indicators circular by clearing inherited switch padding; verify rendered diameter and corner pixels across display scales.
 
-- Align visible menu radio/switch left edges and row centers while retaining their separate native label offsets.
+- Align mixed-menu labels across ordinary commands, checks, radios, and submenus while preserving compact text-only menus.
 
 - Align presentation diagnostics header/body dividers and draw only internal grid lines, preserving the shared bubble header and rounded table shell.
 
 - Give default list items 3px vertical padding so switch indicators remain separated between rows, while retaining dedicated combo and file-list spacing.
 
-- Unify standalone, item-view, group-box, and menu check indicators as switches, including mixed/disabled states and focus treatment, while preserving native input, state, and selection semantics.
+- Unify standalone, item-view, and group-box check indicators as switches, including mixed/disabled states and focus treatment, while preserving native input, state, and selection semantics.
 
-- Use a short left-side menu hover indicator with dedicated icon spacing, and keep menu-bar hover and open states free of fills, outlines, and underlines.
+- Use a small left-side menu hover dot with dedicated icon spacing, and keep menu-bar hover and open states free of fills, outlines, and underlines.
 
 - Add a subtle menu-only shadow inside a transparent stylesheet gutter, retaining smooth shell corners and submenu action alignment; keep native layered-window updates within that padded extent.
 
