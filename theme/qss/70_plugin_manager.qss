@@ -175,7 +175,7 @@ QProgressBar#PluginMarketplaceProgress {
 }
 QProgressBar#PluginMarketplaceProgress::chunk {
     border-radius: 3px;
-    background: #2f80c9;
+    background: #00457c;
 }
 
 /* Host update discovery notification. */

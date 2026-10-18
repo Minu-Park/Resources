@@ -612,7 +612,7 @@ private slots:
         QCOMPARE(item->checkState(), Qt::Unchecked);
     }
 
-    void treeHoverIncludesBranches()
+    void treeHoverPreservesIndentation()
     {
         Resources::installResources(*qApp);
         for (const auto direction : {Qt::LeftToRight, Qt::RightToLeft}) {
@@ -634,7 +634,7 @@ private slots:
                     const QImage image = tree.viewport()->grab().toImage();
                     const qreal ratio = image.devicePixelRatio();
                     QCOMPARE(image.pixelColor(qRound(edge * ratio), qRound(row.center().y() * ratio)),
-                             tree.palette().highlight().color());
+                             tree.palette().base().color());
                 }
             }
         }
