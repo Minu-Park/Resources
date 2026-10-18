@@ -1252,7 +1252,14 @@ private:
         if (!layout) return;
 
         const QString name = layout->objectName();
-        if (name == QLatin1String("PluginMarketplaceRootLayout")) {
+        if (name == QLatin1String("ScriptExecutionLimitsFormLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
+            if (auto* form = qobject_cast<QFormLayout*>(layout)) {
+                form->setHorizontalSpacing(24);
+                form->setVerticalSpacing(12);
+            }
+        }
+        else if (name == QLatin1String("PluginMarketplaceRootLayout")) {
             setLayoutMetrics(layout, QMargins(8, 8, 8, 8), 6);
         }
         else if (name == QLatin1String("PluginMarketplaceToolbarLayout")

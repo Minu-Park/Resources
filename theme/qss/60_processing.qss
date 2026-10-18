@@ -2,10 +2,6 @@
 
 /* Runtime path lists reuse the base themed tree and row interaction surface. */
 
-QLabel#RuntimePathsDescription {
-    color: #425467;
-}
-
 QLabel#RuntimePathEntriesDescription {
     color: #64748b;
 }

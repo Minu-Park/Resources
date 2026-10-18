@@ -1,4 +1,15 @@
 /* Compact plugin list, details, and semantic action states. */
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh {
+    border: none;
+    background: transparent;
+    min-width: 24px;
+    max-width: 24px;
+    padding: 0;
+    qproperty-iconSize: 14px 14px;
+}
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh:focus {
+    outline: 1px solid #8badc7;
+}
 QWidget#PluginMarketplaceContent * {
     font-size: 11px;
 }
