@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fill the current selected cell with a stronger capsule inside joined selections, align its outer edges, and share balanced selection colors and item text/switch spacing across trees, lists and tables.
+- Clip joined selection backgrounds to their owning cells so later neighbors do not overwrite the current cell's right and bottom curves.
+
 - Present marketplace refresh as a borderless icon action and align compact execution-limit forms.
 
 - Clear row hover when another window or popup covers the viewport, and preserve consumer mouse-tracking settings.

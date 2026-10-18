@@ -50,6 +50,125 @@ class ResourcesItemViewTests : public QObject
     Q_OBJECT
   private slots:
     void initTestCase() { Resources::installResources(*qApp); }
+    void currentCellIsFilledWithinJoinedSelection_data()
+    {
+        QTest::addColumn<bool>("treeView");
+        QTest::addColumn<bool>("rtl");
+        for (bool tree : {false, true})
+            for (bool rtl : {false, true})
+                QTest::newRow(qPrintable(QString("%1-%2").arg(tree).arg(rtl))) << tree << rtl;
+    }
+    void currentCellIsFilledWithinJoinedSelection()
+    {
+        QFETCH(bool, treeView);
+        QFETCH(bool, rtl);
+        std::unique_ptr<QAbstractItemView> view(treeView
+            ? static_cast<QAbstractItemView*>(new QTreeView)
+            : static_cast<QAbstractItemView*>(new QTableView));
+        QStandardItemModel model(2, 3);
+        view->setModel(&model);
+        view->setLayoutDirection(rtl ? Qt::RightToLeft : Qt::LeftToRight);
+        view->setSelectionBehavior(QAbstractItemView::SelectRows);
+        if (auto* tree = qobject_cast<QTreeView*>(view.get())) tree->setRootIsDecorated(false);
+        if (auto* table = qobject_cast<QTableView*>(view.get())) table->setShowGrid(false);
+        view->resize(470, 180);
+        view->show();
+        QVERIFY(QTest::qWaitForWindowExposed(view.get()));
+        view->activateWindow();
+        view->setFocus();
+        view->selectionModel()->select(model.index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        view->selectionModel()->select(model.index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        const auto sample = [&](const QImage& image, QPoint point) {
+            return image.pixelColor(qRound(point.x() * image.devicePixelRatio()),
+                                    qRound(point.y() * image.devicePixelRatio()));
+        };
+        for (int column : {0, 1, 2})
+        {
+            const auto current = model.index(0, column);
+            view->selectionModel()->setCurrentIndex(current, QItemSelectionModel::NoUpdate);
+            QCoreApplication::processEvents();
+            const auto image = view->viewport()->grab().toImage();
+            const QRect rect = view->visualRect(current);
+            QCOMPARE(sample(image, rect.center()), QColor("#C1D9EB"));
+            // Current and selection fills share the same top/bottom edges.
+            QCOMPARE(sample(image, QPoint(rect.center().x(), rect.top() + 1)), QColor("#C1D9EB"));
+            QCOMPARE(sample(image, QPoint(rect.center().x(), rect.bottom() - 1)), QColor("#C1D9EB"));
+            // Later columns/rows must not paint their seam overlap over the current capsule.
+            for (const QPoint edge : {QPoint(rect.right(), rect.center().y()),
+                                     QPoint(rect.center().x(), rect.bottom())})
+            {
+                const QColor color = sample(image, edge);
+                const QColor currentColor("#C1D9EB");
+                // Fractional DPR can blend the boundary pixel; a neighbor repaint
+                // replaces it with the much lighter selection color instead.
+                QVERIFY2(qAbs(color.red() - currentColor.red()) <= 8 &&
+                             qAbs(color.green() - currentColor.green()) <= 8 &&
+                             qAbs(color.blue() - currentColor.blue()) <= 8,
+                         qPrintable(QString("Current-cell edge overwritten at %1,%2: %3")
+                             .arg(edge.x()).arg(edge.y()).arg(color.name())));
+            }
+            for (int other = 0; other < 3; ++other)
+                if (other != column)
+                    QCOMPARE(sample(image, view->visualRect(model.index(0, other)).center()),
+                             view->palette().highlight().color());
+        }
+    }
+    void itemSwitchUsesLeadingEdgeAndMatchingHitRect_data()
+    {
+        QTest::addColumn<bool>("rtl");
+        QTest::newRow("ltr") << false;
+        QTest::newRow("rtl") << true;
+    }
+    void listCurrentCellUsesSharedFill()
+    {
+        QListWidget list;
+        list.setSelectionMode(QAbstractItemView::ExtendedSelection);
+        list.addItems({QString(), QString()});
+        list.resize(320, 150);
+        list.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&list));
+        list.activateWindow();
+        list.setFocus();
+        list.selectAll();
+        list.setCurrentRow(1, QItemSelectionModel::NoUpdate);
+        const QImage image = list.viewport()->grab().toImage();
+        for (int row = 0; row < 2; ++row)
+        {
+            const QPoint point = list.visualItemRect(list.item(row)).center();
+            QCOMPARE(image.pixelColor(qRound(point.x() * image.devicePixelRatio()),
+                                      qRound(point.y() * image.devicePixelRatio())),
+                     row == 1 ? QColor("#C1D9EB") : list.palette().highlight().color());
+        }
+    }
+    void itemSwitchUsesLeadingEdgeAndMatchingHitRect()
+    {
+        QFETCH(bool, rtl);
+        QTreeWidget tree;
+        tree.setRootIsDecorated(false);
+        tree.setLayoutDirection(rtl ? Qt::RightToLeft : Qt::LeftToRight);
+        auto* item = new QTreeWidgetItem(&tree, {QStringLiteral("Producer.cti")});
+        item->setCheckState(0, Qt::Unchecked);
+        tree.resize(400, 160);
+        tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        struct Probe : QStyledItemDelegate { using QStyledItemDelegate::initStyleOption; } probe;
+        QStyleOptionViewItem option;
+        option.initFrom(&tree);
+        option.widget = &tree;
+        option.rect = tree.visualItemRect(item);
+        probe.initStyleOption(&option, tree.indexFromItem(item));
+        const QRect check = tree.style()->subElementRect(QStyle::SE_ItemViewItemCheckIndicator, &option, &tree);
+        const QRect text = tree.style()->subElementRect(QStyle::SE_ItemViewItemText, &option, &tree);
+        const int inset = rtl ? option.rect.right() - check.right() : check.left() - option.rect.left();
+        QVERIFY2(inset >= 0 && inset <= 5, qPrintable(QString("leading inset=%1 direction=%2")
+            .arg(inset).arg(tree.property("layoutDirection").toString())));
+        QVERIFY(!check.intersects(text));
+        QTest::mouseClick(tree.viewport(), Qt::LeftButton, Qt::NoModifier, check.center());
+        QCOMPARE(item->checkState(0), Qt::Checked);
+        tree.setCurrentItem(item);
+        QTest::keyClick(&tree, Qt::Key_Space);
+        QCOMPARE(item->checkState(0), Qt::Unchecked);
+    }
     void adjoiningSelectionsHaveNoInternalCorners_data()
     {
         QTest::addColumn<bool>("rtl");
