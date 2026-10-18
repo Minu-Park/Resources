@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Present marketplace refresh as a borderless icon action and align compact execution-limit forms.
+
 - Clear row hover when another window or popup covers the viewport, and preserve consumer mouse-tracking settings.
 
 - Preserve full-row table hover and commit editors exactly once when consumer delegates call through the shared surface delegate.
