@@ -697,7 +697,8 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
-        if (event->type() == QEvent::ActionAdded || event->type() == QEvent::ActionChanged) {
+        if (event->type() == QEvent::ActionAdded || event->type() == QEvent::ActionChanged
+            || event->type() == QEvent::ActionRemoved || event->type() == QEvent::LayoutDirectionChange) {
             if (auto* menu = qobject_cast<QMenu*>(obj)) prepareMenuCheckIndicators(menu);
         }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
@@ -897,9 +898,12 @@ protected:
     }
 
 private:
-    /** @brief Reserves Qt's shared menu icon/check slot for switches without changing toolbar icons. */
+    /** @brief Shares menu leading columns and check marks without changing toolbar icons. */
     static void prepareMenuCheckIndicators(QMenu* menu)
     {
+        if (menu->property("resourcesMenuPreparing").toBool()) return;
+        menu->setProperty("resourcesMenuPreparing", true);
+        bool leadingColumn = false;
         for (QAction* action : menu->actions()) {
             const QVariant original = action->property("resourcesMenuIconVisibility");
             if (action->isCheckable()) {
@@ -910,7 +914,24 @@ private:
                 action->setProperty("resourcesMenuIconVisibility", QVariant());
                 action->setIconVisibleInMenu(original.toBool());
             }
+            if (action->isVisible() && !action->isSeparator())
+                leadingColumn |= action->isCheckable()
+                    || (!action->icon().isNull() && action->isIconVisibleInMenu());
         }
+        const QString direction = menu->layoutDirection() == Qt::RightToLeft
+            ? QStringLiteral("rtl") : QStringLiteral("ltr");
+        if (menu->property("resourcesMenuHasLeadingColumn") != QVariant(leadingColumn)
+            || menu->property("resourcesMenuDirection").toString() != direction) {
+            menu->setProperty("resourcesMenuHasLeadingColumn", leadingColumn);
+            menu->setProperty("resourcesMenuDirection", direction);
+            if (menu->testAttribute(Qt::WA_WState_Polished)) {
+                menu->style()->unpolish(menu);
+                menu->style()->polish(menu);
+                menu->updateGeometry();
+                menu->update();
+            }
+        }
+        menu->setProperty("resourcesMenuPreparing", false);
     }
 
     /** @brief Keeps the visible shell at the requested anchor while reserving an external shadow gutter. */

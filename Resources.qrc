@@ -1,6 +1,25 @@
 <RCC>
     <qresource prefix="/Resources">
-        <file>Icons/menu-hover-indicator.svg</file>
+        <file>Icons/menu-hover-dot.png</file>
+        <file>Icons/menu-hover-dot@2x.png</file>
+        <file>Icons/combo-hover-dot.png</file>
+        <file>Icons/combo-hover-dot@2x.png</file>
+        <file>Icons/menu-check-on.png</file>
+        <file>Icons/menu-check-on@2x.png</file>
+        <file>Icons/menu-check-disabled.png</file>
+        <file>Icons/menu-check-disabled@2x.png</file>
+        <file>Icons/menu-chevron-right-idle.png</file>
+        <file>Icons/menu-chevron-left-idle.png</file>
+        <file>Icons/menu-chevron-right-idle@2x.png</file>
+        <file>Icons/menu-chevron-left-idle@2x.png</file>
+        <file>Icons/menu-chevron-right-active.png</file>
+        <file>Icons/menu-chevron-left-active.png</file>
+        <file>Icons/menu-chevron-right-active@2x.png</file>
+        <file>Icons/menu-chevron-left-active@2x.png</file>
+        <file>Icons/menu-chevron-right-disabled.png</file>
+        <file>Icons/menu-chevron-left-disabled.png</file>
+        <file>Icons/menu-chevron-right-disabled@2x.png</file>
+        <file>Icons/menu-chevron-left-disabled@2x.png</file>
         <file>Icons/radio-selected.svg</file>
         <file>Icons/radio-selected-disabled.svg</file>
         <file>Icons/switch-off.svg</file>
