@@ -277,53 +277,31 @@ QTableCornerButton::section {
     border: none;
 }
 
-QListView::item {
-    padding: 3px 6px;
-}
-
-QTableWidget::item,
-QTreeWidget::item {
-    border: none;
-    margin: 2px 4px;
-    border-radius: 8px;
-}
-
-QTableWidget::item:hover,
-QTreeWidget::item:hover {
-    background: #f5f5f5;
-    border-radius: 8px;
-}
-
-QTableWidget::item:selected,
-QTreeWidget::item:selected {
-    background: #efefef;
-    border-radius: 8px;
-}
-
-QTableWidget[interactionMode="row"]::item,
-QTableWidget[interactionMode="row"]::item:hover,
-QTableWidget[interactionMode="row"]::item:selected {
-    background: transparent;
-    border-radius: 0;
-    margin: 0;
-    color: #16202b;
-}
-
-QTreeWidget::item:selected {
-    color: #16202b;
-}
-
-QTreeWidget[interactionMode="row"]::item,
-QTreeWidget[interactionMode="row"]::item:hover,
-QTreeWidget[interactionMode="row"]::item:selected {
-    background: transparent;
-}
-
-QTreeWidget[interactionMode="row"] {
-    selection-background-color: #f5f5f5;
-    /* The rounded row surface owns hover/selection; a decorated branch panel is square. */
+/* Shared item surfaces are joined in visual coordinates by the installed delegate. */
+QTreeView, QListView, QTableView {
+    selection-background-color: #edf5fb;
+    selection-color: #16202b;
     show-decoration-selected: 0;
 }
+QTreeView::item, QListView::item, QTableView::item {
+    min-height: 22px;
+    padding: 1px 2px;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+}
+QTreeView::item:hover, QListView::item:hover, QTableView::item:hover,
+QTreeView::item:selected, QListView::item:selected, QTableView::item:selected {
+    background: transparent;
+    color: #16202b;
+}
+QWidget#ResourcesItemSelectionSurface {
+    qproperty-radius: 9;
+    qproperty-hoverColor: #f4f8fb;
+    qproperty-focusColor: #8badc7;
+}
+QTableView QLabel { background: transparent; }
 
 QTreeView::branch:has-children:closed,
 QTreeWidget::branch:has-children:closed {
@@ -607,15 +585,19 @@ QRadioButton:hover {
     background: transparent;
 }
 
-QRadioButton::indicator {
-    width: 20px;
-    height: 20px;
+QRadioButton { spacing: 8px; }
+QRadioButton::indicator, QRadioButton::indicator:hover {
+    width: 22px;
+    height: 22px;
+    border: none;
+    padding: 0;
+    background: transparent;
+    image: url(:/Resources/Icons/widget-radio-off.svg);
 }
-
-QRadioButton::indicator:hover {
-    background: #f8fafc;
-    border-color: #8badc7;
-}
+QRadioButton::indicator:checked { image: url(:/Resources/Icons/widget-radio-on.svg); }
+QRadioButton::indicator:disabled { image: url(:/Resources/Icons/widget-radio-off-disabled.svg); }
+QRadioButton::indicator:checked:disabled { image: url(:/Resources/Icons/widget-radio-on-disabled.svg); }
+QRadioButton:disabled { color: #95a3b1; }
 
 /* Default checkbox presentation; native check-state and input behavior remain intact. */
 QCheckBox {
@@ -1048,3 +1030,39 @@ QSlider::handle:horizontal:pressed {
     border-color: #7097b3;
     background: #f1f5f9;
 }
+
+/* Keep explicit progress text readable; compact bars opt in through Qt's existing property. */
+QProgressBar {
+    min-height: 18px;
+    border: none;
+    border-radius: 3px;
+    background: #e7eef5;
+    color: #243546;
+    selection-color: #ffffff;
+    text-align: center;
+    qproperty-alignment: AlignCenter;
+}
+QProgressBar[textVisible="false"] { min-height: 6px; max-height: 6px; }
+QProgressBar::chunk { border: none; border-radius: 3px; background: #00457c; }
+QProgressBar:disabled { background: #edf2f6; color: #95a3b1; }
+QProgressBar::chunk:disabled { background: #a9bdcf; }
+QDateTimeEdit { padding-right: 24px; }
+QTimeEdit { padding-right: 4px; }
+QDateTimeEdit::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 22px;
+    border: none;
+    background: transparent;
+    image: none;
+}
+QDateTimeEdit::down-arrow {
+    image: url(:/Resources/Icons/icons8-expand-arrow-12.png);
+    width: 10px;
+    height: 6px;
+}
+QCalendarWidget QWidget#qt_calendar_navigationbar { background: #ffffff; border-bottom: 1px solid #e2e8ef; }
+QCalendarWidget QToolButton { background: transparent; color: #16202b; border: none; min-height: 22px; padding: 0 4px; font-weight: 600; }
+QCalendarWidget QToolButton#qt_calendar_prevmonth { qproperty-icon: url(:/Resources/Icons/menu-chevron-left-idle.png); icon-size: 12px; }
+QCalendarWidget QToolButton#qt_calendar_nextmonth { qproperty-icon: url(:/Resources/Icons/menu-chevron-right-idle.png); icon-size: 12px; }
+QCalendarWidget QAbstractItemView { background: #ffffff; selection-background-color: #edf5fb; selection-color: #16202b; color: #243546; outline: 0; }

@@ -29,21 +29,4 @@ Static3DDataControlWidget QListWidget {
     padding: 4px;
 }
 
-StaticImageControlWidget QListWidget::item,
-Static3DDataControlWidget QListWidget::item {
-    padding: 6px 10px;
-    border-radius: 6px;
-    color: #16202b;
-}
-
-StaticImageControlWidget QListWidget::item:hover,
-Static3DDataControlWidget QListWidget::item:hover {
-    background-color: #f3f3f3;
-}
-
-StaticImageControlWidget QListWidget::item:selected,
-Static3DDataControlWidget QListWidget::item:selected {
-    background-color: #f0f0f0;
-    color: #16202b;
-    font-weight: 600;
-}
+/* File rows inherit the shared compact item surface and adjoining selection corners. */

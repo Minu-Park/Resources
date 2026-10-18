@@ -1,4 +1,5 @@
 #include "Resources.h"
+#include "ItemViewTheme.h"
 #include "Chrome/ThemedTreeWidget.h"
 
 #include <QApplication>
@@ -23,6 +24,8 @@
 #include <QTextEdit>
 #include <QTextDocument>
 #include <QPushButton>
+#include <QProgressBar>
+#include <QStyleOptionProgressBar>
 #include <QTabBar>
 #include <QToolButton>
 #include <QAbstractItemView>
@@ -214,13 +217,7 @@ private:
     QTreeWidget* _tree = nullptr;
 };
 
-/**
- * @brief Paints a QTableWidget row as one continuous interaction surface.
- *
- * QSS item selectors are cell-scoped. The delegate therefore draws the same
- * full-row surface from every visible cell's clipped paint region and then
- * paints only the cell contents, avoiding gaps between selected cells.
- */
+/** @brief Paints table contents while the shared delegate owns adjoining interaction surfaces. */
 class RoundedTableItemDelegate final : public QStyledItemDelegate
 {
 public:
@@ -249,33 +246,6 @@ public:
             || _table->property("interactionMode").toString() != QLatin1String("row")) {
             QStyledItemDelegate::paint(painter, option, index);
             return;
-        }
-
-        const QPoint cursorPosition = _table->viewport()->mapFromGlobal(QCursor::pos());
-        const QModelIndex hoveredIndex = _table->indexAt(cursorPosition);
-        const bool hoveredRow = hoveredIndex.isValid()
-            && hoveredIndex.row() == index.row()
-            && hoveredIndex.parent() == index.parent();
-        const bool selectedRow = _table->selectionModel()
-            && _table->selectionModel()->isRowSelected(index.row(), index.parent());
-
-        // Paint the same row shape from every cell, but constrain each draw to
-        // that cell before painting its text. The cell segments join into one
-        // continuous row surface without later cells covering earlier text.
-        if (hoveredRow || selectedRow)
-        {
-            QRect surfaceRect = option.rect;
-            surfaceRect.setLeft(_table->viewport()->rect().left());
-            surfaceRect.setRight(_table->viewport()->rect().right());
-            surfaceRect.adjust(0, 2, 0, -2);
-
-            painter->save();
-            painter->setClipRect(option.rect, Qt::IntersectClip);
-            painter->setRenderHint(QPainter::Antialiasing, true);
-            painter->setPen(Qt::NoPen);
-            painter->setBrush(_table->palette().highlight());
-            painter->drawRoundedRect(surfaceRect, 9, 9);
-            painter->restore();
         }
 
         QStyleOptionViewItem cellOption(option);
@@ -446,32 +416,6 @@ void ThemedTreeWidget::drawRow(QPainter* painter,
                                const QStyleOptionViewItem& option,
                                const QModelIndex& index) const
 {
-    if (painter != nullptr
-        && property("interactionMode").toString() == QLatin1String("row")) {
-        const QPoint cursorPosition = viewport()->mapFromGlobal(QCursor::pos());
-        const QModelIndex hoveredIndex = indexAt(cursorPosition);
-        const bool hoveredRow = (option.state & QStyle::State_MouseOver)
-            || isSameTreeRow(index, hoveredIndex);
-        const bool selectedRow = selectionModel()
-            && selectionModel()->isRowSelected(index.row(), index.parent());
-
-        if (hoveredRow || selectedRow) {
-            // QSS item selectors are cell-scoped, so the row boundary owns this shared surface.
-            QRect surfaceRect = option.rect;
-            surfaceRect.setLeft(viewport()->rect().left());
-            surfaceRect.setRight(viewport()->rect().right());
-            // Match the header's horizontal extent; retain only the vertical breathing room.
-            surfaceRect.adjust(0, 2, 0, -2);
-
-            painter->save();
-            painter->setRenderHint(QPainter::Antialiasing, true);
-            painter->setPen(Qt::NoPen);
-            painter->setBrush(palette().highlight());
-            painter->drawRoundedRect(surfaceRect, 9, 9);
-            painter->restore();
-        }
-    }
-
     if (painter == nullptr || model() == nullptr) {
         return;
     }
@@ -502,6 +446,13 @@ void ThemedTreeWidget::drawRow(QPainter* painter,
 
         QStyleOptionViewItem cellOption(option);
         cellOption.rect = cellRect;
+        cellOption.state.setFlag(QStyle::State_Selected,
+            selectionModel() && selectionModel()->isSelected(cellIndex));
+        cellOption.state.setFlag(QStyle::State_HasFocus, hasFocus() && currentIndex() == cellIndex);
+        const QModelIndex hovered = indexAt(viewport()->mapFromGlobal(QCursor::pos()));
+        cellOption.state.setFlag(QStyle::State_MouseOver,
+            property("interactionMode").toString() == QLatin1String("row")
+                ? isSameTreeRow(cellIndex, hovered) : cellIndex == hovered);
         delegate->paint(painter, cellOption, cellIndex);
     }
 }
@@ -678,6 +629,55 @@ protected:
     QRectF boundingRectFor(const QRectF& sourceRect) const override { return sourceRect; }
 };
 
+/** @brief Preserves progress text contrast over both the empty track and the themed fill. */
+static void paintThemedProgressText(QProgressBar* bar)
+{
+    QStyleOptionProgressBar option;
+    option.initFrom(bar);
+    option.rect = bar->rect();
+    option.minimum = bar->minimum();
+    option.maximum = bar->maximum();
+    option.progress = bar->value();
+    option.textVisible = false;
+    option.invertedAppearance = bar->invertedAppearance();
+    option.state.setFlag(QStyle::State_Horizontal, bar->orientation() == Qt::Horizontal);
+    QPainter painter(bar);
+    bar->style()->drawControl(QStyle::CE_ProgressBarGroove, &option, &painter, bar);
+    bar->style()->drawControl(QStyle::CE_ProgressBarContents, &option, &painter, bar);
+    const auto label = [&](const QColor& color) {
+        painter.save();
+        painter.setPen(color);
+        QRect textRect = bar->rect();
+        if (bar->orientation() == Qt::Vertical) {
+            textRect = QRect(0, 0, bar->height(), bar->width());
+            if (bar->textDirection() == QProgressBar::TopToBottom) {
+                painter.translate(bar->width(), 0);
+                painter.rotate(90);
+            } else {
+                painter.translate(0, bar->height());
+                painter.rotate(-90);
+            }
+        }
+        painter.drawText(textRect, bar->alignment() | Qt::AlignVCenter | Qt::TextSingleLine, bar->text());
+        painter.restore();
+    };
+    label(bar->palette().color(QPalette::Text));
+    if (bar->maximum() <= bar->minimum() || bar->value() < bar->minimum()) return;
+    const qreal fraction = (qreal(bar->value()) - bar->minimum())
+        / (qreal(bar->maximum()) - bar->minimum());
+    QRectF fill = bar->style()->subElementRect(QStyle::SE_ProgressBarContents, &option, bar);
+    if (bar->orientation() == Qt::Horizontal) {
+        const bool fromRight = bar->isRightToLeft() != bar->invertedAppearance();
+        const qreal width = fill.width() * fraction;
+        if (fromRight) fill.setLeft(fill.right() - width); else fill.setWidth(width);
+    } else {
+        const qreal height = fill.height() * fraction;
+        if (bar->invertedAppearance()) fill.setHeight(height); else fill.setTop(fill.bottom() - height);
+    }
+    painter.setClipRect(fill);
+    label(bar->palette().color(QPalette::HighlightedText));
+}
+
 class ResourceStyleFilter : public QObject
 {
 public:
@@ -764,6 +764,10 @@ protected:
         }
 
         if (event->type() == QEvent::Paint) {
+            if (auto* bar = qobject_cast<QProgressBar*>(obj); bar && bar->isTextVisible()) {
+                paintThemedProgressText(bar);
+                return true;
+            }
             if (auto* widget = qobject_cast<QWidget*>(obj); widget && !qobject_cast<QMenu*>(obj)) {
                 if (auto* button = qobject_cast<QToolButton*>(widget);
                     button && isGraphicsSettingsTabScrollerButton(button)
@@ -894,6 +898,9 @@ protected:
             }
         }
 
+        if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
+            if (auto* view = qobject_cast<QAbstractItemView*>(obj)) Resources::applyItemViewTheme(view);
+        }
         return QObject::eventFilter(obj, event);
     }
 

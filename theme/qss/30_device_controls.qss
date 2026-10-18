@@ -43,14 +43,14 @@ OneGenFeatureTree QToolButton#DeviceFeatureFavoritesOnly {
 QTreeWidget[treeRole="DeviceFeatureTree"] {
     background: #ffffff;
     alternate-background-color: #ffffff;
-    selection-background-color: #ffffff;
+    selection-background-color: #edf5fb;
     selection-color: #16202b;
     show-decoration-selected: 0;
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"]::item:hover,
 QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
-    background: #ffffff;
+    background: transparent;
     color: #16202b;
 }
 

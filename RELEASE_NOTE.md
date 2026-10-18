@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Join adjacent tree, list, and table selections into one rounded surface; retain consumer delegates, editors, and dedicated popup behavior.
+- Use compact shared item insets, aligned radio/switch geometry, consistent progress colors and readable fill-overlaid text, and styled date/calendar controls.
+
 - Restore the shared menu shadow, flags, and mask immediately after live menu-column repolish.
 
 - Use inset popup dots, lightweight menu check marks, shared mixed-menu label columns, and rounded directional submenu chevrons. Keep widget switches and exclusive menu radios.

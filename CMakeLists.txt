@@ -78,6 +78,7 @@ qt_add_library(PlaygroundResources STATIC
     Resources.qrc
     Resources.h
     Resources.cpp
+    ItemViewTheme.h ItemViewTheme.cpp
     Chrome/ThemedTreeWidget.h
     Chrome/ThemedMdiTitleBar.h
     Chrome/ThemedMdiTitleBar.cpp
@@ -117,6 +118,17 @@ target_include_directories(PlaygroundResources
 )
 
 if(RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS)
+    qt_add_executable(ResourcesItemViewTests tests/ResourcesItemViewTests.cpp)
+    target_link_libraries(ResourcesItemViewTests PRIVATE Resources::Resources Qt6::Test)
+    set_target_properties(ResourcesItemViewTests PROPERTIES WIN32_EXECUTABLE FALSE)
+    if(WIN32)
+        add_test(NAME ResourcesItemViewTests COMMAND ${CMAKE_COMMAND} -E env
+            "PATH=$<TARGET_FILE_DIR:Qt6::Core>;$ENV{PATH}" "QT_QPA_PLATFORM=offscreen"
+            $<TARGET_FILE:ResourcesItemViewTests>)
+    else()
+        add_test(NAME ResourcesItemViewTests COMMAND ResourcesItemViewTests)
+        set_tests_properties(ResourcesItemViewTests PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+    endif()
     qt_add_executable(ResourcesTransientWindowTests tests/ResourcesTransientWindowTests.cpp)
     target_link_libraries(ResourcesTransientWindowTests PRIVATE Resources::Resources Qt6::Test)
     set_target_properties(ResourcesTransientWindowTests PROPERTIES WIN32_EXECUTABLE FALSE)
