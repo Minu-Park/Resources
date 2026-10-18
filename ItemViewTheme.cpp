@@ -45,7 +45,6 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
     {
         surface_->ensurePolished();
         observeSelection();
-        view_->viewport()->setMouseTracking(true);
         view_->viewport()->setAttribute(Qt::WA_Hover);
         view_->viewport()->installEventFilter(this);
         connect(source, &QAbstractItemDelegate::commitData, this, &QAbstractItemDelegate::commitData);
@@ -68,7 +67,8 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
         const bool selected = option.state & QStyle::State_Selected;
         const bool rowMode = view_->selectionBehavior() == QAbstractItemView::SelectRows;
         const QPoint cursor = view_->viewport()->mapFromGlobal(QCursor::pos());
-        const QModelIndex hoverIndex = view_->viewport()->rect().contains(cursor)
+        const QModelIndex hoverIndex = view_->viewport()->underMouse() &&
+                                               view_->viewport()->rect().contains(cursor)
                                            ? view_->indexAt(cursor) : QModelIndex{};
         const bool mouseOver = rowMode ? hoverIndex.isValid() && hoverIndex.row() == index.row() &&
                                             hoverIndex.parent() == index.parent()
@@ -214,7 +214,7 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
         // Qt tables invalidate only the hovered cell; joined row feedback needs both rows repainted.
         if (watched == view_->viewport() &&
             view_->selectionBehavior() == QAbstractItemView::SelectRows &&
-            (event->type() == QEvent::MouseMove || event->type() == QEvent::HoverMove ||
+            (event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverMove ||
              event->type() == QEvent::Leave || event->type() == QEvent::HoverLeave))
         {
             const QPoint cursor = view_->viewport()->mapFromGlobal(QCursor::pos());
