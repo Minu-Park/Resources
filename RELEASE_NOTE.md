@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preserve full-row table hover and commit editors exactly once when consumer delegates call through the shared surface delegate.
+
 - Join adjacent tree, list, and table selections into one rounded surface; retain consumer delegates, editors, and dedicated popup behavior.
 - Use compact shared item insets, aligned radio/switch geometry, consistent progress colors and readable fill-overlaid text, and styled date/calendar controls.
 

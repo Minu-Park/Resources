@@ -3,12 +3,15 @@
 #include <QApplication>
 #include <QCalendarWidget>
 #include <QComboBox>
+#include <QCursor>
 #include <QHeaderView>
 #include <QHelpEvent>
 #include <QItemSelectionModel>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPointer>
+#include <QPersistentModelIndex>
+#include <QSet>
 #include <QStyledItemDelegate>
 #include <QTableView>
 
@@ -42,12 +45,16 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
     {
         surface_->ensurePolished();
         observeSelection();
+        view_->viewport()->setMouseTracking(true);
+        view_->viewport()->setAttribute(Qt::WA_Hover);
+        view_->viewport()->installEventFilter(this);
         connect(source, &QAbstractItemDelegate::commitData, this, &QAbstractItemDelegate::commitData);
         connect(source, &QAbstractItemDelegate::closeEditor, this,
                 [this](QWidget *editor, QAbstractItemDelegate::EndEditHint hint)
                 {
                     // The view removes our filter on close; remove the forwarded source filter too.
-                    editor->removeEventFilter(source_);
+                    if (forwardedEditors_.remove(editor))
+                        editor->removeEventFilter(source_);
                     emit closeEditor(editor, hint);
                 });
         connect(source, &QAbstractItemDelegate::sizeHintChanged, this,
@@ -59,8 +66,14 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
             return;
         observeSelection();
         const bool selected = option.state & QStyle::State_Selected;
-        const bool hovered = view_->selectionMode() != QAbstractItemView::NoSelection &&
-                             (option.state & QStyle::State_MouseOver) &&
+        const bool rowMode = view_->selectionBehavior() == QAbstractItemView::SelectRows;
+        const QPoint cursor = view_->viewport()->mapFromGlobal(QCursor::pos());
+        const QModelIndex hoverIndex = view_->viewport()->rect().contains(cursor)
+                                           ? view_->indexAt(cursor) : QModelIndex{};
+        const bool mouseOver = rowMode ? hoverIndex.isValid() && hoverIndex.row() == index.row() &&
+                                            hoverIndex.parent() == index.parent()
+                                      : bool(option.state & QStyle::State_MouseOver);
+        const bool hovered = view_->selectionMode() != QAbstractItemView::NoSelection && mouseOver &&
                              (option.state & QStyle::State_Enabled);
         if (selected || hovered)
         {
@@ -149,12 +162,20 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
                           const QModelIndex &index) const override
     {
         QWidget *editor = source_ ? source_->createEditor(parent, option, index) : nullptr;
-        if (editor)
+        // An outer consumer delegate owns its editor filter when it calls through us.
+        if (editor && view_->itemDelegateForIndex(index) == this)
+        {
             editor->installEventFilter(source_);
+            forwardedEditors_.insert(editor);
+            connect(editor, &QObject::destroyed, this,
+                    [this, editor] { forwardedEditors_.remove(editor); });
+        }
         return editor;
     }
     void destroyEditor(QWidget *editor, const QModelIndex &index) const override
     {
+        if (forwardedEditors_.remove(editor))
+            editor->removeEventFilter(source_);
         if (source_)
             source_->destroyEditor(editor, index);
         else
@@ -188,8 +209,24 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
     }
 
   protected:
-    bool eventFilter(QObject *, QEvent *) override
+    bool eventFilter(QObject *watched, QEvent *event) override
     {
+        // Qt tables invalidate only the hovered cell; joined row feedback needs both rows repainted.
+        if (watched == view_->viewport() &&
+            view_->selectionBehavior() == QAbstractItemView::SelectRows &&
+            (event->type() == QEvent::MouseMove || event->type() == QEvent::HoverMove ||
+             event->type() == QEvent::Leave || event->type() == QEvent::HoverLeave))
+        {
+            const QPoint cursor = view_->viewport()->mapFromGlobal(QCursor::pos());
+            const auto next = event->type() == QEvent::Leave || event->type() == QEvent::HoverLeave ||
+                                      !view_->viewport()->rect().contains(cursor)
+                                  ? QModelIndex{} : view_->indexAt(cursor).siblingAtColumn(0);
+            if (hoveredRow_ != next)
+            {
+                hoveredRow_ = next;
+                view_->viewport()->update();
+            }
+        }
         return false;
     } // The source owns its editor event policy.
   private:
@@ -206,6 +243,8 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
     }
     mutable QPointer<QItemSelectionModel> selection_;
     mutable QMetaObject::Connection selectionConnection_;
+    mutable QSet<QWidget *> forwardedEditors_;
+    QPersistentModelIndex hoveredRow_;
     QAbstractItemView *view_;
     QPointer<QAbstractItemDelegate> source_;
     ResourcesItemSelectionSurface *surface_;

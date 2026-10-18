@@ -100,6 +100,88 @@ class ResourcesItemViewTests : public QObject
         QTRY_COMPARE(table.item(0, 0)->text(), QString("After"));
         QCOMPARE(commits.count(), 1);
     }
+    void tableHoverSpansOnlyTheHoveredRow_data()
+    {
+        QTest::addColumn<bool>("rtl");
+        QTest::newRow("ltr") << false;
+        QTest::newRow("rtl") << true;
+    }
+    void tableHoverSpansOnlyTheHoveredRow()
+    {
+        QFETCH(bool, rtl);
+        QTableWidget table(2, 3);
+        table.setLayoutDirection(rtl ? Qt::RightToLeft : Qt::LeftToRight);
+        table.setShowGrid(false);
+        table.setSelectionBehavior(QAbstractItemView::SelectRows);
+        for (int r = 0; r < 2; ++r)
+            for (int c = 0; c < 3; ++c)
+                table.setItem(r, c, new QTableWidgetItem);
+        table.resize(430, 180);
+        table.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&table));
+        table.clearFocus();
+        const auto sample = [&](const QImage &image, int r, int c)
+        {
+            const QPoint p = table.visualItemRect(table.item(r, c)).center();
+            return image.pixelColor(qRound(p.x() * image.devicePixelRatio()),
+                                    qRound(p.y() * image.devicePixelRatio()));
+        };
+        QTest::mouseMove(table.viewport(), QPoint(410, 150));
+        const QColor base = sample(table.viewport()->grab().toImage(), 0, 0);
+        for (int r = 0; r < 2; ++r)
+        {
+            QTest::mouseMove(table.viewport(), table.visualItemRect(table.item(r, 1)).center());
+            QCoreApplication::processEvents();
+            const auto image = table.viewport()->grab().toImage();
+            const QColor hover = sample(image, r, 1);
+            QVERIFY(hover != base);
+            for (int c = 0; c < 3; ++c)
+            {
+                QCOMPARE(sample(image, r, c), hover);
+                QCOMPARE(sample(image, 1 - r, c), base);
+            }
+        }
+        QTest::mouseMove(&table, QPoint(1, 1));
+        QCoreApplication::processEvents();
+        const auto cleared = table.viewport()->grab().toImage();
+        for (int r = 0; r < 2; ++r)
+            QCOMPARE(sample(cleared, r, 1), base);
+    }
+    void nestedFavoriteDelegateCommitsOnce_data()
+    {
+        QTest::addColumn<int>("key");
+        QTest::newRow("enter") << int(Qt::Key_Return);
+        QTest::newRow("tab") << int(Qt::Key_Tab);
+        QTest::newRow("focus-out") << 0;
+    }
+    void nestedFavoriteDelegateCommitsOnce()
+    {
+        QFETCH(int, key);
+        SearchableTreeWidget tree;
+        tree.setHeaderLabels({"Name", "Value"});
+        auto *item = new QTreeWidgetItem(&tree, {"Before", "42"});
+        item->setFlags(item->flags() | Qt::ItemIsEditable);
+        tree.resize(420, 220);
+        tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        auto *active = tree.itemDelegateForColumn(0);
+        QVERIFY(active);
+        QSignalSpy commits(active, &QAbstractItemDelegate::commitData);
+        QSignalSpy closes(active, &QAbstractItemDelegate::closeEditor);
+        tree.setCurrentItem(item, 0);
+        tree.editItem(item, 0);
+        auto *editor = tree.viewport()->findChild<QLineEdit *>();
+        QVERIFY(editor);
+        editor->setText("After");
+        if (key)
+            QTest::keyClick(editor, Qt::Key(key));
+        else
+            tree.setFocus();
+        QTRY_COMPARE(item->text(0), QString("After"));
+        QCoreApplication::processEvents();
+        QCOMPARE(commits.count(), 1);
+        QCOMPARE(closes.count(), 1);
+    }
     void featureFavoritesAndEmbeddedEditorsSurvive()
     {
         SearchableTreeWidget tree;
