@@ -2,9 +2,9 @@
 
 QStatusBar {
     background: transparent;
-    border-top: 1px solid @BORDER_COLOR@;
+    border-top: 1px solid @BORDER@;
     border-bottom: none;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     height: 32px;
     min-height: 32px;
     max-height: 32px;
@@ -14,14 +14,14 @@ QStatusBar {
 }
 
 QStatusBar[maximized="true"] {
-    background: #ffffff;
+    background: @SURFACE@;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
 }
 
 QTextEdit#SystemLogViewer {
-    background-color: #ffffff;
-    color: @FONT_COLOR@;
+    background-color: @SURFACE@;
+    color: @TEXT@;
     border: none;
     border-radius: 0px;
     font-family: "JetBrains Mono";
@@ -49,37 +49,37 @@ QLabel#EngineStatusRenderPath,
 QLabel#EngineStatusPointer,
 QLabel#EngineStatusZoom,
 QLabel#EngineStatusFps {
-    background: #ffffff;
-    border: 1px solid #d8d8d7;
+    background: @SURFACE@;
+    border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
     padding: 0 7px;
     height: 24px;
     min-height: 24px;
     max-height: 24px;
     margin: 0 2px 0 0;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
 }
 
 QLabel#EngineStatusSummary[performancePath="native-tile"] {
-    border-color: #1565c0;
+    border-color: @NATIVEPATH@;
 }
 
 QLabel#EngineStatusSummary[performancePath="fit-sampling"] {
-    border-color: #edb078;
+    border-color: @SAMPLEDPATH@;
 }
 
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton,
 QToolButton#ProcessingEnableToggle {
-    background: #ffffff;
-    border: 1px solid #d8d8d7;
+    background: @SURFACE@;
+    border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
     padding: 0 7px;
     height: 24px;
     min-height: 24px;
     max-height: 24px;
     margin: 0 2px 0 0;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
 }
 
 QLabel#CameraStatusLabel,
@@ -90,7 +90,7 @@ QLabel#EngineStatusMode,
 QLabel#EngineStatusZoom,
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-weight: 700;
 }
 
@@ -101,7 +101,7 @@ QStatusBar QLabel[statusRole="message"] {
     padding: 0;
     margin: 0 8px 0 0;
     min-width: 0px;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-weight: 400;
 }
 
@@ -135,22 +135,22 @@ QToolButton#ProcessingEnableToggle {
 }
 
 QToolButton#EngineStatusViewButton:disabled {
-    background: #ffffff;
-    border-color: #d8d8d7;
-    color: @FONT_COLOR@;
+    background: @SURFACE@;
+    border-color: @CONTROLBORDER@;
+    color: @TEXT@;
 }
 
 QToolButton#EngineStatusModeButton:hover,
 QToolButton#EngineStatusViewButton:hover {
-    background: #f1f1f0;
-    border-color: #c8c8c7;
-    color: @FONT_COLOR@;
+    background: @HOVER@;
+    border-color: @HOVERBORDER@;
+    color: @TEXT@;
 }
 
 QToolButton#EngineStatusModeButton:pressed,
 QToolButton#EngineStatusViewButton:pressed {
-    background: #e9e9e8;
-    border-color: #bdbdbc;
+    background: @PRESSED@;
+    border-color: @HOVERBORDER@;
 }
 
 QToolButton#EngineStatusModeButton::menu-indicator,
@@ -160,81 +160,81 @@ QToolButton#EngineStatusViewButton::menu-indicator {
 }
 
 QPushButton#MainLogToggleBtn {
-    background: #ffffff;
-    border: 1px solid #d4d4d3;
+    background: @SURFACE@;
+    border: 1px solid @CURRENT@;
     border-radius: 9px;
     padding: 0 8px;
     height: 24px;
     min-height: 24px;
     max-height: 24px;
     margin: 0 2px 0 0;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-weight: 700;
     font-size: 11px;
 }
 
 QPushButton#RuntimeLibrariesStatusButton {
-    background: #ffffff;
-    border: 1px solid #d8d8d7;
+    background: @SURFACE@;
+    border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
     padding: 0 8px;
     height: 24px;
     min-height: 24px;
     max-height: 24px;
     margin: 0 2px 0 0;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-weight: 700;
     font-size: 11px;
 }
 
 QPushButton#RuntimeLibrariesStatusButton:hover {
-    background: #f1f1f0;
-    border-color: #c8c8c7;
-    color: @FONT_COLOR@;
+    background: @HOVER@;
+    border-color: @HOVERBORDER@;
+    color: @TEXT@;
 }
 
 QPushButton#RuntimeLibrariesStatusButton:pressed {
-    background: #e9e9e8;
-    border-color: #bdbdbc;
+    background: @PRESSED@;
+    border-color: @HOVERBORDER@;
 }
 
 QPushButton#MainLogToggleBtn:hover {
-    background: #f1f1f0;
-    border-color: #bdbdbc;
-    color: @FONT_COLOR@;
+    background: @HOVER@;
+    border-color: @HOVERBORDER@;
+    color: @TEXT@;
 }
 
 QPushButton#MainLogToggleBtn:checked {
-    background: #e8e8e7;
-    border-color: #b0b0af;
-    color: @FONT_COLOR@;
+    background: @PRESSED@;
+    border-color: @DISABLEDTEXT@;
+    color: @TEXT@;
 }
 
 QPushButton#MainLogToggleBtn:checked:hover {
-    background: #e0e0df;
-    border-color: #a3a3a2;
-    color: @FONT_COLOR@;
+    background: @PRESSED@;
+    border-color: @DISABLEDTEXT@;
+    color: @TEXT@;
 }
 
 QPushButton#MainLogToggleBtn[logState="warning"] {
-    border-color: #ffb74d;
+    border-color: @WARNING@;
 }
 
 QPushButton#MainLogToggleBtn[logState="warning"]:hover {
-    border-color: #fb8c00;
+    border-color: @WARNING@;
 }
 
 QPushButton#MainLogToggleBtn[logState="error"] {
-    border-color: #ef4444;
+    border-color: @ERROR@;
 }
 
 QPushButton#MainLogToggleBtn[logState="error"]:hover {
-    border-color: #dc2626;
+    border-color: @ERROR@;
 }
 
 QWidget#MinimizedSessionIndicator {
-    background: #ffffff;
-    border: 1px solid #d8d8d7;
+    background: @SURFACE@;
+    border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
     height: 24px;
     min-height: 24px;
@@ -244,13 +244,13 @@ QWidget#MinimizedSessionIndicator {
 }
 
 QWidget#MinimizedSessionIndicator[minimized="true"] {
-    background: #f1f1f0;
+    background: @HOVER@;
 }
 
 QPushButton#MinimizedSessionRestore {
     background: transparent;
     border: none;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-size: 11px;
     font-weight: 600;
     padding: 0 4px 0 6px;
@@ -258,7 +258,7 @@ QPushButton#MinimizedSessionRestore {
 }
 
 QPushButton#MinimizedSessionRestore:hover {
-    color: #1565c0;
+    color: @TEXT@;
 }
 
 QPushButton#MinimizedSessionClose {

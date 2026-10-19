@@ -3,6 +3,7 @@
 #include "Widgets/SearchableTreeWidget.h"
 #include <QSignalSpy>
 #include <QTest>
+#include <QScopeGuard>
 #include <QtWidgets>
 #include <memory>
 
@@ -50,6 +51,57 @@ class ResourcesItemViewTests : public QObject
     Q_OBJECT
   private slots:
     void initTestCase() { Resources::installResources(*qApp); }
+    void selectedTreeRowsDoNotPaintLeadingRails()
+    {
+        QTreeWidget tree;
+        tree.setHeaderLabels({"Feature", "Value"});
+        tree.setSelectionBehavior(QAbstractItemView::SelectRows);
+        auto* row = new QTreeWidgetItem(&tree, {"Exposure", "120"});
+        tree.resize(360, 150); tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        tree.setCurrentItem(row);
+        const auto image = tree.viewport()->grab().toImage();
+        const qreal dpr = image.devicePixelRatio();
+        const int y = qRound(tree.visualItemRect(row).center().y() * dpr);
+        for (int x = qRound(2 * dpr); x < qRound(16 * dpr); ++x)
+            QVERIFY2(qGray(image.pixelColor(x, y).rgb()) > 200, "A native selection rail remains outside the row capsule.");
+    }
+    void incompleteThemeReloadIsAtomic()
+    {
+        const auto installed = qApp->styleSheet();
+        const auto colors = Resources::themePalette();
+        QTemporaryDir incomplete;
+        QString error;
+        QVERIFY(!Resources::reloadThemeFromDirectory(incomplete.path(), &error));
+        QVERIFY(!error.isEmpty());
+        QCOMPARE(qApp->styleSheet(), installed);
+        QCOMPARE(Resources::themePalette(), colors);
+    }
+    void palettePatchesAreAtomicAndRefreshExistingWidgets()
+    {
+        const auto original = Resources::themePalette();
+        const auto restore = qScopeGuard([&] { Resources::setThemePalette(original); });
+        QLineEdit editor("Existing control");
+        editor.resize(220, 24);
+        editor.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&editor));
+        QVERIFY(Resources::setThemePalette({{"text", QColor("#234567")}, {"selection", QColor("#ddeeff")}}));
+        QCOMPARE(editor.palette().color(QPalette::Text), QColor("#234567"));
+        QCOMPARE(Resources::themePalette().value("selection"), QColor("#ddeeff"));
+        const auto accepted = Resources::themePalette();
+        QVERIFY(!Resources::setThemePalette({{"text", QColor("#abcdef")}, {"unknown", QColor("#112233")}}));
+        QCOMPARE(Resources::themePalette(), accepted);
+        QVERIFY(!Resources::setThemePalette({{"text", QColor()}}));
+        QVERIFY(!Resources::setThemePalette({}));
+        QCOMPARE(Resources::themePalette(), accepted);
+        QVERIFY(Resources::setFontColor(QColor(20, 40, 60, 10)));
+        QCOMPARE(Resources::fontColor(), QColor(20, 40, 60));
+        QCOMPARE(Resources::themePalette().value("text"), Resources::fontColor());
+        Resources::resetThemePalette();
+        QCOMPARE(Resources::themePalette(), Resources::defaultThemePalette());
+        QCOMPARE(editor.palette().color(QPalette::Text), Resources::defaultThemePalette().value("text"));
+        QVERIFY(!qApp->styleSheet().contains(QRegularExpression("@[A-Z_]+@")));
+    }
     void joinedOnlyKeepsAdjacentCellsContinuous()
     {
         QTableWidget table(2, 3);
@@ -77,7 +129,7 @@ class ResourcesItemViewTests : public QObject
         }
         Resources::setItemSelectionAppearance(&table, Resources::ItemSelectionAppearance::CurrentCell);
         image = table.viewport()->grab().toImage();
-        QCOMPARE(sample(image, table.visualRect(table.currentIndex()).center()), QColor("#C1D9EB"));
+        QCOMPARE(sample(image, table.visualRect(table.currentIndex()).center()), QColor("#d4d4d3"));
         QCOMPARE(table.selectionModel()->selectedIndexes().size(), 6);
     }
     void unselectedKeyboardCurrentRemainsVisible_data()
@@ -143,9 +195,9 @@ class ResourcesItemViewTests : public QObject
         const auto image = table.viewport()->grab().toImage();
         const qreal dpr = image.devicePixelRatio();
         const QColor edge = image.pixelColor(qRound(rect.center().x() * dpr), qRound((rect.top() + 1) * dpr));
-        QVERIFY2(edge.blue() > edge.red() + 10, qPrintable(edge.name()));
         const QColor center = image.pixelColor(qRound(rect.center().x() * dpr), qRound(rect.center().y() * dpr));
-        QVERIFY(center != QColor("#C1D9EB"));
+        QVERIFY2(qGray(center.rgb()) - qGray(edge.rgb()) >= 20, qPrintable(edge.name()));
+        QVERIFY(center != QColor("#d4d4d3"));
     }
     void currentCellIsFilledWithinJoinedSelection_data()
     {
@@ -186,16 +238,16 @@ class ResourcesItemViewTests : public QObject
             QCoreApplication::processEvents();
             const auto image = view->viewport()->grab().toImage();
             const QRect rect = view->visualRect(current);
-            QCOMPARE(sample(image, rect.center()), QColor("#C1D9EB"));
+            QCOMPARE(sample(image, rect.center()), QColor("#d4d4d3"));
             // Current and selection fills share the same top/bottom edges.
-            QCOMPARE(sample(image, QPoint(rect.center().x(), rect.top() + 1)), QColor("#C1D9EB"));
-            QCOMPARE(sample(image, QPoint(rect.center().x(), rect.bottom() - 1)), QColor("#C1D9EB"));
+            QCOMPARE(sample(image, QPoint(rect.center().x(), rect.top() + 1)), QColor("#d4d4d3"));
+            QCOMPARE(sample(image, QPoint(rect.center().x(), rect.bottom() - 1)), QColor("#d4d4d3"));
             // Later columns/rows must not paint their seam overlap over the current capsule.
             for (const QPoint edge : {QPoint(rect.right(), rect.center().y()),
                                      QPoint(rect.center().x(), rect.bottom())})
             {
                 const QColor color = sample(image, edge);
-                const QColor currentColor("#C1D9EB");
+                const QColor currentColor("#d4d4d3");
                 // Fractional DPR can blend the boundary pixel; a neighbor repaint
                 // replaces it with the much lighter selection color instead.
                 QVERIFY2(qAbs(color.red() - currentColor.red()) <= 8 &&
@@ -234,7 +286,7 @@ class ResourcesItemViewTests : public QObject
             const QPoint point = list.visualItemRect(list.item(row)).center();
             QCOMPARE(image.pixelColor(qRound(point.x() * image.devicePixelRatio()),
                                       qRound(point.y() * image.devicePixelRatio())),
-                     row == 1 ? QColor("#C1D9EB") : list.palette().highlight().color());
+                     row == 1 ? QColor("#d4d4d3") : list.palette().highlight().color());
         }
     }
     void itemSwitchUsesLeadingEdgeAndMatchingHitRect()
@@ -260,6 +312,8 @@ class ResourcesItemViewTests : public QObject
         QVERIFY2(inset >= 0 && inset <= 5, qPrintable(QString("leading inset=%1 direction=%2")
             .arg(inset).arg(tree.property("layoutDirection").toString())));
         QVERIFY(!check.intersects(text));
+        const int gap = rtl ? check.left() - text.right() - 1 : text.left() - check.right() - 1;
+        QVERIFY2(gap >= 0 && gap <= 10, qPrintable(QString("vacant switch/text gutter=%1").arg(gap)));
         QTest::mouseClick(tree.viewport(), Qt::LeftButton, Qt::NoModifier, check.center());
         QCOMPARE(item->checkState(0), Qt::Checked);
         tree.setCurrentItem(item);
@@ -561,6 +615,8 @@ class ResourcesItemViewTests : public QObject
         layout->addWidget(&active);
         layout->addWidget(&inactive);
         host.show();
+        host.setFocusPolicy(Qt::StrongFocus);
+        host.setFocus();
         for (auto state : {Qt::Unchecked, Qt::Checked, Qt::PartiallyChecked})
         {
             active.setCheckState(state);
@@ -572,6 +628,21 @@ class ResourcesItemViewTests : public QObject
             b.rect = inactive.rect();
             QCOMPARE(active.style()->subElementRect(QStyle::SE_CheckBoxIndicator, &a, &active),
                      inactive.style()->subElementRect(QStyle::SE_CheckBoxIndicator, &b, &inactive));
+            for (QCheckBox* control : {&active, &inactive}) {
+                QStyleOptionButton option;
+                option.initFrom(control); option.rect = control->rect();
+                const QRect indicator = control->style()->subElementRect(QStyle::SE_CheckBoxIndicator, &option, control);
+                const QImage image = control->grab().toImage();
+                const qreal dpr = image.devicePixelRatio();
+                const QRect content(qRound((indicator.left() + 2) * dpr), qRound((indicator.top() + 2) * dpr),
+                                    qRound((indicator.width() - 4) * dpr), qRound((indicator.height() - 4) * dpr));
+                QRect visible;
+                for (int y = content.top(); y <= content.bottom(); ++y)
+                    for (int x = content.left(); x <= content.right(); ++x)
+                        if (qGray(image.pixelColor(x, y).rgb()) < 248) visible |= QRect(x, y, 1, 1);
+                QVERIFY2(visible.width() >= qFloor(32 * dpr) && visible.height() >= qFloor(18 * dpr),
+                         "Switch artwork shrank inside its indicator slot.");
+            }
         }
         // Stack widgets must not be destroyed by their temporary layout parent.
         active.setParent(nullptr);

@@ -5,6 +5,8 @@
 #include <QApplication>
 #include <QPointer>
 #include <QFile>
+#include <QDir>
+#include <QFileInfo>
 #include <QIcon>
 #include <QStringList>
 #include <QTextStream>
@@ -21,6 +23,8 @@
 #include <QComboBox>
 #include <QLabel>
 #include <QLineEdit>
+#include <QAbstractSpinBox>
+#include <QAbstractSpinBox>
 #include <QPlainTextEdit>
 #include <QTextEdit>
 #include <QTextDocument>
@@ -38,6 +42,8 @@
 #include <QScreen>
 #include <QRubberBand>
 #include <QPalette>
+#include <QProxyStyle>
+#include <QStyleFactory>
 #include <QColor>
 #include <QCursor>
 #include <QTableWidget>
@@ -573,11 +579,11 @@ static void paintGraphicsSettingsTabScrollerButton(QToolButton* button)
 
     QPainter painter(button);
     painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.fillRect(button->rect(), QColor(QStringLiteral("#ffffff")));
+    painter.fillRect(button->rect(), Resources::themePalette().value(QStringLiteral("surface")));
 
     const QColor hoverColor = button->isDown()
-        ? QColor(QStringLiteral("#94a3b8"))
-        : QColor(QStringLiteral("#cbd5e1"));
+        ? Resources::themePalette().value(QStringLiteral("hoverBorder"))
+        : Resources::themePalette().value(QStringLiteral("controlBorder"));
     const QRectF hoverRect = QRectF(button->rect()).adjusted(5.0, 5.0, -5.0, -5.0);
     painter.setPen(Qt::NoPen);
     painter.setBrush(hoverColor);
@@ -630,54 +636,103 @@ protected:
     QRectF boundingRectFor(const QRectF& sourceRect) const override { return sourceRect; }
 };
 
-/** @brief Preserves progress text contrast over both the empty track and the themed fill. */
+/** @brief Receives progress geometry and colors from the owning QSS template. */
+class ResourcesProgressSurface final : public QWidget
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal radius MEMBER radius)
+    Q_PROPERTY(QColor trackColor MEMBER trackColor)
+    Q_PROPERTY(QColor fillColor MEMBER fillColor)
+public:
+    explicit ResourcesProgressSurface(QProgressBar* bar) : QWidget(bar) {
+        setObjectName(QStringLiteral("ResourcesProgressSurface"));
+        hide();
+    }
+    qreal radius = 0;
+    QColor trackColor;
+    QColor fillColor;
+};
+
+/** @brief Paints clipped capsule progress and preserves text contrast, including very narrow fills. */
 static void paintThemedProgressText(QProgressBar* bar)
 {
-    QStyleOptionProgressBar option;
-    option.initFrom(bar);
-    option.rect = bar->rect();
-    option.minimum = bar->minimum();
-    option.maximum = bar->maximum();
-    option.progress = bar->value();
-    option.textVisible = false;
-    option.invertedAppearance = bar->invertedAppearance();
-    option.state.setFlag(QStyle::State_Horizontal, bar->orientation() == Qt::Horizontal);
+    auto* surface = bar->findChild<ResourcesProgressSurface*>(QStringLiteral("ResourcesProgressSurface"), Qt::FindDirectChildrenOnly);
+    if (!surface) { surface = new ResourcesProgressSurface(bar); surface->ensurePolished(); }
     QPainter painter(bar);
-    bar->style()->drawControl(QStyle::CE_ProgressBarGroove, &option, &painter, bar);
-    bar->style()->drawControl(QStyle::CE_ProgressBarContents, &option, &painter, bar);
+    painter.setRenderHint(QPainter::Antialiasing);
+    const QRectF track(bar->rect());
+    const qreal radius = qMin(surface->radius, qMin(track.width(), track.height()) / 2);
+    QPainterPath trackPath; trackPath.addRoundedRect(track, radius, radius);
+    painter.fillPath(trackPath, surface->trackColor);
+    const qreal fraction = bar->value() < bar->minimum() ? 0.0 : qBound(0.0,
+        (qreal(bar->value()) - bar->minimum()) / (qreal(bar->maximum()) - bar->minimum()), 1.0);
+    QRectF fill = track;
+    if (bar->orientation() == Qt::Horizontal) {
+        const qreal width = track.width() * fraction;
+        if (bar->isRightToLeft() != bar->invertedAppearance()) fill.setLeft(track.right() - width);
+        else fill.setWidth(width);
+    } else {
+        const qreal height = track.height() * fraction;
+        if (bar->invertedAppearance()) fill.setHeight(height);
+        else fill.setTop(track.bottom() - height);
+    }
+    const qreal fillRadius = qMin(radius, qMin(fill.width(), fill.height()) / 2);
+    QPainterPath fillPath;
+    if (fraction > 0) fillPath.addRoundedRect(fill, fillRadius, fillRadius);
+    painter.save(); painter.setClipPath(trackPath); painter.fillPath(fillPath, surface->fillColor); painter.restore();
+    if (!bar->isTextVisible()) return;
     const auto label = [&](const QColor& color) {
-        painter.save();
-        painter.setPen(color);
+        painter.save(); painter.setPen(color);
         QRect textRect = bar->rect();
         if (bar->orientation() == Qt::Vertical) {
             textRect = QRect(0, 0, bar->height(), bar->width());
-            if (bar->textDirection() == QProgressBar::TopToBottom) {
-                painter.translate(bar->width(), 0);
-                painter.rotate(90);
-            } else {
-                painter.translate(0, bar->height());
-                painter.rotate(-90);
-            }
+            if (bar->textDirection() == QProgressBar::TopToBottom) { painter.translate(bar->width(), 0); painter.rotate(90); }
+            else { painter.translate(0, bar->height()); painter.rotate(-90); }
         }
         painter.drawText(textRect, bar->alignment() | Qt::AlignVCenter | Qt::TextSingleLine, bar->text());
         painter.restore();
     };
     label(bar->palette().color(QPalette::Text));
-    if (bar->maximum() <= bar->minimum() || bar->value() < bar->minimum()) return;
-    const qreal fraction = (qreal(bar->value()) - bar->minimum())
-        / (qreal(bar->maximum()) - bar->minimum());
-    QRectF fill = bar->style()->subElementRect(QStyle::SE_ProgressBarContents, &option, bar);
-    if (bar->orientation() == Qt::Horizontal) {
-        const bool fromRight = bar->isRightToLeft() != bar->invertedAppearance();
-        const qreal width = fill.width() * fraction;
-        if (fromRight) fill.setLeft(fill.right() - width); else fill.setWidth(width);
-    } else {
-        const qreal height = fill.height() * fraction;
-        if (bar->invertedAppearance()) fill.setHeight(height); else fill.setTop(fill.bottom() - height);
-    }
-    painter.setClipRect(fill);
-    label(bar->palette().color(QPalette::HighlightedText));
+    painter.setClipPath(fillPath); label(bar->palette().color(QPalette::HighlightedText));
 }
+
+/** @brief Suppresses native row-edge selection marks behind the shared joined item surface. */
+class ResourcesNativeStyle final : public QProxyStyle
+{
+public:
+    using QProxyStyle::QProxyStyle;
+
+    /** @brief Keeps combo rows content-sized instead of inheriting Windows 11 touch spacing. */
+    QSize sizeFromContents(ContentsType type, const QStyleOption* option, const QSize& contentsSize,
+                           const QWidget* widget = nullptr) const override
+    {
+        QSize size = QProxyStyle::sizeFromContents(type, option, contentsSize, widget);
+        const auto* view = qobject_cast<const QAbstractItemView*>(widget);
+        const auto* item = qstyleoption_cast<const QStyleOptionViewItem*>(option);
+        if (type == CT_ItemViewItem && view && item
+            && qobject_cast<const QComboBox*>(view->window()->parentWidget())) {
+            int height = qMax(item->fontMetrics.height(), contentsSize.height());
+            if (item->features.testFlag(QStyleOptionViewItem::HasDecoration))
+                height = qMax(height, item->decorationSize.height());
+            size.setHeight(height + 2);
+        }
+        return size;
+    }
+
+    void drawPrimitive(PrimitiveElement element, const QStyleOption* option, QPainter* painter,
+                       const QWidget* widget = nullptr) const override
+    {
+        if (element == PE_PanelItemViewRow && qobject_cast<const QAbstractItemView*>(widget)) {
+            if (const auto* item = qstyleoption_cast<const QStyleOptionViewItem*>(option)) {
+                auto neutral = *item;
+                neutral.state &= ~(State_Selected | State_HasFocus);
+                QProxyStyle::drawPrimitive(element, &neutral, painter, widget);
+                return;
+            }
+        }
+        QProxyStyle::drawPrimitive(element, option, painter, widget);
+    }
+};
 
 class ResourceStyleFilter : public QObject
 {
@@ -765,7 +820,7 @@ protected:
         }
 
         if (event->type() == QEvent::Paint) {
-            if (auto* bar = qobject_cast<QProgressBar*>(obj); bar && bar->isTextVisible()) {
+            if (auto* bar = qobject_cast<QProgressBar*>(obj); bar && bar->maximum() > bar->minimum()) {
                 paintThemedProgressText(bar);
                 return true;
             }
@@ -801,10 +856,11 @@ protected:
 
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
             if (auto* editor = qobject_cast<QLineEdit*>(obj);
-                editor && qobject_cast<QComboBox*>(editor->parentWidget()) && editor->styleSheet().isEmpty()) {
+                editor && (qobject_cast<QComboBox*>(editor->parentWidget())
+                    || qobject_cast<QAbstractSpinBox*>(editor->parentWidget())) && editor->styleSheet().isEmpty()) {
                 // Qt excludes embedded editors from application QSS unless they have a local sheet.
                 // Opt in to the shared rule without overriding a consumer's explicit editor theme.
-                editor->setStyleSheet(QStringLiteral("/* Resources: style the embedded combo editor. */"));
+                editor->setStyleSheet(QStringLiteral("/* Resources: style the embedded field editor. */"));
             }
         }
 
@@ -1017,7 +1073,9 @@ private:
         }
         shadow->setBlurRadius(MenuShadowGutter);
         shadow->setOffset(0, 2);
-        shadow->setColor(QColor(32, 42, 56, 36));
+        auto shadowColor = Resources::themePalette().value(QStringLiteral("shadow"));
+        shadowColor.setAlpha(36);
+        shadow->setColor(shadowColor);
         menu->clearMask(); // Preserve the stylesheet's fractional edge coverage at every DPR.
         if (menu->geometry() != geometry) menu->setGeometry(geometry);
         if (visible && !menu->isVisible()) menu->show();
@@ -1106,7 +1164,7 @@ private:
     /** @brief Renders the existing update glyph in the indicator's theme color. */
     static void applyPluginUpdateIcon(QLabel* label)
     {
-        QPixmap icon = QIcon(QStringLiteral(":/Resources/Icons/icons8-update-48.png"))
+        QPixmap icon = QIcon(QStringLiteral(":/Resources/icon/installing-updates-48.png"))
             .pixmap(QSize(12, 12), label->devicePixelRatioF());
         if (icon.isNull()) return;
         QPainter painter(&icon);
@@ -1477,7 +1535,7 @@ private:
         const int h = widget->height();
         QPainter painter(widget);
         const auto* combo = qobject_cast<QComboBox*>(widget->parentWidget());
-        const QColor borderColor(combo ? QColor(0x8b, 0xad, 0xc7) : Resources::borderColor());
+        const QColor borderColor(combo ? Resources::themePalette().value(QStringLiteral("focusBorder")) : Resources::borderColor());
         if (!allRounded && combo && combo->property("popupDirection") == QStringLiteral("above")) {
             painter.translate(w, h);
             painter.rotate(180);
@@ -1602,8 +1660,39 @@ namespace Resources
 
 static ResourceStyleFilter* s_styleFilter = nullptr;
 static QString s_styleSheetTemplate;
-static QColor s_fontColor(0x3c, 0x3c, 0x3b);
-static QColor s_borderColor(0xd9, 0xd9, 0xd8);
+static QString s_platformStyleSheet;
+static QStringList s_themeFileNames;
+ThemePalette defaultThemePalette()
+{
+    return {
+        {QStringLiteral("text"), QColor(QStringLiteral("#3c3c3b"))},
+        {QStringLiteral("secondaryText"), QColor(QStringLiteral("#6e6e6d"))},
+        {QStringLiteral("disabledText"), QColor(QStringLiteral("#9b9b9a"))},
+        {QStringLiteral("surface"), QColor(QStringLiteral("#ffffff"))},
+        {QStringLiteral("workspace"), QColor(QStringLiteral("#eeeeee"))},
+        {QStringLiteral("border"), QColor(QStringLiteral("#d9d9d8"))},
+        {QStringLiteral("controlBorder"), QColor(QStringLiteral("#d9d9d8"))},
+        {QStringLiteral("hoverBorder"), QColor(QStringLiteral("#c4c4c3"))},
+        {QStringLiteral("focusBorder"), QColor(QStringLiteral("#8a8a89"))},
+        {QStringLiteral("hover"), QColor(QStringLiteral("#f4f4f3"))},
+        {QStringLiteral("pressed"), QColor(QStringLiteral("#eeeeed"))},
+        {QStringLiteral("disabledSurface"), QColor(QStringLiteral("#f7f7f7"))},
+        {QStringLiteral("selection"), QColor(QStringLiteral("#e6e6e5"))},
+        {QStringLiteral("current"), QColor(QStringLiteral("#d4d4d3"))},
+        {QStringLiteral("progressTrack"), QColor(QStringLiteral("#eeeeed"))},
+        {QStringLiteral("progressFill"), QColor(QStringLiteral("#3c3c3b"))},
+        {QStringLiteral("shadow"), QColor(QStringLiteral("#3c3c3b"))},
+        {QStringLiteral("warning"), QColor(QStringLiteral("#fb8c00"))},
+        {QStringLiteral("warningText"), QColor(QStringLiteral("#b45309"))},
+        {QStringLiteral("error"), QColor(QStringLiteral("#dc2626"))},
+        {QStringLiteral("errorText"), QColor(QStringLiteral("#b44747"))},
+        {QStringLiteral("success"), QColor(QStringLiteral("#10b981"))},
+        {QStringLiteral("nativePath"), QColor(QStringLiteral("#1565c0"))},
+        {QStringLiteral("sampledPath"), QColor(QStringLiteral("#edb078"))}
+    };
+}
+
+static ThemePalette s_themePalette = defaultThemePalette();
 static QPointer<QApplication> s_app;
 
 namespace {
@@ -1614,21 +1703,62 @@ void applyInstalledStyleSheet()
     }
 
     QString styleSheet = s_styleSheetTemplate;
-    styleSheet.replace(QStringLiteral("@FONT_COLOR@"), s_fontColor.name(QColor::HexRgb));
-    styleSheet.replace(QStringLiteral("@BORDER_COLOR@"), s_borderColor.name(QColor::HexRgb));
+    for (auto it = s_themePalette.cbegin(); it != s_themePalette.cend(); ++it) {
+        const auto token = it.key().toUpper();
+        styleSheet.replace(QLatin1Char('@') + token + QLatin1Char('@'), it.value().name(QColor::HexRgb));
+        styleSheet.replace(QLatin1Char('@') + token + QStringLiteral("_RGB@"), QStringLiteral("%1, %2, %3")
+            .arg(it.value().red()).arg(it.value().green()).arg(it.value().blue()));
+    }
     s_app->setStyleSheet(styleSheet);
 
     QPalette palette = s_app->palette();
-    palette.setColor(QPalette::WindowText, s_fontColor);
-    palette.setColor(QPalette::Text, s_fontColor);
-    palette.setColor(QPalette::ButtonText, s_fontColor);
+    palette.setColor(QPalette::WindowText, s_themePalette.value(QStringLiteral("text")));
+    palette.setColor(QPalette::Text, s_themePalette.value(QStringLiteral("text")));
+    palette.setColor(QPalette::ButtonText, s_themePalette.value(QStringLiteral("text")));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    // Native styles can paint selected tree branches from Accent instead of QSS Highlight.
+    palette.setColor(QPalette::Accent, s_themePalette.value(QStringLiteral("text")));
+#endif
+    palette.setColor(QPalette::Highlight, s_themePalette.value(QStringLiteral("selection")));
+    palette.setColor(QPalette::HighlightedText, s_themePalette.value(QStringLiteral("text")));
+    palette.setColor(QPalette::Link, s_themePalette.value(QStringLiteral("text")));
+    palette.setColor(QPalette::LinkVisited, s_themePalette.value(QStringLiteral("secondaryText")));
+    palette.setColor(QPalette::Base, s_themePalette.value(QStringLiteral("surface")));
+    palette.setColor(QPalette::Window, s_themePalette.value(QStringLiteral("surface")));
+    for (auto role : {QPalette::WindowText, QPalette::Text, QPalette::ButtonText})
+        palette.setColor(QPalette::Disabled, role, s_themePalette.value(QStringLiteral("disabledText")));
     s_app->setPalette(palette);
 }
 }
 
+ThemePalette themePalette()
+{
+    return s_themePalette;
+}
+
+bool setThemePalette(const ThemePalette& colors)
+{
+    if (colors.isEmpty()) return false;
+    auto candidate = s_themePalette;
+    for (auto it = colors.cbegin(); it != colors.cend(); ++it) {
+        if (!candidate.contains(it.key()) || !it.value().isValid()) return false;
+        candidate[it.key()] = QColor(it.value().red(), it.value().green(), it.value().blue());
+    }
+    s_themePalette = candidate;
+    applyInstalledStyleSheet();
+    // Existing popups and custom-painted chrome may not receive another style event until shown.
+    if (s_app) for (QWidget* widget : QApplication::allWidgets()) widget->update();
+    return true;
+}
+
+void resetThemePalette()
+{
+    setThemePalette(defaultThemePalette());
+}
+
 QColor fontColor()
 {
-    return s_fontColor;
+    return s_themePalette.value(QStringLiteral("text"));
 }
 
 bool setFontColor(const QColor& color)
@@ -1637,14 +1767,12 @@ bool setFontColor(const QColor& color)
         return false;
     }
 
-    s_fontColor = QColor(color.red(), color.green(), color.blue());
-    applyInstalledStyleSheet();
-    return true;
+    return setThemePalette({{QStringLiteral("text"), color}});
 }
 
 QColor borderColor()
 {
-    return s_borderColor;
+    return s_themePalette.value(QStringLiteral("border"));
 }
 
 bool setBorderColor(const QColor& color)
@@ -1653,14 +1781,44 @@ bool setBorderColor(const QColor& color)
         return false;
     }
 
-    s_borderColor = QColor(color.red(), color.green(), color.blue());
+    return setThemePalette({{QStringLiteral("border"), color}});
+}
+
+bool reloadThemeFromDirectory(const QString& directory, QString* error)
+{
+    if (error) error->clear();
+    if (!s_app || s_themeFileNames.isEmpty()) {
+        if (error) *error = QStringLiteral("Install Resources before reloading a source theme.");
+        return false;
+    }
+    QString candidate;
+    for (const auto& name : s_themeFileNames) {
+        QFile file(QDir(directory).filePath(name));
+        if (!file.open(QFile::ReadOnly | QFile::Text)) {
+            if (error) *error = QStringLiteral("Could not read theme fragment: %1").arg(file.fileName());
+            return false;
+        }
+        candidate += QString::fromUtf8(file.readAll()) + QLatin1Char('\n');
+    }
+    candidate.replace(QStringLiteral("@MENU_SHADOW_GUTTER@"), QString::number(MenuShadowGutter));
+    s_styleSheetTemplate = candidate + s_platformStyleSheet;
     applyInstalledStyleSheet();
+    for (QWidget* widget : QApplication::allWidgets()) widget->update();
     return true;
 }
 
 void installResources(QApplication& app)
 {
     initResourcesHelper();
+
+#ifdef Q_OS_WIN
+    // Windows 11 paints an extra selected-row rail outside the delegate-owned capsule.
+    static QPointer<ResourcesNativeStyle> nativeStyle;
+    if (!nativeStyle && app.style()->objectName() == QLatin1String("windows11")) {
+        nativeStyle = new ResourcesNativeStyle(QStyleFactory::create(QStringLiteral("windows11")));
+        app.setStyle(nativeStyle);
+    }
+#endif
 
     // Disable tooltip and combo box transition effects to prevent black artifacts during DWM animation
     QApplication::setEffectEnabled(Qt::UI_FadeTooltip, false);
@@ -1703,7 +1861,9 @@ void installResources(QApplication& app)
     };
 
     QString styleSheet;
+    s_themeFileNames.clear();
     for (const QString& qssFile : qssFiles) {
+        s_themeFileNames.append(QFileInfo(qssFile).fileName());
         QFile file(qssFile);
         if (file.open(QFile::ReadOnly | QFile::Text)) {
             QTextStream stream(&file);
@@ -1712,6 +1872,7 @@ void installResources(QApplication& app)
         }
     }
     styleSheet.replace(QStringLiteral("@MENU_SHADOW_GUTTER@"), QString::number(MenuShadowGutter));
+    const auto sourceStyleLength = styleSheet.size();
 #ifdef Q_OS_WIN
     styleSheet += QStringLiteral(
         "\nQWidget#ThemedDialogContainer { border-radius: 8px; }\n"
@@ -1735,6 +1896,7 @@ void installResources(QApplication& app)
         "}\n"
     );
 #endif
+    s_platformStyleSheet = styleSheet.mid(sourceStyleLength);
     s_app = &app;
     s_styleSheetTemplate = styleSheet;
     applyInstalledStyleSheet();
@@ -1756,7 +1918,7 @@ void paintMainWindowBorder(QWidget* window, QPainter& painter, bool maximized, b
     if (!window) return;
 
     if (maximized && !forceRounded) {
-        painter.fillRect(window->rect(), QColor(QStringLiteral("#ffffff")));
+        painter.fillRect(window->rect(), Resources::themePalette().value(QStringLiteral("surface")));
         return;
     }
 
@@ -1776,7 +1938,7 @@ void paintMainWindowBorder(QWidget* window, QPainter& painter, bool maximized, b
 
     // Fill interior with white (1px inset, slightly smaller radius).
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    painter.setBrush(QColor(QStringLiteral("#ffffff")));
+    painter.setBrush(Resources::themePalette().value(QStringLiteral("surface")));
     painter.drawRoundedRect(QRectF(1.0, 1.0, window->width() - 2.0, window->height() - 2.0), innerRadius, innerRadius);
 
     // Draw smooth 1px border.
@@ -1801,7 +1963,7 @@ void paintMdiAreaBackground(QWidget* viewport, QPainter& painter, const QPixmap&
     if (!viewport) return;
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
-    painter.fillRect(viewport->rect(), QColor(QStringLiteral("#eeeeee")));
+    painter.fillRect(viewport->rect(), Resources::themePalette().value(QStringLiteral("workspace")));
 
     if (logo.isNull()) return;
 
@@ -1817,16 +1979,18 @@ QString formatLogHtml(int messageType, const QString& timestamp, const QString& 
     QString typeStr;
     QString color;
     switch (messageType) {
-        case QtDebugMsg:    typeStr = QStringLiteral("DEBUG"); color = QStringLiteral("#8a8a89"); break;
-        case QtInfoMsg:     typeStr = QStringLiteral("INFO");  color = QStringLiteral("#3c3c3b"); break;
-        case QtWarningMsg:  typeStr = QStringLiteral("WARN");  color = QStringLiteral("#fb8c00"); break;
-        case QtCriticalMsg: typeStr = QStringLiteral("CRIT");  color = QStringLiteral("#e53935"); break;
-        case QtFatalMsg:    typeStr = QStringLiteral("FATAL"); color = QStringLiteral("#b71c1c"); break;
-        default:            typeStr = QStringLiteral("LOG");   color = QStringLiteral("#8a8a89"); break;
+        case QtDebugMsg:    typeStr = QStringLiteral("DEBUG"); color = themePalette().value(QStringLiteral("secondaryText")).name(QColor::HexRgb); break;
+        case QtInfoMsg:     typeStr = QStringLiteral("INFO");  color = themePalette().value(QStringLiteral("text")).name(QColor::HexRgb); break;
+        case QtWarningMsg:  typeStr = QStringLiteral("WARN");  color = themePalette().value(QStringLiteral("warning")).name(QColor::HexRgb); break;
+        case QtCriticalMsg: typeStr = QStringLiteral("CRIT");  color = themePalette().value(QStringLiteral("error")).name(QColor::HexRgb); break;
+        case QtFatalMsg:    typeStr = QStringLiteral("FATAL"); color = themePalette().value(QStringLiteral("errorText")).name(QColor::HexRgb); break;
+        default:            typeStr = QStringLiteral("LOG");   color = themePalette().value(QStringLiteral("secondaryText")).name(QColor::HexRgb); break;
     }
 
-    return QStringLiteral("<span style=\"color:#8a8a89;\">[%1]</span> <span style=\"color:%2; font-weight:bold;\">[%3]</span> %4")
-        .arg(timestamp, color, typeStr, message.toHtmlEscaped());
+    return QStringLiteral("<span style=\"color:%5;\">[%1]</span> <span style=\"color:%2; font-weight:bold;\">[%3]</span> %4")
+        .arg(timestamp, color, typeStr, message.toHtmlEscaped(), themePalette().value(QStringLiteral("secondaryText")).name(QColor::HexRgb));
 }
 
 }
+
+#include "Resources.moc"

@@ -6,14 +6,15 @@ QGocatorWidget,
 QHeliotisC4Widget,
 QOneGenWidget,
 QOneGenDeviceWidget {
-    background: #ffffff;
+    background: @SURFACE@;
 }
 
 QTabWidget#FramegrabberControlTabs::pane,
 QTabWidget[tabRole="DeviceControls"]::pane {
+    padding: 0;
     background: transparent;
     border: none;
-    border-top: 1px solid @BORDER_COLOR@;
+    border-top: 1px solid @BORDER@;
     border-radius: 0;
     top: 0;
 }
@@ -41,30 +42,30 @@ OneGenFeatureTree QToolButton#DeviceFeatureFavoritesOnly {
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"] {
-    background: #ffffff;
-    alternate-background-color: #ffffff;
-    selection-background-color: #edf5fb;
-    selection-color: @FONT_COLOR@;
+    background: @SURFACE@;
+    alternate-background-color: @SURFACE@;
+    selection-background-color: @HOVER@;
+    selection-color: @TEXT@;
     show-decoration-selected: 0;
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"]::item:hover,
 QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
     background: transparent;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"] QComboBox:hover,
 QTreeWidget[treeRole="DeviceFeatureTree"] QAbstractSpinBox:hover,
 QTreeWidget[treeRole="DeviceFeatureTree"] QLineEdit:hover {
-    border-color: #cfd9e4;
+    border-color: @CONTROLBORDER@;
 }
 
 QFramegrabberWidget QLabel#FramegrabberStatusLabel:hover,
 QCameraWidget QLabel#CameraStatusLabel:hover,
 QGocatorWidget QLabel#GocatorStatusLabel:hover,
 QHeliotisC4Widget QLabel#HeliotisC4StatusLabel:hover {
-    background: #ffffff;
+    background: @SURFACE@;
 }
 
 
@@ -74,10 +75,10 @@ QHeliotisC4Widget QLabel#HeliotisC4StatusLabel:hover {
 SearchableTreeSurface {
     qproperty-searchInset: 10;
     qproperty-searchMaximumWidth: 440;
-    qproperty-favoriteColor: #00457c;
+    qproperty-favoriteColor: @TEXT@;
     qproperty-searchShadowBlur: 14;
     qproperty-searchShadowOffset: 2;
-    qproperty-searchShadowColor: rgba(22, 32, 43, 42);
+    qproperty-searchShadowColor: rgba(@SHADOW_RGB@, 42);
 }
 
 /* Border, white surface and corner geometry are shared with QHeaderView in 00_base.qss. */
@@ -87,7 +88,7 @@ QFrame#DeviceFeatureSearchBubble {
     min-height: 24px;
     max-height: 24px;
     margin: 0 2px 0 0;
-    color: #425467;
+    color: @TEXT@;
 }
 
 QLineEdit#DeviceFeatureSearchInput,
@@ -99,14 +100,14 @@ QLineEdit#DeviceFeatureSearchInput:focus {
     padding: 0;
     min-height: 22px;
     max-height: 22px;
-    selection-background-color: #dceaf5;
-    selection-color: @FONT_COLOR@;
+    selection-background-color: @SELECTION@;
+    selection-color: @TEXT@;
 }
 
 QLabel#DeviceFeatureSearchCount {
     background: transparent;
     border: none;
-    color: #65788a;
+    color: @SECONDARYTEXT@;
     font-size: 10px;
 }
 
@@ -124,21 +125,21 @@ QToolButton#DeviceFeatureSearchClear {
 }
 
 QToolButton#DeviceFeatureSearchClear:hover {
-    background: #eef3f8;
+    background: @HOVER@;
 }
 
 QToolButton#DeviceFeatureSearchClear:pressed {
-    background: #e2e9f0;
+    background: @HOVER@;
 }
 
 QToolButton#DeviceFeatureSearchClear:focus {
-    border-color: #8badc7;
+    border-color: @FOCUSBORDER@;
 }
 
 QToolButton#DeviceFeatureFavoritesOnly {
     background: transparent;
     border-color: transparent;
-    color: #65788a;
+    color: @SECONDARYTEXT@;
     font-size: 18px;
 }
 
@@ -150,5 +151,5 @@ QToolButton#DeviceFeatureFavoritesOnly:checked {
 }
 
 QToolButton#DeviceFeatureFavoritesOnly:checked {
-    color: #00457c;
+    color: @TEXT@;
 }

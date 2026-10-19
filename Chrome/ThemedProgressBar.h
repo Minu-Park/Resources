@@ -7,11 +7,11 @@
 #include <QPainterPath>
 #include <QtGlobal>
 #include <cmath>
+#include "../Resources.h"
 
 /**
  * @brief Paints a compact themed determinate or indeterminate progress bar.
- * @note The widget owns only its geometry and paint behavior; colors remain local
- *       fallback values because this custom-painted surface is not QSS-stylable.
+ * @note The widget owns geometry and paint behavior; public Resources palette roles own its colors.
  */
 class ThemedProgressBar : public QWidget
 {
@@ -69,10 +69,11 @@ protected:
 
         const QRectF r = rect().toRectF().adjusted(0.5, 0.5, -0.5, -0.5);
         const qreal radius = r.height() / 2.0;
+        const auto colors = Resources::themePalette();
 
         // Background
         p.setPen(Qt::NoPen);
-        p.setBrush(QColor(0, 0, 0, 18));
+        p.setBrush(colors.value(QStringLiteral("progressTrack")));
         p.drawRoundedRect(r, radius, radius);
 
         // Progress ratio
@@ -106,8 +107,8 @@ protected:
 
         // Fill gradient (mapped across full width for smooth transitions)
         QLinearGradient g(r.topLeft(), r.topRight());
-        g.setColorAt(0.0, _startColor);
-        g.setColorAt(1.0, _endColor);
+        g.setColorAt(0.0, colors.value(QStringLiteral("progressFill")));
+        g.setColorAt(1.0, colors.value(QStringLiteral("progressFill")));
 
         p.save();
 
@@ -142,7 +143,9 @@ protected:
 
         p.restore();
 
-        p.setPen(QPen(QColor(0, 0, 0, 25), 1));
+        auto outline = colors.value(QStringLiteral("shadow"));
+        outline.setAlpha(25);
+        p.setPen(QPen(outline, 1));
         p.setBrush(Qt::NoBrush);
         p.drawRoundedRect(r, radius, radius);
     }
@@ -153,10 +156,8 @@ private:
     int _value = 0;
 
     bool _busy = false;
-    bool _roundedEnd = false;
+    bool _roundedEnd = true;
     QTimer _animationTimer;
-    QColor _startColor = QColor(0x1e5ea6);
-    QColor _endColor   = QColor(0x0f3259);
 
     qreal _phase = 0.;
 };
