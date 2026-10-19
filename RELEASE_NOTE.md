@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Draw `frameRole="none"` text browsers without a field, hover, or focus border.
+
 - Preserve keyboard focus on unselected current cells and expose joined-only selection appearance independently of row/cell behavior.
 
 - Fill the current selected cell with a stronger capsule inside joined selections, align its outer edges, and share balanced selection colors and item text/switch spacing across trees, lists and tables.

@@ -353,6 +353,13 @@ QTextBrowser[contentRole="document"] {
     font-family: "Inter";
 }
 
+QTextBrowser[frameRole="none"],
+QTextBrowser[frameRole="none"]:hover,
+QTextBrowser[frameRole="none"]:focus {
+    border: none;
+    background: transparent;
+}
+
 QComboBox,
 QAbstractSpinBox,
 QLineEdit {
