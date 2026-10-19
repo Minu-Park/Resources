@@ -183,5 +183,27 @@
         <file>theme/fonts/Inter-Bold.ttf</file>
         <file>theme/fonts/JetBrainsMono-Regular.ttf</file>
         <file>theme/fonts/JetBrainsMono-Bold.ttf</file>
+        <file>icon/add-24.png</file>
+        <file>icon/add-48.png</file>
+        <file>icon/full-page-view-24.png</file>
+        <file>icon/full-page-view-48.png</file>
+        <file>icon/image-24.png</file>
+        <file>icon/image-48.png</file>
+        <file>icon/info-24.png</file>
+        <file>icon/info-48.png</file>
+        <file>icon/original-size-24.png</file>
+        <file>icon/original-size-48.png</file>
+        <file>icon/remove-24.png</file>
+        <file>icon/remove-48.png</file>
+        <file>icon/reset-24.png</file>
+        <file>icon/reset-48.png</file>
+        <file>icon/save-24.png</file>
+        <file>icon/save-48.png</file>
+        <file>icon/setting-24.png</file>
+        <file>icon/setting-48.png</file>
+        <file>icon/zoomIn-24.png</file>
+        <file>icon/zoomIn-48.png</file>
+        <file>icon/zoomOut-24.png</file>
+        <file>icon/zoomOut-48.png</file>
     </qresource>
 </RCC>

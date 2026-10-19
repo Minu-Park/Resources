@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Publish the trial toolbar glyphs under `icon/` for GraphicsEngine actions that have a matching symbol.
+
 - Draw `frameRole="none"` text browsers without a field, hover, or focus border.
 
 - Preserve keyboard focus on unselected current cells and expose joined-only selection appearance independently of row/cell behavior.
