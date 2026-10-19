@@ -53,7 +53,7 @@ QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceCardIcon {
     max-height: 18px;
 }
 QLabel#PluginMarketplaceCardName {
-    color: #16202b;
+    color: @FONT_COLOR@;
     font-size: 12px;
     font-weight: 600;
 }
@@ -91,7 +91,7 @@ QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceDetailIcon {
     background: transparent;
 }
 QLabel#PluginMarketplaceDetailName {
-    color: #16202b;
+    color: @FONT_COLOR@;
     font-size: 16px;
     font-weight: 700;
     background: transparent;
@@ -111,7 +111,7 @@ QLabel#PluginMarketplaceDescription {
     background: transparent;
 }
 QLabel#PluginMarketplaceSectionLabel {
-    color: #16202b;
+    color: @FONT_COLOR@;
     font-weight: 600;
     background: transparent;
 }
@@ -209,7 +209,7 @@ QLabel#UpdateNotificationTitle {
     padding: 0;
     background-color: transparent;
     border: none;
-    color: #16202b;
+    color: @FONT_COLOR@;
     font-weight: 700;
 }
 
@@ -237,5 +237,5 @@ QToolButton#UpdateNotificationCloseButton {
 QToolButton#UpdateNotificationCloseButton:hover,
 QToolButton#UpdateNotificationCloseButton:pressed {
     background: transparent;
-    color: #16202b;
+    color: @FONT_COLOR@;
 }

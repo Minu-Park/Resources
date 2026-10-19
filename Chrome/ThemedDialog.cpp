@@ -41,7 +41,7 @@ public:
         _closeButton->setFocusPolicy(Qt::NoFocus);
         _closeButton->setFixedSize(20, 20);
         _closeButton->setIconSize(QSize(16, 16));
-        setCloseIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png"));
+        setCloseIcon(QStringLiteral(":/Resources/icon/close-window-outline-48.png"));
 
         layout->addWidget(_closeButton, 0, Qt::AlignVCenter);
 
@@ -59,9 +59,9 @@ protected:
     {
         if (watched == _closeButton) {
             if (event->type() == QEvent::Enter) {
-                setCloseIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png"));
+                setCloseIcon(QStringLiteral(":/Resources/icon/close-window-rounded-48.png"));
             } else if (event->type() == QEvent::Leave) {
-                setCloseIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png"));
+                setCloseIcon(QStringLiteral(":/Resources/icon/close-window-outline-48.png"));
             }
         }
         return QWidget::eventFilter(watched, event);

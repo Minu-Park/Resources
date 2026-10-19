@@ -148,11 +148,11 @@ ThemedFileDialog::ThemedFileDialog(
             button->setProperty("fileDialogRole", "navigation");
             button->setIconSize(QSize(14, 14));
             if (button->objectName() == QLatin1String("backButton")) {
-                button->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-back-48.png")));
+                button->setIcon(QIcon(QStringLiteral(":/Resources/icon/back-48.png")));
             } else if (button->objectName() == QLatin1String("forwardButton")) {
-                button->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-forward-48.png")));
+                button->setIcon(QIcon(QStringLiteral(":/Resources/icon/forward-48.png")));
             } else if (button->objectName() == QLatin1String("toParentButton")) {
-                button->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-collapse-arrow-48.png")));
+                button->setIcon(QIcon(QStringLiteral(":/Resources/icon/collapse-arrow-48.png")));
             } else if (button->objectName() == QLatin1String("newFolderButton")) {
                 button->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-new-folder-48.png")));
             } else if (button->objectName() == QLatin1String("listModeButton")) {

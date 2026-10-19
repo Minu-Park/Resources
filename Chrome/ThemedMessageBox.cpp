@@ -20,10 +20,14 @@ ThemedMessageBox::ThemedMessageBox(
     auto* iconLabel = new QLabel(this);
     iconLabel->setObjectName(QStringLiteral("ThemedMessageBoxIcon"));
     QString iconPath;
-    switch (icon) {
-    case Warning:     iconPath = QStringLiteral(":/Resources/Icons/icons8-warning-96.png");     break;
-    case Critical:    iconPath = QStringLiteral(":/Resources/Icons/icons8-error-96.png");       break;
-    case Information: iconPath = QStringLiteral(":/Resources/Icons/icons8-information-96.png"); break;
+    if (question) {
+        iconPath = QStringLiteral(":/Resources/icon/ask-question-96.png");
+    } else {
+        switch (icon) {
+        case Warning:     iconPath = QStringLiteral(":/Resources/Icons/icons8-warning-96.png"); break;
+        case Critical:    iconPath = QStringLiteral(":/Resources/icon/error-96.png");           break;
+        case Information: iconPath = QStringLiteral(":/Resources/icon/about-96.png");          break;
+        }
     }
     QPixmap pix(iconPath);
     if (!pix.isNull()) {

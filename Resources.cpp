@@ -3,6 +3,7 @@
 #include "Chrome/ThemedTreeWidget.h"
 
 #include <QApplication>
+#include <QPointer>
 #include <QFile>
 #include <QIcon>
 #include <QStringList>
@@ -471,8 +472,8 @@ void ThemedTreeWidget::drawBranches(QPainter* painter, const QRect& rect, const 
     const QRect indicator(isRightToLeft() ? rect.left() : rect.right() - width + 1,
                           rect.top(), width, rect.height());
     const QIcon icon(isExpanded(index)
-        ? QStringLiteral(":/Resources/Icons/icons8-tree-expand-arrow-48.png")
-        : QStringLiteral(":/Resources/Icons/icons8-tree-forward-48.png"));
+        ? QStringLiteral(":/Resources/icon/drop-down-arrow-48.png")
+        : QStringLiteral(":/Resources/icon/forward-48.png"));
     icon.paint(painter, indicator.adjusted((width - 16) / 2, (rect.height() - 16) / 2,
                -(width - 16) / 2, -(rect.height() - 16) / 2), Qt::AlignCenter,
                isEnabled() ? QIcon::Normal : QIcon::Disabled);
@@ -583,8 +584,8 @@ static void paintGraphicsSettingsTabScrollerButton(QToolButton* button)
     painter.drawRoundedRect(hoverRect, 4.0, 4.0);
 
     const QString iconPath = button->objectName() == QLatin1String("ScrollLeftButton")
-        ? QStringLiteral(":/Resources/Icons/icons8-back-48.png")
-        : QStringLiteral(":/Resources/Icons/icons8-forward-48.png");
+        ? QStringLiteral(":/Resources/icon/back-48.png")
+        : QStringLiteral(":/Resources/icon/forward-48.png");
     const QPixmap arrow = QIcon(iconPath).pixmap(QSize(10, 10), QIcon::Normal, QIcon::Off);
     if (!arrow.isNull())
     {
@@ -1129,8 +1130,8 @@ private:
     {
         if (!button) return;
         const QString path = hover
-            ? QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png")
-            : QStringLiteral(":/Resources/Icons/icons8-close-window-48.png");
+            ? QStringLiteral(":/Resources/icon/close-window-rounded-48.png")
+            : QStringLiteral(":/Resources/icon/close-window-outline-48.png");
         button->setIcon(QIcon(path));
         button->setIconSize(QSize(16, 16));
     }
@@ -1476,7 +1477,7 @@ private:
         const int h = widget->height();
         QPainter painter(widget);
         const auto* combo = qobject_cast<QComboBox*>(widget->parentWidget());
-        const QColor borderColor(combo ? QStringLiteral("#8badc7") : QStringLiteral("#d9e1ea"));
+        const QColor borderColor(combo ? QColor(0x8b, 0xad, 0xc7) : Resources::borderColor());
         if (!allRounded && combo && combo->property("popupDirection") == QStringLiteral("above")) {
             painter.translate(w, h);
             painter.rotate(180);
@@ -1591,8 +1592,8 @@ private:
         rubberBand->setStyleSheet(QStringLiteral(
             "QRubberBand {"
             " background-color: rgba(255, 255, 255, 220);"
-            " border: 1px solid #d9e1ea;"
-            "}"));
+            " border: 1px solid %1;"
+            "}").arg(Resources::borderColor().name(QColor::HexRgb)));
     }
 };
 
@@ -1600,6 +1601,62 @@ namespace Resources
 {
 
 static ResourceStyleFilter* s_styleFilter = nullptr;
+static QString s_styleSheetTemplate;
+static QColor s_fontColor(0x3c, 0x3c, 0x3b);
+static QColor s_borderColor(0xd9, 0xd9, 0xd8);
+static QPointer<QApplication> s_app;
+
+namespace {
+void applyInstalledStyleSheet()
+{
+    if (!s_app) {
+        return;
+    }
+
+    QString styleSheet = s_styleSheetTemplate;
+    styleSheet.replace(QStringLiteral("@FONT_COLOR@"), s_fontColor.name(QColor::HexRgb));
+    styleSheet.replace(QStringLiteral("@BORDER_COLOR@"), s_borderColor.name(QColor::HexRgb));
+    s_app->setStyleSheet(styleSheet);
+
+    QPalette palette = s_app->palette();
+    palette.setColor(QPalette::WindowText, s_fontColor);
+    palette.setColor(QPalette::Text, s_fontColor);
+    palette.setColor(QPalette::ButtonText, s_fontColor);
+    s_app->setPalette(palette);
+}
+}
+
+QColor fontColor()
+{
+    return s_fontColor;
+}
+
+bool setFontColor(const QColor& color)
+{
+    if (!color.isValid()) {
+        return false;
+    }
+
+    s_fontColor = QColor(color.red(), color.green(), color.blue());
+    applyInstalledStyleSheet();
+    return true;
+}
+
+QColor borderColor()
+{
+    return s_borderColor;
+}
+
+bool setBorderColor(const QColor& color)
+{
+    if (!color.isValid()) {
+        return false;
+    }
+
+    s_borderColor = QColor(color.red(), color.green(), color.blue());
+    applyInstalledStyleSheet();
+    return true;
+}
 
 void installResources(QApplication& app)
 {
@@ -1678,7 +1735,9 @@ void installResources(QApplication& app)
         "}\n"
     );
 #endif
-    app.setStyleSheet(styleSheet);
+    s_app = &app;
+    s_styleSheetTemplate = styleSheet;
+    applyInstalledStyleSheet();
 
 #if !defined(Q_OS_MAC)
     app.setWindowIcon(QIcon(QStringLiteral(":/Resources/AppIcons/AppIcon.png")));
@@ -1707,7 +1766,7 @@ void paintMainWindowBorder(QWidget* window, QPainter& painter, bool maximized, b
     painter.fillRect(window->rect(), Qt::transparent);
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(QStringLiteral("#d9e1ea")));
+    painter.setBrush(borderColor());
 
     qreal outerRadius = 13.0;
     qreal innerRadius = 12.0;
@@ -1721,7 +1780,7 @@ void paintMainWindowBorder(QWidget* window, QPainter& painter, bool maximized, b
     painter.drawRoundedRect(QRectF(1.0, 1.0, window->width() - 2.0, window->height() - 2.0), innerRadius, innerRadius);
 
     // Draw smooth 1px border.
-    painter.setPen(QPen(QColor(QStringLiteral("#d9e1ea")), 1.0));
+    painter.setPen(QPen(borderColor(), 1.0));
     painter.setBrush(Qt::NoBrush);
     painter.drawRoundedRect(QRectF(0.5, 0.5, window->width() - 1.0, window->height() - 1.0), innerRadius, innerRadius);
 }
@@ -1758,15 +1817,15 @@ QString formatLogHtml(int messageType, const QString& timestamp, const QString& 
     QString typeStr;
     QString color;
     switch (messageType) {
-        case QtDebugMsg:    typeStr = QStringLiteral("DEBUG"); color = QStringLiteral("#78909c"); break;
-        case QtInfoMsg:     typeStr = QStringLiteral("INFO");  color = QStringLiteral("#1e88e5"); break;
+        case QtDebugMsg:    typeStr = QStringLiteral("DEBUG"); color = QStringLiteral("#8a8a89"); break;
+        case QtInfoMsg:     typeStr = QStringLiteral("INFO");  color = QStringLiteral("#3c3c3b"); break;
         case QtWarningMsg:  typeStr = QStringLiteral("WARN");  color = QStringLiteral("#fb8c00"); break;
         case QtCriticalMsg: typeStr = QStringLiteral("CRIT");  color = QStringLiteral("#e53935"); break;
         case QtFatalMsg:    typeStr = QStringLiteral("FATAL"); color = QStringLiteral("#b71c1c"); break;
-        default:            typeStr = QStringLiteral("LOG");   color = QStringLiteral("#7f8c8d"); break;
+        default:            typeStr = QStringLiteral("LOG");   color = QStringLiteral("#8a8a89"); break;
     }
 
-    return QStringLiteral("<span style=\"color:#7f8c8d;\">[%1]</span> <span style=\"color:%2; font-weight:bold;\">[%3]</span> %4")
+    return QStringLiteral("<span style=\"color:#8a8a89;\">[%1]</span> <span style=\"color:%2; font-weight:bold;\">[%3]</span> %4")
         .arg(timestamp, color, typeStr, message.toHtmlEscaped());
 }
 

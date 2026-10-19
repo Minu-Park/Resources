@@ -2,9 +2,9 @@
 
 QStatusBar {
     background: transparent;
-    border-top: 1px solid #d9e1ea;
+    border-top: 1px solid @BORDER_COLOR@;
     border-bottom: none;
-    color: #3d5063;
+    color: @FONT_COLOR@;
     height: 32px;
     min-height: 32px;
     max-height: 32px;
@@ -21,7 +21,7 @@ QStatusBar[maximized="true"] {
 
 QTextEdit#SystemLogViewer {
     background-color: #ffffff;
-    color: #16202b;
+    color: @FONT_COLOR@;
     border: none;
     border-radius: 0px;
     font-family: "JetBrains Mono";
@@ -50,14 +50,14 @@ QLabel#EngineStatusPointer,
 QLabel#EngineStatusZoom,
 QLabel#EngineStatusFps {
     background: #ffffff;
-    border: 1px solid #d7dee6;
+    border: 1px solid #d8d8d7;
     border-radius: 9px;
     padding: 0 7px;
     height: 24px;
     min-height: 24px;
     max-height: 24px;
     margin: 0 2px 0 0;
-    color: #425467;
+    color: @FONT_COLOR@;
 }
 
 QLabel#EngineStatusSummary[performancePath="native-tile"] {
@@ -72,14 +72,14 @@ QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton,
 QToolButton#ProcessingEnableToggle {
     background: #ffffff;
-    border: 1px solid #d7dee6;
+    border: 1px solid #d8d8d7;
     border-radius: 9px;
     padding: 0 7px;
     height: 24px;
     min-height: 24px;
     max-height: 24px;
     margin: 0 2px 0 0;
-    color: #425467;
+    color: @FONT_COLOR@;
 }
 
 QLabel#CameraStatusLabel,
@@ -90,7 +90,7 @@ QLabel#EngineStatusMode,
 QLabel#EngineStatusZoom,
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
-    color: #354657;
+    color: @FONT_COLOR@;
     font-weight: 700;
 }
 
@@ -101,7 +101,7 @@ QStatusBar QLabel[statusRole="message"] {
     padding: 0;
     margin: 0 8px 0 0;
     min-width: 0px;
-    color: #425467;
+    color: @FONT_COLOR@;
     font-weight: 400;
 }
 
@@ -136,21 +136,21 @@ QToolButton#ProcessingEnableToggle {
 
 QToolButton#EngineStatusViewButton:disabled {
     background: #ffffff;
-    border-color: #d7dee6;
-    color: #425467;
+    border-color: #d8d8d7;
+    color: @FONT_COLOR@;
 }
 
 QToolButton#EngineStatusModeButton:hover,
 QToolButton#EngineStatusViewButton:hover {
-    background: #eef3f8;
-    border-color: #c7d4e2;
-    color: #26384a;
+    background: #f1f1f0;
+    border-color: #c8c8c7;
+    color: @FONT_COLOR@;
 }
 
 QToolButton#EngineStatusModeButton:pressed,
 QToolButton#EngineStatusViewButton:pressed {
-    background: #e7eef6;
-    border-color: #bccbda;
+    background: #e9e9e8;
+    border-color: #bdbdbc;
 }
 
 QToolButton#EngineStatusModeButton::menu-indicator,
@@ -161,59 +161,59 @@ QToolButton#EngineStatusViewButton::menu-indicator {
 
 QPushButton#MainLogToggleBtn {
     background: #ffffff;
-    border: 1px solid #c8d9eb;
+    border: 1px solid #d4d4d3;
     border-radius: 9px;
     padding: 0 8px;
     height: 24px;
     min-height: 24px;
     max-height: 24px;
     margin: 0 2px 0 0;
-    color: #00457C;
+    color: @FONT_COLOR@;
     font-weight: 700;
     font-size: 11px;
 }
 
 QPushButton#RuntimeLibrariesStatusButton {
     background: #ffffff;
-    border: 1px solid #d7dee6;
+    border: 1px solid #d8d8d7;
     border-radius: 9px;
     padding: 0 8px;
     height: 24px;
     min-height: 24px;
     max-height: 24px;
     margin: 0 2px 0 0;
-    color: #425467;
+    color: @FONT_COLOR@;
     font-weight: 700;
     font-size: 11px;
 }
 
 QPushButton#RuntimeLibrariesStatusButton:hover {
-    background: #eef3f8;
-    border-color: #c7d4e2;
-    color: #26384a;
+    background: #f1f1f0;
+    border-color: #c8c8c7;
+    color: @FONT_COLOR@;
 }
 
 QPushButton#RuntimeLibrariesStatusButton:pressed {
-    background: #e7eef6;
-    border-color: #bccbda;
+    background: #e9e9e8;
+    border-color: #bdbdbc;
 }
 
 QPushButton#MainLogToggleBtn:hover {
-    background: #f0f5fa;
-    border-color: #8badc7;
-    color: #00457C;
+    background: #f1f1f0;
+    border-color: #bdbdbc;
+    color: @FONT_COLOR@;
 }
 
 QPushButton#MainLogToggleBtn:checked {
-    background: #e1ebf5;
-    border-color: #8badc7;
-    color: #00457C;
+    background: #e8e8e7;
+    border-color: #b0b0af;
+    color: @FONT_COLOR@;
 }
 
 QPushButton#MainLogToggleBtn:checked:hover {
-    background: #d4e3f0;
-    border-color: #7097b3;
-    color: #00457C;
+    background: #e0e0df;
+    border-color: #a3a3a2;
+    color: @FONT_COLOR@;
 }
 
 QPushButton#MainLogToggleBtn[logState="warning"] {
@@ -234,7 +234,7 @@ QPushButton#MainLogToggleBtn[logState="error"]:hover {
 
 QWidget#MinimizedSessionIndicator {
     background: #ffffff;
-    border: 1px solid #d7dee6;
+    border: 1px solid #d8d8d7;
     border-radius: 9px;
     height: 24px;
     min-height: 24px;
@@ -244,13 +244,13 @@ QWidget#MinimizedSessionIndicator {
 }
 
 QWidget#MinimizedSessionIndicator[minimized="true"] {
-    background: #f0f4f8;
+    background: #f1f1f0;
 }
 
 QPushButton#MinimizedSessionRestore {
     background: transparent;
     border: none;
-    color: #354657;
+    color: @FONT_COLOR@;
     font-size: 11px;
     font-weight: 600;
     padding: 0 4px 0 6px;

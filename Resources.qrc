@@ -185,6 +185,18 @@
         <file>theme/fonts/JetBrainsMono-Bold.ttf</file>
         <file>icon/add-24.png</file>
         <file>icon/add-48.png</file>
+        <file>icon/close-window-outline-24.png</file>
+        <file>icon/close-window-outline-48.png</file>
+        <file>icon/close-window-rounded-24.png</file>
+        <file>icon/close-window-rounded-48.png</file>
+        <file>icon/maximize-window-outline-24.png</file>
+        <file>icon/maximize-window-outline-48.png</file>
+        <file>icon/maximize-window-rounded-24.png</file>
+        <file>icon/maximize-window-rounded-48.png</file>
+        <file>icon/minimize-window-outline-24.png</file>
+        <file>icon/minimize-window-outline-48.png</file>
+        <file>icon/minimize-window-rounded-24.png</file>
+        <file>icon/minimize-window-rounded-48.png</file>
         <file>icon/full-page-view-24.png</file>
         <file>icon/full-page-view-48.png</file>
         <file>icon/image-24.png</file>
@@ -205,5 +217,76 @@
         <file>icon/zoomIn-48.png</file>
         <file>icon/zoomOut-24.png</file>
         <file>icon/zoomOut-48.png</file>
+        <file>icon/ai-generated-text-24.png</file>
+        <file>icon/ai-generated-text-48.png</file>
+        <file>icon/camera-24.png</file>
+        <file>icon/camera-48.png</file>
+        <file>icon/certificate-24.png</file>
+        <file>icon/certificate-48.png</file>
+        <file>icon/installing-updates-24.png</file>
+        <file>icon/installing-updates-48.png</file>
+        <file>icon/minus-24.png</file>
+        <file>icon/minus-48.png</file>
+        <file>icon/pause-24.png</file>
+        <file>icon/pause-48.png</file>
+        <file>icon/play-24.png</file>
+        <file>icon/play-48.png</file>
+        <file>icon/plus-math-24.png</file>
+        <file>icon/plus-math-48.png</file>
+        <file>icon/add-image-24.png</file>
+        <file>icon/add-image-48.png</file>
+        <file>icon/back-24.png</file>
+        <file>icon/back-48.png</file>
+        <file>icon/books-24.png</file>
+        <file>icon/books-48.png</file>
+        <file>icon/code-24.png</file>
+        <file>icon/code-48.png</file>
+        <file>icon/collapse-arrow-24.png</file>
+        <file>icon/collapse-arrow-48.png</file>
+        <file>icon/copy-24.png</file>
+        <file>icon/copy-48.png</file>
+        <file>icon/drop-down-arrow-24.png</file>
+        <file>icon/drop-down-arrow-48.png</file>
+        <file>icon/empty-trash-24.png</file>
+        <file>icon/empty-trash-48.png</file>
+        <file>icon/forward-24.png</file>
+        <file>icon/forward-48.png</file>
+        <file>icon/health-data-24.png</file>
+        <file>icon/health-data-48.png</file>
+        <file>icon/image-gallery-24.png</file>
+        <file>icon/image-gallery-48.png</file>
+        <file>icon/orthogonal-view-24.png</file>
+        <file>icon/orthogonal-view-48.png</file>
+        <file>icon/puzzle-24.png</file>
+        <file>icon/puzzle-48.png</file>
+        <file>icon/about-24.png</file>
+        <file>icon/about-48.png</file>
+        <file>icon/about-96.png</file>
+        <file>icon/ask-question-24.png</file>
+        <file>icon/ask-question-48.png</file>
+        <file>icon/ask-question-96.png</file>
+        <file>icon/cameras-24.png</file>
+        <file>icon/cameras-48.png</file>
+        <file>icon/done-24.png</file>
+        <file>icon/done-48.png</file>
+        <file>icon/downloading-updates-24.png</file>
+        <file>icon/downloading-updates-48.png</file>
+        <file>icon/error-24.png</file>
+        <file>icon/error-48.png</file>
+        <file>icon/error-96.png</file>
+        <file>icon/image-view-24.png</file>
+        <file>icon/image-view-48.png</file>
+        <file>icon/network-card-24.png</file>
+        <file>icon/network-card-48.png</file>
+        <file>icon/refresh-24.png</file>
+        <file>icon/refresh-48.png</file>
+        <file>icon/stop-24.png</file>
+        <file>icon/stop-48.png</file>
+        <file>icon/toggle-indeterminate-24.png</file>
+        <file>icon/toggle-indeterminate-48.png</file>
+        <file>icon/toggle-off-24.png</file>
+        <file>icon/toggle-off-48.png</file>
+        <file>icon/toggle-on-24.png</file>
+        <file>icon/toggle-on-48.png</file>
     </qresource>
 </RCC>

@@ -69,11 +69,11 @@ ThemedDockTitleBar::ThemedDockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     _closeButton->installEventFilter(this);
     _floatButton->installEventFilter(this);
 
-    _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png"), QSize(16, 16)));
+    _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/close-window-outline-48.png"), QSize(16, 16)));
     _closeButton->setIconSize(QSize(16, 16));
 
     _floatButton->setIconSize(QSize(16, 16));
-    _floatButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png"), QSize(16, 16)));
+    _floatButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/maximize-window-outline-48.png"), QSize(16, 16)));
 
     _dockWidget->installEventFilter(this);
     connect(_dockWidget, &QDockWidget::topLevelChanged, this, &ThemedDockTitleBar::applyFloatingChrome);
@@ -98,17 +98,17 @@ void ThemedDockTitleBar::paintEvent(QPaintEvent* event)
         p.drawRoundedRect(QRectF(0, 0, width(), height() + radius), radius, radius);
 
         // Draw the outer border line (left, top, right) matching the rounded top corners
-        p.setPen(QPen(QColor(0xd9, 0xe1, 0xea), 1.0));
+        p.setPen(QPen(Resources::borderColor(), 1.0));
         p.setBrush(Qt::NoBrush);
         p.drawRoundedRect(QRectF(0.5, 0.5, width() - 1.0, height() + radius), radius, radius);
 
         // Draw the bottom border line (always straight at the bottom of the titlebar)
-        p.setPen(QColor(0xd9, 0xe1, 0xea));
+        p.setPen(Resources::borderColor());
         p.drawLine(0, height() - 1, width(), height() - 1);
     } else {
         // Docked state: plain white background and bottom border only
         p.fillRect(rect(), Qt::white);
-        p.setPen(QColor(0xd9, 0xe1, 0xea));
+        p.setPen(Resources::borderColor());
         p.drawLine(rect().bottomLeft(), rect().bottomRight());
     }
 }
@@ -139,16 +139,16 @@ bool ThemedDockTitleBar::eventFilter(QObject* watched, QEvent* event)
     }
     else if (watched == _closeButton) {
         if (event->type() == QEvent::Enter) {
-            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png"), QSize(16, 16)));
+            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/close-window-rounded-48.png"), QSize(16, 16)));
         } else if (event->type() == QEvent::Leave) {
-            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png"), QSize(16, 16)));
+            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/close-window-outline-48.png"), QSize(16, 16)));
         }
     }
     else if (watched == _floatButton) {
         if (event->type() == QEvent::Enter) {
-            _floatButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png"), QSize(16, 16)));
+            _floatButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/maximize-window-rounded-48.png"), QSize(16, 16)));
         } else if (event->type() == QEvent::Leave) {
-            _floatButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png"), QSize(16, 16)));
+            _floatButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/maximize-window-outline-48.png"), QSize(16, 16)));
         }
     }
     return QWidget::eventFilter(watched, event);
