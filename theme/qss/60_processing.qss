@@ -141,7 +141,7 @@ QPlainTextEdit#ProcessingCodeEditor {
 
 QLabel#ProcessingParamEditorTitle {
     font-weight: 600;
-    color: #16202b;
+    color: @FONT_COLOR@;
     font-size: 11px;
 }
 
@@ -336,7 +336,7 @@ QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="error"] {
 
 /* Code Editor Signature Help */
 QLabel#SignatureHelpLabel {
-    color: #16202b;
+    color: @FONT_COLOR@;
     background-color: transparent;
     border: 1px solid transparent;
     padding: 1px 3px;

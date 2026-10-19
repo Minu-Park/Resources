@@ -8,7 +8,7 @@ Static3DDataControlWidget {
 
 StaticImageControlWidget QLabel {
     font-weight: 600;
-    color: #2a3a4b;
+    color: @FONT_COLOR@;
 }
 
 StaticImageControlWidget QToolButton,
@@ -24,7 +24,7 @@ Static3DDataControlWidget QToolButton {
 StaticImageControlWidget QListWidget,
 Static3DDataControlWidget QListWidget {
     background-color: #ffffff;
-    border: 1px solid #d9e1ea;
+    border: 1px solid @BORDER_COLOR@;
     border-radius: 8px;
     padding: 4px;
 }

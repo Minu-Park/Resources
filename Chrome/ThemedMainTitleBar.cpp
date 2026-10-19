@@ -127,10 +127,10 @@ ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBa
     _maxButton->installEventFilter(this);
     _closeButton->installEventFilter(this);
 
-    _minButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png"), QSize(16, 16)));
+    _minButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/minimize-window-outline-48.png"), QSize(16, 16)));
     _minButton->setIconSize(QSize(16, 16));
 
-    _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png"), QSize(16, 16)));
+    _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/close-window-outline-48.png"), QSize(16, 16)));
     _closeButton->setIconSize(QSize(16, 16));
 
     _maxButton->setIconSize(QSize(16, 16));
@@ -221,7 +221,7 @@ void ThemedMainTitleBar::updateMaximizeIcon()
     _maxButton->setProperty("maximized", isMax);
 
     bool underMouse = _maxButton->underMouse();
-    QString path = underMouse ? QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png") : QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png");
+    QString path = underMouse ? QStringLiteral(":/Resources/icon/maximize-window-rounded-48.png") : QStringLiteral(":/Resources/icon/maximize-window-outline-48.png");
     _maxButton->setIcon(createSmoothIcon(path, QSize(16, 16)));
 }
 
@@ -229,23 +229,23 @@ bool ThemedMainTitleBar::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _minButton) {
         if (event->type() == QEvent::Enter) {
-            _minButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48-hover.png"), QSize(16, 16)));
+            _minButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/minimize-window-rounded-48.png"), QSize(16, 16)));
         } else if (event->type() == QEvent::Leave) {
-            _minButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-minimize-window-48.png"), QSize(16, 16)));
+            _minButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/minimize-window-outline-48.png"), QSize(16, 16)));
         }
     }
     else if (watched == _closeButton) {
         if (event->type() == QEvent::Enter) {
-            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48-hover.png"), QSize(16, 16)));
+            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/close-window-rounded-48.png"), QSize(16, 16)));
         } else if (event->type() == QEvent::Leave) {
-            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-close-window-48.png"), QSize(16, 16)));
+            _closeButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/close-window-outline-48.png"), QSize(16, 16)));
         }
     }
     else if (watched == _maxButton) {
         if (event->type() == QEvent::Enter) {
-            _maxButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48-hover.png"), QSize(16, 16)));
+            _maxButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/maximize-window-rounded-48.png"), QSize(16, 16)));
         } else if (event->type() == QEvent::Leave) {
-            _maxButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/Icons/icons8-maximize-window-48.png"), QSize(16, 16)));
+            _maxButton->setIcon(createSmoothIcon(QStringLiteral(":/Resources/icon/maximize-window-outline-48.png"), QSize(16, 16)));
         }
     }
     return QWidget::eventFilter(watched, event);

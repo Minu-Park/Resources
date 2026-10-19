@@ -2,7 +2,15 @@
 
 ## Unreleased
 
+- Use `#3c3c3b` as the default font color and let `setFontColor()` replace the shared text ink.
+- Use neutral `#d9d9d8` as the default chrome border so it matches the `#3c3c3b` icon ink, and let `setBorderColor()` replace that border.
+- Recolor toolbar dividers, source tabs, status bubbles, and System Logs onto the same neutral ink. Warning and error colors stay.
+- Publish the menu, trash, and chevron glyphs used by host actions and shared controls.
+- Publish play, pause, plus, minus, AI, camera, update, and certificate glyphs for the matching host actions.
+- Publish image-view, toggles, refresh, download, network, about, question, error, cameras, stop, and check glyphs for the matching controls.
+
 - Publish the trial toolbar glyphs under `icon/` for GraphicsEngine actions that have a matching symbol.
+- Use outline window glyphs for close, minimize, and maximize, and the rounded glyph while those buttons are hovered.
 
 - Draw `frameRole="none"` text browsers without a field, hover, or focus border.
 

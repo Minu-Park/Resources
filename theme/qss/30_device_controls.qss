@@ -13,7 +13,7 @@ QTabWidget#FramegrabberControlTabs::pane,
 QTabWidget[tabRole="DeviceControls"]::pane {
     background: transparent;
     border: none;
-    border-top: 1px solid #d9e1ea;
+    border-top: 1px solid @BORDER_COLOR@;
     border-radius: 0;
     top: 0;
 }
@@ -44,14 +44,14 @@ QTreeWidget[treeRole="DeviceFeatureTree"] {
     background: #ffffff;
     alternate-background-color: #ffffff;
     selection-background-color: #edf5fb;
-    selection-color: #16202b;
+    selection-color: @FONT_COLOR@;
     show-decoration-selected: 0;
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"]::item:hover,
 QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
     background: transparent;
-    color: #16202b;
+    color: @FONT_COLOR@;
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"] QComboBox:hover,
@@ -100,7 +100,7 @@ QLineEdit#DeviceFeatureSearchInput:focus {
     min-height: 22px;
     max-height: 22px;
     selection-background-color: #dceaf5;
-    selection-color: #16202b;
+    selection-color: @FONT_COLOR@;
 }
 
 QLabel#DeviceFeatureSearchCount {
