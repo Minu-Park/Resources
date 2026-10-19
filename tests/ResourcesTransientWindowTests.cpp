@@ -22,6 +22,12 @@
 #include <QProcess>
 #include <QScreen>
 #include <QSignalSpy>
+#include <QSpinBox>
+#include <QDoubleSpinBox>
+#include <QDateEdit>
+#include <QTimeEdit>
+#include <QTabWidget>
+#include <QTabBar>
 #include <QStyle>
 #include <QStyledItemDelegate>
 #include <QStyleOptionViewItem>
@@ -99,7 +105,7 @@ static QString comboJoinError(const QImage& image, qreal joinY)
             int coverage = 0;
             for (int x = 0; x < extent; ++x) {
                 const QColor pixel = image.pixelColor(right ? image.width() - 1 - x : x, y);
-                coverage += qBound(0, pixel.blue() - pixel.red(), 60);
+                coverage += qBound(0, 255 - qGray(pixel.rgb()), 60);
             }
             return coverage;
         };
@@ -388,7 +394,7 @@ private slots:
                      x < qCeil((row.left() + 35) * dpr) && x < exclusive.width(); ++x) {
                     const QColor pixel = exclusive.pixelColor(x, y);
                     if (pixel.red() > 180 && pixel.red() < 249
-                        && pixel.green() - pixel.red() >= 5 && pixel.blue() - pixel.green() >= 5)
+                        && qAbs(pixel.red() - pixel.green()) <= 2 && qAbs(pixel.green() - pixel.blue()) <= 2)
                         result = result.united(QRect(x, y, 1, 1));
                 }
             }
@@ -410,7 +416,7 @@ private slots:
         for (int y = qFloor(toggleRow.top() * dpr); y < qCeil((toggleRow.bottom() + 1) * dpr); ++y)
             for (int x = qFloor(toggleRow.left() * dpr); x < qCeil((toggleRow.left() + 28) * dpr); ++x) {
                 const QColor pixel = checkedMenu.pixelColor(x, y);
-                if (pixel.red() < 50 && pixel.green() < 110 && pixel.blue() > 70 && pixel.blue() < 180)
+                if (pixel.alpha() > 128 && qGray(pixel.rgb()) < 110)
                     checkInk = checkInk.united(QRect(x, y, 1, 1));
             }
         QVERIFY(!checkInk.isEmpty());
@@ -503,7 +509,7 @@ private slots:
             bool bubbleBorderVisible = false;
             for (int y = 0; y < qCeil(2 * headerImage.devicePixelRatio()); ++y) {
                 const QColor pixel = headerImage.pixelColor(headerImage.width() / 4, y);
-                bubbleBorderVisible |= pixel.red() < 230 && pixel.blue() > pixel.red() + 5;
+                bubbleBorderVisible |= pixel.alpha() > 128 && qGray(pixel.rgb()) < 230;
             }
             QVERIFY2(bubbleBorderVisible, "The shared bubble header outline must remain visible");
             QCOMPARE(header->sectionViewportPosition(1), table.columnViewportPosition(1));
@@ -515,7 +521,7 @@ private slots:
                      x <= qCeil((logicalX + 1) * dpr); ++x) {
                     if (x < 0 || x >= image.width()) continue;
                     const QColor pixel = pixels.pixelColor(x, y);
-                    if (pixel.red() < 250 && pixel.blue() > pixel.red() + 3)
+                    if (pixel.alpha() > 128 && qGray(pixel.rgb()) < 250)
                         return true;
                 }
                 return false;
@@ -545,7 +551,7 @@ private slots:
                 for (int x = qFloor((dividerX - 2) * dpr);
                      x <= qCeil((dividerX + 3) * dpr); ++x) {
                     const QColor pixel = whole.pixelColor(x, qRound(logicalY * dpr));
-                    const int ink = qMax(0, pixel.blue() - pixel.red());
+                    const int ink = qMax(0, 255 - qGray(pixel.rgb()));
                     weightedX += x * ink;
                     weight += ink;
                 }
@@ -695,6 +701,59 @@ private slots:
         QCOMPARE(tree.style()->styleHint(QStyle::SH_ItemView_ShowDecorationSelected, nullptr, &tree), 0);
     }
 
+    void singleLineFieldsShareTextInsets()
+    {
+        Resources::installResources(*qApp);
+        QWidget owner;
+        owner.setLayoutDirection(Qt::LeftToRight);
+        owner.setFocusPolicy(Qt::StrongFocus);
+        auto* layout = new QVBoxLayout(&owner);
+        auto* plain = new QLineEdit("MMMMMMMM 120");
+        auto* integer = new QSpinBox; integer->setRange(0, 1000); integer->setPrefix("MMMMMMMM "); integer->setValue(120);
+        auto* number = new QDoubleSpinBox; number->setRange(0, 1000); number->setPrefix("MMMMMMMM "); number->setValue(120);
+        auto* combo = new QComboBox; combo->addItem("MMMMMMMM 120");
+        auto* editable = new QComboBox; editable->setEditable(true); editable->addItem("MMMMMMMM 120");
+        auto* date = new QDateEdit(QDate(2026, 10, 19)); date->setDisplayFormat("'MMMMMMMM' yyyy-MM-dd");
+        auto* time = new QTimeEdit(QTime(12, 34)); time->setDisplayFormat("'MMMMMMMM' HH:mm:ss");
+        const QList<QWidget*> fields{plain, integer, number, combo, editable, date, time};
+        for (auto* field : fields) { field->setFixedSize(280, 24); layout->addWidget(field); }
+        owner.show(); QVERIFY(QTest::qWaitForWindowExposed(&owner)); owner.setFocus();
+        for (auto* editor : owner.findChildren<QLineEdit*>()) editor->deselect();
+        QCoreApplication::processEvents();
+        int reference = -1;
+        QStringList differences;
+        for (auto* field : fields) {
+            const QImage image = field->grab().toImage(); const qreal dpr = image.devicePixelRatio();
+            const QRect scan(qRound(2 * dpr), qRound(3 * dpr), qRound(250 * dpr), qRound(18 * dpr));
+            const QRect text = darkTextBounds(image, scan.intersected(image.rect()), 160);
+            QVERIFY(!text.isEmpty());
+            const int start = text.left();
+            if (reference < 0) reference = start;
+            if (qAbs(start - reference) > qCeil(dpr)) differences.append(QString("%1 inset %2 vs LineEdit %3 (DPR %4)")
+                .arg(field->metaObject()->className()).arg(start).arg(reference).arg(dpr));
+        }
+        QVERIFY2(differences.isEmpty(), qPrintable(differences.join("; ")));
+    }
+
+    void tabPaneDividerSpansPastTabLabels()
+    {
+        Resources::installResources(*qApp);
+        QTabWidget tabs; tabs.addTab(new QWidget, "First"); tabs.addTab(new QWidget, "Second");
+        tabs.resize(440, 180); tabs.show(); QVERIFY(QTest::qWaitForWindowExposed(&tabs));
+        const QImage image = tabs.grab().toImage(); const qreal dpr = image.devicePixelRatio();
+        const int baseline = tabs.tabBar()->geometry().bottom();
+        bool continuous = false;
+        for (int y = qRound((baseline - 2) * dpr); y <= qRound((baseline + 3) * dpr); ++y) {
+            int border = 0, total = 0;
+            for (int x = qRound(4 * dpr); x < image.width() - qRound(4 * dpr); ++x) {
+                const QColor pixel = image.pixelColor(x, y); const int gray = qGray(pixel.rgb());
+                border += gray > 170 && gray < 235; ++total;
+            }
+            continuous |= border > total * 0.95;
+        }
+        QVERIFY2(continuous, "Tab header divider does not span the full content width.");
+    }
+
     void editableComboTextInsets()
     {
         Resources::installResources(*qApp);
@@ -738,17 +797,23 @@ private slots:
         }
     }
 
-    void comboPopupUsesLeftIndicator()
+    void comboPopupUsesNeutralRowsWithoutLeadingMarkers()
     {
         Resources::installResources(*qApp);
-        for (bool editable : {false, true}) {
-            QComboBox combo;
+        for (bool nested : {false, true}) for (bool editable : {false, true}) {
+            QTreeWidget tree;
+            tree.setProperty("treeRole", "DeviceFeatureTree");
+            QComboBox combo(nested ? tree.viewport() : nullptr);
+            if (nested) { tree.resize(400, 240); tree.show(); }
             combo.setEditable(editable);
             combo.addItems({QStringLiteral("First option"), QStringLiteral("Second option"), QStringLiteral("Third option")});
             combo.setCurrentIndex(1);combo.resize(280, 24);combo.show();
             QVERIFY(QTest::qWaitForWindowExposed(&combo));
             combo.showPopup();QTRY_VERIFY(combo.view()->isVisible());
             auto* view = combo.view();
+            const int rowHeight = view->visualRect(combo.model()->index(0, 0)).height();
+            QVERIFY2(rowHeight <= combo.height(), qPrintable(QString("Popup row %1 exceeds field %2 (nested %3, editable %4)")
+                .arg(rowHeight).arg(combo.height()).arg(nested).arg(editable)));
             const auto verifyRow = [&](int row) {
                 QCoreApplication::processEvents();
                 const QRect logical = view->visualRect(combo.model()->index(row, 0));
@@ -756,14 +821,13 @@ private slots:
                 const qreal dpr = image.devicePixelRatio();
                 bool marker = false;
                 for (int y = qCeil(logical.top() * dpr); y < qFloor((logical.bottom() + 1) * dpr); ++y)
-                    for (int x = qFloor(logical.left() * dpr); x < qCeil((logical.left() + 18) * dpr); ++x) {
+                    for (int x = qFloor(logical.left() * dpr); x < qCeil((logical.left() + 6) * dpr); ++x) {
                         const QColor pixel = image.pixelColor(x, y);
-                        marker |= pixel.red() < 40 && pixel.green() > 50 && pixel.blue() > 90;
+                        marker |= pixel.alpha() > 128 && qGray(pixel.rgb()) < 120;
                     }
                 const QColor background = image.pixelColor(qRound((logical.right() - 16) * dpr),
                                                            qRound(logical.center().y() * dpr));
-                return marker && (background.alpha() == 0
-                    || (background.red() > 245 && background.green() > 245 && background.blue() > 245));
+                return !marker && background == Resources::themePalette().value(QStringLiteral("selection"));
             };
             QVERIFY(verifyRow(1));
             const QPoint hover = view->visualRect(combo.model()->index(2, 0)).center();
@@ -800,14 +864,22 @@ private slots:
             QVERIFY(menu.property("resourcesMenuHasLeadingColumn").toBool());
             QCOMPARE(menu.property("resourcesMenuDirection").toString(), rtl ? QStringLiteral("rtl") : QStringLiteral("ltr"));
             const QImage image = menu.grab().toImage();
-            const qreal dpr = image.devicePixelRatio();int first = -1;
+            const qreal dpr = image.devicePixelRatio();
+            const QRect labelRow = menu.actionGeometry(actions.at(icons ? 1 : 0));
+            const QRect labelInk = darkTextBounds(image, QRect(qRound(labelRow.left() * dpr),
+                qRound(labelRow.top() * dpr), qRound(labelRow.width() * dpr), qRound(labelRow.height() * dpr)));
+            QVERIFY(!labelInk.isEmpty());
+            const int first = labelInk.left();
             for (auto* action : actions) {
                 const QRect row = menu.actionGeometry(action);
                 const QRect scan(qRound(row.left() * dpr), qRound(row.top() * dpr),
                                  qRound(row.width() * dpr), qRound(row.height() * dpr));
-                const QRect ink = darkTextBounds(image, scan.intersected(image.rect()));
+                // Match label glyphs independently of the equally dark check/radio/action icons.
+                const QRect labelColumn(labelInk.left() - qCeil(dpr), scan.top(),
+                    labelInk.width() + 2 * qCeil(dpr), scan.height());
+                const QRect ink = darkTextBounds(image, scan.intersected(labelColumn).intersected(image.rect()));
                 QVERIFY(!ink.isEmpty());
-                if (first < 0) first = ink.left();
+                QVERIFY(qAbs(ink.width() - labelInk.width()) <= qCeil(dpr));
                 QVERIFY2(qAbs(ink.left() - first) <= qCeil(dpr), qPrintable(QStringLiteral("%1 icons=%2 rtl=%3 left=%4 first=%5").arg(action->text()).arg(icons).arg(rtl).arg(ink.left()).arg(first)));
             }
             menu.setActiveAction(child->menuAction());QTest::keyClick(&menu, rtl ? Qt::Key_Left : Qt::Key_Right);
@@ -998,7 +1070,7 @@ private slots:
             }
             const QString cornerError = comboCornerError(shell, popup->size(), above);
             QVERIFY2(cornerError.isEmpty(), qPrintable(cornerError));
-            const QColor border(QStringLiteral("#8badc7"));
+            const QColor border(QStringLiteral("#8a8a89"));
             const auto isBorder = [&](const QColor& color, qreal coverage = 1) {
                 return qAbs(color.alpha() - qRound(255 * coverage)) <= 8 && qAbs(color.red() - border.red()) <= 12
                     && qAbs(color.green() - border.green()) <= 12
@@ -1136,7 +1208,11 @@ private slots:
             const auto checkBorder = [](QColor color, qreal coverage) {
                 QVERIFY(qAbs(color.alpha() - qRound(255 * coverage)) <= 2);
                 color.setAlpha(255);
-                QCOMPARE(color.rgba(), QColor(QStringLiteral("#8badc7")).rgba());
+                const QColor border(QStringLiteral("#8a8a89"));
+                // Fractional coverage can round an unpremultiplied channel by one.
+                QVERIFY(qAbs(color.red() - border.red()) <= 1);
+                QVERIFY(qAbs(color.green() - border.green()) <= 1);
+                QVERIFY(qAbs(color.blue() - border.blue()) <= 1);
             };
             checkBorder(shell.pixelColor(0, shell.height() / 2), 1);
             checkBorder(shell.pixelColor(shell.width() - 1, shell.height() / 2),

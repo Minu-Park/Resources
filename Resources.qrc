@@ -1,9 +1,14 @@
 <RCC>
     <qresource prefix="/Resources">
-        <file>Icons/menu-hover-dot.png</file>
-        <file>Icons/menu-hover-dot@2x.png</file>
-        <file>Icons/combo-hover-dot.png</file>
-        <file>Icons/combo-hover-dot@2x.png</file>
+        <file>icon/opened-folder-24.png</file>
+        <file>icon/opened-folder-48.png</file>
+        <file>icon/new-folder-24.png</file>
+        <file>icon/new-folder-48.png</file>
+        <file>icon/menu-24.png</file>
+        <file>icon/menu-48.png</file>
+        <file>icon/list-24.png</file>
+        <file>icon/list-48.png</file>
+
         <file>Icons/menu-check-on.png</file>
         <file>Icons/menu-check-on@2x.png</file>
         <file>Icons/menu-check-disabled.png</file>

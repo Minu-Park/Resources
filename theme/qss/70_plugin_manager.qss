@@ -8,7 +8,7 @@ QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh {
     qproperty-iconSize: 14px 14px;
 }
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh:focus {
-    outline: 1px solid #8badc7;
+    outline: 1px solid @FOCUSBORDER@;
 }
 QWidget#PluginMarketplaceContent * {
     font-size: 11px;
@@ -28,9 +28,9 @@ QWidget#PluginMarketplaceContent QPushButton {
     qproperty-iconSize: 12px 12px;
 }
 QTreeWidget[treeRole="PluginMarketplaceList"] {
-    border: 1px solid #dbe3ec;
+    border: 1px solid @CONTROLBORDER@;
     border-radius: 8px;
-    background: #ffffff;
+    background: @SURFACE@;
     padding: 4px;
 }
 QTreeWidget[treeRole="PluginMarketplaceList"][interactionMode="row"]::item {
@@ -53,16 +53,16 @@ QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceCardIcon {
     max-height: 18px;
 }
 QLabel#PluginMarketplaceCardName {
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-size: 12px;
     font-weight: 600;
 }
 QLabel#PluginMarketplaceCardStatus {
-    color: #516476;
+    color: @SECONDARYTEXT@;
     font-size: 10px;
 }
 QLabel#PluginMarketplaceCardStatus[installationState="update"] {
-    color: #596574;
+    color: @SECONDARYTEXT@;
     font-weight: 500;
 }
 QLabel#PluginMarketplaceUpdateIcon {
@@ -70,12 +70,12 @@ QLabel#PluginMarketplaceUpdateIcon {
     max-width: 12px;
     min-height: 12px;
     max-height: 12px;
-    color: #596574;
+    color: @SECONDARYTEXT@;
 }
 QFrame#PluginMarketplaceDetailShell {
-    border: 1px solid #dbe3ec;
+    border: 1px solid @CONTROLBORDER@;
     border-radius: 8px;
-    background: #ffffff;
+    background: @SURFACE@;
 }
 QScrollArea#PluginMarketplaceDetailsScroll,
 QScrollArea#PluginMarketplaceDetailsScroll > QWidget > QWidget,
@@ -91,27 +91,27 @@ QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceDetailIcon {
     background: transparent;
 }
 QLabel#PluginMarketplaceDetailName {
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-size: 16px;
     font-weight: 700;
     background: transparent;
 }
 QLabel#PluginMarketplaceDetailId {
-    color: #8593a1;
+    color: @DISABLEDTEXT@;
     font-size: 10px;
     background: transparent;
 }
 QLabel#PluginMarketplacePackageStatus {
-    color: #416f9a;
+    color: @SECONDARYTEXT@;
     font-weight: 600;
     background: transparent;
 }
 QLabel#PluginMarketplaceDescription {
-    color: #354657;
+    color: @TEXT@;
     background: transparent;
 }
 QLabel#PluginMarketplaceSectionLabel {
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-weight: 600;
     background: transparent;
 }
@@ -122,7 +122,7 @@ QLabel#PluginMarketplaceActivationNote,
 QLabel#PluginMarketplaceEmpty,
 QLabel#PluginMarketplaceResult,
 QLabel#PluginMarketplaceOperationStatus {
-    color: #6b7c8d;
+    color: @SECONDARYTEXT@;
     background: transparent;
 }
 QLabel#PluginMarketplaceSummary,
@@ -132,46 +132,46 @@ QLabel#PluginMarketplaceActivationNote {
 }
 QLabel#PluginMarketplaceResult[messageState="error"],
 QLabel#PluginMarketplaceCompatibility[messageState="error"] {
-    color: #b44747;
+    color: @ERRORTEXT@;
 }
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"] {
-    background: #ffffff;
-    color: #24303c;
-    border-color: #bcc6d0;
+    background: @SURFACE@;
+    color: @TEXT@;
+    border-color: @HOVERBORDER@;
     font-weight: 600;
 }
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:hover {
-    background: #f3f5f7;
-    border-color: #a6b2be;
+    background: @HOVER@;
+    border-color: @DISABLEDTEXT@;
 }
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:pressed {
-    background: #e8edf2;
-    border-color: #97a4b2;
+    background: @HOVER@;
+    border-color: @DISABLEDTEXT@;
 }
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove {
-    color: #65707c;
-    border-color: #d8dee5;
+    color: @SECONDARYTEXT@;
+    border-color: @CONTROLBORDER@;
     font-weight: 500;
 }
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:hover {
-    background: #f3f5f7;
-    color: #424c58;
-    border-color: #bcc6d0;
+    background: @HOVER@;
+    color: @TEXT@;
+    border-color: @HOVERBORDER@;
 }
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:pressed {
-    background: #e8edf2;
-    color: #24303c;
-    border-color: #a6b2be;
+    background: @HOVER@;
+    color: @TEXT@;
+    border-color: @DISABLEDTEXT@;
 }
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:focus,
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:focus {
-    border-color: #7890a6;
+    border-color: @DISABLEDTEXT@;
 }
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:disabled,
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:disabled {
-    background: #f7f8f9;
-    border-color: #dee3e9;
-    color: #97a0aa;
+    background: @DISABLEDSURFACE@;
+    border-color: @CONTROLBORDER@;
+    color: @DISABLEDTEXT@;
 }
 QSplitter#PluginMarketplaceSplitter::handle {
     background: transparent;
@@ -182,11 +182,11 @@ QProgressBar#PluginMarketplaceProgress {
     max-height: 6px;
     border: none;
     border-radius: 3px;
-    background: #e2eaf2;
+    background: @PROGRESSTRACK@;
 }
 QProgressBar#PluginMarketplaceProgress::chunk {
     border-radius: 3px;
-    background: #00457c;
+    background: @PROGRESSFILL@;
 }
 
 /* Host update discovery notification. */
@@ -194,14 +194,14 @@ QFrame#UpdateNotificationPopup {
     min-width: 250px;
     max-width: 360px;
     padding: 8px 10px;
-    background-color: #ffffff;
-    border: 1px solid #cfd9e4;
+    background-color: @SURFACE@;
+    border: 1px solid @CONTROLBORDER@;
     border-radius: 12px;
 }
 
 QFrame#UpdateNotificationPopup:hover {
-    background-color: #f8fafc;
-    border-color: #b7c7d8;
+    background-color: @HOVER@;
+    border-color: @HOVERBORDER@;
 }
 
 QLabel#UpdateNotificationTitle {
@@ -209,7 +209,7 @@ QLabel#UpdateNotificationTitle {
     padding: 0;
     background-color: transparent;
     border: none;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-weight: 700;
 }
 
@@ -218,7 +218,7 @@ QLabel#UpdateNotificationMessage {
     padding: 0;
     background-color: transparent;
     border: none;
-    color: #516476;
+    color: @SECONDARYTEXT@;
 }
 
 QToolButton#UpdateNotificationCloseButton {
@@ -229,7 +229,7 @@ QToolButton#UpdateNotificationCloseButton {
     padding: 0;
     border: none;
     background: transparent;
-    color: #7f8b97;
+    color: @DISABLEDTEXT@;
     font-size: 17px;
     font-weight: 600;
 }
@@ -237,5 +237,5 @@ QToolButton#UpdateNotificationCloseButton {
 QToolButton#UpdateNotificationCloseButton:hover,
 QToolButton#UpdateNotificationCloseButton:pressed {
     background: transparent;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
 }

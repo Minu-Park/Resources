@@ -3,12 +3,12 @@
 /* Static image and 3D Data source controls */
 StaticImageControlWidget,
 Static3DDataControlWidget {
-    background: #ffffff;
+    background: @SURFACE@;
 }
 
 StaticImageControlWidget QLabel {
     font-weight: 600;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
 }
 
 StaticImageControlWidget QToolButton,
@@ -23,8 +23,8 @@ Static3DDataControlWidget QToolButton {
 
 StaticImageControlWidget QListWidget,
 Static3DDataControlWidget QListWidget {
-    background-color: #ffffff;
-    border: 1px solid @BORDER_COLOR@;
+    background-color: @SURFACE@;
+    border: 1px solid @BORDER@;
     border-radius: 8px;
     padding: 4px;
 }

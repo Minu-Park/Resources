@@ -154,11 +154,11 @@ ThemedFileDialog::ThemedFileDialog(
             } else if (button->objectName() == QLatin1String("toParentButton")) {
                 button->setIcon(QIcon(QStringLiteral(":/Resources/icon/collapse-arrow-48.png")));
             } else if (button->objectName() == QLatin1String("newFolderButton")) {
-                button->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-new-folder-48.png")));
+                button->setIcon(QIcon(QStringLiteral(":/Resources/icon/new-folder-48.png")));
             } else if (button->objectName() == QLatin1String("listModeButton")) {
-                button->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-menu-48.png")));
+                button->setIcon(QIcon(QStringLiteral(":/Resources/icon/menu-48.png")));
             } else if (button->objectName() == QLatin1String("detailModeButton")) {
-                button->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-list-48.png")));
+                button->setIcon(QIcon(QStringLiteral(":/Resources/icon/list-48.png")));
             }
             button->style()->unpolish(button);
             button->style()->polish(button);

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Unify shared selection, focus, controls and package surfaces on the neutral ink ramp while preserving diagnostic state colors.
+- Expose factory/current palette queries, atomic role patches, full reset and complete source-QSS reload through the public API; share colors with QSS and native painters.
+- Remove leading menu/combo markers and compact item content insets and switch/text spacing.
+- Keep composite fields inside one border and align text across line, spin, combo and date/time editors; compact Windows 11 combo rows with matching hover/selected corners.
+- Render full-canvas neutral 36x20 vector switches with 14px thumbs and consistent disabled geometry; reserve 8px between checkable group titles and their frame.
+- Use clipped capsule progress fills and apply public progress colors to loading, splash and update surfaces.
+- Inset ordinary tab pages and draw a continuous header divider; dedicated flat panes retain their own spacing.
+- Use supplied folder/file-view PNG artwork and the existing neutral warning triangle and radio assets.
+
 - Use `#3c3c3b` as the default font color and let `setFontColor()` replace the shared text ink.
 - Use neutral `#d9d9d8` as the default chrome border so it matches the `#3c3c3b` icon ink, and let `setBorderColor()` replace that border.
 - Recolor toolbar dividers, source tabs, status bubbles, and System Logs onto the same neutral ink. Warning and error colors stay.

@@ -2,6 +2,8 @@
 
 #include <QtGlobal>
 #include <QColor>
+#include <QMap>
+#include <QString>
 #include "Chrome/WindowPlatformAttributes.h"
 
 #ifdef Q_OS_WIN
@@ -25,6 +27,34 @@ namespace Resources
  */
 void installResources(QApplication& app);
 
+/** @brief Named application colors; defaultThemePalette() enumerates the supported roles. */
+using ThemePalette = QMap<QString, QColor>;
+
+/** @brief Returns the complete factory palette without changing the installed theme. */
+ThemePalette defaultThemePalette();
+
+/** @brief Returns a copy of the current process-wide palette, including before installation. */
+ThemePalette themePalette();
+
+/**
+ * @brief Atomically applies a nonempty patch of known palette roles and refreshes themed widgets.
+ * @param colors Role/color pairs from defaultThemePalette(); invalid colors or unknown roles reject the whole patch.
+ * @return Whether all entries were accepted. Alpha is discarded; nothing is persisted.
+ * @note Call on the GUI thread. Before installation, values are stored for the next host installation.
+ */
+bool setThemePalette(const ThemePalette& colors);
+
+/** @brief Restores every factory color on the GUI thread without changing application settings. */
+void resetThemePalette();
+
+/**
+ * @brief Reloads the complete installed QSS fragment set from a host-selected directory.
+ * @param directory Directory containing every installed qss fragment; missing files reject the whole reload.
+ * @param error Optional failure description. Current colors and platform chrome rules are preserved.
+ * @return Whether the complete source theme was installed. Call on the GUI thread after installResources().
+ */
+bool reloadThemeFromDirectory(const QString& directory, QString* error = nullptr);
+
 /**
  * @brief Returns the installed default font color.
  * @return Current font color. The initial value is `#3c3c3b`.
@@ -35,7 +65,7 @@ QColor fontColor();
  * @brief Replaces the default font color and reapplies the installed stylesheet.
  * @param color RGB color. An invalid color is ignored, and any alpha is discarded.
  * @return `true` when the color is stored. Stylesheet application waits until `installResources()`.
- * @note Call on the GUI thread. Shared ink and selection text follow this color; status and muted colors do not.
+ * @note Call on the GUI thread. Shared ink, selection text and native accent marks follow this color; status and muted colors do not.
  */
 bool setFontColor(const QColor& color);
 

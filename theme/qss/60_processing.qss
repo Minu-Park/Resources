@@ -3,16 +3,16 @@
 /* Runtime path lists reuse the base themed tree and row interaction surface. */
 
 QLabel#RuntimePathEntriesDescription {
-    color: #64748b;
+    color: @SECONDARYTEXT@;
 }
 
 QLabel#RuntimePathsStatusLabel[state="normal"] {
-    color: #64748b;
+    color: @SECONDARYTEXT@;
     font-weight: 400;
 }
 
 QLabel#RuntimePathsStatusLabel[state="warning"] {
-    color: #b45309;
+    color: @WARNINGTEXT@;
     font-weight: 600;
 }
 
@@ -26,11 +26,11 @@ QLabel#RuntimePathsStatusBadge {
 }
 
 QLabel#RuntimePathsStatusBadge[state="ok"] {
-    color: #10b981;
+    color: @SUCCESS@;
 }
 
 QLabel#RuntimePathsStatusBadge[state="nok"] {
-    color: #ef4444;
+    color: @ERROR@;
 }
 
 QLabel#RuntimePathsLabel {
@@ -52,18 +52,18 @@ QPushButton#RuntimePathsBrowseButton {
 /* OpenCV processing panel */
 QLabel#ProcessingEditorTitle {
     font-weight: 600;
-    color: #000000;
+    color: @TEXT@;
 }
 
 QToolButton#ProcessingEnableToggle[active="true"] {
-    border-color: #cfd9e4;
-    background-color: #f1f3f5;
-    color: #000000;
+    border-color: @CONTROLBORDER@;
+    background-color: @HOVER@;
+    color: @TEXT@;
 }
 
 QToolButton#ProcessingEnableToggle[active="true"]:hover {
-    background-color: #e9ecef;
-    border-color: #b7c7d8;
+    background-color: @HOVER@;
+    border-color: @HOVERBORDER@;
 }
 
 QWidget#ProcessingEditorContainer {
@@ -71,8 +71,8 @@ QWidget#ProcessingEditorContainer {
 }
 
 QWidget#ProcessingTabBar {
-    background-color: #f1f5f9;
-    border: 1px solid #cfd9e4;
+    background-color: @HOVER@;
+    border: 1px solid @CONTROLBORDER@;
     border-bottom: none;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
@@ -99,7 +99,7 @@ QToolButton#ProcessingTabAddBtn:hover,
 QToolButton#ProcessingTabDeleteBtn:hover,
 QToolButton#ProcessingTabLoadBtn:hover,
 QToolButton#ProcessingTabSaveBtn:hover {
-    background-color: #cbd5e1;
+    background-color: @PRESSED@;
     border-radius: 4px;
 }
 
@@ -107,7 +107,7 @@ QToolButton#ProcessingTabAddBtn:pressed,
 QToolButton#ProcessingTabDeleteBtn:pressed,
 QToolButton#ProcessingTabLoadBtn:pressed,
 QToolButton#ProcessingTabSaveBtn:pressed {
-    background-color: #94a3b8;
+    background-color: @DISABLEDTEXT@;
 }
 
 QToolButton#ProcessingTabDeleteBtn:disabled,
@@ -123,10 +123,10 @@ QComboBox#ProcessingScriptComboBox {
 }
 
 QPlainTextEdit#ProcessingCodeEditor {
-    background-color: #ffffff;
-    color: #334155;
-    border: 1px solid #cfd9e4;
-    border-top: 1px solid #cfd9e4;
+    background-color: @SURFACE@;
+    color: @TEXT@;
+    border: 1px solid @CONTROLBORDER@;
+    border-top: 1px solid @CONTROLBORDER@;
     border-bottom: none;
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
@@ -141,14 +141,14 @@ QPlainTextEdit#ProcessingCodeEditor {
 
 QLabel#ProcessingParamEditorTitle {
     font-weight: 600;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-size: 11px;
 }
 
 QTextEdit#ProcessingParamEditor {
-    background-color: #ffffff;
-    color: #1e293b;
-    border: 1px solid #cfd9e4;
+    background-color: @SURFACE@;
+    color: @TEXT@;
+    border: 1px solid @CONTROLBORDER@;
     border-radius: 8px;
     padding: 0px 8px;
     font-family: "JetBrains Mono";
@@ -156,14 +156,14 @@ QTextEdit#ProcessingParamEditor {
 }
 
 QLabel#ProcessingParamHintLabel {
-    color: #64748b;
+    color: @SECONDARYTEXT@;
     font-style: italic;
     padding: 6px;
     font-size: 11px;
 }
 
 QLabel#ProcessingParamNameLabel {
-    color: #000000;
+    color: @TEXT@;
     font-weight: 400;
 }
 
@@ -196,8 +196,8 @@ QWidget#ProcessingConsoleContainer {
 
 /* Compiler Console Header */
 QWidget#ProcessingConsoleHeader {
-    background-color: #f1f5f9;
-    border: 1px solid #cfd9e4;
+    background-color: @HOVER@;
+    border: 1px solid @CONTROLBORDER@;
     border-bottom: none;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
@@ -207,7 +207,7 @@ QWidget#ProcessingConsoleHeader {
 
 QLabel#ProcessingConsoleTitle {
     font-weight: bold;
-    color: #475569;
+    color: @TEXT@;
     font-size: 11px;
     background: transparent;
     border: none;
@@ -217,7 +217,7 @@ QLabel#ProcessingConsoleTitle {
 QToolButton#ProcessingConsoleClear {
     border: none;
     background: transparent;
-    color: #64748b;
+    color: @SECONDARYTEXT@;
     font-weight: 600;
     font-size: 11px;
     padding: 2px 8px;
@@ -226,36 +226,36 @@ QToolButton#ProcessingConsoleClear {
 }
 
 QToolButton#ProcessingConsoleClear:hover {
-    color: #0f172a;
+    color: @TEXT@;
 }
 
 QToolButton#ProcessingConsoleClear:pressed {
-    color: #475569;
+    color: @TEXT@;
 }
 
 QToolButton#ProcessingConsoleClose {
     border: none;
     background: transparent;
-    color: #64748b;
+    color: @SECONDARYTEXT@;
     padding: 2px;
     border-radius: 4px;
     margin-right: 8px;
 }
 
 QToolButton#ProcessingConsoleClose:hover {
-    color: #0f172a;
+    color: @TEXT@;
 }
 
 QToolButton#ProcessingConsoleClose:pressed {
-    color: #475569;
+    color: @TEXT@;
 }
 
 /* Processing Console Log */
 QPlainTextEdit#ProcessingConsoleLog {
-    background-color: #ffffff;
-    color: #1e293b;
-    border: 1px solid #cfd9e4;
-    border-top: 1px solid #cfd9e4;
+    background-color: @SURFACE@;
+    color: @TEXT@;
+    border: 1px solid @CONTROLBORDER@;
+    border-top: 1px solid @CONTROLBORDER@;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
     border-top-left-radius: 0px;
@@ -274,38 +274,38 @@ QToolBar#ProcessingToolBar {
 }
 
 QToolButton#ProcessingCompileButton {
-    background: #ffffff;
-    border: 1px solid #d7dee6;
+    background: @SURFACE@;
+    border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
     padding: 0 7px;
     height: 24px;
     min-height: 24px;
     max-height: 24px;
-    color: #425467;
+    color: @TEXT@;
 }
 
 QToolButton#ProcessingCompileButton:hover {
-    background: #eef3f8;
-    border-color: #c7d4e2;
-    color: #26384a;
+    background: @HOVER@;
+    border-color: @CONTROLBORDER@;
+    color: @TEXT@;
 }
 
 QToolButton#ProcessingCompileButton:pressed {
-    background: #e7eef6;
-    border-color: #bccbda;
+    background: @HOVER@;
+    border-color: @HOVERBORDER@;
 }
 
 QToolButton#ProcessingCompileButton:disabled {
-    background: #ffffff;
-    border-color: #e2e8f0;
-    color: #94a3b8;
+    background: @SURFACE@;
+    border-color: @CONTROLBORDER@;
+    color: @DISABLEDTEXT@;
 }
 
 /* Editor StatusBar */
 QFrame#EditorStatusBar {
-    background-color: #ffffff;
-    border: 1px solid #cfd9e4;
-    border-top: 1px solid #cfd9e4;
+    background-color: @SURFACE@;
+    border: 1px solid @CONTROLBORDER@;
+    border-top: 1px solid @CONTROLBORDER@;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
     min-height: 22px;
@@ -313,7 +313,7 @@ QFrame#EditorStatusBar {
 }
 
 QFrame#EditorStatusBar QLabel {
-    color: #475569;
+    color: @TEXT@;
     font-family: "JetBrains Mono", "Inter";
     font-size: 10px;
     font-weight: 500;
@@ -336,7 +336,7 @@ QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="error"] {
 
 /* Code Editor Signature Help */
 QLabel#SignatureHelpLabel {
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     background-color: transparent;
     border: 1px solid transparent;
     padding: 1px 3px;

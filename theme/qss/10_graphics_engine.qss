@@ -1,18 +1,18 @@
 /* theme/qss/10_graphics_engine.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
 
 QToolBar {
-    background: #ffffff;
+    background: @SURFACE@;
     border: none;
-    border-top: 1px solid @BORDER_COLOR@;
-    border-bottom: 1px solid @BORDER_COLOR@;
+    border-top: 1px solid @BORDER@;
+    border-bottom: 1px solid @BORDER@;
     spacing: 3px;
     padding: 3px 3px;
 }
 
 QToolBar#EngineToolBar {
-    background: #ffffff;
+    background: @SURFACE@;
     border-top: none;
-    border-bottom: 1px solid @BORDER_COLOR@;
+    border-bottom: 1px solid @BORDER@;
     min-height: 32px;
     padding: 6px;
     spacing: 3px;
@@ -25,15 +25,15 @@ QToolBar#EngineToolBar QToolButton {
 }
 
 QToolBar::separator {
-    background: #d0d0cf;
+    background: @PRESSED@;
     width: 1px;
     margin: 2px 6px;
 }
 
 QLabel#GraphicsSourceTitle {
-    background: rgba(255, 255, 255, 220);
-    color: @FONT_COLOR@;
-    border: 1px solid #d8d8d7;
+    background: rgba(@SURFACE_RGB@, 220);
+    color: @TEXT@;
+    border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
     padding: 0 7px;
     min-height: 24px;
@@ -43,7 +43,7 @@ QLabel#GraphicsSourceTitle {
 }
 
 QTabBar#GraphicsSourceTabBar {
-    border-top: 1px solid @BORDER_COLOR@;
+    border-top: 1px solid @BORDER@;
     border-right: none;
     border-bottom: none;
     border-left: none;
@@ -58,12 +58,12 @@ QTabBar#GraphicsSourceTabBar::tab {
 }
 
 QTabBar#GraphicsSourceTabBar::tab:selected {
-    border-top: 2px solid @FONT_COLOR@;
+    border-top: 2px solid @TEXT@;
     border-bottom: none;
 }
 
 QTabBar#GraphicsSourceTabBar::tab:hover:!selected {
-    border-top: 2px solid #c4c4c3;
+    border-top: 2px solid @HOVERBORDER@;
     border-bottom: none;
 }
 
@@ -103,24 +103,24 @@ QScrollBar#ImageViewOverlayScrollBar::sub-page {
 
 QLabel#PlotLineProfilePointLabel {
     background: transparent;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-weight: 700;
 }
 
 /* Right-side Graphics Settings Panel */
 QWidget#GraphicsSettingsPanel {
-    background: #ffffff;
-    border-left: 1px solid @BORDER_COLOR@;
+    background: @SURFACE@;
+    border-left: 1px solid @BORDER@;
 }
 
 QWidget#GraphicsSettingsPanelHeader {
-    background: #ffffff;
-    border-bottom: 1px solid @BORDER_COLOR@;
+    background: @SURFACE@;
+    border-bottom: 1px solid @BORDER@;
 }
 
 QLabel#GraphicsSettingsPanelTitle {
     background: transparent;
-    color: @FONT_COLOR@;
+    color: @TEXT@;
     font-size: 10px;
     font-weight: 700;
 }
@@ -147,9 +147,10 @@ QTabWidget#GraphicsSettingsPanelTabs {
 }
 
 QTabWidget#GraphicsSettingsPanelTabs::pane {
-    background: #ffffff;
+    padding: 0;
+    background: @SURFACE@;
     border: none;
-    border-top: 1px solid @BORDER_COLOR@;
+    border-top: 1px solid @BORDER@;
     border-radius: 0;
     top: 0;
 }
@@ -178,7 +179,7 @@ QTabWidget#GraphicsSettingsPanelTabs QTabBar QToolButton:pressed {
 }
 
 QScrollArea#GraphicsSettingsPageScrollArea {
-    background: #ffffff;
+    background: @SURFACE@;
     border: none;
 }
 
@@ -187,18 +188,18 @@ QWidget#GraphicsSettingsDisplayPage,
 QWidget#GraphicsSettingsSurfacePage,
 QWidget#GraphicsSettingsPointCloudPage,
 QWidget#GraphicsSettingsRangePage {
-    background: #ffffff;
+    background: @SURFACE@;
 }
 
 QLabel#GraphicsSettingsSectionTitle {
     background: transparent;
-    color: #6e6e6d;
+    color: @SECONDARYTEXT@;
     font-size: 11px;
     font-weight: 700;
 }
 
 QLabel#GraphicsSettingsRangeChannelNote {
-    color: #6e6e6d;
+    color: @SECONDARYTEXT@;
 }
 
 /* Embedded Analysis Panel */
@@ -213,8 +214,9 @@ QTabWidget#AnalysisPanelTabs {
 }
 
 QTabWidget#AnalysisPanelTabs::pane {
+    padding: 0;
     border: none;
-    border-top: 1px solid @BORDER_COLOR@;
+    border-top: 1px solid @BORDER@;
     background: transparent;
     top: 0px;
     left: -6px;
@@ -268,35 +270,35 @@ QToolButton[plotActionRole="action"] {
 }
 
 QToolButton[plotActionRole="action"]:checked {
-    background: #eeeeed;
-    border: 1px solid #c8c8c7;
+    background: @HOVER@;
+    border: 1px solid @HOVERBORDER@;
     border-radius: 6px;
 }
 
 QToolButton#PlotViewActionButton:hover,
 QToolButton[plotActionRole="action"]:hover {
-    background: #f4f4f3;
-    border: 1px solid #d8d8d7;
+    background: @HOVER@;
+    border: 1px solid @CONTROLBORDER@;
     border-radius: 6px;
 }
 
 QToolButton#PlotViewActionButton:checked:hover,
 QToolButton[plotActionRole="action"]:checked:hover {
-    background: #e6e6e5;
-    border: 1px solid #b0b0af;
+    background: @SELECTION@;
+    border: 1px solid @DISABLEDTEXT@;
     border-radius: 6px;
 }
 
 QFrame#PlotViewReadout {
-    background: rgba(255, 255, 255, 232);
-    border: 1px solid rgba(216, 216, 215, 220);
+    background: rgba(@SURFACE_RGB@, 232);
+    border: 1px solid rgba(@BORDER_RGB@, 220);
     border-radius: 9px;
     padding: 6px 10px;
 }
 
 QLabel#PlotViewReadoutText {
     background: transparent;
-    color: #3a4148;
+    color: @TEXT@;
 }
 
 QToolButton[plotActionRole="action"]:disabled {
@@ -311,12 +313,12 @@ QFrame#PlotViewYRangePopup {
 
 QFrame#PlotViewYRangePopup QLabel {
     background: transparent;
-    color: #24364a;
+    color: @TEXT@;
 }
 
 QLabel#PlotViewYRangePopupTitle {
     min-height: 20px;
     background: transparent;
-    color: #24364a;
+    color: @TEXT@;
     font-weight: 700;
 }
