@@ -1,6 +1,6 @@
 # Resources Release Note
 
-## Unreleased
+## v1.3.1 (2026-10-20)
 
 - Add neutral GenICam, Heliotis and LMI icon variants in 24px and 48px sizes.
 
@@ -13,7 +13,7 @@
 - Remove leading menu/combo markers and compact item content insets and switch/text spacing.
 - Keep composite fields inside one border and align text across line, spin, combo and date/time editors; compact Windows 11 combo rows with matching hover/selected corners.
 - Render full-canvas neutral 36x20 vector switches with 14px thumbs and consistent disabled geometry; reserve 8px between checkable group titles and their frame.
-- Use clipped capsule progress fills and apply public progress colors to loading, splash and update surfaces.
+- Use clipped capsule progress fills; splash/loading retain their blue gradient and update surfaces follow public progress colors.
 - Inset ordinary tab pages and draw a continuous header divider; dedicated flat panes retain their own spacing.
 - Use supplied folder/file-view PNG artwork and the existing neutral warning triangle and radio assets.
 
