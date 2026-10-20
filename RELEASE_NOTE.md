@@ -1,6 +1,6 @@
 # Resources Release Note
 
-## v1.3.1 (2026-10-20)
+## v1.3.0 (2026-10-20)
 
 - Add neutral GenICam, Heliotis and LMI icon variants in 24px and 48px sizes.
 
@@ -72,8 +72,6 @@
 - Export reusable dialog support without theme assets, preserving the existing platform window behavior.
 
 - Export Resources::Widgets as an installed Qt-only package; allow consumers to omit theme assets and window chrome.
-
-## v1.3.0 (2026-10-08)
 
 - Add an opt-in `controlRole="switch"` presentation for native checkboxes, with
   scalable on/off indicators and disabled states.
