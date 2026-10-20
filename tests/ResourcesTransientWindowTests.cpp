@@ -24,6 +24,10 @@
 #include <QSignalSpy>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
+#include <QFormLayout>
+#include <QLabel>
+#include <QSlider>
+#include <QStyleOptionSlider>
 #include <QDateEdit>
 #include <QTimeEdit>
 #include <QTabWidget>
@@ -266,7 +270,7 @@ private slots:
         owner.resize(400, 250);
         owner.show();
         QMenu menu(&owner);
-        const QIcon icon(QStringLiteral(":/Resources/Icons/icons8-image-48.png"));
+        const QIcon icon(QStringLiteral(":/Resources/icon/image-48.png"));
         QVERIFY(!icon.isNull());
         auto* action = menu.addAction(icon, QStringLiteral("Checkable action"));
         action->setIconVisibleInMenu(true);
@@ -401,6 +405,37 @@ private slots:
         }
     }
 
+    void horizontalSliderCentersInLabeledInputRow()
+    {
+        Resources::installResources(*qApp);
+        QWidget panel;
+        auto* form = new QFormLayout(&panel);
+        auto* label = new QLabel(QStringLiteral("Threshold"));
+        auto* slider = new QSlider(Qt::Horizontal);
+        form->addRow(label, slider);
+        panel.resize(360, 100);
+        panel.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&panel));
+        QVERIFY(qAbs(label->geometry().center().y() - slider->geometry().center().y()) <= 1);
+        for (const int value : {0, 50, 100}) {
+            slider->setRange(0, 100);
+            slider->setValue(value);
+            QStyleOptionSlider option;
+            option.initFrom(slider);
+            option.orientation = Qt::Horizontal;
+            option.minimum = 0;
+            option.maximum = 100;
+            option.sliderPosition = value;
+            option.sliderValue = value;
+            const QRect groove = slider->style()->subControlRect(QStyle::CC_Slider, &option,
+                QStyle::SC_SliderGroove, slider);
+            const QRect handle = slider->style()->subControlRect(QStyle::CC_Slider, &option,
+                QStyle::SC_SliderHandle, slider);
+            QVERIFY(qAbs(groove.center().y() - slider->rect().center().y()) <= 1);
+            QVERIFY(qAbs(handle.center().y() - groove.center().y()) <= 1);
+        }
+    }
+
     void exclusiveMenuIndicatorsRemainRadioButtons()
     {
         Resources::installResources(*qApp);
@@ -439,9 +474,11 @@ private slots:
         };
         const QRect outline = indicatorOutline(firstRow);
         QVERIFY(!outline.isEmpty());
-        QVERIFY2(qAbs(outline.width() - qRound(18 * dpr)) <= 1,
+        // The supplied 48px radio has a 40px visible circle inside its 18px menu slot.
+        constexpr qreal radioInkSize = 18.0 * 40.0 / 48.0;
+        QVERIFY2(qAbs(outline.width() - qRound(radioInkSize * dpr)) <= 1,
                  qPrintable(QStringLiteral("Radio outline width %1 at DPR %2").arg(outline.width()).arg(dpr)));
-        QVERIFY(qAbs(outline.height() - qRound(18 * dpr)) <= 1);
+        QVERIFY(qAbs(outline.height() - qRound(radioInkSize * dpr)) <= 1);
         for (const QPoint corner : {outline.topLeft(), outline.topRight(), outline.bottomLeft(), outline.bottomRight()}) {
             const QColor pixel = exclusive.pixelColor(corner);
             QVERIFY(pixel.red() > 245 && pixel.green() > 245 && pixel.blue() > 245);
@@ -888,7 +925,7 @@ private slots:
             QMenu menu;
             menu.setLayoutDirection(rtl ? Qt::RightToLeft : Qt::LeftToRight);
             QList<QAction*> actions;
-            if (icons) actions << menu.addAction(QIcon(QStringLiteral(":/Resources/Icons/icons8-gears-48.png")), QStringLiteral("MMMM command"));
+            if (icons) actions << menu.addAction(QIcon(QStringLiteral(":/Resources/icon/setting-48.png")), QStringLiteral("MMMM command"));
             actions << menu.addAction(QStringLiteral("MMMM command"));
             auto* check = menu.addAction(QStringLiteral("MMMM command"));
             check->setCheckable(true);check->setChecked(true);actions << check;
@@ -956,7 +993,7 @@ private slots:
         QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());QVERIFY(ownsPopupShell());
         delete check;
         command->setIconVisibleInMenu(true);
-        command->setIcon(QIcon(QStringLiteral(":/Resources/Icons/icons8-gears-48.png")));
+        command->setIcon(QIcon(QStringLiteral(":/Resources/icon/setting-48.png")));
         QVERIFY(menu.property("resourcesMenuHasLeadingColumn").toBool());QVERIFY(ownsPopupShell());
         command->setIcon(QIcon());
         QVERIFY(!menu.property("resourcesMenuHasLeadingColumn").toBool());QVERIFY(ownsPopupShell());

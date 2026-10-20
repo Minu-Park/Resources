@@ -18,36 +18,6 @@
         <file>icon/menu-48.png</file>
         <file>icon/list-24.png</file>
         <file>icon/list-48.png</file>
-
-        <file>Icons/menu-check-on.png</file>
-        <file>Icons/menu-check-on@2x.png</file>
-        <file>Icons/menu-check-disabled.png</file>
-        <file>Icons/menu-check-disabled@2x.png</file>
-        <file>Icons/menu-chevron-right-idle.png</file>
-        <file>Icons/menu-chevron-left-idle.png</file>
-        <file>Icons/menu-chevron-right-idle@2x.png</file>
-        <file>Icons/menu-chevron-left-idle@2x.png</file>
-        <file>Icons/menu-chevron-right-active.png</file>
-        <file>Icons/menu-chevron-left-active.png</file>
-        <file>Icons/menu-chevron-right-active@2x.png</file>
-        <file>Icons/menu-chevron-left-active@2x.png</file>
-        <file>Icons/menu-chevron-right-disabled.png</file>
-        <file>Icons/menu-chevron-left-disabled.png</file>
-        <file>Icons/menu-chevron-right-disabled@2x.png</file>
-        <file>Icons/menu-chevron-left-disabled@2x.png</file>
-        <file>Icons/radio-selected.svg</file>
-        <file>Icons/radio-selected-disabled.svg</file>
-        <file>Icons/switch-off.svg</file>
-        <file>Icons/switch-on.svg</file>
-        <file>Icons/widget-radio-off.svg</file>
-        <file>Icons/widget-radio-on.svg</file>
-        <file>Icons/widget-radio-off-disabled.svg</file>
-        <file>Icons/widget-radio-on-disabled.svg</file>
-
-        <file>Icons/switch-mixed.svg</file>
-        <file>Icons/switch-mixed-disabled.svg</file>
-        <file>Icons/switch-off-disabled.svg</file>
-        <file>Icons/switch-on-disabled.svg</file>
         <file>Icon.ico</file>
         <file>Icon.png</file>
         <file>AppIcons/AppIcon.png</file>
@@ -61,139 +31,7 @@
         <file>theme/qss/50_static_image.qss</file>
         <file>theme/qss/60_processing.qss</file>
         <file>theme/qss/70_plugin_manager.qss</file>
-        <file>Icons/icons8-zoom-out-48.png</file>
-        <file>Icons/icons8-zoom-in-48.png</file>
-        <file>Icons/icons8-warning-96.png</file>
-        <file>Icons/icons8-virtual-machine-48.png</file>
-        <file>Icons/icons8-view-48.png</file>
-        <file>Icons/icons8-script-48.png</file>
-        <file>Icons/icons8-download-48.png</file>
-        <file>Icons/icons8-downloading-updates-48.png</file>
-        <file>Icons/icons8-update-48.png</file>
-        <file>Icons/icons8-unchecked-checkbox-48.png</file>
-        <file>Icons/icons8-toggle-full-screen-48.png</file>
-        <file>Icons/icons8-timer-48.png</file>
-        <file>Icons/icons8-text-cursor-48.png</file>
-        <file>Icons/icons8-front-view-48.png</file>
-        <file>Icons/icons8-surface-48.png</file>
-        <file>Icons/icons8-stop-48.png</file>
-        <file>Icons/icons8-statistics-48.png</file>
-        <file>Icons/icons8-star-48.png</file>
-        <file>Icons/icons8-software-installer-48.png</file>
-        <file>Icons/icons8-share-48.png</file>
-        <file>Icons/icons8-setup-48.png</file>
-        <file>Icons/icons8-setting-48.png</file>
-        <file>Icons/icons8-run-command-48.png</file>
-        <file>Icons/icons8-sent-48.png</file>
-        <file>Icons/icons8-secured-file-48.png</file>
-        <file>Icons/icons8-secured-file-48-2.png</file>
-        <file>Icons/icons8-save-as-48.png</file>
-        <file>Icons/icons8-ruler-48.png</file>
-        <file>Icons/icons8-rs-232-male-48.png</file>
-        <file>Icons/icons8-restore-window-50.png</file>
-        <file>Icons/icons8-refresh-48.png</file>
-        <file>Icons/icons8-recipe-48.png</file>
-        <file>Icons/icons8-project-setup-48.png</file>
-        <file>Icons/icons8-play-sequence-48.png</file>
-        <file>Icons/icons8-play-property-48.png</file>
-        <file>Icons/icons8-play-continuous-48.png</file>
-        <file>Icons/icons8-play-48.png</file>
-        <file>Icons/icons8-plugin-48.png</file>
-        <file>Icons/icons8-photo-editor-48.png</file>
-        <file>Icons/icons8-pause-48.png</file>
-        <file>Icons/icons8-pause-48-2.png</file>
-        <file>Icons/icons8-opened-folder-48.png</file>
-        <file>Icons/icons8-one-to-one-48.png</file>
-        <file>Icons/icons8-note-48.png</file>
-        <file>Icons/icons8-normal-distribution-histogram-48.png</file>
-        <file>Icons/icons8-network-card-48.png</file>
-        <file>Icons/icons8-network-card-48-5.png</file>
-        <file>Icons/icons8-network-card-48-4.png</file>
-        <file>Icons/icons8-network-card-48-3.png</file>
-        <file>Icons/icons8-network-card-48-2.png</file>
-        <file>Icons/icons8-more-48.png</file>
-        <file>Icons/icons8-new-folder-48.png</file>
-        <file>Icons/icons8-minimize-window-48.png</file>
-        <file>Icons/icons8-medium-icons-48.png</file>
-        <file>Icons/icons8-measure-48.png</file>
-        <file>Icons/icons8-live-video-on-48.png</file>
-        <file>Icons/icons8-link-48.png</file>
-        <file>Icons/icons8-list-48.png</file>
-        <file>Icons/icons8-menu-48.png</file>
-        <file>Icons/icons8-information-96.png</file>
-        <file>Icons/icons8-error-96.png</file>
-        <file>Icons/icons8-increase-font-48.png</file>
-        <file>Icons/icons8-import-48.png</file>
-        <file>Icons/icons8-images-folder-48.png</file>
-        <file>Icons/icons8-image-gallery-48.png</file>
-        <file>Icons/icons8-image-file-add-48.png</file>
-        <file>Icons/icons8-histogram-48.png</file>
-        <file>Icons/icons8-high-importance-48.png</file>
-        <file>Icons/icons8-gears-48.png</file>
-        <file>Icons/icons8-forward-48.png</file>
-        <file>Icons/icons8-forward-48-disabled.png</file>
-        <file>Icons/icons8-folder-48.png</file>
-        <file>Icons/icons8-export-csv-48.png</file>
-        <file>Icons/icons8-export-48.png</file>
-        <file>Icons/icons8-expand-48.png</file>
-        <file>Icons/icons8-ethernet-48.png</file>
-        <file>Icons/icons8-edit-48.png</file>
-        <file>Icons/icons8-disconnected-48.png</file>
-        <file>Icons/icons8-decrease-font-48.png</file>
-        <file>Icons/icons8-debug-48.png</file>
-        <file>Icons/icons8-crosshair-48.png</file>
-        <file>Icons/icons8-copy-48.png</file>
-        <file>Icons/icons8-connect-48.png</file>
-        <file>Icons/icons8-connect-48 (2).png</file>
-        <file>Icons/icons8-arrow-48-2.png</file>
-        <file>Icons/icons8-arrow-48-3.png</file>
-        <file>Icons/icons8-collapse-arrow-48.png</file>
-        <file>Icons/icons8-collapse-48.png</file>
-        <file>Icons/icons8-close-window-48.png</file>
-        <file>Icons/icons8-cinema-film-play-48.png</file>
-        <file>Icons/icons8-checked-checkbox-48.png</file>
-        <file>Icons/icons8-check-48.png</file>
-        <file>Icons/icons8-certificate-48.png</file>
-        <file>Icons/icons8-cameras-48.png</file>
-        <file>Icons/icons8-camera-48.png</file>
-        <file>Icons/icons8-camera-48-2.png</file>
-        <file>Icons/icons8-camera-48 (2).png</file>
-        <file>Icons/icons8-back-48.png</file>
-        <file>Icons/icons8-back-48-disabled.png</file>
-        <file>Icons/icons8-add-image-48.png</file>
-        <file>Icons/icons8-add-camera-48.png</file>
-        <file>Icons/icons8-about-48.png</file>
-        <file>Icons/basler.png</file>
-        <file>Icons/genicam.png</file>
-        <file>Icons/icons8-expand-arrow-48.png</file>
-        <file>Icons/icons8-forward-24.png</file>
-        <file>Icons/icons8-expand-arrow-24.png</file>
-        <file>Icons/icons8-tree-forward-48.png</file>
-        <file>Icons/icons8-tree-expand-arrow-48.png</file>
-        <file>Icons/icons8-expand-arrow-12.png</file>
-        <file>Icons/icons8-collapse-arrow-12.png</file>
         <file>BASLER_Logo.png</file>
-        <file>Icons/heliotis.png</file>
-        <file>Icons/lmi.png</file>
-        <file>Icons/icons8-clear-48.png</file>
-        <file>Icons/search-clear.svg</file>
-        <file>Icons/icons8-cursor-48.png</file>
-        <file>Icons/icons8-delete-48.png</file>
-        <file>Icons/icons8-trash-48.png</file>
-        <file>Icons/icons8-ai-48.png</file>
-        <file>Icons/icons8-plus-60.png</file>
-        <file>Icons/icons8-subtract-60.png</file>
-        <file>Icons/icons8-toolbar-48.png</file>
-        <file>Icons/icons8-bar-48.png</file>
-        <file>Icons/icons8-image-48.png</file>
-        <file>Icons/icons8-depth-48.png</file>
-        <file>Icons/icons8-right-view-48.png</file>
-        <file>Icons/icons8-map-grid-48.png</file>
-        <file>Icons/icons8-grid-48.png</file>
-        <file>Icons/icons8-close-window-48-hover.png</file>
-        <file>Icons/icons8-maximize-window-48.png</file>
-        <file>Icons/icons8-maximize-window-48-hover.png</file>
-        <file>Icons/icons8-minimize-window-48-hover.png</file>
         <file>theme/fonts/Inter-Regular.ttf</file>
         <file>theme/fonts/Inter-Bold.ttf</file>
         <file>theme/fonts/JetBrainsMono-Regular.ttf</file>
@@ -303,5 +141,37 @@
         <file>icon/toggle-off-48.png</file>
         <file>icon/toggle-on-24.png</file>
         <file>icon/toggle-on-48.png</file>
+        <file>icon/clear-24.png</file>
+        <file>icon/clear-48.png</file>
+        <file>icon/cursor-24.png</file>
+        <file>icon/cursor-48.png</file>
+        <file>icon/depth-24.png</file>
+        <file>icon/depth-48.png</file>
+        <file>icon/folder-24.png</file>
+        <file>icon/folder-48.png</file>
+        <file>icon/folder-96.png</file>
+        <file>icon/grid-24.png</file>
+        <file>icon/grid-48.png</file>
+        <file>icon/map-grid-24.png</file>
+        <file>icon/map-grid-48.png</file>
+        <file>icon/round-24.png</file>
+        <file>icon/round-48.png</file>
+        <file>icon/search-clear.svg</file>
+        <file>icon/switch-mixed-disabled.svg</file>
+        <file>icon/switch-mixed.svg</file>
+        <file>icon/switch-off-disabled.svg</file>
+        <file>icon/switch-off.svg</file>
+        <file>icon/switch-on-disabled.svg</file>
+        <file>icon/switch-on.svg</file>
+        <file>icon/text-cursor-24.png</file>
+        <file>icon/text-cursor-48.png</file>
+        <file>icon/unchecked-radio-button-24.png</file>
+        <file>icon/unchecked-radio-button-48.png</file>
+        <file>icon/upload-24.png</file>
+        <file>icon/upload-48.png</file>
+        <file>icon/wrench-24.png</file>
+        <file>icon/wrench-48.png</file>
+        <file>icon/radio-empty-disabled.svg</file>
+        <file>icon/radio-selected-disabled.svg</file>
     </qresource>
 </RCC>

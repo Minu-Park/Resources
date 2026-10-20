@@ -6,6 +6,8 @@
 - Skip global theme repolish when an accepted palette patch leaves every color unchanged.
 - Use the border role for table grid lines independently of hover backgrounds.
 - Restore original blue splash/loading title, version, status and percentage text.
+- Center horizontal sliders in 24px input rows.
+- Consolidate shared artwork under icon/, publish the supplied plot and script action glyphs, and use the supplied empty/selected radio artwork.
 
 ## v1.3.0 (2026-10-20)
 

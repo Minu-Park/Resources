@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 }
 ```
 
-Use virtual paths such as `:/Resources/Icons/...`; never depend on a source-tree path at runtime.
+Use virtual paths such as `:/Resources/icon/...`; never depend on a source-tree path at runtime.
 
 ## Searchable tree widgets
 
