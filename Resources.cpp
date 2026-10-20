@@ -56,6 +56,9 @@
 #include <QBitmap>
 #include <QRegion>
 #include <QRegularExpression>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QSaveFile>
 
 #ifdef Q_OS_WIN
 #include <dwmapi.h>
@@ -1744,6 +1747,7 @@ bool setThemePalette(const ThemePalette& colors)
         if (!candidate.contains(it.key()) || !it.value().isValid()) return false;
         candidate[it.key()] = QColor(it.value().red(), it.value().green(), it.value().blue());
     }
+    if (candidate == s_themePalette) return true;
     s_themePalette = candidate;
     applyInstalledStyleSheet();
     // Existing popups and custom-painted chrome may not receive another style event until shown.
@@ -1754,6 +1758,66 @@ bool setThemePalette(const ThemePalette& colors)
 void resetThemePalette()
 {
     setThemePalette(defaultThemePalette());
+}
+
+ThemePalette defaultPaletteGroup(PaletteGroup group)
+{
+    auto colors = defaultThemePalette();
+    const QStringList fontRoles = {QStringLiteral("text"), QStringLiteral("secondaryText"),
+        QStringLiteral("disabledText"), QStringLiteral("warningText"), QStringLiteral("errorText")};
+    for (auto it = colors.begin(); it != colors.end();) {
+        if (fontRoles.contains(it.key()) != (group == PaletteGroup::Font)) it = colors.erase(it);
+        else ++it;
+    }
+    return colors;
+}
+
+bool savePaletteFile(const QString& path, QString* error)
+{
+    if (error) error->clear();
+    QJsonObject colors;
+    const auto roles = defaultThemePalette();
+    const auto current = themePalette();
+    for (auto it = roles.cbegin(); it != roles.cend(); ++it)
+        colors.insert(it.key(), current.value(it.key()).name(QColor::HexRgb));
+    const QByteArray bytes = QJsonDocument(QJsonObject{{QStringLiteral("colors"), colors}}).toJson();
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit()) {
+        if (error) *error = file.errorString();
+        return false;
+    }
+    return true;
+}
+
+bool loadPaletteFile(const QString& path, QString* error)
+{
+    if (error) error->clear();
+    const auto fail = [error](const QString& message) {
+        resetThemePalette();
+        if (error) *error = message + QStringLiteral(" Built-in defaults restored.");
+        return false;
+    };
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) return fail(file.errorString());
+    if (file.size() > 65536) return fail(QStringLiteral("Palette file exceeds 64 KiB."));
+    QJsonParseError parseError;
+    const auto document = QJsonDocument::fromJson(file.readAll(), &parseError);
+    if (parseError.error != QJsonParseError::NoError || !document.isObject())
+        return fail(QStringLiteral("Invalid palette JSON: %1").arg(parseError.errorString()));
+    const auto root = document.object();
+    if (root.size() != 1 || !root.value(QStringLiteral("colors")).isObject())
+        return fail(QStringLiteral("Expected a single colors object."));
+    const auto colors = root.value(QStringLiteral("colors")).toObject();
+    const auto roles = defaultThemePalette();
+    if (colors.size() != roles.size()) return fail(QStringLiteral("Theme must contain every supported color role."));
+    ThemePalette patch;
+    const QRegularExpression rgb(QStringLiteral("^#[0-9a-fA-F]{6}$"));
+    for (auto it = colors.begin(); it != colors.end(); ++it) {
+        if (!roles.contains(it.key()) || !it.value().isString() || !rgb.match(it.value().toString()).hasMatch())
+            return fail(QStringLiteral("Unknown role or invalid RGB color: %1").arg(it.key()));
+        patch.insert(it.key(), QColor(it.value().toString()));
+    }
+    return setThemePalette(patch);
 }
 
 QColor fontColor()

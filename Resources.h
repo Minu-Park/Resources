@@ -47,6 +47,20 @@ bool setThemePalette(const ThemePalette& colors);
 /** @brief Restores every factory color on the GUI thread without changing application settings. */
 void resetThemePalette();
 
+/** @brief Groups surface/feedback and font roles for authoring-tool presentation. */
+enum class PaletteGroup { Theme, Font };
+
+/** @brief Returns factory roles belonging to one authoring-tool color group. */
+ThemePalette defaultPaletteGroup(PaletteGroup group);
+
+/** @brief Atomically saves the complete current theme, including font colors, as RGB JSON. */
+bool savePaletteFile(const QString& path, QString* error = nullptr);
+
+/** @brief Validates and replaces the complete theme from RGB JSON.
+ *  @note Call on the GUI thread. Missing or invalid files restore every built-in color; false returns a diagnostic.
+ */
+bool loadPaletteFile(const QString& path, QString* error = nullptr);
+
 /**
  * @brief Reloads the complete installed QSS fragment set from a host-selected directory.
  * @param directory Directory containing every installed qss fragment; missing files reject the whole reload.
