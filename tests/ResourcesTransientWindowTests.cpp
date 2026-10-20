@@ -300,6 +300,35 @@ private slots:
         menu.close();
     }
 
+    void iconMenusRetainExclusiveActionGlyphs()
+    {
+        Resources::installResources(*qApp);
+        QMenu menu;
+        menu.setObjectName(QStringLiteral("EngineModeMenu"));
+        menu.setProperty("menuPresentation", QStringLiteral("icons"));
+        QActionGroup group(&menu);
+        group.setExclusive(true);
+        auto* image = menu.addAction(QIcon(QStringLiteral(":/Resources/icon/image-view-48.png")), QStringLiteral("Image"));
+        auto* surface = menu.addAction(QIcon(QStringLiteral(":/Resources/icon/orthogonal-view-48.png")), QStringLiteral("Surface"));
+        for (auto* action : {image, surface}) {
+            QVERIFY(!action->icon().isNull());
+            action->setCheckable(true);
+            group.addAction(action);
+        }
+        image->setChecked(true);
+        menu.popup(QPoint(60, 60));
+        QTRY_VERIFY(menu.isVisible());
+        QVERIFY(image->isIconVisibleInMenu());
+        QVERIFY(surface->isIconVisibleInMenu());
+        QSignalSpy triggered(surface, &QAction::triggered);
+        menu.setActiveAction(surface);
+        QTest::keyClick(&menu, Qt::Key_Return);
+        QCOMPARE(triggered.count(), 1);
+        QVERIFY(surface->isChecked());
+        QVERIFY(!image->isChecked());
+        QTRY_VERIFY(!menu.isVisible());
+    }
+
     void menuShadowScreenEdges()
     {
         Resources::installResources(*qApp);
