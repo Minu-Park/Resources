@@ -1,5 +1,12 @@
 # Resources Release Note
 
+## Unreleased
+
+- Add atomic complete-theme JSON persistence, including font colors; missing or invalid files restore every built-in color.
+- Skip global theme repolish when an accepted palette patch leaves every color unchanged.
+- Use the border role for table grid lines independently of hover backgrounds.
+- Restore original blue splash/loading title, version, status and percentage text.
+
 ## v1.3.0 (2026-10-20)
 
 - Add neutral GenICam, Heliotis and LMI icon variants in 24px and 48px sizes.
