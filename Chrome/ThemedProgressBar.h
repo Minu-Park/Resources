@@ -11,11 +11,19 @@
 
 /**
  * @brief Paints a compact themed determinate or indeterminate progress bar.
- * @note The widget owns geometry and paint behavior; public Resources palette roles own its colors.
+ * @note Resources palette roles provide defaults; surface-specific QSS may override colors.
  */
 class ThemedProgressBar : public QWidget
 {
     Q_OBJECT
+    /** @brief Optional surface-specific track color supplied by the installed theme. */
+    Q_PROPERTY(QColor trackColor MEMBER _trackColor)
+    /** @brief Optional surface-specific gradient start supplied by the installed theme. */
+    Q_PROPERTY(QColor startColor MEMBER _startColor)
+    /** @brief Optional surface-specific gradient end supplied by the installed theme. */
+    Q_PROPERTY(QColor endColor MEMBER _endColor)
+    /** @brief Optional surface-specific outline supplied by the installed theme. */
+    Q_PROPERTY(QColor outlineColor MEMBER _outlineColor)
 public:
     /** @brief Creates a progress bar with an expanding width and compact height. */
     explicit ThemedProgressBar(QWidget* parent = nullptr) : QWidget(parent) {
@@ -73,7 +81,7 @@ protected:
 
         // Background
         p.setPen(Qt::NoPen);
-        p.setBrush(colors.value(QStringLiteral("progressTrack")));
+        p.setBrush(_trackColor.isValid() ? _trackColor : colors.value(QStringLiteral("progressTrack")));
         p.drawRoundedRect(r, radius, radius);
 
         // Progress ratio
@@ -107,8 +115,8 @@ protected:
 
         // Fill gradient (mapped across full width for smooth transitions)
         QLinearGradient g(r.topLeft(), r.topRight());
-        g.setColorAt(0.0, colors.value(QStringLiteral("progressFill")));
-        g.setColorAt(1.0, colors.value(QStringLiteral("progressFill")));
+        g.setColorAt(0.0, _startColor.isValid() ? _startColor : colors.value(QStringLiteral("progressFill")));
+        g.setColorAt(1.0, _endColor.isValid() ? _endColor : colors.value(QStringLiteral("progressFill")));
 
         p.save();
 
@@ -145,6 +153,7 @@ protected:
 
         auto outline = colors.value(QStringLiteral("shadow"));
         outline.setAlpha(25);
+        if (_outlineColor.isValid()) outline = _outlineColor;
         p.setPen(QPen(outline, 1));
         p.setBrush(Qt::NoBrush);
         p.drawRoundedRect(r, radius, radius);
@@ -158,6 +167,10 @@ private:
     bool _busy = false;
     bool _roundedEnd = true;
     QTimer _animationTimer;
+    QColor _trackColor;
+    QColor _startColor;
+    QColor _endColor;
+    QColor _outlineColor;
 
     qreal _phase = 0.;
 };

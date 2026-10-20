@@ -1012,6 +1012,14 @@ QToolButton[fileDialogRole="navigation"] {
     color: @TEXT@;
 }
 
+/* Startup/loading feedback retains its original blue gradient. */
+ThemedProgressBar#SplashProgress, ThemedProgressBar#LoadingProgress {
+    qproperty-trackColor: rgba(0, 0, 0, 18);
+    qproperty-startColor: #1e5ea6;
+    qproperty-endColor: #0f3259;
+    qproperty-outlineColor: rgba(0, 0, 0, 25);
+}
+
 QFrame#SplashFrame, QFrame#LoadingFrame {
     background: @SURFACE@;
     border: 1px solid @BORDER@;
