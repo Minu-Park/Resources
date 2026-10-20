@@ -112,7 +112,7 @@ QLabel#DeviceFeatureSearchCount {
 }
 
 QToolButton#DeviceFeatureSearchClear {
-    qproperty-icon: url(:/Resources/Icons/search-clear.svg);
+    qproperty-icon: url(:/Resources/icon/search-clear.svg);
     qproperty-iconSize: 16px 16px;
     min-width: 20px;
     max-width: 20px;
