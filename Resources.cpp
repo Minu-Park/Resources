@@ -970,10 +970,11 @@ private:
     {
         if (menu->property("resourcesMenuPreparing").toBool()) return;
         menu->setProperty("resourcesMenuPreparing", true);
+        const bool usesIcons = menu->property("menuPresentation").toString() == QLatin1String("icons");
         bool leadingColumn = false;
         for (QAction* action : menu->actions()) {
             const QVariant original = action->property("resourcesMenuIconVisibility");
-            if (action->isCheckable()) {
+            if (action->isCheckable() && !usesIcons) {
                 if (!original.isValid())
                     action->setProperty("resourcesMenuIconVisibility", action->isIconVisibleInMenu());
                 if (action->isIconVisibleInMenu()) action->setIconVisibleInMenu(false);

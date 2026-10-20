@@ -1,5 +1,20 @@
 /* theme/qss/10_graphics_engine.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
 
+/* Display-mode actions retain exclusive state while their glyphs identify each view. */
+QMenu#EngineModeMenu::indicator {
+    width: 18px;
+    height: 18px;
+    image: none;
+}
+
+QMenu#EngineModeMenu::item:checked {
+    background-color: @HOVER@;
+}
+
+QMenu#EngineModeMenu::item:selected {
+    background-color: @SELECTION@;
+}
+
 QToolBar {
     background: @SURFACE@;
     border: none;
