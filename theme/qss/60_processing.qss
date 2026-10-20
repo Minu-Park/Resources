@@ -55,17 +55,6 @@ QLabel#ProcessingEditorTitle {
     color: @TEXT@;
 }
 
-QToolButton#ProcessingEnableToggle[active="true"] {
-    border-color: @CONTROLBORDER@;
-    background-color: @HOVER@;
-    color: @TEXT@;
-}
-
-QToolButton#ProcessingEnableToggle[active="true"]:hover {
-    background-color: @HOVER@;
-    border-color: @HOVERBORDER@;
-}
-
 QWidget#ProcessingEditorContainer {
     background: transparent;
 }
@@ -271,34 +260,6 @@ QToolBar#ProcessingToolBar {
     border: none;
     spacing: 4px;
     padding: 0px;
-}
-
-QToolButton#ProcessingCompileButton {
-    background: @SURFACE@;
-    border: 1px solid @CONTROLBORDER@;
-    border-radius: 9px;
-    padding: 0 7px;
-    height: 24px;
-    min-height: 24px;
-    max-height: 24px;
-    color: @TEXT@;
-}
-
-QToolButton#ProcessingCompileButton:hover {
-    background: @HOVER@;
-    border-color: @CONTROLBORDER@;
-    color: @TEXT@;
-}
-
-QToolButton#ProcessingCompileButton:pressed {
-    background: @HOVER@;
-    border-color: @HOVERBORDER@;
-}
-
-QToolButton#ProcessingCompileButton:disabled {
-    background: @SURFACE@;
-    border-color: @CONTROLBORDER@;
-    color: @DISABLEDTEXT@;
 }
 
 /* Editor StatusBar */
