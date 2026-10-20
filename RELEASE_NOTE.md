@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Use the shared tool-button styling for script build and load actions instead of dedicated outlined controls.
 - Add atomic complete-theme JSON persistence, including font colors; missing or invalid files restore every built-in color.
 - Skip global theme repolish when an accepted palette patch leaves every color unchanged.
 - Use the border role for table grid lines independently of hover backgrounds.
