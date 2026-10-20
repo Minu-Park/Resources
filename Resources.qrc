@@ -1,5 +1,15 @@
 <RCC>
     <qresource prefix="/Resources">
+        <file>icon/genicam-24.png</file>
+        <file>icon/genicam-48.png</file>
+        <file>icon/heliotis-24.png</file>
+        <file>icon/heliotis-48.png</file>
+        <file>icon/lmi-24.png</file>
+        <file>icon/lmi-48.png</file>
+        <file>icon/connect-24.png</file>
+        <file>icon/connect-48.png</file>
+        <file>icon/disconnected-24.png</file>
+        <file>icon/disconnected-48.png</file>
         <file>icon/opened-folder-24.png</file>
         <file>icon/opened-folder-48.png</file>
         <file>icon/new-folder-24.png</file>

@@ -334,6 +334,43 @@ private slots:
         QCursor::setPos(oldCursor);
     }
 
+    void titleBarMenuTextHitArea()
+    {
+        Resources::installResources(*qApp);
+        for (bool maximized : {false, true}) {
+            ThemedMainWindow window;
+            window.setWindowTitle(QStringLiteral("Menu hit test"));
+            window.resize(720, 360);
+            auto* bar = window.themedMenuBar();
+            auto* menu = bar->addMenu(QStringLiteral("System"));
+            menu->addAction(QStringLiteral("Settings"));
+            if (maximized) window.showMaximized(); else window.show();
+            QVERIFY(QTest::qWaitForWindowExposed(&window));
+            QCoreApplication::processEvents();
+            const QRect action = bar->actionGeometry(menu->menuAction());
+            const QImage image = bar->grab().toImage();
+            const qreal dpr = image.devicePixelRatio();
+            QRect ink;
+            for (int y = 0; y < image.height(); ++y) {
+                for (int x = qCeil((action.left() + 4) * dpr);
+                     x < qFloor((action.right() - 4) * dpr); ++x) {
+                    const QColor color = image.pixelColor(x, y);
+                    if (color.alpha() > 200 && qGray(color.rgb()) < 150)
+                        ink |= QRect(QPoint(qFloor(x / dpr), qFloor(y / dpr)), QSize(1, 1));
+                }
+            }
+            qInfo() << "Menu action / text" << action << ink << "bar" << bar->geometry();
+            QVERIFY(!ink.isEmpty());
+            QVERIFY2(action.contains(ink), "Painted menu text extends beyond its clickable action");
+            for (const QPoint point : {ink.center(), QPoint(ink.center().x(), ink.bottom())}) {
+                QCOMPARE(bar->actionAt(point), menu->menuAction());
+                QTest::mouseClick(bar, Qt::LeftButton, Qt::NoModifier, point);
+                QTRY_VERIFY(menu->isVisible());
+                menu->close();
+            }
+        }
+    }
+
     void menuBarShellAnchor()
     {
         Resources::installResources(*qApp);

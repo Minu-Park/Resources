@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add neutral GenICam, Heliotis and LMI icon variants in 24px and 48px sizes.
+
+- Restore the original blue gradient on splash and loading progress surfaces.
+
+- Publish shared connect and disconnect artwork in both supplied sizes.
+
 - Unify shared selection, focus, controls and package surfaces on the neutral ink ramp while preserving diagnostic state colors.
 - Expose factory/current palette queries, atomic role patches, full reset and complete source-QSS reload through the public API; share colors with QSS and native painters.
 - Remove leading menu/combo markers and compact item content insets and switch/text spacing.
