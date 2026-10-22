@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Publish the supplied debug glyph in 24px and 48px sizes.
+- Avoid invalid point-size conversion when Windows 11 measures dropdown indicators for QSS pixel fonts.
 - Show display-mode menu glyphs and current-row emphasis without additional radio indicators.
 - Use the shared tool-button styling for script build and load actions instead of dedicated outlined controls.
 - Add atomic complete-theme JSON persistence, including font colors; missing or invalid files restore every built-in color.

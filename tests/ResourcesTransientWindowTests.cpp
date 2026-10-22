@@ -19,6 +19,7 @@
 #include <QLineEdit>
 #include <QPainter>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QProcess>
 #include <QScreen>
 #include <QSignalSpy>
@@ -897,6 +898,26 @@ private slots:
                 QCOMPARE(editable.currentText(), QStringLiteral("Custom"));
                 QVERIFY(!edited.isEmpty());
             }
+        }
+    }
+
+    void comboPopupAcceptsPixelFonts()
+    {
+        Resources::installResources(*qApp);
+        QTest::failOnWarning(QRegularExpression(QStringLiteral("QFont::setPointSize.*")));
+        QComboBox combo;
+        combo.addItems({QStringLiteral("Camera A"), QStringLiteral("Camera B")});
+        combo.resize(280, 24);
+        combo.show();
+        QTest::qWait(30);
+        QVERIFY(combo.font().pixelSize() > 0);
+        QCOMPARE(combo.font().pointSize(), -1);
+        for (int i = 0; i < 2; ++i) {
+            combo.showPopup();
+            QTRY_VERIFY(combo.view()->isVisible());
+            QTest::keyClick(combo.view(), Qt::Key_Down);
+            QTest::keyClick(combo.view(), Qt::Key_Return);
+            QTRY_VERIFY(!combo.view()->isVisible());
         }
     }
 
