@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/Resources">
+        <file>icon/close-24.png</file>
+        <file>icon/close-48.png</file>
         <file>icon/genicam-24.png</file>
         <file>icon/genicam-48.png</file>
         <file>icon/heliotis-24.png</file>
