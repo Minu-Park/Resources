@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Apply consistent settings-page spacing to General, Color and Diagnostics categories.
+
 - Publish the supplied debug glyph in 24px and 48px sizes.
 - Avoid invalid point-size conversion when Windows 11 measures dropdown indicators for QSS pixel fonts.
 - Show display-mode menu glyphs and current-row emphasis without additional radio indicators.
