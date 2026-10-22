@@ -705,6 +705,18 @@ class ResourcesNativeStyle final : public QProxyStyle
 public:
     using QProxyStyle::QProxyStyle;
 
+    /** @brief Uses the native default arrow metric when a pixel font has no point size. */
+    int pixelMetric(PixelMetric metric, const QStyleOption* option = nullptr,
+                    const QWidget* widget = nullptr) const override
+    {
+        // Qt's Windows 11 style passes widget->font().pointSize() to setPointSize().
+        // QSS pixel fonts return -1; its widget-free metric avoids that invalid conversion.
+        if (metric == PM_MenuButtonIndicator && widget && widget->font().pointSize() <= 0
+            && baseStyle()->objectName().compare(QStringLiteral("windows11"), Qt::CaseInsensitive) == 0)
+            return QProxyStyle::pixelMetric(metric, option, nullptr);
+        return QProxyStyle::pixelMetric(metric, option, widget);
+    }
+
     /** @brief Keeps combo rows content-sized instead of inheriting Windows 11 touch spacing. */
     QSize sizeFromContents(ContentsType type, const QStyleOption* option, const QSize& contentsSize,
                            const QWidget* widget = nullptr) const override
