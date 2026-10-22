@@ -199,7 +199,9 @@ QScrollArea#GraphicsSettingsPageScrollArea {
 }
 
 QWidget#GraphicsSettingsPageViewport,
-QWidget#GraphicsSettingsDisplayPage,
+QWidget#GraphicsSettingsGeneralPage,
+QWidget#GraphicsSettingsColorPage,
+QWidget#GraphicsSettingsDiagnosticsPage,
 QWidget#GraphicsSettingsSurfacePage,
 QWidget#GraphicsSettingsPointCloudPage,
 QWidget#GraphicsSettingsRangePage {

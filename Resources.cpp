@@ -1408,7 +1408,9 @@ private:
         else if (name == QLatin1String("GraphicsSettingsPanelHeaderLayout")) {
             setLayoutMetrics(layout, QMargins(12, 4, 12, 4), 6);
         }
-        else if (name == QLatin1String("GraphicsSettingsDisplayPageLayout") ||
+        else if (name == QLatin1String("GraphicsSettingsGeneralPageLayout") ||
+                 name == QLatin1String("GraphicsSettingsColorPageLayout") ||
+                 name == QLatin1String("GraphicsSettingsDiagnosticsPageLayout") ||
                  name == QLatin1String("GraphicsSettingsSurfacePageLayout") ||
                  name == QLatin1String("GraphicsSettingsPointCloudPageLayout") ||
                  name == QLatin1String("GraphicsSettingsRangePageLayout")) {
