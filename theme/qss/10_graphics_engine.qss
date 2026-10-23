@@ -119,7 +119,7 @@ QScrollBar#ImageViewOverlayScrollBar::sub-page {
 QLabel#PlotLineProfilePointLabel {
     background: transparent;
     color: @TEXT@;
-    font-weight: @WEIGHT_EMPHASIS@;
+    font-weight: @WEIGHT_NORMAL@;
 }
 
 /* Right-side Graphics Settings Panel */
@@ -338,4 +338,20 @@ QLabel#PlotViewYRangePopupTitle {
     background: transparent;
     color: @TEXT@;
     font-weight: @WEIGHT_EMPHASIS@;
+}
+
+/* Plot UI roles; series and inspection colors encode data identity. */
+PlotViewWidget {
+    qproperty-plotSurfaceColor: @SURFACE@;
+    qproperty-plotBorderColor: @BORDER@;
+    qproperty-plotSecondaryTextColor: @SECONDARYTEXT@;
+    qproperty-plotWarningColor: @WARNINGTEXT@;
+    color: @TEXT@;
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
+}
+
+QTableWidget#AnalysisStatisticsTable, QTableWidget#AnalysisStatisticsTable QHeaderView::section {
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
 }
