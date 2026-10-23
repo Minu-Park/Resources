@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Style the staged Core update notification's Update and Later actions, and keep that notice from adopting the clickable-body hover.
+
 - Add a neutral, borderless close glyph in 24px and 48px sizes for compact loading surfaces.
 
 - Apply consistent settings-page spacing to General, Color and Diagnostics categories.

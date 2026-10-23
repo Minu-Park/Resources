@@ -204,6 +204,11 @@ QFrame#UpdateNotificationPopup:hover {
     border-color: @HOVERBORDER@;
 }
 
+QFrame#UpdateNotificationPopup[updateRole="decision"]:hover {
+    background-color: @SURFACE@;
+    border-color: @CONTROLBORDER@;
+}
+
 QLabel#UpdateNotificationTitle {
     min-height: 0;
     padding: 0;
@@ -237,5 +242,32 @@ QToolButton#UpdateNotificationCloseButton {
 QToolButton#UpdateNotificationCloseButton:hover,
 QToolButton#UpdateNotificationCloseButton:pressed {
     background: transparent;
+    color: @TEXT@;
+}
+
+QWidget#UpdateNotificationActions {
+    background: transparent;
+}
+
+QPushButton#UpdateNotificationLaterButton,
+QPushButton#UpdateNotificationUpdateButton {
+    min-height: 28px;
+    padding: 2px 12px;
+    border: 1px solid @CONTROLBORDER@;
+    border-radius: 8px;
+    background: transparent;
+    color: @TEXT@;
+    font-weight: 600;
+}
+
+QPushButton#UpdateNotificationUpdateButton {
+    background: @HOVER@;
+}
+
+QPushButton#UpdateNotificationLaterButton:hover,
+QPushButton#UpdateNotificationUpdateButton:hover,
+QPushButton#UpdateNotificationLaterButton:pressed,
+QPushButton#UpdateNotificationUpdateButton:pressed {
+    border-color: @HOVERBORDER@;
     color: @TEXT@;
 }
