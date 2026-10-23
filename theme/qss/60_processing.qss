@@ -2,49 +2,81 @@
 
 /* Runtime path lists reuse the base themed tree and row interaction surface. */
 
-QLabel#RuntimePathEntriesDescription {
-    color: @SECONDARYTEXT@;
+/* Libraries use one frame around the list and its compact action strip. */
+QFrame#RuntimePathsListPanel {
+    background: @HOVER@;
+    border: 1px solid @CONTROLBORDER@;
+    border-radius: 9px;
 }
-
+QTreeWidget#RuntimePathsListWidget,
+QTreeWidget#RuntimePathEntriesList {
+    border: none;
+    border-radius: 0;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    background: @SURFACE@;
+}
+QToolBar#RuntimePathsActionToolBar {
+    background: @HOVER@;
+    border: none;
+    border-top: 1px solid @CONTROLBORDER@;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    spacing: 2px;
+    padding: 2px 4px;
+}
+QToolBar#RuntimePathsActionToolBar QToolButton {
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    min-width: 16px;
+    max-width: 16px;
+    min-height: 16px;
+    max-height: 16px;
+    padding: 2px;
+    margin: 0;
+    qproperty-iconSize: 14px 14px;
+}
+QToolBar#RuntimePathsActionToolBar QToolButton:hover {
+    background: @SURFACE@;
+}
+QTreeWidget#RuntimePathsListWidget {
+    font-weight: 600;
+}
+QWidget#RuntimePathsFormContainer QLabel#RuntimePathsLabel {
+    min-width: 112px;
+    max-width: 112px;
+    font-weight: 600;
+}
+QLabel#RuntimePathsHeading {
+    font-size: 13px;
+    font-weight: 600;
+}
+QLabel#RuntimePathsHint {
+    color: @SECONDARYTEXT@;
+    font-size: 11px;
+    font-weight: 400;
+    padding: 0;
+    margin: 0;
+}
+QLineEdit#RuntimePathsNameEdit {
+    font-weight: 600;
+}
 QLabel#RuntimePathsStatusLabel[state="normal"] {
     color: @SECONDARYTEXT@;
     font-weight: 400;
 }
-
 QLabel#RuntimePathsStatusLabel[state="warning"] {
     color: @WARNINGTEXT@;
     font-weight: 600;
 }
-
-QLabel#RuntimePathsStatusBadge {
-    background: transparent;
-    border: none;
-    padding: 0;
-    font-weight: bold;
-    font-size: 11px;
-    qproperty-alignment: AlignLeft;
-}
-
-QLabel#RuntimePathsStatusBadge[state="ok"] {
-    color: @SUCCESS@;
-}
-
-QLabel#RuntimePathsStatusBadge[state="nok"] {
-    color: @ERROR@;
-}
-
-QLabel#RuntimePathsLabel {
-    min-width: 136px;
-    max-width: 136px;
-}
-
 QLineEdit#RuntimePathsLineEdit {
     min-width: 150px;
 }
 
 QPushButton#RuntimePathsBrowseButton {
-    min-width: 75px;
-    max-width: 75px;
+    min-width: 48px;
+    max-width: 48px;
 }
 
 
