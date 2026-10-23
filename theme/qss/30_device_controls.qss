@@ -85,8 +85,8 @@ SearchableTreeSurface {
 QFrame#DeviceFeatureSearchBubble {
     padding: 0 7px;
     height: 24px;
-    min-height: 24px;
-    max-height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
+    max-height: @CONTROL_HEIGHT@px;
     margin: 0 2px 0 0;
     color: @TEXT@;
 }
@@ -108,7 +108,7 @@ QLabel#DeviceFeatureSearchCount {
     background: transparent;
     border: none;
     color: @SECONDARYTEXT@;
-    font-size: 10px;
+    font-size: @FONT_COMPACT@px;
 }
 
 QToolButton#DeviceFeatureSearchClear {
@@ -140,7 +140,7 @@ QToolButton#DeviceFeatureFavoritesOnly {
     background: transparent;
     border-color: transparent;
     color: @SECONDARYTEXT@;
-    font-size: 18px;
+    font-size: @FONT_DISPLAY@px;
 }
 
 QToolButton#DeviceFeatureFavoritesOnly:hover,

@@ -2,6 +2,7 @@
 #include "Chrome/ThemedDockTitleBar.h"
 #include "Chrome/ThemedMainWindow.h"
 #include "Chrome/ThemedTreeWidget.h"
+#include "Chrome/ThemedMessageBox.h"
 #include "Resources.h"
 
 #include <QApplication>
@@ -132,6 +133,22 @@ class ResourcesTransientWindowTests : public QObject
 {
     Q_OBJECT
 private slots:
+    void messageIconBalancesShortAndWrappedText()
+    {
+        Resources::installResources(*qApp);
+        for (const auto& text : {QStringLiteral("Discard unsaved changes?"),
+                QStringLiteral("The selected operation contains unsaved changes. Review the current settings before continuing. ").repeated(4)}) {
+            ThemedMessageBox dialog(ThemedMessageBox::Information, "Confirmation", text, nullptr, true);
+            dialog.resize(460, 220);
+            dialog.show();
+            QApplication::processEvents();
+            const auto* icon = dialog.findChild<QLabel*>("ThemedMessageBoxIcon");
+            const auto* message = dialog.findChild<QLabel*>("ThemedMessageBoxText");
+            QVERIFY(icon && message);
+            QVERIFY(qAbs(icon->geometry().center().y() - message->geometry().center().y()) <= 1);
+        }
+    }
+
     void menuShellCorners_data()
     {
         QTest::addColumn<bool>("rtl");

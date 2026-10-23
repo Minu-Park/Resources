@@ -24,8 +24,8 @@ QTextEdit#SystemLogViewer {
     color: @TEXT@;
     border: none;
     border-radius: 0px;
-    font-family: "JetBrains Mono";
-    font-size: 11px;
+    font-family: "@FONT_MONO@";
+    font-size: @FONT_CAPTION@px;
     padding: 0px 12px;
 }
 
@@ -54,8 +54,8 @@ QLabel#EngineStatusFps {
     border-radius: 9px;
     padding: 0 7px;
     height: 24px;
-    min-height: 24px;
-    max-height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
+    max-height: @CONTROL_HEIGHT@px;
     margin: 0 2px 0 0;
     color: @TEXT@;
 }
@@ -75,8 +75,8 @@ QToolButton#EngineStatusViewButton {
     border-radius: 9px;
     padding: 0 7px;
     height: 24px;
-    min-height: 24px;
-    max-height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
+    max-height: @CONTROL_HEIGHT@px;
     margin: 0 2px 0 0;
     color: @TEXT@;
 }
@@ -90,7 +90,7 @@ QLabel#EngineStatusZoom,
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
     color: @TEXT@;
-    font-weight: 700;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QStatusBar QLabel[statusRole="message"] {
@@ -101,16 +101,16 @@ QStatusBar QLabel[statusRole="message"] {
     margin: 0 8px 0 0;
     min-width: 0px;
     color: @TEXT@;
-    font-weight: 400;
+    font-weight: @WEIGHT_NORMAL@;
 }
 
 QStatusBar QLabel[statusRole="message"][messageState="error"] {
-    font-weight: 700;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QLabel[statusRole="coordinates"],
 QLabel[statusRole="fps"] {
-    font-family: "JetBrains Mono", "Inter";
+    font-family: "@FONT_MONO@", "@FONT_UI@";
 }
 
 QLabel#EngineStatusMode,
@@ -118,13 +118,13 @@ QLabel#EngineStatusSummary,
 QLabel#EngineStatusRenderPath,
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
-    font-family: "Inter";
+    font-family: "@FONT_UI@";
 }
 
 QLabel#EngineStatusPointer,
 QLabel#EngineStatusZoom,
 QLabel#EngineStatusFps {
-    font-family: "JetBrains Mono";
+    font-family: "@FONT_MONO@";
 }
 
 QToolButton#EngineStatusModeButton,
@@ -163,12 +163,12 @@ QPushButton#MainLogToggleBtn {
     border-radius: 9px;
     padding: 0 8px;
     height: 24px;
-    min-height: 24px;
-    max-height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
+    max-height: @CONTROL_HEIGHT@px;
     margin: 0 2px 0 0;
     color: @TEXT@;
-    font-weight: 700;
-    font-size: 11px;
+    font-weight: @WEIGHT_EMPHASIS@;
+    font-size: @FONT_CAPTION@px;
 }
 
 QPushButton#RuntimeLibrariesStatusButton {
@@ -177,12 +177,12 @@ QPushButton#RuntimeLibrariesStatusButton {
     border-radius: 9px;
     padding: 0 8px;
     height: 24px;
-    min-height: 24px;
-    max-height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
+    max-height: @CONTROL_HEIGHT@px;
     margin: 0 2px 0 0;
     color: @TEXT@;
-    font-weight: 700;
-    font-size: 11px;
+    font-weight: @WEIGHT_EMPHASIS@;
+    font-size: @FONT_CAPTION@px;
 }
 
 QPushButton#RuntimeLibrariesStatusButton:hover {
@@ -235,8 +235,8 @@ QWidget#MinimizedSessionIndicator {
     border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
     height: 24px;
-    min-height: 24px;
-    max-height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
+    max-height: @CONTROL_HEIGHT@px;
     margin: 0 2px 0 0;
     padding: 0;
 }
@@ -249,8 +249,8 @@ QPushButton#MinimizedSessionRestore {
     background: transparent;
     border: none;
     color: @TEXT@;
-    font-size: 11px;
-    font-weight: 600;
+    font-size: @FONT_CAPTION@px;
+    font-weight: @WEIGHT_EMPHASIS@;
     padding: 0 4px 0 6px;
     margin: 0;
 }

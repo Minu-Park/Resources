@@ -11,7 +11,7 @@ QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh:focus {
     outline: 1px solid @FOCUSBORDER@;
 }
 QWidget#PluginMarketplaceContent * {
-    font-size: 11px;
+    font-size: @FONT_CAPTION@px;
 }
 QWidget#PluginMarketplaceContent QLabel {
     min-height: 0;
@@ -54,16 +54,16 @@ QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceCardIcon {
 }
 QLabel#PluginMarketplaceCardName {
     color: @TEXT@;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 QLabel#PluginMarketplaceCardStatus {
     color: @SECONDARYTEXT@;
-    font-size: 10px;
+    font-size: @FONT_CAPTION@px;
 }
 QLabel#PluginMarketplaceCardStatus[installationState="update"] {
     color: @SECONDARYTEXT@;
-    font-weight: 500;
+    font-weight: @WEIGHT_NORMAL@;
 }
 QLabel#PluginMarketplaceUpdateIcon {
     min-width: 12px;
@@ -92,18 +92,18 @@ QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceDetailIcon {
 }
 QLabel#PluginMarketplaceDetailName {
     color: @TEXT@;
-    font-size: 16px;
-    font-weight: 700;
+    font-size: @FONT_TITLE@px;
+    font-weight: @WEIGHT_EMPHASIS@;
     background: transparent;
 }
 QLabel#PluginMarketplaceDetailId {
-    color: @DISABLEDTEXT@;
-    font-size: 10px;
+    color: @SECONDARYTEXT@;
+    font-size: @FONT_CAPTION@px;
     background: transparent;
 }
 QLabel#PluginMarketplacePackageStatus {
     color: @SECONDARYTEXT@;
-    font-weight: 600;
+    font-weight: @WEIGHT_EMPHASIS@;
     background: transparent;
 }
 QLabel#PluginMarketplaceDescription {
@@ -112,7 +112,7 @@ QLabel#PluginMarketplaceDescription {
 }
 QLabel#PluginMarketplaceSectionLabel {
     color: @TEXT@;
-    font-weight: 600;
+    font-weight: @WEIGHT_EMPHASIS@;
     background: transparent;
 }
 QLabel#PluginMarketplaceSummary,
@@ -128,7 +128,7 @@ QLabel#PluginMarketplaceOperationStatus {
 QLabel#PluginMarketplaceSummary,
 QLabel#PluginMarketplaceHistoryStatus,
 QLabel#PluginMarketplaceActivationNote {
-    font-size: 10px;
+    font-size: @FONT_CAPTION@px;
 }
 QLabel#PluginMarketplaceResult[messageState="error"],
 QLabel#PluginMarketplaceCompatibility[messageState="error"] {
@@ -138,7 +138,7 @@ QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"] {
     background: @SURFACE@;
     color: @TEXT@;
     border-color: @HOVERBORDER@;
-    font-weight: 600;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:hover {
     background: @HOVER@;
@@ -151,7 +151,7 @@ QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:pressed {
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove {
     color: @SECONDARYTEXT@;
     border-color: @CONTROLBORDER@;
-    font-weight: 500;
+    font-weight: @WEIGHT_NORMAL@;
 }
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:hover {
     background: @HOVER@;
@@ -177,23 +177,11 @@ QSplitter#PluginMarketplaceSplitter::handle {
     background: transparent;
     width: 6px;
 }
-QProgressBar#PluginMarketplaceProgress {
-    min-height: 6px;
-    max-height: 6px;
-    border: none;
-    border-radius: 3px;
-    background: @PROGRESSTRACK@;
-}
-QProgressBar#PluginMarketplaceProgress::chunk {
-    border-radius: 3px;
-    background: @PROGRESSFILL@;
-}
-
 /* Host update discovery notification. */
 QFrame#UpdateNotificationPopup {
     min-width: 250px;
     max-width: 360px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     background-color: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
     border-radius: 12px;
@@ -215,7 +203,7 @@ QLabel#UpdateNotificationTitle {
     background-color: transparent;
     border: none;
     color: @TEXT@;
-    font-weight: 700;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QLabel#UpdateNotificationMessage {
@@ -235,8 +223,8 @@ QToolButton#UpdateNotificationCloseButton {
     border: none;
     background: transparent;
     color: @DISABLEDTEXT@;
-    font-size: 17px;
-    font-weight: 600;
+    font-size: @FONT_DISPLAY@px;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QToolButton#UpdateNotificationCloseButton:hover,
@@ -257,7 +245,7 @@ QPushButton#UpdateNotificationUpdateButton {
     border-radius: 8px;
     background: transparent;
     color: @TEXT@;
-    font-weight: 600;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QPushButton#UpdateNotificationUpdateButton {
