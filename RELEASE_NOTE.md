@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add compact list-bottom action bars, bold library items and field labels, and concise path hints for library configuration dialogs.
+- Remove retired library-dialog layout metric rules.
 
 - Style the staged Core update notification's Update and Later actions, and keep that notice from adopting the clickable-body hover.
 

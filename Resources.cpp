@@ -1456,9 +1456,6 @@ private:
         else if (name == QLatin1String("RuntimePathsLeftPanelLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
         }
-        else if (name == QLatin1String("RuntimePathsListButtonsLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
-        }
         else if (name == QLatin1String("RuntimePathsFormLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
         }
@@ -1468,19 +1465,6 @@ private:
             } else {
                 setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
             }
-        }
-        else if (name == QLatin1String("RuntimePathsBottomLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
-        }
-        else if (name == QLatin1String("RuntimePathEntriesConfiguredLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
-        }
-        else if (name == QLatin1String("RuntimePathEntriesConfiguredActionsLayout") ||
-                 name == QLatin1String("RuntimePathEntriesActionsLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
-        }
-        else if (name == QLatin1String("RuntimePathEntriesAddLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
         }
 
         for (int i = 0; i < layout->count(); ++i) {
