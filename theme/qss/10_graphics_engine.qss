@@ -323,17 +323,20 @@ QToolButton[plotActionRole="action"]:disabled {
     border: none;
 }
 
-QFrame#PlotViewYRangePopup {
+QFrame#PlotViewYRangePopup,
+QFrame#PlotViewHistogramBinPopup {
     background: transparent;
     border: none;
 }
 
-QFrame#PlotViewYRangePopup QLabel {
+QFrame#PlotViewYRangePopup QLabel,
+QFrame#PlotViewHistogramBinPopup QLabel {
     background: transparent;
     color: @TEXT@;
 }
 
-QLabel#PlotViewYRangePopupTitle {
+QLabel#PlotViewYRangePopupTitle,
+QLabel#PlotViewHistogramBinPopupTitle {
     min-height: 20px;
     background: transparent;
     color: @TEXT@;
@@ -353,5 +356,11 @@ PlotViewWidget {
 
 QTableWidget#AnalysisStatisticsTable, QTableWidget#AnalysisStatisticsTable QHeaderView::section {
     font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
+}
+
+QLabel#PlotViewHistogramBinSummaryLabel {
+    color: @SECONDARYTEXT@;
+    font-size: @FONT_CAPTION@px;
     font-weight: @WEIGHT_NORMAL@;
 }
