@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Apply shared surface, border, secondary and warning colors to analysis plots and normal body typography to measurement tables.
+
 - Use one complete loading-bar renderer for standard progress controls: matching track, blue gradient, rounded fill, outline and light sweep, including busy package operations.
 - Normalize remaining panel, readout and notification spacing to the shared layout scale.
 - Center message-dialog icons against both short and wrapped message blocks.
