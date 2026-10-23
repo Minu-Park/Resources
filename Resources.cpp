@@ -1450,6 +1450,9 @@ private:
         else if (name == QLatin1String("RuntimePathsBodyLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 16);
         }
+        else if (name == QLatin1String("RuntimePathsToolbarPanelLayout")) {
+            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
+        }
         else if (name == QLatin1String("RuntimePathsLeftPanelLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
         }
