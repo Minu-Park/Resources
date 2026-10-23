@@ -48,7 +48,7 @@ QWidget#ThemedMainTitleBar QMenuBar {
 QWidget#ThemedMdiTitleBar QMenuBar {
     background: transparent;
     border: none;
-    font-size: 11px;
+    font-size: @FONT_CAPTION@px;
 }
 
 QWidget#ThemedMainTitleBar QMenuBar::item,
@@ -59,8 +59,8 @@ QWidget#ThemedMdiTitleBar QMenuBar::item {
 
 QLabel#MainTitleLabel {
     background: transparent;
-    font-size: 13px;
-    font-weight: bold;
+    font-size: @FONT_TITLE@px;
+    font-weight: @WEIGHT_EMPHASIS@;
     color: @TEXT@;
     margin: 0px;
     padding: 0px;
@@ -133,7 +133,7 @@ QLabel#HmiMoveHandle {
     border: none;
     border-radius: 0px;
     color: @SURFACE@;
-    font-weight: bold;
+    font-weight: @WEIGHT_EMPHASIS@;
     min-height: 28px;
     max-height: 28px;
     padding-left: 10px;
@@ -165,8 +165,8 @@ QWidget#ThemedDialogTitleBar {
 
 QLabel#ThemedDialogTitleLabel {
     background: transparent;
-    font-size: 11px;
-    font-weight: bold;
+    font-size: @FONT_TITLE@px;
+    font-weight: @WEIGHT_EMPHASIS@;
     color: @TEXT@;
     margin: 0px;
     padding: 0px;
@@ -181,6 +181,8 @@ QPushButton#ThemedDialogCloseButton {
     margin: 0px;
     padding: 0px;
 }
+
+
 
 QPushButton#ThemedDialogCloseButton:hover {
     background: transparent;
@@ -205,8 +207,8 @@ QWidget#ThemedMdiTitleBar[maximized="true"] {
 
 QLabel#ThemedMdiTitleBarLabel {
     background: transparent;
-    font-size: 11px;
-    font-weight: bold;
+    font-size: @FONT_TITLE@px;
+    font-weight: @WEIGHT_EMPHASIS@;
     color: @TEXT@;
     margin: 0px;
     padding: 0px;
@@ -244,8 +246,8 @@ QWidget#ThemedDockTitleBar {
 
 QLabel#ThemedDockTitleBarLabel {
     background: transparent;
-    font-size: 11px;
-    font-weight: bold;
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_EMPHASIS@;
     color: @TEXT@;
     padding-top: 1px; /* Slightly lower the font vertical alignment */
 }

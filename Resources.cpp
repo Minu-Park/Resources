@@ -1,6 +1,7 @@
 #include "Resources.h"
 #include "ItemViewTheme.h"
 #include "Chrome/ThemedTreeWidget.h"
+#include "Chrome/ProgressShine.h"
 
 #include <QApplication>
 #include <QPointer>
@@ -73,6 +74,27 @@ inline void initResourcesHelper()
 
 // Shared by popup geometry/effects and the installed QSS token.
 static constexpr int MenuShadowGutter = 12;
+
+/** @brief Returns immutable Resources-owned presentation tokens shared by QSS and native metrics. */
+static const QJsonObject& presentationTokens()
+{
+    static const QJsonObject tokens = [] {
+        QFile file(QStringLiteral(":/Resources/theme/presentation.json"));
+        if (!file.open(QFile::ReadOnly)) qFatal("Cannot read embedded presentation tokens");
+        const auto object = QJsonDocument::fromJson(file.readAll()).object();
+        if (object.isEmpty()) qFatal("Invalid embedded presentation tokens");
+        return object;
+    }();
+    return tokens;
+}
+
+/** @brief Reads one required logical-pixel or weight metric from the compiled presentation contract. */
+static int presentationMetric(const char* name)
+{
+    const auto value = presentationTokens().value(QLatin1String(name));
+    if (!value.isDouble() || value.toInt() <= 0) qFatal("Invalid presentation metric: %s", name);
+    return value.toInt();
+}
 
 // ---------------------------------------------------------------------------
 class DeviceFeatureTreeDelegate : public QStyledItemDelegate
@@ -643,17 +665,28 @@ protected:
 class ResourcesProgressSurface final : public QWidget
 {
     Q_OBJECT
-    Q_PROPERTY(qreal radius MEMBER radius)
     Q_PROPERTY(QColor trackColor MEMBER trackColor)
-    Q_PROPERTY(QColor fillColor MEMBER fillColor)
+    Q_PROPERTY(QColor startColor MEMBER startColor)
+    Q_PROPERTY(QColor endColor MEMBER endColor)
+    Q_PROPERTY(QColor outlineColor MEMBER outlineColor)
 public:
     explicit ResourcesProgressSurface(QProgressBar* bar) : QWidget(bar) {
         setObjectName(QStringLiteral("ResourcesProgressSurface"));
         hide();
+        timer.setInterval(16);
+        connect(&timer, &QTimer::timeout, this, [this, bar] {
+            if (!bar->isVisible() || !bar->isEnabled()) { timer.stop(); return; }
+            phase += 0.005;
+            if (phase > 1000.0) phase = 0.0;
+            bar->update();
+        });
     }
-    qreal radius = 0;
     QColor trackColor;
-    QColor fillColor;
+    QColor startColor;
+    QColor endColor;
+    QColor outlineColor;
+    QTimer timer;
+    qreal phase = 0.0;
 };
 
 /** @brief Paints clipped capsule progress and preserves text contrast, including very narrow fills. */
@@ -661,29 +694,28 @@ static void paintThemedProgressText(QProgressBar* bar)
 {
     auto* surface = bar->findChild<ResourcesProgressSurface*>(QStringLiteral("ResourcesProgressSurface"), Qt::FindDirectChildrenOnly);
     if (!surface) { surface = new ResourcesProgressSurface(bar); surface->ensurePolished(); }
+    if (bar->isVisible() && bar->isEnabled() && !surface->timer.isActive()) surface->timer.start();
     QPainter painter(bar);
-    painter.setRenderHint(QPainter::Antialiasing);
-    const QRectF track(bar->rect());
-    const qreal radius = qMin(surface->radius, qMin(track.width(), track.height()) / 2);
-    QPainterPath trackPath; trackPath.addRoundedRect(track, radius, radius);
-    painter.fillPath(trackPath, surface->trackColor);
-    const qreal fraction = bar->value() < bar->minimum() ? 0.0 : qBound(0.0,
+    const bool busy = bar->minimum() == 0 && bar->maximum() == 0;
+    const qreal fraction = busy ? 1.0 : bar->value() < bar->minimum() ? 0.0 :
+        bar->maximum() == bar->minimum() ? 1.0 : qBound(0.0,
         (qreal(bar->value()) - bar->minimum()) / (qreal(bar->maximum()) - bar->minimum()), 1.0);
-    QRectF fill = track;
-    if (bar->orientation() == Qt::Horizontal) {
-        const qreal width = track.width() * fraction;
-        if (bar->isRightToLeft() != bar->invertedAppearance()) fill.setLeft(track.right() - width);
-        else fill.setWidth(width);
-    } else {
-        const qreal height = track.height() * fraction;
-        if (bar->invertedAppearance()) fill.setHeight(height);
-        else fill.setTop(track.bottom() - height);
+    painter.save();
+    QSizeF size(bar->size());
+    if (bar->orientation() == Qt::Vertical) {
+        painter.translate(0, bar->height());
+        painter.rotate(-90);
+        size.transpose();
     }
-    const qreal fillRadius = qMin(radius, qMin(fill.width(), fill.height()) / 2);
-    QPainterPath fillPath;
-    if (fraction > 0) fillPath.addRoundedRect(fill, fillRadius, fillRadius);
-    painter.save(); painter.setClipPath(trackPath); painter.fillPath(fillPath, surface->fillColor); painter.restore();
-    if (!bar->isTextVisible()) return;
+    const bool reverse = bar->orientation() == Qt::Horizontal
+        ? bar->isRightToLeft() != bar->invertedAppearance() : bar->invertedAppearance();
+    if (reverse) { painter.translate(size.width(), 0); painter.scale(-1, 1); }
+    const auto canonicalFill = Resources::detail::paintLoadingProgress(painter, QRectF(QPointF(), size),
+        fraction, surface->phase, busy, true, bar->isEnabled(), surface->trackColor,
+        surface->startColor, surface->endColor, surface->outlineColor);
+    const auto fillPath = painter.worldTransform().map(canonicalFill);
+    painter.restore();
+    if (!bar->isTextVisible() || busy) return;
     const auto label = [&](const QColor& color) {
         painter.save(); painter.setPen(color);
         QRect textRect = bar->rect();
@@ -835,7 +867,7 @@ protected:
         }
 
         if (event->type() == QEvent::Paint) {
-            if (auto* bar = qobject_cast<QProgressBar*>(obj); bar && bar->maximum() > bar->minimum()) {
+            if (auto* bar = qobject_cast<QProgressBar*>(obj)) {
                 paintThemedProgressText(bar);
                 return true;
             }
@@ -1327,7 +1359,26 @@ private:
         if (!layout) return;
 
         const QString name = layout->objectName();
-        if (name == QLatin1String("ScriptExecutionLimitsFormLayout")) {
+        const QString presentation = layout->property("presentationLayout").toString();
+        if (!presentation.isEmpty()) {
+            const bool page = presentation == QLatin1String("page");
+            const bool content = presentation == QLatin1String("content");
+            const int inset = page || content ? presentationMetric("SPACE_CONTENT") : 0;
+            const int spacing = page || presentation == QLatin1String("columns")
+                ? presentationMetric("SPACE_SECTION") : content
+                ? presentationMetric("SPACE_CONTENT") : presentationMetric("SPACE_ROW");
+            setLayoutMetrics(layout, QMargins(inset, inset, inset, inset), spacing);
+            if (auto* form = qobject_cast<QFormLayout*>(layout)) {
+                form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+                form->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
+                form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+                form->setHorizontalSpacing(presentationMetric("SPACE_ROW"));
+                form->setVerticalSpacing(presentationMetric("SPACE_ROW"));
+                form->setRowWrapPolicy(layout->property("presentationStacked").toBool()
+                    ? QFormLayout::WrapAllRows : QFormLayout::WrapLongRows);
+            }
+        }
+        else if (name == QLatin1String("ScriptExecutionLimitsFormLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
             if (auto* form = qobject_cast<QFormLayout*>(layout)) {
                 form->setHorizontalSpacing(24);
@@ -1367,7 +1418,7 @@ private:
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
         }
         else if (name == QLatin1String("DeviceTopBarLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 10);
+            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 8);
         }
         else if (name == QLatin1String("DeviceSelectorLayout")) {
             setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
@@ -1438,7 +1489,7 @@ private:
             }
         }
         else if (name == QLatin1String("ProcessingInteractiveGroupLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 14, 12, 12), 8);
+            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 8);
         }
         else if (name == QLatin1String("ProcessingInteractiveGridLayout")) {
             if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
@@ -1684,8 +1735,8 @@ ThemePalette defaultThemePalette()
         {QStringLiteral("disabledSurface"), QColor(QStringLiteral("#f7f7f7"))},
         {QStringLiteral("selection"), QColor(QStringLiteral("#e6e6e5"))},
         {QStringLiteral("current"), QColor(QStringLiteral("#d4d4d3"))},
-        {QStringLiteral("progressTrack"), QColor(QStringLiteral("#eeeeed"))},
-        {QStringLiteral("progressFill"), QColor(QStringLiteral("#3c3c3b"))},
+        {QStringLiteral("progressTrack"), QColor(QStringLiteral("#ededed"))},
+        {QStringLiteral("progressFill"), QColor(QStringLiteral("#1e5ea6"))},
         {QStringLiteral("shadow"), QColor(QStringLiteral("#3c3c3b"))},
         {QStringLiteral("warning"), QColor(QStringLiteral("#fb8c00"))},
         {QStringLiteral("warningText"), QColor(QStringLiteral("#b45309"))},
@@ -1708,6 +1759,9 @@ void applyInstalledStyleSheet()
     }
 
     QString styleSheet = s_styleSheetTemplate;
+    const auto& tokens = presentationTokens();
+    for (auto it = tokens.begin(); it != tokens.end(); ++it)
+        styleSheet.replace(QLatin1Char('@') + it.key() + QLatin1Char('@'), it.value().toVariant().toString());
     for (auto it = s_themePalette.cbegin(); it != s_themePalette.cend(); ++it) {
         const auto token = it.key().toUpper();
         styleSheet.replace(QLatin1Char('@') + token + QLatin1Char('@'), it.value().name(QColor::HexRgb));
@@ -1907,12 +1961,8 @@ void installResources(QApplication& app)
     }
 
     // Set application default font
-    QFont defaultFont(QStringLiteral("Inter"));
-#if defined(Q_OS_MAC)
-    defaultFont.setPointSizeF(12.0);
-#else
-    defaultFont.setPointSizeF(10.0);
-#endif
+    QFont defaultFont(presentationTokens().value(QStringLiteral("FONT_UI")).toString());
+    defaultFont.setPixelSize(presentationMetric("FONT_BODY"));
     app.setFont(defaultFont);
 
     const QStringList qssFiles = {

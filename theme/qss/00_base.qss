@@ -2,8 +2,9 @@
 
 * {
     color: @TEXT@;
-    font-family: "Inter";
-    font-size: 12px;
+    font-family: "@FONT_UI@";
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
     outline: none;
 }
 
@@ -91,7 +92,7 @@ QGroupBox {
     border: 1px solid @BORDER@;
     border-radius: 8px;
     margin-top: 22px;
-    font-weight: 700;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QGroupBox::title {
@@ -102,8 +103,8 @@ QGroupBox::title {
     padding: 0px;
     background: transparent;
     color: @TEXT@;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 /* A 24px title switch needs breathing room before the section frame begins. */
@@ -118,7 +119,7 @@ QGroupBox QComboBox,
 QGroupBox QAbstractSpinBox,
 QGroupBox QCheckBox,
 QGroupBox QRadioButton {
-    font-weight: 400;
+    font-weight: @WEIGHT_NORMAL@;
 }
 
 QTabBar {
@@ -137,14 +138,14 @@ QTabBar::tab {
     padding: 8px 8px;
     margin-right: 0px;
     border-radius: 0px;
-    font-weight: 500;
+    font-weight: @WEIGHT_NORMAL@;
 }
 
 QTabBar::tab:selected {
     background: transparent;
     color: @TEXT@;
     border-bottom: 2px solid @TEXT@;
-    font-weight: 700;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QTabBar::tab:hover:!selected {
@@ -242,16 +243,42 @@ QFrame#DeviceFeatureSearchBubble {
     border-radius: 9px;
 }
 
-QLabel[textRole="sectionTitle"] {
-    font-weight: 700;
-}
-
-QLabel[textRole="description"] {
+/* Semantic typography is global; consumers expose roles rather than point sizes. */
+QLabel[textRole="title"] {
     color: @TEXT@;
+    font-size: @FONT_TITLE@px;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
-
+QLabel[textRole="sectionTitle"] {
+    color: @TEXT@;
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_EMPHASIS@;
+}
+QLabel[textRole="body"],
+QLabel[textRole="fieldName"] {
+    color: @TEXT@;
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
+}
+QLabel[textRole="description"],
 QLabel[textRole="caption"] {
     color: @SECONDARYTEXT@;
+    font-size: @FONT_CAPTION@px;
+    font-weight: @WEIGHT_NORMAL@;
+    min-height: 0;
+}
+QLabel[textRole="warning"] {
+    color: @WARNINGTEXT@;
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
+}
+QLabel[textRole="error"] {
+    color: @ERRORTEXT@;
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
+}
+QLabel:disabled {
+    color: @DISABLEDTEXT@;
 }
 
 QHeaderView::section {
@@ -261,8 +288,8 @@ QHeaderView::section {
     border-right: 1px solid @CONTROLBORDER@;
     min-height: 22px;
     padding: 0 6px;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QHeaderView::section:first {
@@ -278,8 +305,8 @@ QHeaderView::section:last {
 
 QHeaderView[fileDialogRole="itemHeader"] {
     color: @TEXT@;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QTableCornerButton::section {
@@ -362,11 +389,11 @@ QTextBrowser {
 QPlainTextEdit,
 QTextEdit,
 QTextBrowser {
-    font-family: "JetBrains Mono";
+    font-family: "@FONT_MONO@";
 }
 
 QTextBrowser[contentRole="document"] {
-    font-family: "Inter";
+    font-family: "@FONT_UI@";
 }
 
 QTextBrowser[frameRole="none"],
@@ -560,7 +587,7 @@ QPushButton {
     border: 1px solid @CONTROLBORDER@;
     background: @SURFACE@;
     color: @TEXT@;
-    font-weight: 700;
+    font-weight: @WEIGHT_NORMAL@;
 }
 
 QPushButton:hover {
@@ -581,14 +608,14 @@ QPushButton:disabled {
 }
 
 QToolButton {
-    min-height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
     padding: 3px 8px;
     margin: 0;
     border: 1px solid transparent;
     border-radius: 7px;
     background: transparent;
     color: @TEXT@;
-    font-weight: 600;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QToolButton:hover {
@@ -645,8 +672,8 @@ QRadioButton:disabled { color: @DISABLEDTEXT@; }
 /* Default checkbox presentation; native check-state and input behavior remain intact. */
 QCheckBox {
     spacing: 8px;
-    min-height: 24px;
-    max-height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
+    max-height: @CONTROL_HEIGHT@px;
 }
 
 QCheckBox::indicator,
@@ -919,14 +946,14 @@ QMenu::separator {
 QMenuBar {
     background: @SURFACE@;
     color: @TEXT@;
-    font-size: 13px;
+    font-size: @FONT_TITLE@px;
 }
 
 QMenuBar::item {
     padding: 4px 10px;
     border-radius: 4px;
     background: transparent;
-    font-size: 13px;
+    font-size: @FONT_TITLE@px;
 }
 
 QMenuBar::item:selected,
@@ -1010,10 +1037,10 @@ QToolButton[fileDialogRole="navigation"] {
     color: @TEXT@;
 }
 
-/* Startup/loading feedback retains its original blue gradient. */
-ThemedProgressBar#SplashProgress, ThemedProgressBar#LoadingProgress {
-    qproperty-trackColor: rgba(0, 0, 0, 18);
-    qproperty-startColor: #1e5ea6;
+/* One loading-bar appearance for startup, downloads and package operations. */
+ThemedProgressBar, QWidget#ResourcesProgressSurface {
+    qproperty-trackColor: @PROGRESSTRACK@;
+    qproperty-startColor: @PROGRESSFILL@;
     qproperty-endColor: #0f3259;
     qproperty-outlineColor: rgba(0, 0, 0, 25);
 }
@@ -1025,37 +1052,37 @@ QFrame#SplashFrame, QFrame#LoadingFrame {
 }
 
 QLabel {
-    min-height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
 }
 
 QLabel#SplashTitle {
     color: #00457C;
-    font-size: 18px;
-    font-weight: bold;
+    font-size: @FONT_DISPLAY@px;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QLabel#SplashVersion {
     color: #516476;
-    font-size: 10px;
-    font-weight: bold;
+    font-size: @FONT_COMPACT@px;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QLabel#SplashText, QLabel#LoadingText {
     color: rgba(22, 32, 43, 160);
-    font-size: 10px;
+    font-size: @FONT_COMPACT@px;
 }
 
 QLabel#SplashPercent, QLabel#LoadingPercent {
     color: #00457C;
-    font-size: 12px;
-    font-weight: bold;
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 /* Global QSlider Defaults */
 QSlider:horizontal {
     height: 24px;
-    min-height: 24px;
-    max-height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
+    max-height: @CONTROL_HEIGHT@px;
 }
 
 QSlider::groove:horizontal {
@@ -1095,24 +1122,16 @@ QProgressBar {
     min-height: 18px;
     border: none;
     border-radius: 10px;
-    background: @PROGRESSTRACK@;
+    background: transparent;
     color: @TEXT@;
     selection-color: @SURFACE@;
     text-align: center;
     qproperty-alignment: AlignCenter;
 }
-QWidget#ResourcesProgressSurface {
-    qproperty-radius: 10;
-    qproperty-trackColor: @PROGRESSTRACK@;
-    qproperty-fillColor: @PROGRESSFILL@;
-}
-QProgressBar[textVisible="false"] QWidget#ResourcesProgressSurface { qproperty-radius: 3; }
-QWidget#ResourcesProgressSurface:disabled { qproperty-trackColor: @DISABLEDSURFACE@; qproperty-fillColor: @DISABLEDTEXT@; }
-QProgressBar[textVisible="false"] { min-height: 6px; max-height: 6px; border-radius: 3px; }
-QProgressBar::chunk { border: none; border-radius: 10px; background: @PROGRESSFILL@; }
-QProgressBar[textVisible="false"]::chunk { border-radius: 3px; }
-QProgressBar:disabled { background: @HOVER@; color: @DISABLEDTEXT@; }
-QProgressBar::chunk:disabled { background: @PROGRESSTRACK@; }
+
+QProgressBar[textVisible="false"] { min-height: 8px; max-height: 8px; border-radius: 4px; }
+QProgressBar::chunk { border: none; background: transparent; }
+QProgressBar:disabled { color: @DISABLEDTEXT@; }
 QDateTimeEdit { padding-right: 24px; }
 QTimeEdit { padding-right: 4px; }
 QDateTimeEdit::drop-down {
@@ -1129,7 +1148,7 @@ QDateTimeEdit::down-arrow {
     height: 6px;
 }
 QCalendarWidget QWidget#qt_calendar_navigationbar { background: @SURFACE@; border-bottom: 1px solid @CONTROLBORDER@; }
-QCalendarWidget QToolButton { background: transparent; color: @TEXT@; border: none; min-height: 22px; padding: 0 4px; font-weight: 600; }
+QCalendarWidget QToolButton { background: transparent; color: @TEXT@; border: none; min-height: 22px; padding: 0 4px; font-weight: @WEIGHT_EMPHASIS@; }
 QCalendarWidget QToolButton#qt_calendar_prevmonth { qproperty-icon: url(:/Resources/icon/back-48.png); icon-size: 12px; }
 QCalendarWidget QToolButton#qt_calendar_nextmonth { qproperty-icon: url(:/Resources/icon/forward-48.png); icon-size: 12px; }
 QCalendarWidget QAbstractItemView { background: @SURFACE@; selection-background-color: @HOVER@; selection-color: @TEXT@; color: @TEXT@; outline: 0; }

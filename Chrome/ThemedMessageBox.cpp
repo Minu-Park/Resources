@@ -37,7 +37,7 @@ ThemedMessageBox::ThemedMessageBox(
         iconLabel->setPixmap(scaled);
     }
     iconLabel->setFixedSize(32, 32);
-    body->addWidget(iconLabel, 0, Qt::AlignTop);
+    body->addWidget(iconLabel, 0, Qt::AlignVCenter);
 
     auto* messageLabel = new QLabel(text, this);
     messageLabel->setObjectName(QStringLiteral("ThemedMessageBoxText"));

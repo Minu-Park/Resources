@@ -2,7 +2,14 @@
 
 ## Unreleased
 
-- Add compact list-bottom action bars, bold library items and field labels, and concise path hints for library configuration dialogs.
+- Use one complete loading-bar renderer for standard progress controls: matching track, blue gradient, rounded fill, outline and light sweep, including busy package operations.
+- Normalize remaining panel, readout and notification spacing to the shared layout scale.
+- Center message-dialog icons against both short and wrapped message blocks.
+
+- Define shared font families, logical-pixel sizes, weights and layout metrics in one embedded presentation token file; resolve tokens for installation and source-QSS reload.
+- Standardize semantic text roles, dialog/dock/section titles, normal-weight controls and library fields, and secondary metadata colors.
+
+- Add compact list-bottom action bars and concise path hints for library configuration dialogs.
 - Remove retired library-dialog layout metric rules.
 
 - Style the staged Core update notification's Update and Later actions, and keep that notice from adopting the clickable-body hover.

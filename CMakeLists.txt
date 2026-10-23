@@ -95,6 +95,7 @@ qt_add_library(PlaygroundResources STATIC
     Chrome/ThemedLoadingWidget.h
     Chrome/ThemedLoadingWidget.cpp
     Chrome/ThemedProgressBar.h
+    Chrome/ProgressShine.h
     Chrome/ThemedMainWindow.h
     Chrome/ThemedMainWindow.cpp
 )
@@ -118,6 +119,13 @@ target_include_directories(PlaygroundResources
 )
 
 if(RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS)
+    qt_add_executable(ResourcesProgressTests tests/ResourcesProgressTests.cpp)
+    target_link_libraries(ResourcesProgressTests PRIVATE Resources::Resources Qt6::Test)
+    set_target_properties(ResourcesProgressTests PROPERTIES WIN32_EXECUTABLE FALSE)
+    add_test(NAME ResourcesProgressTests COMMAND ResourcesProgressTests)
+    set_tests_properties(ResourcesProgressTests PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+        ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>")
     qt_add_executable(ResourcesItemViewTests tests/ResourcesItemViewTests.cpp)
     target_link_libraries(ResourcesItemViewTests PRIVATE Resources::Resources Qt6::Test)
     set_target_properties(ResourcesItemViewTests PROPERTIES WIN32_EXECUTABLE FALSE)
