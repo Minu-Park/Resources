@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fix MDI, dock/widget and dialog title bars to one shared 11px scale, including nested dialog contexts.
+- Remove conflicting library-list typography rules; dialog list and field values use normal weight.
+
 - Restore original non-dialog widget title sizes and neutral wording; apply one consistent typography scale inside dialogs only.
 - Use #15487f only for selected-tab text and bottom underlines. Preserve original selection capsule rendering with nearly white blue row/current-cell fills and original icon artwork.
 - Separate structural/widget borders from interactive item borders and correct histogram summary text specificity.

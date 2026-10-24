@@ -172,7 +172,7 @@ QLabel#ThemedDialogTitleLabel {
     margin: 0px;
     padding: 0px;
 
-    font-size: @FONT_CAPTION@px;
+    font-size: @FONT_CHROME_TITLE@px;
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
@@ -215,7 +215,7 @@ QLabel#ThemedMdiTitleBarLabel {
     margin: 0px;
     padding: 0px;
 
-    font-size: @FONT_CAPTION@px;
+    font-size: @FONT_CHROME_TITLE@px;
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
@@ -254,7 +254,7 @@ QLabel#ThemedDockTitleBarLabel {
     color: @TEXT@;
     padding-top: 1px; /* Slightly lower the font vertical alignment */
 
-    font-size: @FONT_CAPTION@px;
+    font-size: @FONT_CHROME_TITLE@px;
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
@@ -328,7 +328,7 @@ QDialog, QDialog QWidget {
     font-size: @FONT_BODY@px;
     font-weight: @WEIGHT_NORMAL@;
 }
-QDialog QLabel[textRole="title"], QDialog QLabel#ThemedDialogTitleLabel,
+QDialog QLabel[textRole="title"],
 QDialog QLabel#PluginMarketplaceDetailName {
     font-size: @FONT_TITLE@px;
     font-weight: @WEIGHT_EMPHASIS@;
@@ -375,5 +375,14 @@ QDialog QTreeWidget#RuntimePathsListWidget::item:selected,
 QDialog QWidget#RuntimePathsFormContainer QLabel#RuntimePathsLabel {
     font-size: @FONT_BODY@px;
     font-weight: @WEIGHT_NORMAL@;
+    color: @TEXT@;
+}
+
+/* Fixed chrome scale: nested dialog typography must not enlarge title bars. */
+QDialog QLabel#ThemedDialogTitleLabel,
+QDialog QLabel#ThemedMdiTitleBarLabel,
+QDialog QLabel#ThemedDockTitleBarLabel {
+    font-size: @FONT_CHROME_TITLE@px;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
     color: @TEXT@;
 }

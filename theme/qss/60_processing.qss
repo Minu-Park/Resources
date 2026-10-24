@@ -40,22 +40,10 @@ QToolBar#RuntimePathsActionToolBar QToolButton {
 QToolBar#RuntimePathsActionToolBar QToolButton:hover {
     background: @SURFACE@;
 }
-QTreeWidget#RuntimePathsListWidget {
-
-    font-weight: @WEIGHT_EMPHASIS@;
-}
+/* Dialog typography is owned by 40_chrome.qss; retain only layout here. */
 QWidget#RuntimePathsFormContainer QLabel#RuntimePathsLabel {
     min-width: 112px;
     max-width: 112px;
-
-    font-weight: @WEIGHT_EMPHASIS@;
-}
-QLabel#RuntimePathsHeading {
-
-    color: @TEXT@;
-
-    font-size: @FONT_TITLE@px;
-    font-weight: @WEIGHT_EMPHASIS@;
 }
 QLabel#RuntimePathsHint {
     color: @SECONDARYTEXT@;
@@ -64,15 +52,6 @@ QLabel#RuntimePathsHint {
 
     font-size: @FONT_CAPTION@px;
     font-weight: @WEIGHT_NORMAL@;
-}
-QLineEdit#RuntimePathsNameEdit {
-
-    font-weight: @WEIGHT_EMPHASIS@;
-}
-QTreeWidget#RuntimePathsListWidget::item:selected {
-    font-weight: @WEIGHT_EMPHASIS@;
-
-    color: @TEXT@;
 }
 QLabel#RuntimePathsStatusLabel[state="normal"] {
     color: @SECONDARYTEXT@;
