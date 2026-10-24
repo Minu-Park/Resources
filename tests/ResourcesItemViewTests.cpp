@@ -51,6 +51,27 @@ class ResourcesItemViewTests : public QObject
     Q_OBJECT
   private slots:
     void initTestCase() { Resources::installResources(*qApp); }
+    void signaturePaletteKeepsBordersAndInkMonochrome()
+    {
+        const auto colors = Resources::defaultThemePalette();
+        QCOMPARE(colors.value("hover"), QColor("#f4f4f3"));
+        QCOMPARE(colors.value("selection"), QColor("#f4f7fb"));
+        QCOMPARE(colors.value("pressed"), QColor("#eeeeed"));
+        QCOMPARE(colors.value("current"), QColor("#eef3f9"));
+        QCOMPARE(colors.value("border"), QColor("#d9d9d8"));
+        QCOMPARE(colors.value("controlBorder"), QColor("#d9d9d8"));
+        QCOMPARE(colors.value("hoverBorder"), QColor("#c4c4c3"));
+        QCOMPARE(colors.value("focusBorder"), QColor("#8a8a89"));
+        QCOMPARE(colors.value("statusBorder"), QColor("#d4d4d3"));
+        QCOMPARE(colors.value("text"), QColor("#3c3c3b"));
+        QCOMPARE(colors.value("selectionAccent"), QColor("#15487f"));
+        QVERIFY(!Resources::defaultPaletteGroup(Resources::PaletteGroup::Font).contains("selectionAccent"));
+        QCOMPARE(qApp->palette().color(QPalette::HighlightedText), colors.value("text"));
+        QCOMPARE(qApp->palette().color(QPalette::Highlight), colors.value("selection"));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+        QCOMPARE(qApp->palette().color(QPalette::Accent), colors.value("text"));
+#endif
+    }
     void selectedTreeRowsDoNotPaintLeadingRails()
     {
         QTreeWidget tree;
@@ -129,7 +150,7 @@ class ResourcesItemViewTests : public QObject
         }
         Resources::setItemSelectionAppearance(&table, Resources::ItemSelectionAppearance::CurrentCell);
         image = table.viewport()->grab().toImage();
-        QCOMPARE(sample(image, table.visualRect(table.currentIndex()).center()), QColor("#d4d4d3"));
+        QCOMPARE(sample(image, table.visualRect(table.currentIndex()).center()), Resources::themePalette().value(QStringLiteral("current")));
         QCOMPARE(table.selectionModel()->selectedIndexes().size(), 6);
     }
     void unselectedKeyboardCurrentRemainsVisible_data()
@@ -197,7 +218,7 @@ class ResourcesItemViewTests : public QObject
         const QColor edge = image.pixelColor(qRound(rect.center().x() * dpr), qRound((rect.top() + 1) * dpr));
         const QColor center = image.pixelColor(qRound(rect.center().x() * dpr), qRound(rect.center().y() * dpr));
         QVERIFY2(qGray(center.rgb()) - qGray(edge.rgb()) >= 20, qPrintable(edge.name()));
-        QVERIFY(center != QColor("#d4d4d3"));
+        QVERIFY(center != Resources::themePalette().value(QStringLiteral("current")));
     }
     void currentCellIsFilledWithinJoinedSelection_data()
     {
@@ -209,6 +230,10 @@ class ResourcesItemViewTests : public QObject
     }
     void currentCellIsFilledWithinJoinedSelection()
     {
+        // Use a contrasting test palette to detect seam overwrites independently of the pale factory colors.
+        const auto original = Resources::themePalette();
+        const auto restore = qScopeGuard([&] { Resources::setThemePalette(original); });
+        QVERIFY(Resources::setThemePalette({{"selection", QColor("#e6e6e5")}, {"current", QColor("#d4d4d3")}}));
         QFETCH(bool, treeView);
         QFETCH(bool, rtl);
         std::unique_ptr<QAbstractItemView> view(treeView
@@ -238,16 +263,16 @@ class ResourcesItemViewTests : public QObject
             QCoreApplication::processEvents();
             const auto image = view->viewport()->grab().toImage();
             const QRect rect = view->visualRect(current);
-            QCOMPARE(sample(image, rect.center()), QColor("#d4d4d3"));
+            QCOMPARE(sample(image, rect.center()), Resources::themePalette().value(QStringLiteral("current")));
             // Current and selection fills share the same top/bottom edges.
-            QCOMPARE(sample(image, QPoint(rect.center().x(), rect.top() + 1)), QColor("#d4d4d3"));
-            QCOMPARE(sample(image, QPoint(rect.center().x(), rect.bottom() - 1)), QColor("#d4d4d3"));
+            QCOMPARE(sample(image, QPoint(rect.center().x(), rect.top() + 1)), Resources::themePalette().value(QStringLiteral("current")));
+            QCOMPARE(sample(image, QPoint(rect.center().x(), rect.bottom() - 1)), Resources::themePalette().value(QStringLiteral("current")));
             // Later columns/rows must not paint their seam overlap over the current capsule.
             for (const QPoint edge : {QPoint(rect.right(), rect.center().y()),
                                      QPoint(rect.center().x(), rect.bottom())})
             {
                 const QColor color = sample(image, edge);
-                const QColor currentColor("#d4d4d3");
+                const QColor currentColor = Resources::themePalette().value(QStringLiteral("current"));
                 // Fractional DPR can blend the boundary pixel; a neighbor repaint
                 // replaces it with the much lighter selection color instead.
                 QVERIFY2(qAbs(color.red() - currentColor.red()) <= 8 &&
@@ -286,7 +311,7 @@ class ResourcesItemViewTests : public QObject
             const QPoint point = list.visualItemRect(list.item(row)).center();
             QCOMPARE(image.pixelColor(qRound(point.x() * image.devicePixelRatio()),
                                       qRound(point.y() * image.devicePixelRatio())),
-                     row == 1 ? QColor("#d4d4d3") : list.palette().highlight().color());
+                     row == 1 ? Resources::themePalette().value(QStringLiteral("current")) : list.palette().highlight().color());
         }
     }
     void itemSwitchUsesLeadingEdgeAndMatchingHitRect()
@@ -364,10 +389,10 @@ class ResourcesItemViewTests : public QObject
                 const QRect cell = table.visualItemRect(table.item(r, c));
                 const auto below = table.indexAt(QPoint(cell.center().x(), cell.bottom() + 1));
                 QVERIFY(below.isValid());
-                QCOMPARE(pixel(QPoint(cell.left() + 1, cell.bottom())), table.palette().highlight().color());
+                QCOMPARE(pixel(QPoint(cell.center().x(), cell.bottom())), table.palette().highlight().color());
                 const auto right = table.indexAt(QPoint(cell.right() + 1, cell.center().y()));
                 if (right.isValid())
-                    QCOMPARE(pixel(QPoint(cell.right(), cell.top() + 1)),
+                    QCOMPARE(pixel(QPoint(cell.right(), cell.center().y())),
                              table.palette().highlight().color());
             }
     }

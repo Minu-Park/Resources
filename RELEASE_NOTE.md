@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Restore original non-dialog widget title sizes and neutral wording; apply one consistent typography scale inside dialogs only.
+- Use #15487f only for selected-tab text and bottom underlines. Preserve original selection capsule rendering with nearly white blue row/current-cell fills and original icon artwork.
+- Separate structural/widget borders from interactive item borders and correct histogram summary text specificity.
+
 - Apply shared popup title and caption roles to the production histogram bin editor.
 
 - Apply shared surface, border, secondary and warning colors to analysis plots and normal body typography to measurement tables.

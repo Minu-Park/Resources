@@ -11,6 +11,7 @@ QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh:focus {
     outline: 1px solid @FOCUSBORDER@;
 }
 QWidget#PluginMarketplaceContent * {
+
     font-size: @FONT_CAPTION@px;
 }
 QWidget#PluginMarketplaceContent QLabel {
@@ -54,16 +55,19 @@ QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceCardIcon {
 }
 QLabel#PluginMarketplaceCardName {
     color: @TEXT@;
+
     font-size: @FONT_BODY@px;
     font-weight: @WEIGHT_EMPHASIS@;
 }
 QLabel#PluginMarketplaceCardStatus {
     color: @SECONDARYTEXT@;
-    font-size: @FONT_CAPTION@px;
+
+    font-size: @FONT_COMPACT@px;
 }
 QLabel#PluginMarketplaceCardStatus[installationState="update"] {
     color: @SECONDARYTEXT@;
-    font-weight: @WEIGHT_NORMAL@;
+
+    font-weight: @WEIGHT_WIDGET_MEDIUM@;
 }
 QLabel#PluginMarketplaceUpdateIcon {
     min-width: 12px;
@@ -92,19 +96,22 @@ QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceDetailIcon {
 }
 QLabel#PluginMarketplaceDetailName {
     color: @TEXT@;
-    font-size: @FONT_TITLE@px;
-    font-weight: @WEIGHT_EMPHASIS@;
     background: transparent;
+
+    font-size: @FONT_WIDGET_LARGE@px;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 QLabel#PluginMarketplaceDetailId {
     color: @SECONDARYTEXT@;
-    font-size: @FONT_CAPTION@px;
     background: transparent;
+
+    font-size: @FONT_COMPACT@px;
 }
 QLabel#PluginMarketplacePackageStatus {
     color: @SECONDARYTEXT@;
-    font-weight: @WEIGHT_EMPHASIS@;
     background: transparent;
+
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 QLabel#PluginMarketplaceDescription {
     color: @TEXT@;
@@ -112,8 +119,9 @@ QLabel#PluginMarketplaceDescription {
 }
 QLabel#PluginMarketplaceSectionLabel {
     color: @TEXT@;
-    font-weight: @WEIGHT_EMPHASIS@;
     background: transparent;
+
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 QLabel#PluginMarketplaceSummary,
 QLabel#PluginMarketplaceCompatibility,
@@ -128,7 +136,8 @@ QLabel#PluginMarketplaceOperationStatus {
 QLabel#PluginMarketplaceSummary,
 QLabel#PluginMarketplaceHistoryStatus,
 QLabel#PluginMarketplaceActivationNote {
-    font-size: @FONT_CAPTION@px;
+
+    font-size: @FONT_COMPACT@px;
 }
 QLabel#PluginMarketplaceResult[messageState="error"],
 QLabel#PluginMarketplaceCompatibility[messageState="error"] {
@@ -138,6 +147,7 @@ QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"] {
     background: @SURFACE@;
     color: @TEXT@;
     border-color: @HOVERBORDER@;
+
     font-weight: @WEIGHT_EMPHASIS@;
 }
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:hover {
@@ -151,7 +161,8 @@ QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:pressed {
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove {
     color: @SECONDARYTEXT@;
     border-color: @CONTROLBORDER@;
-    font-weight: @WEIGHT_NORMAL@;
+
+    font-weight: @WEIGHT_WIDGET_MEDIUM@;
 }
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:hover {
     background: @HOVER@;
@@ -203,7 +214,8 @@ QLabel#UpdateNotificationTitle {
     background-color: transparent;
     border: none;
     color: @TEXT@;
-    font-weight: @WEIGHT_EMPHASIS@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QLabel#UpdateNotificationMessage {
@@ -223,7 +235,8 @@ QToolButton#UpdateNotificationCloseButton {
     border: none;
     background: transparent;
     color: @DISABLEDTEXT@;
-    font-size: @FONT_DISPLAY@px;
+
+    font-size: @FONT_WIDGET_GLYPH@px;
     font-weight: @WEIGHT_EMPHASIS@;
 }
 
@@ -245,6 +258,7 @@ QPushButton#UpdateNotificationUpdateButton {
     border-radius: 8px;
     background: transparent;
     color: @TEXT@;
+
     font-weight: @WEIGHT_EMPHASIS@;
 }
 

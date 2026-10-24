@@ -24,9 +24,10 @@ QTextEdit#SystemLogViewer {
     color: @TEXT@;
     border: none;
     border-radius: 0px;
+    padding: 0px 12px;
+
     font-family: "@FONT_MONO@";
     font-size: @FONT_CAPTION@px;
-    padding: 0px 12px;
 }
 
 QStatusBar::item {
@@ -90,7 +91,8 @@ QLabel#EngineStatusZoom,
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
     color: @TEXT@;
-    font-weight: @WEIGHT_EMPHASIS@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QStatusBar QLabel[statusRole="message"] {
@@ -101,15 +103,20 @@ QStatusBar QLabel[statusRole="message"] {
     margin: 0 8px 0 0;
     min-width: 0px;
     color: @TEXT@;
+
     font-weight: @WEIGHT_NORMAL@;
 }
 
 QStatusBar QLabel[statusRole="message"][messageState="error"] {
-    font-weight: @WEIGHT_EMPHASIS@;
+
+    color: @TEXT@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QLabel[statusRole="coordinates"],
 QLabel[statusRole="fps"] {
+
     font-family: "@FONT_MONO@", "@FONT_UI@";
 }
 
@@ -118,12 +125,14 @@ QLabel#EngineStatusSummary,
 QLabel#EngineStatusRenderPath,
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
+
     font-family: "@FONT_UI@";
 }
 
 QLabel#EngineStatusPointer,
 QLabel#EngineStatusZoom,
 QLabel#EngineStatusFps {
+
     font-family: "@FONT_MONO@";
 }
 
@@ -159,7 +168,7 @@ QToolButton#EngineStatusViewButton::menu-indicator {
 
 QPushButton#MainLogToggleBtn {
     background: @SURFACE@;
-    border: 1px solid @CURRENT@;
+    border: 1px solid @STATUSBORDER@;
     border-radius: 9px;
     padding: 0 8px;
     height: 24px;
@@ -167,7 +176,8 @@ QPushButton#MainLogToggleBtn {
     max-height: @CONTROL_HEIGHT@px;
     margin: 0 2px 0 0;
     color: @TEXT@;
-    font-weight: @WEIGHT_EMPHASIS@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
     font-size: @FONT_CAPTION@px;
 }
 
@@ -181,7 +191,8 @@ QPushButton#RuntimeLibrariesStatusButton {
     max-height: @CONTROL_HEIGHT@px;
     margin: 0 2px 0 0;
     color: @TEXT@;
-    font-weight: @WEIGHT_EMPHASIS@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
     font-size: @FONT_CAPTION@px;
 }
 
@@ -249,10 +260,11 @@ QPushButton#MinimizedSessionRestore {
     background: transparent;
     border: none;
     color: @TEXT@;
-    font-size: @FONT_CAPTION@px;
-    font-weight: @WEIGHT_EMPHASIS@;
     padding: 0 4px 0 6px;
     margin: 0;
+
+    font-size: @FONT_CAPTION@px;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QPushButton#MinimizedSessionRestore:hover {

@@ -40,7 +40,7 @@ QToolBar#EngineToolBar QToolButton {
 }
 
 QToolBar::separator {
-    background: @PRESSED@;
+    background: @BORDER@;
     width: 1px;
     margin: 2px 6px;
 }
@@ -54,7 +54,8 @@ QLabel#GraphicsSourceTitle {
     min-height: @CONTROL_HEIGHT@px;
     max-height: @CONTROL_HEIGHT@px;
     margin: 6px;
-    font-weight: @WEIGHT_EMPHASIS@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QTabBar#GraphicsSourceTabBar {
@@ -67,19 +68,19 @@ QTabBar#GraphicsSourceTabBar {
 }
 
 QTabBar#GraphicsSourceTabBar::tab {
-    border-top: 2px solid transparent;
-    border-bottom: none;
+    border-top: none;
+    border-bottom: 2px solid transparent;
     padding: 5px 8px;
 }
 
 QTabBar#GraphicsSourceTabBar::tab:selected {
-    border-top: 2px solid @TEXT@;
-    border-bottom: none;
+    border-top: none;
+    border-bottom: 2px solid @SELECTIONACCENT@;
 }
 
 QTabBar#GraphicsSourceTabBar::tab:hover:!selected {
-    border-top: 2px solid @HOVERBORDER@;
-    border-bottom: none;
+    border-top: none;
+    border-bottom: 2px solid @HOVERBORDER@;
 }
 
 QScrollBar#ImageViewOverlayScrollBar:horizontal,
@@ -119,7 +120,8 @@ QScrollBar#ImageViewOverlayScrollBar::sub-page {
 QLabel#PlotLineProfilePointLabel {
     background: transparent;
     color: @TEXT@;
-    font-weight: @WEIGHT_NORMAL@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 /* Right-side Graphics Settings Panel */
@@ -136,8 +138,9 @@ QWidget#GraphicsSettingsPanelHeader {
 QLabel#GraphicsSettingsPanelTitle {
     background: transparent;
     color: @TEXT@;
-    font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_EMPHASIS@;
+
+    font-size: @FONT_COMPACT@px;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QToolButton#GraphicsSettingsPanelCloseButton {
@@ -211,8 +214,9 @@ QWidget#GraphicsSettingsRangePage {
 QLabel#GraphicsSettingsSectionTitle {
     background: transparent;
     color: @TEXT@;
-    font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_EMPHASIS@;
+
+    font-size: @FONT_CAPTION@px;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QLabel#GraphicsSettingsRangeChannelNote {
@@ -335,12 +339,12 @@ QFrame#PlotViewHistogramBinPopup QLabel {
     color: @TEXT@;
 }
 
-QLabel#PlotViewYRangePopupTitle,
-QLabel#PlotViewHistogramBinPopupTitle {
+QFrame#PlotViewYRangePopup QLabel#PlotViewYRangePopupTitle,
+QFrame#PlotViewHistogramBinPopup QLabel#PlotViewHistogramBinPopupTitle {
     min-height: 20px;
     background: transparent;
     color: @TEXT@;
-    font-weight: @WEIGHT_EMPHASIS@;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 /* Plot UI roles; series and inspection colors encode data identity. */
@@ -355,12 +359,15 @@ PlotViewWidget {
 }
 
 QTableWidget#AnalysisStatisticsTable, QTableWidget#AnalysisStatisticsTable QHeaderView::section {
-    font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_NORMAL@;
+    color: @TEXT@;
 }
 
-QLabel#PlotViewHistogramBinSummaryLabel {
+QFrame#PlotViewHistogramBinPopup QLabel#PlotViewHistogramBinSummaryLabel {
     color: @SECONDARYTEXT@;
-    font-size: @FONT_CAPTION@px;
-    font-weight: @WEIGHT_NORMAL@;
+}
+
+QTabBar#GraphicsSourceTabBar::tab:selected,
+QTabWidget#AnalysisPanelTabs QTabBar::tab:selected,
+QTabWidget#GraphicsSettingsPanelTabs QTabBar::tab:selected {
+    background: transparent;
 }
