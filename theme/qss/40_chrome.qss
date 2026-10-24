@@ -48,6 +48,7 @@ QWidget#ThemedMainTitleBar QMenuBar {
 QWidget#ThemedMdiTitleBar QMenuBar {
     background: transparent;
     border: none;
+
     font-size: @FONT_CAPTION@px;
 }
 
@@ -59,11 +60,12 @@ QWidget#ThemedMdiTitleBar QMenuBar::item {
 
 QLabel#MainTitleLabel {
     background: transparent;
-    font-size: @FONT_TITLE@px;
-    font-weight: @WEIGHT_EMPHASIS@;
     color: @TEXT@;
     margin: 0px;
     padding: 0px;
+
+    font-size: @FONT_TITLE@px;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QPushButton#MainMinButton,
@@ -133,10 +135,11 @@ QLabel#HmiMoveHandle {
     border: none;
     border-radius: 0px;
     color: @SURFACE@;
-    font-weight: @WEIGHT_EMPHASIS@;
     min-height: 28px;
     max-height: 28px;
     padding-left: 10px;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QWidget#HmiResizeHandle {
@@ -165,11 +168,12 @@ QWidget#ThemedDialogTitleBar {
 
 QLabel#ThemedDialogTitleLabel {
     background: transparent;
-    font-size: @FONT_TITLE@px;
-    font-weight: @WEIGHT_EMPHASIS@;
     color: @TEXT@;
     margin: 0px;
     padding: 0px;
+
+    font-size: @FONT_CAPTION@px;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QPushButton#ThemedDialogCloseButton {
@@ -207,11 +211,12 @@ QWidget#ThemedMdiTitleBar[maximized="true"] {
 
 QLabel#ThemedMdiTitleBarLabel {
     background: transparent;
-    font-size: @FONT_TITLE@px;
-    font-weight: @WEIGHT_EMPHASIS@;
     color: @TEXT@;
     margin: 0px;
     padding: 0px;
+
+    font-size: @FONT_CAPTION@px;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QPushButton#TitleMinButton,
@@ -246,10 +251,11 @@ QWidget#ThemedDockTitleBar {
 
 QLabel#ThemedDockTitleBarLabel {
     background: transparent;
-    font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_EMPHASIS@;
     color: @TEXT@;
     padding-top: 1px; /* Slightly lower the font vertical alignment */
+
+    font-size: @FONT_CAPTION@px;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QPushButton#DockMaxButton,
@@ -315,4 +321,59 @@ QDockWidget[floatingState="true"] QFrame#DockContainerWidget > QWidget {
 QRubberBand {
     background-color: rgba(@SURFACE_RGB@, 220);
     border: 1px solid @BORDER@;
+}
+
+/* Typography policy is dialog-only. Workspace/session/dock/data widgets keep original metrics. */
+QDialog, QDialog QWidget {
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
+}
+QDialog QLabel[textRole="title"], QDialog QLabel#ThemedDialogTitleLabel,
+QDialog QLabel#PluginMarketplaceDetailName {
+    font-size: @FONT_TITLE@px;
+    font-weight: @WEIGHT_EMPHASIS@;
+    color: @TEXT@;
+}
+QDialog QGroupBox::title, QDialog QLabel[textRole="sectionTitle"],
+QDialog QLabel#PluginMarketplaceSectionLabel, QDialog QLabel#RuntimePathsHeading {
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_EMPHASIS@;
+    color: @TEXT@;
+}
+QDialog QLabel[textRole="body"], QDialog QLabel[textRole="fieldName"],
+QDialog QLineEdit#RuntimePathsNameEdit, QDialog QLabel#RuntimePathsNameLabel {
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
+    color: @TEXT@;
+}
+QDialog QLabel[textRole="description"], QDialog QLabel[textRole="caption"] {
+    font-size: @FONT_CAPTION@px;
+    font-weight: @WEIGHT_NORMAL@;
+    color: @SECONDARYTEXT@;
+}
+QDialog QHeaderView::section, QDialog QHeaderView[fileDialogRole="itemHeader"] {
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
+    color: @TEXT@;
+}
+
+QDialog QLabel:disabled { color: @DISABLEDTEXT@; }
+
+QDialog QTabBar::tab {
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
+}
+QDialog QTabBar::tab:selected {
+    color: @SELECTIONACCENT@;
+    font-weight: @WEIGHT_EMPHASIS@;
+    border-bottom: 2px solid @SELECTIONACCENT@;
+    background: transparent;
+}
+
+QDialog QTreeWidget#RuntimePathsListWidget,
+QDialog QTreeWidget#RuntimePathsListWidget::item:selected,
+QDialog QWidget#RuntimePathsFormContainer QLabel#RuntimePathsLabel {
+    font-size: @FONT_BODY@px;
+    font-weight: @WEIGHT_NORMAL@;
+    color: @TEXT@;
 }

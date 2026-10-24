@@ -958,13 +958,19 @@ private slots:
             const auto verifyRow = [&](int row) {
                 QCoreApplication::processEvents();
                 const QRect logical = view->visualRect(combo.model()->index(row, 0));
-                const QImage image = view->viewport()->grab().toImage();
-                const qreal dpr = image.devicePixelRatio();
+                const qreal dpr = view->viewport()->devicePixelRatioF();
+                QImage image(view->viewport()->size() * dpr, QImage::Format_RGB32);
+                image.setDevicePixelRatio(dpr);
+                image.fill(Resources::themePalette().value(QStringLiteral("surface")));
+                QPainter painter(&image);
+                view->viewport()->render(&painter);
+                painter.end();
                 bool marker = false;
-                for (int y = qCeil(logical.top() * dpr); y < qFloor((logical.bottom() + 1) * dpr); ++y)
-                    for (int x = qFloor(logical.left() * dpr); x < qCeil((logical.left() + 6) * dpr); ++x) {
+                for (int y = qCeil((logical.center().y() - 2) * dpr); y < qFloor((logical.center().y() + 2) * dpr); ++y)
+                    for (int x = qFloor((logical.left() + 3) * dpr); x < qCeil((logical.left() + 6) * dpr); ++x) {
                         const QColor pixel = image.pixelColor(x, y);
-                        marker |= pixel.alpha() > 128 && qGray(pixel.rgb()) < 120;
+                        marker |= pixel.alpha() > 128 && qGray(pixel.rgb()) < 120
+                            && qAbs(pixel.red() - pixel.green()) < 10 && qAbs(pixel.green() - pixel.blue()) < 10;
                     }
                 const QColor background = image.pixelColor(qRound((logical.right() - 16) * dpr),
                                                            qRound(logical.center().y() * dpr));

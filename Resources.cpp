@@ -1722,6 +1722,7 @@ ThemePalette defaultThemePalette()
 {
     return {
         {QStringLiteral("text"), QColor(QStringLiteral("#3c3c3b"))},
+        {QStringLiteral("selectionAccent"), QColor(QStringLiteral("#15487f"))},
         {QStringLiteral("secondaryText"), QColor(QStringLiteral("#6e6e6d"))},
         {QStringLiteral("disabledText"), QColor(QStringLiteral("#9b9b9a"))},
         {QStringLiteral("surface"), QColor(QStringLiteral("#ffffff"))},
@@ -1733,8 +1734,9 @@ ThemePalette defaultThemePalette()
         {QStringLiteral("hover"), QColor(QStringLiteral("#f4f4f3"))},
         {QStringLiteral("pressed"), QColor(QStringLiteral("#eeeeed"))},
         {QStringLiteral("disabledSurface"), QColor(QStringLiteral("#f7f7f7"))},
-        {QStringLiteral("selection"), QColor(QStringLiteral("#e6e6e5"))},
-        {QStringLiteral("current"), QColor(QStringLiteral("#d4d4d3"))},
+        {QStringLiteral("selection"), QColor(QStringLiteral("#f4f7fb"))},
+        {QStringLiteral("current"), QColor(QStringLiteral("#eef3f9"))},
+        {QStringLiteral("statusBorder"), QColor(QStringLiteral("#d4d4d3"))},
         {QStringLiteral("progressTrack"), QColor(QStringLiteral("#ededed"))},
         {QStringLiteral("progressFill"), QColor(QStringLiteral("#1e5ea6"))},
         {QStringLiteral("shadow"), QColor(QStringLiteral("#3c3c3b"))},
@@ -1962,7 +1964,11 @@ void installResources(QApplication& app)
 
     // Set application default font
     QFont defaultFont(presentationTokens().value(QStringLiteral("FONT_UI")).toString());
-    defaultFont.setPixelSize(presentationMetric("FONT_BODY"));
+#if defined(Q_OS_MAC)
+    defaultFont.setPointSizeF(12.0);
+#else
+    defaultFont.setPointSizeF(10.0);
+#endif
     app.setFont(defaultFont);
 
     const QStringList qssFiles = {

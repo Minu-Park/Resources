@@ -2,10 +2,10 @@
 
 * {
     color: @TEXT@;
+    outline: none;
+
     font-family: "@FONT_UI@";
     font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_NORMAL@;
-    outline: none;
 }
 
 QDialog,
@@ -92,7 +92,10 @@ QGroupBox {
     border: 1px solid @BORDER@;
     border-radius: 8px;
     margin-top: 22px;
-    font-weight: @WEIGHT_EMPHASIS@;
+
+    color: @TEXT@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QGroupBox::title {
@@ -103,8 +106,9 @@ QGroupBox::title {
     padding: 0px;
     background: transparent;
     color: @TEXT@;
-    font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_EMPHASIS@;
+
+    font-size: @FONT_CAPTION@px;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 /* A 24px title switch needs breathing room before the section frame begins. */
@@ -119,6 +123,7 @@ QGroupBox QComboBox,
 QGroupBox QAbstractSpinBox,
 QGroupBox QCheckBox,
 QGroupBox QRadioButton {
+
     font-weight: @WEIGHT_NORMAL@;
 }
 
@@ -138,14 +143,16 @@ QTabBar::tab {
     padding: 8px 8px;
     margin-right: 0px;
     border-radius: 0px;
-    font-weight: @WEIGHT_NORMAL@;
+
+    font-weight: @WEIGHT_WIDGET_MEDIUM@;
 }
 
 QTabBar::tab:selected {
     background: transparent;
-    color: @TEXT@;
-    border-bottom: 2px solid @TEXT@;
-    font-weight: @WEIGHT_EMPHASIS@;
+    color: @SELECTIONACCENT@;
+    border-bottom: 2px solid @SELECTIONACCENT@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QTabBar::tab:hover:!selected {
@@ -239,43 +246,33 @@ QTreeWidget {
 QHeaderView,
 QFrame#DeviceFeatureSearchBubble {
     background: @SURFACE@;
-    border: 1px solid @CONTROLBORDER@;
+    border: 1px solid @BORDER@;
     border-radius: 9px;
 }
 
 /* Semantic typography is global; consumers expose roles rather than point sizes. */
 QLabel[textRole="title"] {
     color: @TEXT@;
-    font-size: @FONT_TITLE@px;
-    font-weight: @WEIGHT_EMPHASIS@;
 }
 QLabel[textRole="sectionTitle"] {
     color: @TEXT@;
-    font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_EMPHASIS@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 QLabel[textRole="body"],
 QLabel[textRole="fieldName"] {
     color: @TEXT@;
-    font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_NORMAL@;
 }
 QLabel[textRole="description"],
 QLabel[textRole="caption"] {
     color: @SECONDARYTEXT@;
-    font-size: @FONT_CAPTION@px;
-    font-weight: @WEIGHT_NORMAL@;
     min-height: 0;
 }
 QLabel[textRole="warning"] {
     color: @WARNINGTEXT@;
-    font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_NORMAL@;
 }
 QLabel[textRole="error"] {
     color: @ERRORTEXT@;
-    font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_NORMAL@;
 }
 QLabel:disabled {
     color: @DISABLEDTEXT@;
@@ -285,11 +282,12 @@ QHeaderView::section {
     background: transparent;
     color: @TEXT@;
     border: none;
-    border-right: 1px solid @CONTROLBORDER@;
+    border-right: 1px solid @BORDER@;
     min-height: 22px;
     padding: 0 6px;
+
     font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_EMPHASIS@;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QHeaderView::section:first {
@@ -305,8 +303,9 @@ QHeaderView::section:last {
 
 QHeaderView[fileDialogRole="itemHeader"] {
     color: @TEXT@;
+
     font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_EMPHASIS@;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QTableCornerButton::section {
@@ -339,7 +338,8 @@ QWidget#ResourcesItemSelectionSurface {
     qproperty-currentColor: @CURRENT@;
     qproperty-focusColor: @FOCUSBORDER@;
 }
-QTableView QLabel { background: transparent; }
+QTableView QLabel { background: transparent;
+}
 
 QTreeView::branch, QTreeWidget::branch {
     border: none;
@@ -382,17 +382,19 @@ QTextBrowser {
     border: 1px solid @CONTROLBORDER@;
     border-radius: 8px;
     padding: 5px 4px;
-    selection-background-color: @HOVER@;
+    selection-background-color: @SELECTION@;
     selection-color: @TEXT@;
 }
 
 QPlainTextEdit,
 QTextEdit,
 QTextBrowser {
+
     font-family: "@FONT_MONO@";
 }
 
 QTextBrowser[contentRole="document"] {
+
     font-family: "@FONT_UI@";
 }
 
@@ -587,7 +589,8 @@ QPushButton {
     border: 1px solid @CONTROLBORDER@;
     background: @SURFACE@;
     color: @TEXT@;
-    font-weight: @WEIGHT_NORMAL@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QPushButton:hover {
@@ -600,6 +603,7 @@ QPushButton:pressed {
     background: @HOVER@;
     color: @TEXT@;
 }
+
 
 QPushButton:disabled {
     background: @DISABLEDSURFACE@;
@@ -615,6 +619,7 @@ QToolButton {
     border-radius: 7px;
     background: transparent;
     color: @TEXT@;
+
     font-weight: @WEIGHT_EMPHASIS@;
 }
 
@@ -655,7 +660,8 @@ QRadioButton:hover {
     background: transparent;
 }
 
-QRadioButton { spacing: 8px; }
+QRadioButton { spacing: 8px;
+}
 QRadioButton::indicator, QRadioButton::indicator:hover {
     width: 22px;
     height: 22px;
@@ -664,10 +670,14 @@ QRadioButton::indicator, QRadioButton::indicator:hover {
     background: transparent;
     image: url(:/Resources/icon/round-48.png);
 }
-QRadioButton::indicator:checked { image: url(:/Resources/icon/unchecked-radio-button-48.png); }
-QRadioButton::indicator:disabled { image: url(:/Resources/icon/radio-empty-disabled.svg); }
-QRadioButton::indicator:checked:disabled { image: url(:/Resources/icon/radio-selected-disabled.svg); }
-QRadioButton:disabled { color: @DISABLEDTEXT@; }
+QRadioButton::indicator:checked { image: url(:/Resources/icon/unchecked-radio-button-48.png);
+}
+QRadioButton::indicator:disabled { image: url(:/Resources/icon/radio-empty-disabled.svg);
+}
+QRadioButton::indicator:checked:disabled { image: url(:/Resources/icon/radio-selected-disabled.svg);
+}
+QRadioButton:disabled { color: @DISABLEDTEXT@;
+}
 
 /* Default checkbox presentation; native check-state and input behavior remain intact. */
 QCheckBox {
@@ -946,6 +956,7 @@ QMenu::separator {
 QMenuBar {
     background: @SURFACE@;
     color: @TEXT@;
+
     font-size: @FONT_TITLE@px;
 }
 
@@ -953,6 +964,7 @@ QMenuBar::item {
     padding: 4px 10px;
     border-radius: 4px;
     background: transparent;
+
     font-size: @FONT_TITLE@px;
 }
 
@@ -1056,26 +1068,30 @@ QLabel {
 }
 
 QLabel#SplashTitle {
-    color: #00457C;
+    color: @TEXT@;
+
     font-size: @FONT_DISPLAY@px;
-    font-weight: @WEIGHT_EMPHASIS@;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QLabel#SplashVersion {
-    color: #516476;
+    color: @SECONDARYTEXT@;
+
     font-size: @FONT_COMPACT@px;
-    font-weight: @WEIGHT_EMPHASIS@;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 QLabel#SplashText, QLabel#LoadingText {
     color: rgba(22, 32, 43, 160);
+
     font-size: @FONT_COMPACT@px;
 }
 
 QLabel#SplashPercent, QLabel#LoadingPercent {
-    color: #00457C;
+    color: @TEXT@;
+
     font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_EMPHASIS@;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
 /* Global QSlider Defaults */
@@ -1129,11 +1145,16 @@ QProgressBar {
     qproperty-alignment: AlignCenter;
 }
 
-QProgressBar[textVisible="false"] { min-height: 8px; max-height: 8px; border-radius: 4px; }
-QProgressBar::chunk { border: none; background: transparent; }
-QProgressBar:disabled { color: @DISABLEDTEXT@; }
-QDateTimeEdit { padding-right: 24px; }
-QTimeEdit { padding-right: 4px; }
+QProgressBar[textVisible="false"] { min-height: 8px; max-height: 8px; border-radius: 4px;
+}
+QProgressBar::chunk { border: none; background: transparent;
+}
+QProgressBar:disabled { color: @DISABLEDTEXT@;
+}
+QDateTimeEdit { padding-right: 24px;
+}
+QTimeEdit { padding-right: 4px;
+}
 QDateTimeEdit::drop-down {
     subcontrol-origin: padding;
     subcontrol-position: top right;
@@ -1147,9 +1168,18 @@ QDateTimeEdit::down-arrow {
     width: 10px;
     height: 6px;
 }
-QCalendarWidget QWidget#qt_calendar_navigationbar { background: @SURFACE@; border-bottom: 1px solid @CONTROLBORDER@; }
-QCalendarWidget QToolButton { background: transparent; color: @TEXT@; border: none; min-height: 22px; padding: 0 4px; font-weight: @WEIGHT_EMPHASIS@; }
-QCalendarWidget QToolButton#qt_calendar_prevmonth { qproperty-icon: url(:/Resources/icon/back-48.png); icon-size: 12px; }
-QCalendarWidget QToolButton#qt_calendar_nextmonth { qproperty-icon: url(:/Resources/icon/forward-48.png); icon-size: 12px; }
-QCalendarWidget QAbstractItemView { background: @SURFACE@; selection-background-color: @HOVER@; selection-color: @TEXT@; color: @TEXT@; outline: 0; }
-QCalendarWidget QAbstractItemView::item { padding: 1px 2px; }
+QCalendarWidget QWidget#qt_calendar_navigationbar { background: @SURFACE@; border-bottom: 1px solid @CONTROLBORDER@;
+}
+QCalendarWidget QToolButton { background: transparent; color: @TEXT@; border: none; min-height: 22px; padding: 0 4px;
+    font-weight: @WEIGHT_EMPHASIS@;
+}
+QCalendarWidget QToolButton#qt_calendar_prevmonth { qproperty-icon: url(:/Resources/icon/back-48.png); icon-size: 12px;
+}
+QCalendarWidget QToolButton#qt_calendar_nextmonth { qproperty-icon: url(:/Resources/icon/forward-48.png); icon-size: 12px;
+}
+QCalendarWidget QAbstractItemView { background: @SURFACE@; selection-background-color: @HOVER@; selection-color: @TEXT@; color: @TEXT@; outline: 0;
+}
+QCalendarWidget QAbstractItemView::item { padding: 1px 2px;
+}
+
+QFrame#DeviceFeatureSearchBubble { border-color: @CONTROLBORDER@; }

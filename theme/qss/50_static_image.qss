@@ -7,8 +7,9 @@ Static3DDataControlWidget {
 }
 
 StaticImageControlWidget QLabel {
-    font-weight: @WEIGHT_EMPHASIS@;
     color: @TEXT@;
+
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 StaticImageControlWidget QToolButton,

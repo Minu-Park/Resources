@@ -108,6 +108,7 @@ QLabel#DeviceFeatureSearchCount {
     background: transparent;
     border: none;
     color: @SECONDARYTEXT@;
+
     font-size: @FONT_COMPACT@px;
 }
 
@@ -140,6 +141,7 @@ QToolButton#DeviceFeatureFavoritesOnly {
     background: transparent;
     border-color: transparent;
     color: @SECONDARYTEXT@;
+
     font-size: @FONT_DISPLAY@px;
 }
 
