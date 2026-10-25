@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Apply shared hover/focus/held input borders inside device trees, preserving neutral row surfaces, disabled styling and parameter behavior.
+
 - Apply the shared 4px capsule track to horizontal sliders, keeping white handles, distinct hover/drag outlines and a neutral disabled track.
 
 - Apply compact 4x2 symmetric vector chevrons to all combo, spin and date/time inputs: neutral at rest, blue only on hover and light gray when unavailable, without changing hit areas.
