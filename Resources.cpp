@@ -1492,6 +1492,8 @@ private:
         }
         else if (name == QLatin1String("DeviceFeatureSearchLayout")) {
             setLayoutMetrics(layout, QMargins(7, 0, 7, 0), 6);
+            for (int index = 0; index < layout->count(); ++index)
+                layout->itemAt(index)->setAlignment(Qt::AlignVCenter);
         }
         else if (name == QLatin1String("DeviceTreePanelLayout")) {
             setLayoutMetrics(layout, QMargins(12, 0, 12, 12), 8);

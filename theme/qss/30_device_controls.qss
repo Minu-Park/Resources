@@ -70,18 +70,18 @@ softly lifted frame. */
 SearchableTreeSurface {
     qproperty-searchInset: 10;
     qproperty-searchMaximumWidth: 440;
-    qproperty-favoriteColor: @TEXT@;
+    qproperty-favoriteColor: @FOCUSBORDER@;
     qproperty-searchShadowBlur: 14;
     qproperty-searchShadowOffset: 2;
     qproperty-searchShadowColor: rgba(@SHADOW_RGB@, 42);
 }/* Border,
 white surface and corner geometry are shared with QHeaderView in 00_base.qss. */
 QFrame#DeviceFeatureSearchBubble {
-    padding: 0 7px;
+    padding: 0;
     height: 24px;
     min-height: @CONTROL_HEIGHT@px;
     max-height: @CONTROL_HEIGHT@px;
-    margin: 0 2px 0 0;
+    margin: 0;
     color: @TEXT@;
 }
 
@@ -137,6 +137,13 @@ QToolButton#DeviceFeatureSearchClear:enabled:pressed {
 }
 
 QToolButton#DeviceFeatureFavoritesOnly {
+    qproperty-iconSize: 16px 16px;
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px;
+    padding: 0;
+    margin: 0;
     background: transparent;
     color: @SECONDARYTEXT@;
 
@@ -166,4 +173,17 @@ QToolButton#DeviceFeatureSearchClear:enabled:checked {
 
     border: none;
     outline: none;
+}
+
+/* Opt-in search-bubble state proposal; the inner input remains borderless. */
+QFrame#DeviceFeatureSearchBubble[searchPreview="state-border"]:enabled:hover,
+QFrame#DeviceFeatureSearchBubble[searchPreview="state-border"][designHovered="true"]:enabled,
+QFrame#DeviceFeatureSearchBubble[searchPreview="state-border"][searchFocusWithin="true"]:enabled {
+    border-color: @HOVERBORDER@;
+}
+QFrame#DeviceFeatureSearchBubble[searchPreview="state-border"][searchPressed="true"]:enabled {
+    border-color: @FOCUSBORDER@;
+}
+QFrame#DeviceFeatureSearchBubble[searchPreview="state-border"]:disabled {
+    border-color: @CONTROLBORDER@;
 }
