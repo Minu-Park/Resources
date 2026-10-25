@@ -185,16 +185,19 @@ QTabBar QToolButton#ScrollLeftButton {
 }
 
 QTabBar QToolButton:hover {
-    background-color: @PRESSED@;
+    background-color: @SURFACE@;
+    border-color: @FOCUSBORDER@;
     border-radius: 4px;
 }
 
 QTabBar QToolButton:pressed {
-    background-color: @DISABLEDTEXT@;
+    background-color: @SURFACE@;
+    border-color: @FOCUSBORDER@;
 }
 
 QTabBar QToolButton:disabled {
     background-color: @SURFACE@;
+    border-color: transparent;
 }
 
 QTabBar QToolButton::left-arrow {
@@ -630,21 +633,18 @@ QToolButton {
     font-weight: @WEIGHT_EMPHASIS@;
 }
 
-QToolButton:hover {
-    background: @HOVER@;
-    border-color: @CONTROLBORDER@;
+QToolButton:enabled:hover {
+    background: transparent;
+    border-color: @FOCUSBORDER@;
     color: @TEXT@;
 }
 
-QToolButton:pressed {
-    background: @PRESSED@;
-    border-color: @HOVERBORDER@;
-}
-
-QToolButton:checked {
-    background: @HOVER@;
-    border-color: @CONTROLBORDER@;
-    color: @TEXT@;
+QToolButton:enabled:pressed,
+QToolButton:enabled:checked,
+QToolButton:enabled:focus {
+    background: transparent;
+    border-color: @FOCUSBORDER@;
+    outline: none;
 }
 
 QToolButton:disabled {

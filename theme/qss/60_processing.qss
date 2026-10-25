@@ -105,24 +105,30 @@ QToolButton#ProcessingTabSaveBtn {
     max-width: 20px;
     min-height: 20px;
     max-height: 20px;
-    border: none;
+    border: 1px solid transparent;
     background: transparent;
-    padding: 1px;
+    padding: 0;
 }
 
-QToolButton#ProcessingTabAddBtn:hover,
-QToolButton#ProcessingTabDeleteBtn:hover,
-QToolButton#ProcessingTabLoadBtn:hover,
-QToolButton#ProcessingTabSaveBtn:hover {
-    background-color: @PRESSED@;
+QToolButton#ProcessingTabAddBtn:enabled:hover,
+QToolButton#ProcessingTabDeleteBtn:enabled:hover,
+QToolButton#ProcessingTabLoadBtn:enabled:hover,
+QToolButton#ProcessingTabSaveBtn:enabled:hover,
+QToolButton#ProcessingTabAddBtn:enabled:focus,
+QToolButton#ProcessingTabDeleteBtn:enabled:focus,
+QToolButton#ProcessingTabLoadBtn:enabled:focus,
+QToolButton#ProcessingTabSaveBtn:enabled:focus {
+    background-color: transparent;
+    border-color: @FOCUSBORDER@;
     border-radius: 4px;
 }
 
-QToolButton#ProcessingTabAddBtn:pressed,
-QToolButton#ProcessingTabDeleteBtn:pressed,
-QToolButton#ProcessingTabLoadBtn:pressed,
-QToolButton#ProcessingTabSaveBtn:pressed {
-    background-color: @DISABLEDTEXT@;
+QToolButton#ProcessingTabAddBtn:enabled:pressed,
+QToolButton#ProcessingTabDeleteBtn:enabled:pressed,
+QToolButton#ProcessingTabLoadBtn:enabled:pressed,
+QToolButton#ProcessingTabSaveBtn:enabled:pressed {
+    background-color: transparent;
+    border-color: @FOCUSBORDER@;
 }
 
 QToolButton#ProcessingTabDeleteBtn:disabled,
