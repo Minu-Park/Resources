@@ -52,7 +52,11 @@ QWidget#ThemedMdiTitleBar QMenuBar {
     font-size: @FONT_CAPTION@px;
 }
 
-QWidget#ThemedMainTitleBar QMenuBar::item,
+QWidget#ThemedMainTitleBar QMenuBar::item {
+    padding: 9px 8px;
+    margin: 0;
+}
+
 QWidget#ThemedMdiTitleBar QMenuBar::item {
     padding: 3px 8px;
     margin: 0;

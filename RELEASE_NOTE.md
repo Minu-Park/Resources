@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Expand main title-bar menu items vertically and keep enabled menu targets ahead of frame-resize hit testing so the space above and below each label remains clickable.
+
 - Use #15487f for active input borders and interactive status controls; disabled menu buttons and read-only status labels retain their neutral borders.
 
 - Fix MDI, dock/widget and dialog title bars to one shared 11px scale, including nested dialog contexts.
