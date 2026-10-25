@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use the shared accent outline for hovered, focused, pressed and checked push buttons, including marketplace and update actions.
+
 - Restore the splash title accent color (#15487f by default).
 
 - Expand main title-bar menu items vertically and keep enabled menu targets ahead of frame-resize hit testing so the space above and below each label remains clickable.

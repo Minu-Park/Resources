@@ -152,11 +152,11 @@ QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"] {
 }
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:hover {
     background: @HOVER@;
-    border-color: @DISABLEDTEXT@;
+    border-color: @FOCUSBORDER@;
 }
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:pressed {
     background: @HOVER@;
-    border-color: @DISABLEDTEXT@;
+    border-color: @FOCUSBORDER@;
 }
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove {
     color: @SECONDARYTEXT@;
@@ -167,16 +167,16 @@ QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove {
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:hover {
     background: @HOVER@;
     color: @TEXT@;
-    border-color: @HOVERBORDER@;
+    border-color: @FOCUSBORDER@;
 }
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:pressed {
     background: @HOVER@;
     color: @TEXT@;
-    border-color: @DISABLEDTEXT@;
+    border-color: @FOCUSBORDER@;
 }
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:focus,
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:focus {
-    border-color: @DISABLEDTEXT@;
+    border-color: @FOCUSBORDER@;
 }
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:disabled,
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:disabled {
@@ -266,10 +266,12 @@ QPushButton#UpdateNotificationUpdateButton {
     background: @HOVER@;
 }
 
-QPushButton#UpdateNotificationLaterButton:hover,
-QPushButton#UpdateNotificationUpdateButton:hover,
-QPushButton#UpdateNotificationLaterButton:pressed,
-QPushButton#UpdateNotificationUpdateButton:pressed {
-    border-color: @HOVERBORDER@;
+QPushButton#UpdateNotificationLaterButton:enabled:hover,
+QPushButton#UpdateNotificationUpdateButton:enabled:hover,
+QPushButton#UpdateNotificationLaterButton:enabled:pressed,
+QPushButton#UpdateNotificationUpdateButton:enabled:pressed,
+QPushButton#UpdateNotificationLaterButton:enabled:focus,
+QPushButton#UpdateNotificationUpdateButton:enabled:focus {
+    border-color: @FOCUSBORDER@;
     color: @TEXT@;
 }
