@@ -58,11 +58,7 @@ QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
     color: @TEXT@;
 }
 
-QTreeWidget[treeRole="DeviceFeatureTree"] QComboBox:hover,
-QTreeWidget[treeRole="DeviceFeatureTree"] QAbstractSpinBox:hover,
-QTreeWidget[treeRole="DeviceFeatureTree"] QLineEdit:hover {
-    border-color: @CONTROLBORDER@;
-}
+
 
 QFramegrabberWidget QLabel#FramegrabberStatusLabel:hover,
 QCameraWidget QLabel#CameraStatusLabel:hover,
