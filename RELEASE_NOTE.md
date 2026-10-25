@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Highlight the selected plugin's detail title with the shared accent color (#15487f by default).
+
 - Use the shared accent outline for hovered, focused, pressed and checked push buttons, including marketplace and update actions.
 
 - Restore the splash title accent color (#15487f by default).

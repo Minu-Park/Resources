@@ -95,7 +95,7 @@ QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceDetailIcon {
     background: transparent;
 }
 QLabel#PluginMarketplaceDetailName {
-    color: @TEXT@;
+    color: @SELECTIONACCENT@;
     background: transparent;
 
     font-size: @FONT_WIDGET_LARGE@px;
