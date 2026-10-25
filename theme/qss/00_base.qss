@@ -593,15 +593,22 @@ QPushButton {
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
-QPushButton:hover {
+QPushButton:enabled:hover {
     background: @HOVER@;
-    border-color: @HOVERBORDER@;
+    border-color: @FOCUSBORDER@;
     color: @TEXT@;
 }
 
 QPushButton:pressed {
     background: @HOVER@;
     color: @TEXT@;
+}
+
+QPushButton:enabled:focus,
+QPushButton:enabled:pressed,
+QPushButton:enabled:checked {
+    border-color: @FOCUSBORDER@;
+    outline: none;
 }
 
 
