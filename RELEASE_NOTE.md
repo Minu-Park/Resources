@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Center search clear/favorite controls in matching 20px slots with equal horizontal insets; use the shared active blue for selected favorites.
+
+- Add an opt-in search-bubble border-state proposal while keeping the inner editor borderless and current product defaults unchanged.
+
 - Apply shared hover/focus/held input borders inside device trees, preserving neutral row surfaces, disabled styling and parameter behavior.
 
 - Apply the shared 4px capsule track to horizontal sliders, keeping white handles, distinct hover/drag outlines and a neutral disabled track.

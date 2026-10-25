@@ -95,7 +95,7 @@ public:
   void paint(QPainter* painter, const QRect& rect, QIcon::Mode mode, QIcon::State state) override {
     const bool filled = state == QIcon::On;
     auto color = filled ? tree_->favoriteColor() : tree_->tree()->palette().color(QPalette::Text);
-    if (mode == QIcon::Disabled) color = tree_->tree()->palette().color(QPalette::Disabled, QPalette::Text);
+    if (mode == QIcon::Disabled) color = QApplication::palette().color(QPalette::Disabled, QPalette::Text);
     paintStar(painter, rect.adjusted(2, 2, -2, -2), filled, color);
   }
 private:
