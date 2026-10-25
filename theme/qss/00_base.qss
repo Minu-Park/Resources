@@ -1068,7 +1068,7 @@ QLabel {
 }
 
 QLabel#SplashTitle {
-    color: @TEXT@;
+    color: @SELECTIONACCENT@;
 
     font-size: @FONT_DISPLAY@px;
     font-weight: @WEIGHT_WIDGET_BOLD@;
