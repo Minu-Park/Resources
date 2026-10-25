@@ -178,5 +178,21 @@
         <file>icon/wrench-48.png</file>
         <file>icon/radio-empty-disabled.svg</file>
         <file>icon/radio-selected-disabled.svg</file>
+        <file>icon/switch-outline-off.svg</file>
+        <file>icon/switch-outline-on.svg</file>
+        <file>icon/switch-outline-mixed.svg</file>
+        <file>icon/switch-outline-off-disabled.svg</file>
+        <file>icon/switch-outline-on-disabled.svg</file>
+        <file>icon/switch-outline-mixed-disabled.svg</file>
+        <file>icon/radio-outline-off.svg</file>
+        <file>icon/radio-outline-on.svg</file>
+        <file>icon/radio-outline-off-disabled.svg</file>
+        <file>icon/radio-outline-on-disabled.svg</file>
+        <file>icon/chevron-up-blue.svg</file>
+        <file>icon/chevron-up-disabled.svg</file>
+        <file>icon/chevron-down-blue.svg</file>
+        <file>icon/chevron-down-disabled.svg</file>
+        <file>icon/chevron-up-neutral.svg</file>
+        <file>icon/chevron-down-neutral.svg</file>
     </qresource>
 </RCC>

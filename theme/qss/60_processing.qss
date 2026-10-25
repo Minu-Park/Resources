@@ -8,6 +8,7 @@ QFrame#RuntimePathsListPanel {
     border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
 }
+
 QTreeWidget#RuntimePathsListWidget,
 QTreeWidget#RuntimePathEntriesList {
     border: none;
@@ -16,6 +17,7 @@ QTreeWidget#RuntimePathEntriesList {
     border-top-right-radius: 8px;
     background: @SURFACE@;
 }
+
 QToolBar#RuntimePathsActionToolBar {
     background: @HOVER@;
     border: none;
@@ -25,9 +27,9 @@ QToolBar#RuntimePathsActionToolBar {
     spacing: 2px;
     padding: 2px 4px;
 }
+
 QToolBar#RuntimePathsActionToolBar QToolButton {
     background: transparent;
-    border: none;
     border-radius: 4px;
     min-width: 16px;
     max-width: 16px;
@@ -36,15 +38,22 @@ QToolBar#RuntimePathsActionToolBar QToolButton {
     padding: 2px;
     margin: 0;
     qproperty-iconSize: 14px 14px;
+
+    border: none;
+    outline: none;
 }
+
 QToolBar#RuntimePathsActionToolBar QToolButton:hover {
     background: @SURFACE@;
-}
-/* Dialog typography is owned by 40_chrome.qss; retain only layout here. */
+
+    border: none;
+    outline: none;
+}/* Dialog typography is owned by 40_chrome.qss; retain only layout here. */
 QWidget#RuntimePathsFormContainer QLabel#RuntimePathsLabel {
     min-width: 112px;
     max-width: 112px;
 }
+
 QLabel#RuntimePathsHint {
     color: @SECONDARYTEXT@;
     padding: 0;
@@ -53,16 +62,19 @@ QLabel#RuntimePathsHint {
     font-size: @FONT_CAPTION@px;
     font-weight: @WEIGHT_NORMAL@;
 }
+
 QLabel#RuntimePathsStatusLabel[state="normal"] {
     color: @SECONDARYTEXT@;
 
     font-weight: @WEIGHT_NORMAL@;
 }
+
 QLabel#RuntimePathsStatusLabel[state="warning"] {
     color: @WARNINGTEXT@;
 
     font-weight: @WEIGHT_EMPHASIS@;
 }
+
 QLineEdit#RuntimePathsLineEdit {
     min-width: 150px;
 }
@@ -70,11 +82,7 @@ QLineEdit#RuntimePathsLineEdit {
 QPushButton#RuntimePathsBrowseButton {
     min-width: 48px;
     max-width: 48px;
-}
-
-
-
-/* OpenCV processing panel */
+}/* OpenCV processing panel */
 QLabel#ProcessingEditorTitle {
     color: @TEXT@;
 
@@ -105,22 +113,26 @@ QToolButton#ProcessingTabSaveBtn {
     max-width: 20px;
     min-height: 20px;
     max-height: 20px;
-    border: 1px solid transparent;
     background: transparent;
     padding: 0;
+
+    border: none;
+    outline: none;
 }
 
-QToolButton#ProcessingTabAddBtn:enabled:hover,
-QToolButton#ProcessingTabDeleteBtn:enabled:hover,
-QToolButton#ProcessingTabLoadBtn:enabled:hover,
-QToolButton#ProcessingTabSaveBtn:enabled:hover,
-QToolButton#ProcessingTabAddBtn:enabled:focus,
-QToolButton#ProcessingTabDeleteBtn:enabled:focus,
-QToolButton#ProcessingTabLoadBtn:enabled:focus,
-QToolButton#ProcessingTabSaveBtn:enabled:focus {
+QToolButton#ProcessingTabAddBtn:enabled:hover:!pressed:!checked,
+QToolButton#ProcessingTabDeleteBtn:enabled:hover:!pressed:!checked,
+QToolButton#ProcessingTabLoadBtn:enabled:hover:!pressed:!checked,
+QToolButton#ProcessingTabSaveBtn:enabled:hover:!pressed:!checked,
+QToolButton#ProcessingTabAddBtn:enabled:focus:!pressed:!checked,
+QToolButton#ProcessingTabDeleteBtn:enabled:focus:!pressed:!checked,
+QToolButton#ProcessingTabLoadBtn:enabled:focus:!pressed:!checked,
+QToolButton#ProcessingTabSaveBtn:enabled:focus:!pressed:!checked {
     background-color: transparent;
-    border-color: @FOCUSBORDER@;
     border-radius: 4px;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#ProcessingTabAddBtn:enabled:pressed,
@@ -128,12 +140,17 @@ QToolButton#ProcessingTabDeleteBtn:enabled:pressed,
 QToolButton#ProcessingTabLoadBtn:enabled:pressed,
 QToolButton#ProcessingTabSaveBtn:enabled:pressed {
     background-color: transparent;
-    border-color: @FOCUSBORDER@;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#ProcessingTabDeleteBtn:disabled,
 QToolButton#ProcessingTabSaveBtn:disabled {
     opacity: 0.4;
+
+    border: none;
+    outline: none;
 }
 
 QComboBox#ProcessingScriptComboBox {
@@ -196,18 +213,12 @@ QLabel#ProcessingParamNameLabel {
     font-weight: @WEIGHT_NORMAL@;
 }
 
-
-
 QCheckBox#ProcessingParamCheckBox {
     padding-left: 3px;
-}
-
-/* Code editor line number gutter */
+}/* Code editor line number gutter */
 QWidget#CodeEditorLineNumberArea {
     background-color: transparent;
-}
-
-/* Build Log Splitter */
+}/* Build Log Splitter */
 QSplitter#ProcessingEditorSplitter::handle {
     background-color: transparent;
     height: 2px;
@@ -215,15 +226,11 @@ QSplitter#ProcessingEditorSplitter::handle {
 
 QSplitter#ProcessingEditorSplitter::handle:hover {
     background-color: transparent;
-}
-
-/* Compiler Console Panel Container */
+}/* Compiler Console Panel Container */
 QWidget#ProcessingConsoleContainer {
     background: transparent;
     border: none;
-}
-
-/* Compiler Console Header */
+}/* Compiler Console Header */
 QWidget#ProcessingConsoleHeader {
     background-color: @HOVER@;
     border: 1px solid @CONTROLBORDER@;
@@ -245,7 +252,6 @@ QLabel#ProcessingConsoleTitle {
 }
 
 QToolButton#ProcessingConsoleClear {
-    border: none;
     background: transparent;
     color: @SECONDARYTEXT@;
     padding: 2px 8px;
@@ -254,34 +260,49 @@ QToolButton#ProcessingConsoleClear {
 
     font-weight: @WEIGHT_EMPHASIS@;
     font-size: @FONT_CAPTION@px;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#ProcessingConsoleClear:hover {
     color: @TEXT@;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#ProcessingConsoleClear:pressed {
     color: @TEXT@;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#ProcessingConsoleClose {
-    border: none;
     background: transparent;
     color: @SECONDARYTEXT@;
     padding: 2px;
     border-radius: 4px;
     margin-right: 8px;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#ProcessingConsoleClose:hover {
     color: @TEXT@;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#ProcessingConsoleClose:pressed {
     color: @TEXT@;
-}
 
-/* Processing Console Log */
+    border: none;
+    outline: none;
+}/* Processing Console Log */
 QPlainTextEdit#ProcessingConsoleLog {
     background-color: @SURFACE@;
     color: @TEXT@;
@@ -295,17 +316,13 @@ QPlainTextEdit#ProcessingConsoleLog {
 
     font-family: "@FONT_MONO@";
     font-size: @FONT_CAPTION@px;
-}
-
-/* Processing ToolBar */
+}/* Processing ToolBar */
 QToolBar#ProcessingToolBar {
     background: transparent;
     border: none;
     spacing: 4px;
     padding: 0px;
-}
-
-/* Editor StatusBar */
+}/* Editor StatusBar */
 QFrame#EditorStatusBar {
     background-color: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
@@ -323,17 +340,13 @@ QFrame#EditorStatusBar QLabel {
     font-family: "@FONT_MONO@", "@FONT_UI@";
     font-size: @FONT_COMPACT@px;
     font-weight: @WEIGHT_WIDGET_MEDIUM@;
-}
-
-/* Save State Styles */
+}/* Save State Styles */
 QFrame#EditorStatusBar QLabel#EditorStatusSaveStatus[saveState="modified"] {
 
     color: @TEXT@;
 
     font-weight: @WEIGHT_EMPHASIS@;
-}
-
-/* Clangd State Styles */
+}/* Clangd State Styles */
 QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="ready"] {
 
     color: @TEXT@;
@@ -346,12 +359,22 @@ QFrame#EditorStatusBar QLabel#EditorStatusClangd[clangdState="error"] {
     color: @TEXT@;
 
     font-weight: @WEIGHT_EMPHASIS@;
-}
-
-/* Code Editor Signature Help */
+}/* Code Editor Signature Help */
 QLabel#SignatureHelpLabel {
     color: @TEXT@;
     background-color: transparent;
     border: 1px solid transparent;
     padding: 1px 3px;
+}/* Active interaction takes precedence over hover and keyboard focus. */
+QToolButton#ProcessingTabAddBtn:enabled:pressed,
+QToolButton#ProcessingTabAddBtn:enabled:checked,
+QToolButton#ProcessingTabDeleteBtn:enabled:pressed,
+QToolButton#ProcessingTabDeleteBtn:enabled:checked,
+QToolButton#ProcessingTabLoadBtn:enabled:pressed,
+QToolButton#ProcessingTabLoadBtn:enabled:checked,
+QToolButton#ProcessingTabSaveBtn:enabled:pressed,
+QToolButton#ProcessingTabSaveBtn:enabled:checked {
+
+    border: none;
+    outline: none;
 }

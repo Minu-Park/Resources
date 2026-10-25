@@ -39,6 +39,9 @@ OneGenFeatureTree QToolButton#DeviceFeatureFavoritesOnly {
     max-height: 20px;
     padding: 0;
     border-radius: 8px;
+
+    border: none;
+    outline: none;
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"] {
@@ -66,12 +69,8 @@ QCameraWidget QLabel#CameraStatusLabel:hover,
 QGocatorWidget QLabel#GocatorStatusLabel:hover,
 QHeliotisC4Widget QLabel#HeliotisC4StatusLabel:hover {
     background: @SURFACE@;
-}
-
-
-
-
-/* Search uses the feature header surface with a compact, softly lifted frame. */
+}/* Search uses the feature header surface with a compact,
+softly lifted frame. */
 SearchableTreeSurface {
     qproperty-searchInset: 10;
     qproperty-searchMaximumWidth: 440;
@@ -79,9 +78,8 @@ SearchableTreeSurface {
     qproperty-searchShadowBlur: 14;
     qproperty-searchShadowOffset: 2;
     qproperty-searchShadowColor: rgba(@SHADOW_RGB@, 42);
-}
-
-/* Border, white surface and corner geometry are shared with QHeaderView in 00_base.qss. */
+}/* Border,
+white surface and corner geometry are shared with QHeaderView in 00_base.qss. */
 QFrame#DeviceFeatureSearchBubble {
     padding: 0 7px;
     height: 24px;
@@ -121,32 +119,55 @@ QToolButton#DeviceFeatureSearchClear {
     max-height: 20px;
     padding: 0;
     background: transparent;
-    border: 1px solid transparent;
     border-radius: 5px;
+
+    border: none;
+    outline: none;
 }
 
-QToolButton#DeviceFeatureSearchClear:enabled:hover,
-QToolButton#DeviceFeatureSearchClear:enabled:pressed,
-QToolButton#DeviceFeatureSearchClear:enabled:focus {
+QToolButton#DeviceFeatureSearchClear:enabled:hover:!pressed:!checked,
+QToolButton#DeviceFeatureSearchClear:enabled:focus:!pressed:!checked {
     background: transparent;
-    border-color: @FOCUSBORDER@;
+
+    border: none;
+    outline: none;
+}
+
+QToolButton#DeviceFeatureSearchClear:enabled:pressed {
+    background: transparent;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#DeviceFeatureFavoritesOnly {
     background: transparent;
-    border-color: transparent;
     color: @SECONDARYTEXT@;
 
     font-size: @FONT_DISPLAY@px;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#DeviceFeatureFavoritesOnly:hover,
 QToolButton#DeviceFeatureFavoritesOnly:pressed,
 QToolButton#DeviceFeatureFavoritesOnly:checked {
     background: transparent;
-    border-color: transparent;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#DeviceFeatureFavoritesOnly:checked {
     color: @TEXT@;
+
+    border: none;
+    outline: none;
+}/* Active interaction takes precedence over hover and keyboard focus. */
+QToolButton#DeviceFeatureSearchClear:enabled:pressed,
+QToolButton#DeviceFeatureSearchClear:enabled:checked {
+
+    border: none;
+    outline: none;
 }
