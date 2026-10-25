@@ -606,11 +606,6 @@ static void paintGraphicsSettingsTabScrollerButton(QToolButton* button)
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.fillRect(button->rect(), Resources::themePalette().value(QStringLiteral("surface")));
 
-    const QRectF hoverRect = QRectF(button->rect()).adjusted(5.5, 5.5, -5.5, -5.5);
-    painter.setPen(QPen(Resources::themePalette().value(QStringLiteral("focusBorder")), 1.0));
-    painter.setBrush(Qt::NoBrush);
-    painter.drawRoundedRect(hoverRect, 4.0, 4.0);
-
     const QString iconPath = button->objectName() == QLatin1String("ScrollLeftButton")
         ? QStringLiteral(":/Resources/icon/back-48.png")
         : QStringLiteral(":/Resources/icon/forward-48.png");
@@ -797,6 +792,57 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+        if (event->type() == QEvent::Enter || event->type() == QEvent::Leave
+            || event->type() == QEvent::EnabledChange || event->type() == QEvent::Hide) {
+            auto* input = qobject_cast<QWidget*>(obj);
+            if (input && input->property("indicatorPreview").toString() == QLatin1String("blue-vector")
+                && (qobject_cast<QComboBox*>(input) || qobject_cast<QAbstractSpinBox*>(input))) {
+                const bool hovered = input->isEnabled() && event->type() != QEvent::Leave
+                    && event->type() != QEvent::Hide
+                    && (event->type() == QEvent::Enter || input->underMouse());
+                if (input->property("resourcesIndicatorHovered") != QVariant(hovered)) {
+                    // One visual hover state covers the complete composite field, including its editor.
+                    input->setProperty("resourcesIndicatorHovered", hovered);
+                    input->style()->unpolish(input);
+                    input->style()->polish(input);
+                    input->update();
+                }
+            }
+        }
+        if (event->type() == QEvent::Polish || event->type() == QEvent::Show
+            || event->type() == QEvent::StyleChange || event->type() == QEvent::Paint) {
+            if (auto* button = qobject_cast<QPushButton*>(obj)) {
+                const bool hasIcon = !button->icon().isNull();
+                if (button->property("resourcesIconButton") != QVariant(hasIcon)) {
+                    // QAbstractButton has no iconChanged signal; paint also admits runtime icon updates.
+                    button->setProperty("resourcesIconButton", hasIcon);
+                    if (button->testAttribute(Qt::WA_WState_Polished)) {
+                        button->style()->unpolish(button);
+                        button->style()->polish(button);
+                        button->updateGeometry();
+                    }
+                }
+            }
+        }
+        if (event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::ApplicationDeactivate
+            || (obj == pressedInput_ && (event->type() == QEvent::Hide || event->type() == QEvent::EnabledChange))) {
+            setPressedInput(nullptr);
+        }
+        if (event->type() == QEvent::MouseButtonPress
+            && static_cast<QMouseEvent*>(event)->button() == Qt::LeftButton) {
+            auto* widget = qobject_cast<QWidget*>(obj);
+            QWidget* input = nullptr;
+            for (auto* current = widget; current; current = current->parentWidget()) {
+                if (qobject_cast<QComboBox*>(current) || qobject_cast<QAbstractSpinBox*>(current)) {
+                    input = current;
+                    break;
+                }
+                if (qobject_cast<QLineEdit*>(current) || qobject_cast<QPlainTextEdit*>(current)
+                    || qobject_cast<QTextEdit*>(current)) input = current;
+                if (current->isWindow()) break;
+            }
+            setPressedInput(input && input->isEnabled() ? input : nullptr);
+        }
         if (event->type() == QEvent::ActionAdded || event->type() == QEvent::ActionChanged
             || event->type() == QEvent::ActionRemoved || event->type() == QEvent::LayoutDirectionChange) {
             if (auto* menu = qobject_cast<QMenu*>(obj)) prepareMenuCheckIndicators(menu);
@@ -1006,6 +1052,25 @@ protected:
     }
 
 private:
+    QPointer<QWidget> pressedInput_;
+
+    /** @brief Exposes a held pointer press for input frames without changing focus or input handling. */
+    void setPressedInput(QWidget* input)
+    {
+        if (pressedInput_ == input) return;
+        const auto polish = [](QWidget* widget, bool pressed) {
+            if (!widget) return;
+            widget->setProperty("interactionPressed", pressed);
+            widget->style()->unpolish(widget);
+            widget->style()->polish(widget);
+            widget->update();
+        };
+        const QPointer<QWidget> previous = pressedInput_;
+        pressedInput_ = input;
+        polish(previous, false);
+        polish(pressedInput_, true);
+    }
+
     /** @brief Shares menu leading columns and check marks without changing toolbar icons. */
     static void prepareMenuCheckIndicators(QMenu* menu)
     {
@@ -1726,7 +1791,7 @@ ThemePalette defaultThemePalette()
         {QStringLiteral("workspace"), QColor(QStringLiteral("#eeeeee"))},
         {QStringLiteral("border"), QColor(QStringLiteral("#d9d9d8"))},
         {QStringLiteral("controlBorder"), QColor(QStringLiteral("#d9d9d8"))},
-        {QStringLiteral("hoverBorder"), QColor(QStringLiteral("#c4c4c3"))},
+        {QStringLiteral("hoverBorder"), QColor(QStringLiteral("#8eafd1"))},
         {QStringLiteral("focusBorder"), QColor(QStringLiteral("#15487f"))},
         {QStringLiteral("hover"), QColor(QStringLiteral("#f4f4f3"))},
         {QStringLiteral("pressed"), QColor(QStringLiteral("#eeeeed"))},

@@ -37,6 +37,9 @@ QToolBar#EngineToolBar QToolButton {
     min-width: 18px;
     min-height: 18px;
     padding: 3px;
+
+    border: none;
+    outline: none;
 }
 
 QToolBar::separator {
@@ -122,9 +125,7 @@ QLabel#PlotLineProfilePointLabel {
     color: @TEXT@;
 
     font-weight: @WEIGHT_WIDGET_BOLD@;
-}
-
-/* Right-side Graphics Settings Panel */
+}/* Right-side Graphics Settings Panel */
 QWidget#GraphicsSettingsPanel {
     background: @SURFACE@;
     border-left: 1px solid @BORDER@;
@@ -150,13 +151,18 @@ QToolButton#GraphicsSettingsPanelCloseButton {
     max-height: 20px;
     padding: 0;
     background: transparent;
-    border: none;
     border-radius: 6px;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#GraphicsSettingsPanelCloseButton:hover,
 QToolButton#GraphicsSettingsPanelCloseButton:pressed {
     background: transparent;
+
+    border: none;
+    outline: none;
 }
 
 QTabWidget#GraphicsSettingsPanelTabs {
@@ -193,7 +199,9 @@ QTabWidget#GraphicsSettingsPanelTabs QTabBar::tab {
 QTabWidget#GraphicsSettingsPanelTabs QTabBar QToolButton:hover,
 QTabWidget#GraphicsSettingsPanelTabs QTabBar QToolButton:pressed {
     background-color: transparent;
-    border: 1px solid transparent;
+
+    border: none;
+    outline: none;
 }
 
 QScrollArea#GraphicsSettingsPageScrollArea {
@@ -221,9 +229,7 @@ QLabel#GraphicsSettingsSectionTitle {
 
 QLabel#GraphicsSettingsRangeChannelNote {
     color: @SECONDARYTEXT@;
-}
-
-/* Embedded Analysis Panel */
+}/* Embedded Analysis Panel */
 QWidget#AnalysisPanel {
     background: transparent;
     border: none;
@@ -266,8 +272,10 @@ QToolButton#AnalysisTabCloseButton {
     max-height: 16px;
     padding: 0;
     background: transparent;
-    border: none;
     qproperty-text: "";
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#PlotViewActionButton {
@@ -277,7 +285,9 @@ QToolButton#PlotViewActionButton {
     max-height: 20px;
     padding: 0;
     background: transparent;
+
     border: none;
+    outline: none;
 }
 
 QToolButton[plotActionRole="action"] {
@@ -287,20 +297,31 @@ QToolButton[plotActionRole="action"] {
     max-height: 20px;
     padding: 0;
     background: transparent;
+
     border: none;
+    outline: none;
 }
 
-QToolButton#PlotViewActionButton:enabled:hover,
+QToolButton#PlotViewActionButton:enabled:hover:!pressed:!checked,
+QToolButton#PlotViewActionButton:enabled:focus:!pressed:!checked,
+QToolButton[plotActionRole="action"]:enabled:hover:!pressed:!checked,
+QToolButton[plotActionRole="action"]:enabled:focus:!pressed:!checked {
+    background: transparent;
+    border-radius: 6px;
+
+    border: none;
+    outline: none;
+}
+
 QToolButton#PlotViewActionButton:enabled:pressed,
 QToolButton#PlotViewActionButton:enabled:checked,
-QToolButton#PlotViewActionButton:enabled:focus,
-QToolButton[plotActionRole="action"]:enabled:hover,
 QToolButton[plotActionRole="action"]:enabled:pressed,
-QToolButton[plotActionRole="action"]:enabled:checked,
-QToolButton[plotActionRole="action"]:enabled:focus {
+QToolButton[plotActionRole="action"]:enabled:checked {
     background: transparent;
-    border: 1px solid @FOCUSBORDER@;
     border-radius: 6px;
+
+    border: none;
+    outline: none;
 }
 
 QFrame#PlotViewReadout {
@@ -317,7 +338,9 @@ QLabel#PlotViewReadoutText {
 
 QToolButton[plotActionRole="action"]:disabled {
     background: transparent;
+
     border: none;
+    outline: none;
 }
 
 QFrame#PlotViewYRangePopup,
@@ -338,9 +361,7 @@ QFrame#PlotViewHistogramBinPopup QLabel#PlotViewHistogramBinPopupTitle {
     background: transparent;
     color: @TEXT@;
     font-weight: @WEIGHT_WIDGET_BOLD@;
-}
-
-/* Plot UI roles; series and inspection colors encode data identity. */
+}/* Plot UI roles; series and inspection colors encode data identity. */
 PlotViewWidget {
     qproperty-plotSurfaceColor: @SURFACE@;
     qproperty-plotBorderColor: @BORDER@;
@@ -351,7 +372,8 @@ PlotViewWidget {
     font-weight: @WEIGHT_NORMAL@;
 }
 
-QTableWidget#AnalysisStatisticsTable, QTableWidget#AnalysisStatisticsTable QHeaderView::section {
+QTableWidget#AnalysisStatisticsTable,
+QTableWidget#AnalysisStatisticsTable QHeaderView::section {
     color: @TEXT@;
 }
 
@@ -363,4 +385,12 @@ QTabBar#GraphicsSourceTabBar::tab:selected,
 QTabWidget#AnalysisPanelTabs QTabBar::tab:selected,
 QTabWidget#GraphicsSettingsPanelTabs QTabBar::tab:selected {
     background: transparent;
+}/* Active interaction takes precedence over hover and keyboard focus. */
+QToolButton#PlotViewActionButton:enabled:pressed,
+QToolButton#PlotViewActionButton:enabled:checked,
+QToolButton[plotActionRole="action"]:enabled:pressed,
+QToolButton[plotActionRole="action"]:enabled:checked {
+
+    border: none;
+    outline: none;
 }

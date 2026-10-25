@@ -2,17 +2,25 @@
 
 ## Unreleased
 
-- Keep System Logs and active icon-action backgrounds neutral; show active state through accent outlines instead of darker pressed or checked fills.
+- Add an opt-in compact 4x2 symmetric filled vector-chevron proposal for combo, spin and date/time arrows: neutral at rest and blue only on hover, preserving hit areas and default artwork.
+
+- Add an opt-in state-only radio proposal with a thin outline, blue selected dot and distinct disabled selection; keep default radio artwork unchanged.
+
+- Add an opt-in outline-toggle presentation for visual review, preserving the existing switch default and native checkbox behavior.
+
+- Keep System Logs and icon-action backgrounds neutral without darker pressed or checked fills.
 
 - Highlight the selected plugin's detail title with the shared accent color (#15487f by default).
 
-- Use the shared accent outline for hovered, focused, pressed and checked push buttons, including marketplace and update actions.
+- Keep enabled button backgrounds unchanged across hover, focus, pressed and checked states.
+
+- Keep all tool buttons and icon-bearing push buttons borderless in every state, including status menus and runtime icon changes. Text-only push buttons retain light-blue hover/focus and dark-blue pressed/checked borders.
 
 - Restore the splash title accent color (#15487f by default).
 
 - Expand main title-bar menu items vertically and keep enabled menu targets ahead of frame-resize hit testing so the space above and below each label remains clickable.
 
-- Use #15487f for active input borders and interactive status controls; disabled menu buttons and read-only status labels retain their neutral borders.
+- Apply light-blue hover/focus borders and accent pressed/checked/open borders consistently to input frames and interactive status bubbles; passive labels and disabled controls retain neutral borders.
 
 - Fix MDI, dock/widget and dialog title bars to one shared 11px scale, including nested dialog contexts.
 - Remove conflicting library-list typography rules; dialog list and field values use normal weight.

@@ -1,4 +1,6 @@
-/* Compact plugin list, details, and semantic action states. */
+/* Compact plugin list,
+details,
+and semantic action states. */
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh {
     border: none;
     background: transparent;
@@ -7,37 +9,68 @@ QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh {
     padding: 0;
     qproperty-iconSize: 14px 14px;
 }
-QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh:focus {
+
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh[resourcesIconButton="true"] {
+    border: none;
+    outline: none;
+}
+
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh:enabled:hover:!pressed:!checked,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh:enabled:focus:!pressed:!checked {
+    outline: 1px solid @HOVERBORDER@;
+}
+
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh[resourcesIconButton="true"]:enabled:hover:!pressed:!checked,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh[resourcesIconButton="true"]:enabled:focus:!pressed:!checked {
+    border: none;
+    outline: none;
+}
+
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh:enabled:pressed,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh:enabled:checked {
     outline: 1px solid @FOCUSBORDER@;
 }
+
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh[resourcesIconButton="true"]:enabled:pressed,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh[resourcesIconButton="true"]:enabled:checked {
+    border: none;
+    outline: none;
+}
+
 QWidget#PluginMarketplaceContent * {
 
     font-size: @FONT_CAPTION@px;
 }
+
 QWidget#PluginMarketplaceContent QLabel {
     min-height: 0;
 }
+
 QWidget#PluginMarketplaceContent QPushButton,
 QWidget#PluginMarketplaceContent QComboBox {
     min-height: 18px;
     max-height: 18px;
 }
+
 QWidget#PluginMarketplaceContent QPushButton {
     border-radius: 6px;
     padding-left: 8px;
     padding-right: 8px;
     qproperty-iconSize: 12px 12px;
 }
+
 QTreeWidget[treeRole="PluginMarketplaceList"] {
     border: 1px solid @CONTROLBORDER@;
     border-radius: 8px;
     background: @SURFACE@;
     padding: 4px;
 }
+
 QTreeWidget[treeRole="PluginMarketplaceList"][interactionMode="row"]::item {
     margin: 2px 0;
     padding: 0;
 }
+
 QWidget#PluginMarketplaceCard,
 QLabel#PluginMarketplaceCardIcon,
 QLabel#PluginMarketplaceCardName,
@@ -47,28 +80,33 @@ QLabel#PluginMarketplaceUpdateIcon {
     border: none;
     padding: 0;
 }
+
 QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceCardIcon {
     min-width: 18px;
     max-width: 18px;
     min-height: 18px;
     max-height: 18px;
 }
+
 QLabel#PluginMarketplaceCardName {
     color: @TEXT@;
 
     font-size: @FONT_BODY@px;
     font-weight: @WEIGHT_EMPHASIS@;
 }
+
 QLabel#PluginMarketplaceCardStatus {
     color: @SECONDARYTEXT@;
 
     font-size: @FONT_COMPACT@px;
 }
+
 QLabel#PluginMarketplaceCardStatus[installationState="update"] {
     color: @SECONDARYTEXT@;
 
     font-weight: @WEIGHT_WIDGET_MEDIUM@;
 }
+
 QLabel#PluginMarketplaceUpdateIcon {
     min-width: 12px;
     max-width: 12px;
@@ -76,17 +114,20 @@ QLabel#PluginMarketplaceUpdateIcon {
     max-height: 12px;
     color: @SECONDARYTEXT@;
 }
+
 QFrame#PluginMarketplaceDetailShell {
     border: 1px solid @CONTROLBORDER@;
     border-radius: 8px;
     background: @SURFACE@;
 }
+
 QScrollArea#PluginMarketplaceDetailsScroll,
 QScrollArea#PluginMarketplaceDetailsScroll > QWidget > QWidget,
 QFrame#PluginMarketplaceDetails {
     background: transparent;
     border: none;
 }
+
 QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceDetailIcon {
     min-width: 36px;
     max-width: 36px;
@@ -94,6 +135,7 @@ QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceDetailIcon {
     max-height: 36px;
     background: transparent;
 }
+
 QLabel#PluginMarketplaceDetailName {
     color: @SELECTIONACCENT@;
     background: transparent;
@@ -101,28 +143,33 @@ QLabel#PluginMarketplaceDetailName {
     font-size: @FONT_WIDGET_LARGE@px;
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
+
 QLabel#PluginMarketplaceDetailId {
     color: @SECONDARYTEXT@;
     background: transparent;
 
     font-size: @FONT_COMPACT@px;
 }
+
 QLabel#PluginMarketplacePackageStatus {
     color: @SECONDARYTEXT@;
     background: transparent;
 
     font-weight: @WEIGHT_EMPHASIS@;
 }
+
 QLabel#PluginMarketplaceDescription {
     color: @TEXT@;
     background: transparent;
 }
+
 QLabel#PluginMarketplaceSectionLabel {
     color: @TEXT@;
     background: transparent;
 
     font-weight: @WEIGHT_EMPHASIS@;
 }
+
 QLabel#PluginMarketplaceSummary,
 QLabel#PluginMarketplaceCompatibility,
 QLabel#PluginMarketplaceHistoryStatus,
@@ -133,16 +180,19 @@ QLabel#PluginMarketplaceOperationStatus {
     color: @SECONDARYTEXT@;
     background: transparent;
 }
+
 QLabel#PluginMarketplaceSummary,
 QLabel#PluginMarketplaceHistoryStatus,
 QLabel#PluginMarketplaceActivationNote {
 
     font-size: @FONT_COMPACT@px;
 }
+
 QLabel#PluginMarketplaceResult[messageState="error"],
 QLabel#PluginMarketplaceCompatibility[messageState="error"] {
     color: @ERRORTEXT@;
 }
+
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"] {
     background: @SURFACE@;
     color: @TEXT@;
@@ -150,45 +200,94 @@ QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"] {
 
     font-weight: @WEIGHT_EMPHASIS@;
 }
-QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:hover {
-    background: @HOVER@;
-    border-color: @FOCUSBORDER@;
+
+QWidget#PluginMarketplaceContent QPushButton[resourcesIconButton="true"][commandRole="primary"] {
+    border: none;
+    outline: none;
 }
+
+QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:hover:!pressed:!checked {
+    background: @SURFACE@;
+    border-color: @HOVERBORDER@;
+}
+
+QWidget#PluginMarketplaceContent QPushButton[resourcesIconButton="true"][commandRole="primary"]:hover:!pressed:!checked {
+    border: none;
+    outline: none;
+}
+
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:pressed {
-    background: @HOVER@;
+    background: @SURFACE@;
     border-color: @FOCUSBORDER@;
 }
+
+QWidget#PluginMarketplaceContent QPushButton[resourcesIconButton="true"][commandRole="primary"]:pressed {
+    border: none;
+    outline: none;
+}
+
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove {
     color: @SECONDARYTEXT@;
     border-color: @CONTROLBORDER@;
 
     font-weight: @WEIGHT_WIDGET_MEDIUM@;
 }
-QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:hover {
-    background: @HOVER@;
-    color: @TEXT@;
-    border-color: @FOCUSBORDER@;
+
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove[resourcesIconButton="true"] {
+    border: none;
+    outline: none;
 }
+
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:hover:!pressed:!checked {
+    background: @SURFACE@;
+    color: @TEXT@;
+    border-color: @HOVERBORDER@;
+}
+
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove[resourcesIconButton="true"]:hover:!pressed:!checked {
+    border: none;
+    outline: none;
+}
+
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:pressed {
-    background: @HOVER@;
+    background: @SURFACE@;
     color: @TEXT@;
     border-color: @FOCUSBORDER@;
 }
-QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:focus,
-QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:focus {
-    border-color: @FOCUSBORDER@;
+
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove[resourcesIconButton="true"]:pressed {
+    border: none;
+    outline: none;
 }
+
+QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:focus:!pressed:!checked,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:focus:!pressed:!checked {
+    border-color: @HOVERBORDER@;
+}
+
+QWidget#PluginMarketplaceContent QPushButton[resourcesIconButton="true"][commandRole="primary"]:focus:!pressed:!checked,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove[resourcesIconButton="true"]:focus:!pressed:!checked {
+    border: none;
+    outline: none;
+}
+
 QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:disabled,
 QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:disabled {
     background: @DISABLEDSURFACE@;
     border-color: @CONTROLBORDER@;
     color: @DISABLEDTEXT@;
 }
+
+QWidget#PluginMarketplaceContent QPushButton[resourcesIconButton="true"][commandRole="primary"]:disabled,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove[resourcesIconButton="true"]:disabled {
+    border: none;
+    outline: none;
+}
+
 QSplitter#PluginMarketplaceSplitter::handle {
     background: transparent;
     width: 6px;
-}
-/* Host update discovery notification. */
+}/* Host update discovery notification. */
 QFrame#UpdateNotificationPopup {
     min-width: 250px;
     max-width: 360px;
@@ -232,18 +331,23 @@ QToolButton#UpdateNotificationCloseButton {
     min-height: 20px;
     max-height: 20px;
     padding: 0;
-    border: none;
     background: transparent;
     color: @DISABLEDTEXT@;
 
     font-size: @FONT_WIDGET_GLYPH@px;
     font-weight: @WEIGHT_EMPHASIS@;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#UpdateNotificationCloseButton:hover,
 QToolButton#UpdateNotificationCloseButton:pressed {
     background: transparent;
     color: @TEXT@;
+
+    border: none;
+    outline: none;
 }
 
 QWidget#UpdateNotificationActions {
@@ -262,16 +366,67 @@ QPushButton#UpdateNotificationUpdateButton {
     font-weight: @WEIGHT_EMPHASIS@;
 }
 
-QPushButton#UpdateNotificationUpdateButton {
-    background: @HOVER@;
+QPushButton#UpdateNotificationLaterButton[resourcesIconButton="true"],
+QPushButton#UpdateNotificationUpdateButton[resourcesIconButton="true"] {
+    border: none;
+    outline: none;
 }
 
-QPushButton#UpdateNotificationLaterButton:enabled:hover,
-QPushButton#UpdateNotificationUpdateButton:enabled:hover,
+QPushButton#UpdateNotificationUpdateButton {
+    background: @SURFACE@;
+}
+
+QPushButton#UpdateNotificationLaterButton:enabled:hover:!pressed:!checked,
+QPushButton#UpdateNotificationUpdateButton:enabled:hover:!pressed:!checked,
+QPushButton#UpdateNotificationLaterButton:enabled:focus:!pressed:!checked,
+QPushButton#UpdateNotificationUpdateButton:enabled:focus:!pressed:!checked {
+    border-color: @HOVERBORDER@;
+    color: @TEXT@;
+}
+
+QPushButton#UpdateNotificationLaterButton[resourcesIconButton="true"]:enabled:hover:!pressed:!checked,
+QPushButton#UpdateNotificationUpdateButton[resourcesIconButton="true"]:enabled:hover:!pressed:!checked,
+QPushButton#UpdateNotificationLaterButton[resourcesIconButton="true"]:enabled:focus:!pressed:!checked,
+QPushButton#UpdateNotificationUpdateButton[resourcesIconButton="true"]:enabled:focus:!pressed:!checked {
+    border: none;
+    outline: none;
+}
+
 QPushButton#UpdateNotificationLaterButton:enabled:pressed,
-QPushButton#UpdateNotificationUpdateButton:enabled:pressed,
-QPushButton#UpdateNotificationLaterButton:enabled:focus,
-QPushButton#UpdateNotificationUpdateButton:enabled:focus {
+QPushButton#UpdateNotificationUpdateButton:enabled:pressed {
     border-color: @FOCUSBORDER@;
     color: @TEXT@;
+}
+
+QPushButton#UpdateNotificationLaterButton[resourcesIconButton="true"]:enabled:pressed,
+QPushButton#UpdateNotificationUpdateButton[resourcesIconButton="true"]:enabled:pressed {
+    border: none;
+    outline: none;
+}/* Active interaction takes precedence over hover and keyboard focus. */
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh:enabled:pressed,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh:enabled:checked,
+QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:enabled:pressed,
+QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:enabled:checked,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:enabled:pressed,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:enabled:checked,
+QPushButton#UpdateNotificationLaterButton:enabled:pressed,
+QPushButton#UpdateNotificationLaterButton:enabled:checked,
+QPushButton#UpdateNotificationUpdateButton:enabled:pressed,
+QPushButton#UpdateNotificationUpdateButton:enabled:checked {
+    border-color: @FOCUSBORDER@;
+}
+
+/* Active interaction takes precedence over hover and keyboard focus. */
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh[resourcesIconButton="true"]:enabled:pressed,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRefresh[resourcesIconButton="true"]:enabled:checked,
+QWidget#PluginMarketplaceContent QPushButton[resourcesIconButton="true"][commandRole="primary"]:enabled:pressed,
+QWidget#PluginMarketplaceContent QPushButton[resourcesIconButton="true"][commandRole="primary"]:enabled:checked,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove[resourcesIconButton="true"]:enabled:pressed,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove[resourcesIconButton="true"]:enabled:checked,
+QPushButton#UpdateNotificationLaterButton[resourcesIconButton="true"]:enabled:pressed,
+QPushButton#UpdateNotificationLaterButton[resourcesIconButton="true"]:enabled:checked,
+QPushButton#UpdateNotificationUpdateButton[resourcesIconButton="true"]:enabled:pressed,
+QPushButton#UpdateNotificationUpdateButton[resourcesIconButton="true"]:enabled:checked {
+    border: none;
+    outline: none;
 }

@@ -4,15 +4,11 @@
 StaticImageControlWidget,
 Static3DDataControlWidget {
     background: @SURFACE@;
-}
-
-StaticImageControlWidget QLabel {
+}StaticImageControlWidget QLabel {
     color: @TEXT@;
 
     font-weight: @WEIGHT_EMPHASIS@;
-}
-
-StaticImageControlWidget QToolButton,
+}StaticImageControlWidget QToolButton,
 Static3DDataControlWidget QToolButton {
     min-width: 20px;
     min-height: 20px;
@@ -20,9 +16,10 @@ Static3DDataControlWidget QToolButton {
     max-height: 20px;
     padding: 0;
     border-radius: 8px;
-}
 
-StaticImageControlWidget QListWidget,
+    border: none;
+    outline: none;
+}StaticImageControlWidget QListWidget,
 Static3DDataControlWidget QListWidget {
     background-color: @SURFACE@;
     border: 1px solid @BORDER@;

@@ -35,11 +35,7 @@ QStatusBar::item {
     background: transparent;
     margin: 0;
     padding: 0;
-}
-
-
-
-/* Device state labels and the full GraphicsEngine statusbar use bubble geometry. */
+}/* Device state labels and the full GraphicsEngine statusbar use bubble geometry. */
 QLabel#CameraStatusLabel,
 QLabel#FramegrabberStatusLabel,
 QLabel#GocatorStatusLabel,
@@ -72,7 +68,6 @@ QLabel#EngineStatusSummary[performancePath="fit-sampling"] {
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
     background: @SURFACE@;
-    border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
     padding: 0 7px;
     height: 24px;
@@ -80,6 +75,9 @@ QToolButton#EngineStatusViewButton {
     max-height: @CONTROL_HEIGHT@px;
     margin: 0 2px 0 0;
     color: @TEXT@;
+
+    border: none;
+    outline: none;
 }
 
 QLabel#CameraStatusLabel,
@@ -87,12 +85,20 @@ QLabel#FramegrabberStatusLabel,
 QLabel#GocatorStatusLabel,
 QLabel#HeliotisC4StatusLabel,
 QLabel#EngineStatusMode,
-QLabel#EngineStatusZoom,
+QLabel#EngineStatusZoom {
+    color: @TEXT@;
+
+    font-weight: @WEIGHT_WIDGET_BOLD@;
+}
+
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
     color: @TEXT@;
 
     font-weight: @WEIGHT_WIDGET_BOLD@;
+
+    border: none;
+    outline: none;
 }
 
 QStatusBar QLabel[statusRole="message"] {
@@ -122,11 +128,18 @@ QLabel[statusRole="fps"] {
 
 QLabel#EngineStatusMode,
 QLabel#EngineStatusSummary,
-QLabel#EngineStatusRenderPath,
+QLabel#EngineStatusRenderPath {
+
+    font-family: "@FONT_UI@";
+}
+
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
 
     font-family: "@FONT_UI@";
+
+    border: none;
+    outline: none;
 }
 
 QLabel#EngineStatusPointer,
@@ -139,36 +152,50 @@ QLabel#EngineStatusFps {
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
     icon-size: 16px;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#EngineStatusViewButton:disabled {
     background: @SURFACE@;
-    border-color: @CONTROLBORDER@;
     color: @TEXT@;
+
+    border: none;
+    outline: none;
 }
 
-QToolButton#EngineStatusModeButton:enabled:hover,
-QToolButton#EngineStatusViewButton:enabled:hover {
+QToolButton#EngineStatusModeButton:enabled:hover:!pressed:!checked,
+QToolButton#EngineStatusViewButton:enabled:hover:!pressed:!checked {
     background: @SURFACE@;
-    border-color: @FOCUSBORDER@;
     color: @TEXT@;
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#EngineStatusModeButton:enabled:pressed,
 QToolButton#EngineStatusViewButton:enabled:pressed {
     background: @SURFACE@;
-    border-color: @FOCUSBORDER@;
+
+    border: none;
+    outline: none;
 }
 
-QToolButton#EngineStatusModeButton:enabled:focus,
-QToolButton#EngineStatusViewButton:enabled:focus {
-    border-color: @FOCUSBORDER@;
+QToolButton#EngineStatusModeButton:enabled:focus:!pressed:!checked,
+QToolButton#EngineStatusViewButton:enabled:focus:!pressed:!checked {
+
+    border: none;
+    outline: none;
 }
 
 QToolButton#EngineStatusModeButton::menu-indicator,
 QToolButton#EngineStatusViewButton::menu-indicator {
     image: none;
     width: 0px;
+
+    border: none;
+    outline: none;
 }
 
 QPushButton#MainLogToggleBtn {
@@ -186,6 +213,11 @@ QPushButton#MainLogToggleBtn {
     font-size: @FONT_CAPTION@px;
 }
 
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"] {
+    border: none;
+    outline: none;
+}
+
 QPushButton#RuntimeLibrariesStatusButton {
     background: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
@@ -201,10 +233,20 @@ QPushButton#RuntimeLibrariesStatusButton {
     font-size: @FONT_CAPTION@px;
 }
 
-QPushButton#RuntimeLibrariesStatusButton:enabled:hover {
+QPushButton#RuntimeLibrariesStatusButton[resourcesIconButton="true"] {
+    border: none;
+    outline: none;
+}
+
+QPushButton#RuntimeLibrariesStatusButton:enabled:hover:!pressed:!checked {
     background: @SURFACE@;
-    border-color: @FOCUSBORDER@;
+    border-color: @HOVERBORDER@;
     color: @TEXT@;
+}
+
+QPushButton#RuntimeLibrariesStatusButton[resourcesIconButton="true"]:enabled:hover:!pressed:!checked {
+    border: none;
+    outline: none;
 }
 
 QPushButton#RuntimeLibrariesStatusButton:enabled:pressed {
@@ -212,10 +254,20 @@ QPushButton#RuntimeLibrariesStatusButton:enabled:pressed {
     border-color: @FOCUSBORDER@;
 }
 
-QPushButton#MainLogToggleBtn:enabled:hover {
+QPushButton#RuntimeLibrariesStatusButton[resourcesIconButton="true"]:enabled:pressed {
+    border: none;
+    outline: none;
+}
+
+QPushButton#MainLogToggleBtn:enabled:hover:!pressed:!checked {
     background: @SURFACE@;
-    border-color: @FOCUSBORDER@;
+    border-color: @HOVERBORDER@;
     color: @TEXT@;
+}
+
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"]:enabled:hover:!pressed:!checked {
+    border: none;
+    outline: none;
 }
 
 QPushButton#MainLogToggleBtn:checked {
@@ -224,27 +276,64 @@ QPushButton#MainLogToggleBtn:checked {
     color: @TEXT@;
 }
 
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"]:checked {
+    border: none;
+    outline: none;
+}
+
 QPushButton#MainLogToggleBtn:checked:hover {
     background: @SURFACE@;
     border-color: @FOCUSBORDER@;
     color: @TEXT@;
 }
 
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"]:checked:hover {
+    border: none;
+    outline: none;
+}
+
 QPushButton#MainLogToggleBtn[logState="warning"] {
     border-color: @WARNING@;
+}
+
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"][logState="warning"] {
+    border: none;
+    outline: none;
 }
 
 QPushButton#MainLogToggleBtn[logState="error"] {
     border-color: @ERROR@;
 }
 
-QPushButton#MainLogToggleBtn:enabled:hover,
-QPushButton#MainLogToggleBtn:enabled:focus,
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"][logState="error"] {
+    border: none;
+    outline: none;
+}
+
+QPushButton#MainLogToggleBtn:enabled:hover:!pressed:!checked,
+QPushButton#MainLogToggleBtn:enabled:focus:!pressed:!checked,
+QPushButton#RuntimeLibrariesStatusButton:enabled:focus:!pressed:!checked {
+    background: @SURFACE@;
+    border-color: @HOVERBORDER@;
+}
+
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"]:enabled:hover:!pressed:!checked,
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"]:enabled:focus:!pressed:!checked,
+QPushButton#RuntimeLibrariesStatusButton[resourcesIconButton="true"]:enabled:focus:!pressed:!checked {
+    border: none;
+    outline: none;
+}
+
 QPushButton#MainLogToggleBtn:enabled:pressed,
-QPushButton#MainLogToggleBtn:enabled:checked,
-QPushButton#RuntimeLibrariesStatusButton:enabled:focus {
+QPushButton#MainLogToggleBtn:enabled:checked {
     background: @SURFACE@;
     border-color: @FOCUSBORDER@;
+}
+
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"]:enabled:pressed,
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"]:enabled:checked {
+    border: none;
+    outline: none;
 }
 
 QWidget#MinimizedSessionIndicator {
@@ -273,6 +362,11 @@ QPushButton#MinimizedSessionRestore {
     font-weight: @WEIGHT_EMPHASIS@;
 }
 
+QPushButton#MinimizedSessionRestore[resourcesIconButton="true"] {
+    border: none;
+    outline: none;
+}
+
 QPushButton#MinimizedSessionRestore:hover {
     color: @TEXT@;
 }
@@ -288,4 +382,34 @@ QPushButton#MinimizedSessionClose {
     min-height: 16px;
     max-width: 16px;
     max-height: 16px;
+}
+
+QPushButton#MinimizedSessionClose[resourcesIconButton="true"] {
+    border: none;
+    outline: none;
+}
+
+QPushButton#RuntimeLibrariesStatusButton:enabled:pressed,
+QPushButton#RuntimeLibrariesStatusButton:enabled:checked,
+QPushButton#MainLogToggleBtn:enabled:pressed,
+QPushButton#MainLogToggleBtn:enabled:checked {
+    border-color: @FOCUSBORDER@;
+}
+
+/* Active interaction takes precedence over hover and keyboard focus. */
+QToolButton#EngineStatusModeButton:enabled:pressed,
+QToolButton#EngineStatusModeButton:enabled:checked,
+QToolButton#EngineStatusViewButton:enabled:pressed,
+QToolButton#EngineStatusViewButton:enabled:checked {
+
+    border: none;
+    outline: none;
+}
+
+QPushButton#RuntimeLibrariesStatusButton[resourcesIconButton="true"]:enabled:pressed,
+QPushButton#RuntimeLibrariesStatusButton[resourcesIconButton="true"]:enabled:checked,
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"]:enabled:pressed,
+QPushButton#MainLogToggleBtn[resourcesIconButton="true"]:enabled:checked {
+    border: none;
+    outline: none;
 }
