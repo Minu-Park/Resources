@@ -290,23 +290,16 @@ QToolButton[plotActionRole="action"] {
     border: none;
 }
 
-QToolButton[plotActionRole="action"]:checked {
-    background: @HOVER@;
-    border: 1px solid @HOVERBORDER@;
-    border-radius: 6px;
-}
-
-QToolButton#PlotViewActionButton:hover,
-QToolButton[plotActionRole="action"]:hover {
-    background: @HOVER@;
-    border: 1px solid @CONTROLBORDER@;
-    border-radius: 6px;
-}
-
-QToolButton#PlotViewActionButton:checked:hover,
-QToolButton[plotActionRole="action"]:checked:hover {
-    background: @SELECTION@;
-    border: 1px solid @DISABLEDTEXT@;
+QToolButton#PlotViewActionButton:enabled:hover,
+QToolButton#PlotViewActionButton:enabled:pressed,
+QToolButton#PlotViewActionButton:enabled:checked,
+QToolButton#PlotViewActionButton:enabled:focus,
+QToolButton[plotActionRole="action"]:enabled:hover,
+QToolButton[plotActionRole="action"]:enabled:pressed,
+QToolButton[plotActionRole="action"]:enabled:checked,
+QToolButton[plotActionRole="action"]:enabled:focus {
+    background: transparent;
+    border: 1px solid @FOCUSBORDER@;
     border-radius: 6px;
 }
 

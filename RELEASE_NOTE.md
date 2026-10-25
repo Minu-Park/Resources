@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep System Logs and active icon-action backgrounds neutral; show active state through accent outlines instead of darker pressed or checked fills.
+
 - Highlight the selected plugin's detail title with the shared accent color (#15487f by default).
 
 - Use the shared accent outline for hovered, focused, pressed and checked push buttons, including marketplace and update actions.

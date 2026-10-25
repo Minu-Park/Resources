@@ -606,12 +606,9 @@ static void paintGraphicsSettingsTabScrollerButton(QToolButton* button)
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.fillRect(button->rect(), Resources::themePalette().value(QStringLiteral("surface")));
 
-    const QColor hoverColor = button->isDown()
-        ? Resources::themePalette().value(QStringLiteral("hoverBorder"))
-        : Resources::themePalette().value(QStringLiteral("controlBorder"));
-    const QRectF hoverRect = QRectF(button->rect()).adjusted(5.0, 5.0, -5.0, -5.0);
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(hoverColor);
+    const QRectF hoverRect = QRectF(button->rect()).adjusted(5.5, 5.5, -5.5, -5.5);
+    painter.setPen(QPen(Resources::themePalette().value(QStringLiteral("focusBorder")), 1.0));
+    painter.setBrush(Qt::NoBrush);
     painter.drawRoundedRect(hoverRect, 4.0, 4.0);
 
     const QString iconPath = button->objectName() == QLatin1String("ScrollLeftButton")

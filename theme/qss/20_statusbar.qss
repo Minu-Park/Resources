@@ -149,14 +149,14 @@ QToolButton#EngineStatusViewButton:disabled {
 
 QToolButton#EngineStatusModeButton:enabled:hover,
 QToolButton#EngineStatusViewButton:enabled:hover {
-    background: @HOVER@;
+    background: @SURFACE@;
     border-color: @FOCUSBORDER@;
     color: @TEXT@;
 }
 
 QToolButton#EngineStatusModeButton:enabled:pressed,
 QToolButton#EngineStatusViewButton:enabled:pressed {
-    background: @PRESSED@;
+    background: @SURFACE@;
     border-color: @FOCUSBORDER@;
 }
 
@@ -202,30 +202,30 @@ QPushButton#RuntimeLibrariesStatusButton {
 }
 
 QPushButton#RuntimeLibrariesStatusButton:enabled:hover {
-    background: @HOVER@;
+    background: @SURFACE@;
     border-color: @FOCUSBORDER@;
     color: @TEXT@;
 }
 
 QPushButton#RuntimeLibrariesStatusButton:enabled:pressed {
-    background: @PRESSED@;
+    background: @SURFACE@;
     border-color: @FOCUSBORDER@;
 }
 
 QPushButton#MainLogToggleBtn:enabled:hover {
-    background: @HOVER@;
+    background: @SURFACE@;
     border-color: @FOCUSBORDER@;
     color: @TEXT@;
 }
 
 QPushButton#MainLogToggleBtn:checked {
-    background: @PRESSED@;
+    background: @SURFACE@;
     border-color: @FOCUSBORDER@;
     color: @TEXT@;
 }
 
 QPushButton#MainLogToggleBtn:checked:hover {
-    background: @PRESSED@;
+    background: @SURFACE@;
     border-color: @FOCUSBORDER@;
     color: @TEXT@;
 }
@@ -243,6 +243,7 @@ QPushButton#MainLogToggleBtn:enabled:focus,
 QPushButton#MainLogToggleBtn:enabled:pressed,
 QPushButton#MainLogToggleBtn:enabled:checked,
 QPushButton#RuntimeLibrariesStatusButton:enabled:focus {
+    background: @SURFACE@;
     border-color: @FOCUSBORDER@;
 }
 

@@ -125,15 +125,10 @@ QToolButton#DeviceFeatureSearchClear {
     border-radius: 5px;
 }
 
-QToolButton#DeviceFeatureSearchClear:hover {
-    background: @HOVER@;
-}
-
-QToolButton#DeviceFeatureSearchClear:pressed {
-    background: @HOVER@;
-}
-
-QToolButton#DeviceFeatureSearchClear:focus {
+QToolButton#DeviceFeatureSearchClear:enabled:hover,
+QToolButton#DeviceFeatureSearchClear:enabled:pressed,
+QToolButton#DeviceFeatureSearchClear:enabled:focus {
+    background: transparent;
     border-color: @FOCUSBORDER@;
 }
 
