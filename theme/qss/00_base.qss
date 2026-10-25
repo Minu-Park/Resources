@@ -415,13 +415,13 @@ QLineEdit {
     background: @SURFACE@;
 }
 
-QComboBox:hover,
-QAbstractSpinBox:hover,
-QLineEdit:hover,
-QPlainTextEdit:hover,
-QTextEdit:hover,
-QTextBrowser:hover {
-    border-color: @HOVERBORDER@;
+QComboBox:enabled:hover,
+QAbstractSpinBox:enabled:hover,
+QLineEdit:enabled:hover,
+QPlainTextEdit:enabled:hover,
+QTextEdit:enabled:hover,
+QTextBrowser:enabled:hover {
+    border-color: @FOCUSBORDER@;
 }
 
 QComboBox:focus,
