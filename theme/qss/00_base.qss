@@ -553,9 +553,9 @@ QComboBox::drop-down {
 }
 
 QComboBox::down-arrow {
-    image: url(:/Resources/icon/drop-down-arrow-48.png);
-    width: 10px;
-    height: 6px;
+    image: url(:/Resources/icon/chevron-down-neutral.svg);
+    width: 4px;
+    height: 2px;
 }
 
 QComboBox QAbstractItemView {
@@ -611,15 +611,15 @@ QAbstractSpinBox::down-button {
 }
 
 QAbstractSpinBox::up-arrow {
-    image: url(:/Resources/icon/collapse-arrow-48.png);
-    width: 10px;
-    height: 6px;
+    image: url(:/Resources/icon/chevron-up-neutral.svg);
+    width: 4px;
+    height: 2px;
 }
 
 QAbstractSpinBox::down-arrow {
-    image: url(:/Resources/icon/drop-down-arrow-48.png);
-    width: 10px;
-    height: 6px;
+    image: url(:/Resources/icon/chevron-down-neutral.svg);
+    width: 4px;
+    height: 2px;
 }
 
 QPushButton {
@@ -1277,9 +1277,9 @@ QDateTimeEdit::drop-down {
 }
 
 QDateTimeEdit::down-arrow {
-    image: url(:/Resources/icon/drop-down-arrow-48.png);
-    width: 10px;
-    height: 6px;
+    image: url(:/Resources/icon/chevron-down-neutral.svg);
+    width: 4px;
+    height: 2px;
 }
 
 QCalendarWidget QWidget#qt_calendar_navigationbar { background: @SURFACE@; border-bottom: 1px solid @CONTROLBORDER@;
@@ -1359,39 +1359,26 @@ QRadioButton[radioPreview="outline"]::indicator:checked:disabled {
     image: url(:/Resources/icon/radio-outline-on-disabled.svg);
 }
 
-/* Opt-in compact vector arrows: neutral at rest, blue only while hovered. */
-QComboBox[indicatorPreview="blue-vector"]::down-arrow,
-QAbstractSpinBox[indicatorPreview="blue-vector"]::down-arrow,
-QDateTimeEdit[indicatorPreview="blue-vector"]::down-arrow {
-    image: url(:/Resources/icon/chevron-down-neutral.svg);
-    width: 4px;
-    height: 2px;
-}
-QAbstractSpinBox[indicatorPreview="blue-vector"]::up-arrow {
-    image: url(:/Resources/icon/chevron-up-neutral.svg);
-    width: 4px;
-    height: 2px;
-}
-QComboBox[indicatorPreview="blue-vector"][resourcesIndicatorHovered="true"]::down-arrow,
-QAbstractSpinBox[indicatorPreview="blue-vector"][resourcesIndicatorHovered="true"]::down-arrow,
-QDateTimeEdit[indicatorPreview="blue-vector"][resourcesIndicatorHovered="true"]::down-arrow {
+/* Shared compact vector arrows: neutral at rest, blue only while hovered. */
+QComboBox[resourcesIndicatorHovered="true"]::down-arrow,
+QAbstractSpinBox[resourcesIndicatorHovered="true"]::down-arrow,
+QDateTimeEdit[resourcesIndicatorHovered="true"]::down-arrow {
     image: url(:/Resources/icon/chevron-down-blue.svg);
 }
-QAbstractSpinBox[indicatorPreview="blue-vector"][resourcesIndicatorHovered="true"]::up-arrow {
+QAbstractSpinBox[resourcesIndicatorHovered="true"]::up-arrow {
     image: url(:/Resources/icon/chevron-up-blue.svg);
 }
-QComboBox[indicatorPreview="blue-vector"]::down-arrow:disabled,
-QAbstractSpinBox[indicatorPreview="blue-vector"]::down-arrow:disabled,
-QAbstractSpinBox[indicatorPreview="blue-vector"]::down-arrow:off,
-QDateTimeEdit[indicatorPreview="blue-vector"]::down-arrow:disabled {
+QComboBox::down-arrow:disabled,
+QAbstractSpinBox::down-arrow:disabled,
+QAbstractSpinBox::down-arrow:off,
+QDateTimeEdit::down-arrow:disabled {
     image: url(:/Resources/icon/chevron-down-disabled.svg);
 }
-QAbstractSpinBox[indicatorPreview="blue-vector"]::up-arrow:disabled,
-QAbstractSpinBox[indicatorPreview="blue-vector"]::up-arrow:off {
+QAbstractSpinBox::up-arrow:disabled,
+QAbstractSpinBox::up-arrow:off {
     image: url(:/Resources/icon/chevron-up-disabled.svg);
 }
-
-QComboBox[indicatorPreview="blue-vector"],
-QAbstractSpinBox[indicatorPreview="blue-vector"] {
+QComboBox,
+QAbstractSpinBox {
     image: none;
 }
