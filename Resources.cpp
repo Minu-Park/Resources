@@ -795,8 +795,7 @@ protected:
         if (event->type() == QEvent::Enter || event->type() == QEvent::Leave
             || event->type() == QEvent::EnabledChange || event->type() == QEvent::Hide) {
             auto* input = qobject_cast<QWidget*>(obj);
-            if (input && input->property("indicatorPreview").toString() == QLatin1String("blue-vector")
-                && (qobject_cast<QComboBox*>(input) || qobject_cast<QAbstractSpinBox*>(input))) {
+            if (input && (qobject_cast<QComboBox*>(input) || qobject_cast<QAbstractSpinBox*>(input))) {
                 const bool hovered = input->isEnabled() && event->type() != QEvent::Leave
                     && event->type() != QEvent::Hide
                     && (event->type() == QEvent::Enter || input->underMouse());
