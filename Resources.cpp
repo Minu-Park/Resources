@@ -1730,7 +1730,7 @@ ThemePalette defaultThemePalette()
         {QStringLiteral("border"), QColor(QStringLiteral("#d9d9d8"))},
         {QStringLiteral("controlBorder"), QColor(QStringLiteral("#d9d9d8"))},
         {QStringLiteral("hoverBorder"), QColor(QStringLiteral("#c4c4c3"))},
-        {QStringLiteral("focusBorder"), QColor(QStringLiteral("#8a8a89"))},
+        {QStringLiteral("focusBorder"), QColor(QStringLiteral("#15487f"))},
         {QStringLiteral("hover"), QColor(QStringLiteral("#f4f4f3"))},
         {QStringLiteral("pressed"), QColor(QStringLiteral("#eeeeed"))},
         {QStringLiteral("disabledSurface"), QColor(QStringLiteral("#f7f7f7"))},
