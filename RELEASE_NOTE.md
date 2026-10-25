@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Align the default-palette regression with the distinct hover/focus and active border colors.
+
 - Center search clear/favorite controls in matching 20px slots with equal horizontal insets; use the shared active blue for selected favorites.
 
 - Add an opt-in search-bubble border-state proposal while keeping the inner editor borderless and current product defaults unchanged.

@@ -51,7 +51,7 @@ class ResourcesItemViewTests : public QObject
     Q_OBJECT
   private slots:
     void initTestCase() { Resources::installResources(*qApp); }
-    void signaturePaletteKeepsBordersAndInkMonochrome()
+    void signaturePaletteKeepsNeutralInkAndDistinctInteractionBorders()
     {
         const auto colors = Resources::defaultThemePalette();
         QCOMPARE(colors.value("hover"), QColor("#f4f4f3"));
@@ -60,8 +60,8 @@ class ResourcesItemViewTests : public QObject
         QCOMPARE(colors.value("current"), QColor("#eef3f9"));
         QCOMPARE(colors.value("border"), QColor("#d9d9d8"));
         QCOMPARE(colors.value("controlBorder"), QColor("#d9d9d8"));
-        QCOMPARE(colors.value("hoverBorder"), QColor("#c4c4c3"));
-        QCOMPARE(colors.value("focusBorder"), QColor("#8a8a89"));
+        QCOMPARE(colors.value("hoverBorder"), QColor("#8eafd1"));
+        QCOMPARE(colors.value("focusBorder"), QColor("#15487f"));
         QCOMPARE(colors.value("statusBorder"), QColor("#d4d4d3"));
         QCOMPARE(colors.value("text"), QColor("#3c3c3b"));
         QCOMPARE(colors.value("selectionAccent"), QColor("#15487f"));
