@@ -194,5 +194,7 @@
         <file>icon/chevron-down-disabled.svg</file>
         <file>icon/chevron-up-neutral.svg</file>
         <file>icon/chevron-down-neutral.svg</file>
+        <file>icon/chevron-up-hover.svg</file>
+        <file>icon/chevron-down-hover.svg</file>
     </qresource>
 </RCC>
