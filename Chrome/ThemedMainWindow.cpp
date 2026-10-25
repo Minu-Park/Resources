@@ -7,6 +7,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QMenuBar>
+#include <QAction>
 #include <QWindow>
 #include <QStyle>
 #include <QStatusBar>
@@ -204,9 +205,15 @@ void ThemedMainWindow::leaveEvent(QEvent* event) {
     setCursor(Qt::ArrowCursor);
 }
 
+/** @brief Computes resize edges while preserving enabled title-bar menu targets. */
 int ThemedMainWindow::determineResizeMode(const QPoint& pos) {
     if (isMaximized() || isFullScreen()) {
         return ResizeNone;
+    }
+
+    if (_menuBar && _menuBar->isVisible() && _menuBar->isEnabled()) {
+        const auto* action = _menuBar->actionAt(_menuBar->mapFrom(this, pos));
+        if (action && action->isVisible() && action->isEnabled()) return ResizeNone;
     }
 
     int mode = ResizeNone;

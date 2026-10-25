@@ -385,20 +385,42 @@ private slots:
         QCursor::setPos(oldCursor);
     }
 
+    void titleBarMenuTextHitArea_data()
+    {
+        QTest::addColumn<int>("width");
+        QTest::addColumn<bool>("maximized");
+        QTest::newRow("normal") << 720 << false;
+        QTest::newRow("narrow") << 520 << false;
+        QTest::newRow("maximized") << 720 << true;
+    }
+
     void titleBarMenuTextHitArea()
     {
+        QFETCH(int, width);
+        QFETCH(bool, maximized);
         Resources::installResources(*qApp);
-        for (bool maximized : {false, true}) {
-            ThemedMainWindow window;
-            window.setWindowTitle(QStringLiteral("Menu hit test"));
-            window.resize(720, 360);
-            auto* bar = window.themedMenuBar();
-            auto* menu = bar->addMenu(QStringLiteral("System"));
+        struct MenuHitWindow : ThemedMainWindow {
+            using ThemedMainWindow::determineResizeMode;
+        };
+        MenuHitWindow window;
+        window.setWindowTitle(QStringLiteral("Playground"));
+        window.resize(width, 360);
+        auto* bar = window.themedMenuBar();
+        QList<QMenu*> menus;
+        for (const auto& title : {"Device", "Simulation", "System"}) {
+            auto* menu = bar->addMenu(QString::fromLatin1(title));
             menu->addAction(QStringLiteral("Settings"));
-            if (maximized) window.showMaximized(); else window.show();
-            QVERIFY(QTest::qWaitForWindowExposed(&window));
-            QCoreApplication::processEvents();
+            menus.append(menu);
+        }
+        if (maximized) window.showMaximized(); else window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        window.activateWindow();
+        QVERIFY(QTest::qWaitForWindowActive(&window));
+        QCoreApplication::processEvents();
+        for (auto* menu : menus) {
             const QRect action = bar->actionGeometry(menu->menuAction());
+            QVERIFY2(action.height() >= 34, "Main menu target must include comfortable vertical padding");
+            QVERIFY(bar->rect().contains(action));
             const QImage image = bar->grab().toImage();
             const qreal dpr = image.devicePixelRatio();
             QRect ink;
@@ -413,12 +435,24 @@ private slots:
             qInfo() << "Menu action / text" << action << ink << "bar" << bar->geometry();
             QVERIFY(!ink.isEmpty());
             QVERIFY2(action.contains(ink), "Painted menu text extends beyond its clickable action");
-            for (const QPoint point : {ink.center(), QPoint(ink.center().x(), ink.bottom())}) {
+            QVERIFY(ink.top() - action.top() >= 8);
+            QVERIFY(action.bottom() - ink.bottom() >= 8);
+            for (const QPoint point : {ink.center(), QPoint(ink.center().x(), action.top() + 1),
+                                       QPoint(ink.center().x(), action.bottom() - 1)}) {
                 QCOMPARE(bar->actionAt(point), menu->menuAction());
+                QCOMPARE(window.determineResizeMode(bar->mapTo(&window, point)), 0);
+                qInfo() << "Menu click" << menu->title() << point;
                 QTest::mouseClick(bar, Qt::LeftButton, Qt::NoModifier, point);
-                QTRY_VERIFY(menu->isVisible());
+                QTRY_VERIFY_WITH_TIMEOUT(menu->isVisible(), 1000);
                 menu->close();
+                QTest::keyClick(bar, Qt::Key_Escape);
             }
+        }
+        if (!maximized) QVERIFY(window.determineResizeMode(QPoint(window.width() / 2, 0)) != 0);
+        const QString captures = qEnvironmentVariable("PLAYGROUND_MENU_HIT_CAPTURE_DIR");
+        if (!captures.isEmpty()) {
+            QVERIFY(QDir().mkpath(captures));
+            QVERIFY(window.grab().save(QDir(captures).filePath(QString::fromLatin1(QTest::currentDataTag()) + ".png")));
         }
     }
 
