@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Apply the shared 4px capsule track to horizontal sliders, keeping white handles, distinct hover/drag outlines and a neutral disabled track.
+
 - Add an opt-in compact 4x2 symmetric filled vector-chevron proposal for combo, spin and date/time arrows: neutral at rest and blue only on hover, preserving hit areas and default artwork.
 
 - Add an opt-in state-only radio proposal with a thin outline, blue selected dot and distinct disabled selection; keep default radio artwork unchanged.

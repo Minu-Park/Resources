@@ -1201,15 +1201,19 @@ QSlider:horizontal {
 QSlider::groove:horizontal {
     border: none;
     height: 4px;
-    background: @HOVER@;
+    background: @CONTROLBORDER@;
     border-radius: 2px;
 }
-
 QSlider::sub-page:horizontal {
-    background: @TEXT@;
+    border: none;
+    background: @FOCUSBORDER@;
     border-radius: 2px;
 }
-
+QSlider::add-page:horizontal {
+    border: none;
+    background: @CONTROLBORDER@;
+    border-radius: 2px;
+}
 QSlider::handle:horizontal {
     background: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
@@ -1219,16 +1223,24 @@ QSlider::handle:horizontal {
     margin-bottom: -5px;
     border-radius: 7px;
 }
-
-QSlider::handle:horizontal:hover {
+QSlider::handle:horizontal:hover,
+QSlider::handle:horizontal:focus {
+    border-color: @HOVERBORDER@;
+    background: @SURFACE@;
+}
+QSlider::handle:horizontal:pressed {
     border-color: @FOCUSBORDER@;
-    background: @HOVER@;
+    background: @SURFACE@;
+}
+QSlider::sub-page:horizontal:disabled {
+    background: @CONTROLBORDER@;
+}
+QSlider::handle:horizontal:disabled {
+    border-color: @CONTROLBORDER@;
+    background: @SURFACE@;
 }
 
-QSlider::handle:horizontal:pressed {
-    border-color: @DISABLEDTEXT@;
-    background: @HOVER@;
-}/* Keep explicit progress text readable; compact bars opt in through Qt's existing property. */
+/* Keep explicit progress text readable; compact bars opt in through Qt's existing property. */
 QProgressBar {
     min-height: 18px;
     border: none;
