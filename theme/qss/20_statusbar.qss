@@ -76,7 +76,7 @@ QToolButton#EngineStatusViewButton {
     margin: 0 2px 0 0;
     color: @TEXT@;
 
-    border: none;
+    border: 1px solid @CONTROLBORDER@;
     outline: none;
 }
 
@@ -97,7 +97,6 @@ QToolButton#EngineStatusViewButton {
 
     font-weight: @WEIGHT_WIDGET_BOLD@;
 
-    border: none;
     outline: none;
 }
 
@@ -138,7 +137,6 @@ QToolButton#EngineStatusViewButton {
 
     font-family: "@FONT_UI@";
 
-    border: none;
     outline: none;
 }
 
@@ -153,15 +151,15 @@ QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
     icon-size: 16px;
 
-    border: none;
     outline: none;
 }
 
+QToolButton#EngineStatusModeButton:disabled,
 QToolButton#EngineStatusViewButton:disabled {
     background: @SURFACE@;
     color: @TEXT@;
 
-    border: none;
+    border-color: @CONTROLBORDER@;
     outline: none;
 }
 
@@ -170,7 +168,7 @@ QToolButton#EngineStatusViewButton:enabled:hover:!pressed:!checked {
     background: @SURFACE@;
     color: @TEXT@;
 
-    border: none;
+    border-color: @HOVERBORDER@;
     outline: none;
 }
 
@@ -178,14 +176,14 @@ QToolButton#EngineStatusModeButton:enabled:pressed,
 QToolButton#EngineStatusViewButton:enabled:pressed {
     background: @SURFACE@;
 
-    border: none;
+    border-color: @FOCUSBORDER@;
     outline: none;
 }
 
 QToolButton#EngineStatusModeButton:enabled:focus:!pressed:!checked,
 QToolButton#EngineStatusViewButton:enabled:focus:!pressed:!checked {
 
-    border: none;
+    border-color: @HOVERBORDER@;
     outline: none;
 }
 
@@ -402,7 +400,7 @@ QToolButton#EngineStatusModeButton:enabled:checked,
 QToolButton#EngineStatusViewButton:enabled:pressed,
 QToolButton#EngineStatusViewButton:enabled:checked {
 
-    border: none;
+    border-color: @FOCUSBORDER@;
     outline: none;
 }
 
