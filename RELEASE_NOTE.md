@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Restore GraphicsEngine mode/view status-bubble outlines: neutral at rest or disabled, light blue on hover/focus, and accent while pressed, checked or open.
+
 - Align the default-palette regression with the distinct hover/focus and active border colors.
 
 - Center search clear/favorite controls in matching 20px slots with equal horizontal insets; use the shared active blue for selected favorites.
@@ -24,7 +26,7 @@
 
 - Keep enabled button backgrounds unchanged across hover, focus, pressed and checked states.
 
-- Keep all tool buttons and icon-bearing push buttons borderless in every state, including status menus and runtime icon changes. Text-only push buttons retain light-blue hover/focus and dark-blue pressed/checked borders.
+- Keep tool buttons and icon-bearing push buttons borderless in every state, including runtime icon changes, except the EngineStatusModeButton and EngineStatusViewButton status bubbles. Text-only push buttons retain light-blue hover/focus and dark-blue pressed/checked borders.
 
 - Restore the splash title accent color (#15487f by default).
 
