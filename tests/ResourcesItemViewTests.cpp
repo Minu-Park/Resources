@@ -673,6 +673,35 @@ class ResourcesItemViewTests : public QObject
         active.setParent(nullptr);
         inactive.setParent(nullptr);
     }
+    void defaultSwitchRetainsKeyboardFocusAndActivation()
+    {
+        QWidget host;
+        auto* layout = new QVBoxLayout(&host);
+        auto* first = new QLineEdit;
+        auto* toggle = new QCheckBox("Enable");
+        layout->addWidget(first);
+        layout->addWidget(toggle);
+        host.show();
+        host.activateWindow();
+        first->setFocus();
+        QApplication::processEvents();
+        const QImage idle = toggle->grab().toImage();
+        QTest::keyClick(first, Qt::Key_Tab);
+        QApplication::processEvents();
+        QVERIFY(toggle->hasFocus());
+        const QImage focused = toggle->grab().toImage();
+        QVERIFY2(focused != idle, "Keyboard focus must remain visible on the default switch.");
+        const QColor border = Resources::themePalette().value("focusBorder");
+        int focusPixels = 0;
+        for (int y = 0; y < focused.height(); ++y)
+            for (int x = 0; x < focused.width(); ++x)
+                focusPixels += focused.pixelColor(x, y) == border;
+        QVERIFY2(focusPixels > 0, "The focus border must not be hidden by the switch artwork.");
+        QSignalSpy changed(toggle, &QCheckBox::checkStateChanged);
+        QTest::keyClick(toggle, Qt::Key_Space);
+        QCOMPARE(toggle->checkState(), Qt::Checked);
+        QCOMPARE(changed.count(), 1);
+    }
     void completedProgressTextRetainsContrast()
     {
         QProgressBar bar;
