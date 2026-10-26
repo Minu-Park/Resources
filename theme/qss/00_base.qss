@@ -794,7 +794,7 @@ QGroupBox::indicator:hover {
     border: 1px solid transparent;
     border-radius: 12px;
     background: transparent;
-    image: url(:/Resources/icon/switch-off.svg);
+    image: url(:/Resources/icon/switch-outline-off.svg);
 }
 
 QCheckBox::indicator:checked,
@@ -803,7 +803,7 @@ QAbstractItemView::indicator:checked,
 QAbstractItemView::indicator:checked:hover,
 QGroupBox::indicator:checked,
 QGroupBox::indicator:checked:hover {
-    image: url(:/Resources/icon/switch-on.svg);
+    image: url(:/Resources/icon/switch-outline-on.svg);
 }/* Keep the switch near the content edge without leaving a vacant marker column. */
 QAbstractItemView::indicator {
     position: relative;
@@ -822,7 +822,7 @@ QAbstractItemView::indicator:indeterminate,
 QAbstractItemView::indicator:indeterminate:hover,
 QGroupBox::indicator:indeterminate,
 QGroupBox::indicator:indeterminate:hover {
-    image: url(:/Resources/icon/switch-mixed.svg);
+    image: url(:/Resources/icon/switch-outline-mixed.svg);
 }
 
 QCheckBox::indicator:focus,
@@ -841,7 +841,7 @@ QAbstractItemView::indicator:disabled,
 QAbstractItemView::indicator:disabled:hover,
 QGroupBox::indicator:disabled,
 QGroupBox::indicator:disabled:hover {
-    image: url(:/Resources/icon/switch-off-disabled.svg);
+    image: url(:/Resources/icon/switch-outline-off-disabled.svg);
 }
 
 QCheckBox::indicator:checked:disabled,
@@ -850,7 +850,7 @@ QAbstractItemView::indicator:checked:disabled,
 QAbstractItemView::indicator:checked:disabled:hover,
 QGroupBox::indicator:checked:disabled,
 QGroupBox::indicator:checked:disabled:hover {
-    image: url(:/Resources/icon/switch-on-disabled.svg);
+    image: url(:/Resources/icon/switch-outline-on-disabled.svg);
 }
 
 QCheckBox::indicator:indeterminate:disabled,
@@ -859,7 +859,7 @@ QAbstractItemView::indicator:indeterminate:disabled,
 QAbstractItemView::indicator:indeterminate:disabled:hover,
 QGroupBox::indicator:indeterminate:disabled,
 QGroupBox::indicator:indeterminate:disabled:hover {
-    image: url(:/Resources/icon/switch-mixed-disabled.svg);
+    image: url(:/Resources/icon/switch-outline-mixed-disabled.svg);
 }
 
 QGraphicsView {
@@ -1311,34 +1311,6 @@ QCalendarWidget QAbstractItemView::item { padding: 1px 2px;
 }
 
 QFrame#DeviceFeatureSearchBubble { border-color: @CONTROLBORDER@; }
-
-/* Opt-in toggle proposal: product defaults remain on the existing switch assets. */
-QCheckBox[togglePreview="outline"]::indicator {
-    width: 36px;
-    height: 20px;
-    padding: 2px;
-    border: none;
-    border-radius: 12px;
-    background: transparent;
-    image: url(:/Resources/icon/switch-outline-off.svg);
-}
-QCheckBox[togglePreview="outline"]::indicator:checked {
-    border-color: transparent;
-    image: url(:/Resources/icon/switch-outline-on.svg);
-}
-QCheckBox[togglePreview="outline"]::indicator:indeterminate {
-    border-color: transparent;
-    image: url(:/Resources/icon/switch-outline-mixed.svg);
-}
-QCheckBox[togglePreview="outline"]::indicator:disabled {
-    image: url(:/Resources/icon/switch-outline-off-disabled.svg);
-}
-QCheckBox[togglePreview="outline"]::indicator:checked:disabled {
-    image: url(:/Resources/icon/switch-outline-on-disabled.svg);
-}
-QCheckBox[togglePreview="outline"]::indicator:indeterminate:disabled {
-    image: url(:/Resources/icon/switch-outline-mixed-disabled.svg);
-}
 
 /* State-only radio proposal; supplied default radio artwork remains unchanged. */
 QRadioButton[radioPreview="outline"]::indicator {

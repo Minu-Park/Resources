@@ -18,7 +18,7 @@
 
 - Add an opt-in state-only radio proposal with a thin outline, blue selected dot and distinct disabled selection; keep default radio artwork unchanged.
 
-- Add an opt-in outline-toggle presentation for visual review, preserving the existing switch default and native checkbox behavior.
+- Apply outline toggles by default to checkboxes, item-view checks and checkable group boxes, preserving keyboard focus, hit areas and native behavior. Remove the toggle opt-in path and superseded switch artwork.
 
 - Keep System Logs and icon-action backgrounds neutral without darker pressed or checked fills.
 
