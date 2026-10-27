@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep the search bubble height stable under plain Qt styling when typing reveals the clear button.
+
 - Restore GraphicsEngine mode/view status-bubble outlines: neutral at rest or disabled, light blue on hover/focus, and accent while pressed, checked or open.
 
 - Align the default-palette regression with the distinct hover/focus and active border colors.

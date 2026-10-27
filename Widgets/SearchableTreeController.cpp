@@ -269,6 +269,9 @@ SearchableTreeController::SearchableTreeController(QTreeWidget* tree, const Opti
   clearSearch->setObjectName(QStringLiteral("DeviceFeatureSearchClear"));
   clearSearch->setIcon(tree_->style()->standardIcon(QStyle::SP_DialogCloseButton));
   clearSearch->setToolButtonStyle(Qt::ToolButtonIconOnly);
+  // Match the favorites button; a larger style default would make the bubble
+  // grow when typing reveals this button under plain Qt styling.
+  clearSearch->setIconSize(QSize(16, 16));
   clearSearch->setFocusPolicy(Qt::NoFocus);
   clearSearch->setToolTip(tr("Clear search"));
   clearSearch->setAccessibleName(tr("Clear search"));
