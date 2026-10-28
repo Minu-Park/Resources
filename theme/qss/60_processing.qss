@@ -28,26 +28,21 @@ QToolBar#RuntimePathsActionToolBar {
     padding: 2px 4px;
 }
 
+/* 20px compact actions: padding absorbs the shared 1px state border. */
 QToolBar#RuntimePathsActionToolBar QToolButton {
     background: transparent;
-    border-radius: 4px;
+    border-radius: 6px;
     min-width: 16px;
     max-width: 16px;
     min-height: 16px;
     max-height: 16px;
-    padding: 2px;
+    padding: 1px;
     margin: 0;
     qproperty-iconSize: 14px 14px;
-
-    border: none;
-    outline: none;
 }
 
 QToolBar#RuntimePathsActionToolBar QToolButton:hover {
     background: @SURFACE@;
-
-    border: none;
-    outline: none;
 }/* Dialog typography is owned by 40_chrome.qss; retain only layout here. */
 QWidget#RuntimePathsFormContainer QLabel#RuntimePathsLabel {
     min-width: 112px;
@@ -103,54 +98,25 @@ QWidget#ProcessingTabBar {
     max-height: 32px;
 }
 
+/* 20px compact actions: 18px contents plus the shared 1px state border. */
 QToolButton#ProcessingTabAddBtn,
 QToolButton#ProcessingTabDeleteBtn,
 QToolButton#ProcessingTabLoadBtn,
 QToolButton#ProcessingTabSaveBtn {
-    width: 20px;
-    height: 20px;
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    max-width: 18px;
+    min-height: 18px;
+    max-height: 18px;
     background: transparent;
     padding: 0;
-
-    border: none;
-    outline: none;
-}
-
-QToolButton#ProcessingTabAddBtn:enabled:hover:!pressed:!checked,
-QToolButton#ProcessingTabDeleteBtn:enabled:hover:!pressed:!checked,
-QToolButton#ProcessingTabLoadBtn:enabled:hover:!pressed:!checked,
-QToolButton#ProcessingTabSaveBtn:enabled:hover:!pressed:!checked,
-QToolButton#ProcessingTabAddBtn:enabled:focus:!pressed:!checked,
-QToolButton#ProcessingTabDeleteBtn:enabled:focus:!pressed:!checked,
-QToolButton#ProcessingTabLoadBtn:enabled:focus:!pressed:!checked,
-QToolButton#ProcessingTabSaveBtn:enabled:focus:!pressed:!checked {
-    background-color: transparent;
-    border-radius: 4px;
-
-    border: none;
-    outline: none;
-}
-
-QToolButton#ProcessingTabAddBtn:enabled:pressed,
-QToolButton#ProcessingTabDeleteBtn:enabled:pressed,
-QToolButton#ProcessingTabLoadBtn:enabled:pressed,
-QToolButton#ProcessingTabSaveBtn:enabled:pressed {
-    background-color: transparent;
-
-    border: none;
-    outline: none;
+    border-radius: 6px;
 }
 
 QToolButton#ProcessingTabDeleteBtn:disabled,
 QToolButton#ProcessingTabSaveBtn:disabled {
     opacity: 0.4;
-
-    border: none;
-    outline: none;
 }
 
 QComboBox#ProcessingScriptComboBox {
@@ -365,16 +331,4 @@ QLabel#SignatureHelpLabel {
     background-color: transparent;
     border: 1px solid transparent;
     padding: 1px 3px;
-}/* Active interaction takes precedence over hover and keyboard focus. */
-QToolButton#ProcessingTabAddBtn:enabled:pressed,
-QToolButton#ProcessingTabAddBtn:enabled:checked,
-QToolButton#ProcessingTabDeleteBtn:enabled:pressed,
-QToolButton#ProcessingTabDeleteBtn:enabled:checked,
-QToolButton#ProcessingTabLoadBtn:enabled:pressed,
-QToolButton#ProcessingTabLoadBtn:enabled:checked,
-QToolButton#ProcessingTabSaveBtn:enabled:pressed,
-QToolButton#ProcessingTabSaveBtn:enabled:checked {
-
-    border: none;
-    outline: none;
 }

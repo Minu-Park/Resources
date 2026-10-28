@@ -28,7 +28,7 @@
 
 - Keep enabled button backgrounds unchanged across hover, focus, pressed and checked states.
 
-- Keep tool buttons and icon-bearing push buttons borderless in every state, including runtime icon changes, except the EngineStatusModeButton and EngineStatusViewButton status bubbles. Text-only push buttons retain light-blue hover/focus and dark-blue pressed/checked borders.
+- Give tool buttons and icon-bearing push buttons a rounded state outline, including after runtime icon changes: none at rest or disabled, light blue on hover/focus and dark blue while pressed or checked. A reserved transparent 1px border keeps toolbar, compact 20px and marketplace action sizes unchanged. Window, dialog, dock, panel and tab close glyphs, tab scroll arrows, calendar navigation, search clear, favorites, console Clear and minimized-session controls stay borderless. Text-only push buttons retain light-blue hover/focus and dark-blue pressed/checked borders.
 
 - Restore the splash title accent color (#15487f by default).
 

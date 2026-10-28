@@ -172,6 +172,7 @@ QTabBar QToolButton {
     width: 20px;
     height: 24px;
     margin: 0px 0px;
+    padding: 3px 8px;
 
     border: none;
     outline: none;
@@ -637,20 +638,15 @@ QPushButton {
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
+/* Icon buttons reserve a transparent border at rest so state outlines keep geometry. */
 QPushButton[resourcesIconButton="true"] {
-    border: none;
-    outline: none;
+    border-color: transparent;
 }
 
 QPushButton:enabled:hover {
     background: @SURFACE@;
     border-color: @HOVERBORDER@;
     color: @TEXT@;
-}
-
-QPushButton[resourcesIconButton="true"]:enabled:hover {
-    border: none;
-    outline: none;
 }
 
 QPushButton:pressed {
@@ -663,21 +659,10 @@ QPushButton:enabled:focus {
     outline: none;
 }
 
-QPushButton[resourcesIconButton="true"]:enabled:focus {
-    border: none;
-    outline: none;
-}
-
 QPushButton:enabled:pressed,
 QPushButton:enabled:checked {
     background: @SURFACE@;
     border-color: @FOCUSBORDER@;
-    outline: none;
-}
-
-QPushButton[resourcesIconButton="true"]:enabled:pressed,
-QPushButton[resourcesIconButton="true"]:enabled:checked {
-    border: none;
     outline: none;
 }
 
@@ -688,53 +673,40 @@ QPushButton:disabled {
 }
 
 QPushButton[resourcesIconButton="true"]:disabled {
-    border: none;
-    outline: none;
+    border-color: transparent;
 }
 
+/* Tool buttons share the icon-button state outline; padding absorbs the reserved 1px border. */
 QToolButton {
     min-height: @CONTROL_HEIGHT@px;
-    padding: 3px 8px;
+    padding: 2px 7px;
     margin: 0;
+    border: 1px solid transparent;
     border-radius: 7px;
     background: transparent;
     color: @TEXT@;
+    outline: none;
 
     font-weight: @WEIGHT_EMPHASIS@;
-
-    border: none;
-    outline: none;
 }
 
-QToolButton:enabled:hover {
-    background: transparent;
-    color: @TEXT@;
-
-    border: none;
-    outline: none;
-}
-
+QToolButton:enabled:hover,
 QToolButton:enabled:focus {
     background: transparent;
-
-    border: none;
-    outline: none;
+    color: @TEXT@;
+    border-color: @HOVERBORDER@;
 }
 
 QToolButton:enabled:pressed,
 QToolButton:enabled:checked {
     background: transparent;
-
-    border: none;
-    outline: none;
+    border-color: @FOCUSBORDER@;
 }
 
 QToolButton:disabled {
     color: @DISABLEDTEXT@;
     background: transparent;
-
-    border: none;
-    outline: none;
+    border-color: transparent;
 }
 
 QCheckBox,
@@ -1119,11 +1091,8 @@ QToolButton[fileDialogRole="navigation"] {
     min-height: 22px;
     max-width: 22px;
     max-height: 22px;
-    padding: 2px;
+    padding: 1px;
     qproperty-iconSize: 14px 14px;
-
-    border: none;
-    outline: none;
 }#AutoCompletePopup {
     border: 1px solid transparent;
     border-radius: 8px;

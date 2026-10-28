@@ -26,22 +26,32 @@ QTabWidget[tabRole="DeviceControls"] > QTabBar {
     padding-top: 0;
 }
 
+/* 20px compact actions: 18px contents plus the shared 1px state border. */
 QFramegrabberWidget QToolButton,
 QCameraWidget QToolButton,
 QGocatorWidget QToolButton,
 QHeliotisC4Widget QToolButton,
 QOneGenWidget QToolButton,
-QOneGenDeviceWidget QToolButton,
-OneGenFeatureTree QToolButton#DeviceFeatureFavoritesOnly {
+QOneGenDeviceWidget QToolButton {
+    min-width: 18px;
+    min-height: 18px;
+    max-width: 18px;
+    max-height: 18px;
+    padding: 0;
+    border-radius: 6px;
+}
+
+/* Borderless tab scroll arrows keep their full 20px slot. */
+QFramegrabberWidget QTabBar QToolButton,
+QCameraWidget QTabBar QToolButton,
+QGocatorWidget QTabBar QToolButton,
+QHeliotisC4Widget QTabBar QToolButton,
+QOneGenWidget QTabBar QToolButton,
+QOneGenDeviceWidget QTabBar QToolButton {
     min-width: 20px;
     min-height: 20px;
     max-width: 20px;
     max-height: 20px;
-    padding: 0;
-    border-radius: 8px;
-
-    border: none;
-    outline: none;
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"] {
