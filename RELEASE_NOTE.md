@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove redundant shorthand/edge assignments and share matching chrome, status-bubble, processing-header and indicator selector groups while preserving their state scopes. Resolve plot action size and radius from the same compact-action metrics as other consumers.
+
 - Reject unmatched theme braces and text outside complete rule blocks before fragment ownership checks, atomic reload or platform composition; mirror structural rejection in the source policy guard.
 
 - Validate source and platform theme layers at installation and reload, propagate composition errors without replacing output, and explicitly require extension-menu coverage in the overflow acceptance fixture.

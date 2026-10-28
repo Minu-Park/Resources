@@ -1,0 +1,11 @@
+/* Source-only authoring proposal; not embedded or installed with the theme. */
+QMenu#DesignTreeHoverMenu::item {
+    border-radius: 12px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+QMenu#DesignTreeHoverMenu::item:selected {
+    background-color: @ITEMHOVER@;
+    color: @TEXT@;
+}

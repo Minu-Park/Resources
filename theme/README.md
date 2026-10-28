@@ -14,8 +14,11 @@ without adding fonts, event filters or delegates a second time.
 - `qss/00_base.qss` owns standard control templates, including spin frames, embedded
   editors and arrow states. Reusable `resourcesDensity` selectors own compact fields,
   and compact actions. The engine toolbar consumes shared action-size and padding
-  tokens in its named QSS rule. Later fragments may add named exceptions;
-  they must not introduce another type-wide standard-control template. The manager
+  tokens in its named QSS rule. Plot actions share the compact-action template
+  and its size/radius tokens. Matching selector families share one declaration
+  block; unrelated roles retain separate rules even
+  when factory values happen to coincide, preserving state precedence and ownership.
+  Later fragments must not introduce another type-wide standard-control template. The manager
   rejects duplicate selector/property assignments across the whole candidate,
   including reordered equivalent pseudo-states, and unparsed declaration or block
   text. Unbalanced braces are rejected in each fragment before ownership checks.
@@ -53,6 +56,10 @@ rendering checks; token validation is not a complete QSS syntax validator.
 
 Qt QSS has no import mechanism, so fragment order in `ResourcesTheme::install()`
 is part of the theme contract. The design catalog watches both QSS and metrics.
+
+Source-only proposals under `previews/` are not embedded or installed. An authoring
+consumer may append a proposal to an isolated copy of the complete source theme;
+the ordinary installation and source-reload contracts still validate that copy.
 
 - Put generic widget defaults in the lowest-numbered files.
 - Put semantic role and state selectors after their defaults.

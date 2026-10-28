@@ -26,8 +26,6 @@ QTabWidget[tabRole="DeviceControls"] > QTabBar {
     padding-top: 0;
 }
 
-
-
 /* Borderless tab scroll arrows keep their full 20px slot. */
 QFramegrabberWidget QTabBar QToolButton,
 QCameraWidget QTabBar QToolButton,
@@ -63,8 +61,6 @@ QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
     background: transparent;
     color: @TEXT@;
 }
-
-
 
 QFramegrabberWidget QLabel#FramegrabberStatusLabel:hover,
 QCameraWidget QLabel#CameraStatusLabel:hover,
@@ -128,7 +124,9 @@ QToolButton#DeviceFeatureSearchClear {
 }
 
 QToolButton#DeviceFeatureSearchClear:enabled:hover:!pressed:!checked,
-QToolButton#DeviceFeatureSearchClear:enabled:focus:!pressed:!checked {
+QToolButton#DeviceFeatureSearchClear:enabled:focus:!pressed:!checked,
+QToolButton#DeviceFeatureFavoritesOnly:hover,
+QToolButton#DeviceFeatureFavoritesOnly:pressed {
     background: transparent;
 
     border: none;
@@ -152,13 +150,6 @@ QToolButton#DeviceFeatureFavoritesOnly {
 
     font-size: @FONT_DISPLAY@px;
 
-    border: none;
-    outline: none;
-}
-
-QToolButton#DeviceFeatureFavoritesOnly:hover,
-QToolButton#DeviceFeatureFavoritesOnly:pressed {
-    background: transparent;
     border: none;
     outline: none;
 }

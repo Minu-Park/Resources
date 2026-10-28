@@ -84,7 +84,8 @@ QWidget#ProcessingEditorContainer {
     background: transparent;
 }
 
-QWidget#ProcessingTabBar {
+QWidget#ProcessingTabBar,
+QWidget#ProcessingConsoleHeader {
     background-color: @HOVER@;
     border: 1px solid @CONTROLBORDER@;
     border-bottom: none;
@@ -129,7 +130,7 @@ QPlainTextEdit#ProcessingCodeEditor {
     background-color: @SURFACE@;
     color: @TEXT@;
     border: 1px solid @CONTROLBORDER@;
-    border-top: 1px solid @CONTROLBORDER@;
+
     border-bottom: none;
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
@@ -193,15 +194,6 @@ QWidget#ProcessingConsoleContainer {
     background: transparent;
     border: none;
 }/* Compiler Console Header */
-QWidget#ProcessingConsoleHeader {
-    background-color: @HOVER@;
-    border: 1px solid @CONTROLBORDER@;
-    border-bottom: none;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    min-height: 32px;
-    max-height: 32px;
-}
 
 QLabel#ProcessingConsoleTitle {
     color: @TEXT@;
@@ -227,14 +219,10 @@ QToolButton#ProcessingConsoleClear {
     outline: none;
 }
 
-QToolButton#ProcessingConsoleClear:hover {
-    color: @TEXT@;
-
-    border: none;
-    outline: none;
-}
-
-QToolButton#ProcessingConsoleClear:pressed {
+QToolButton#ProcessingConsoleClear:hover,
+QToolButton#ProcessingConsoleClear:pressed,
+QToolButton#ProcessingConsoleClose:hover,
+QToolButton#ProcessingConsoleClose:pressed {
     color: @TEXT@;
 
     border: none;
@@ -252,24 +240,12 @@ QToolButton#ProcessingConsoleClose {
     outline: none;
 }
 
-QToolButton#ProcessingConsoleClose:hover {
-    color: @TEXT@;
-
-    border: none;
-    outline: none;
-}
-
-QToolButton#ProcessingConsoleClose:pressed {
-    color: @TEXT@;
-
-    border: none;
-    outline: none;
-}/* Processing Console Log */
+/* Processing Console Log */
 QPlainTextEdit#ProcessingConsoleLog {
     background-color: @SURFACE@;
     color: @TEXT@;
     border: 1px solid @CONTROLBORDER@;
-    border-top: 1px solid @CONTROLBORDER@;
+
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
     border-top-left-radius: 0px;
@@ -288,7 +264,7 @@ QToolBar#ProcessingToolBar {
 QFrame#EditorStatusBar {
     background-color: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
-    border-top: 1px solid @CONTROLBORDER@;
+
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
     min-height: 22px;

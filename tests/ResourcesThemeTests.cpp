@@ -203,7 +203,7 @@ private slots:
             QCOMPARE(button->size(), QSize(20, 20));
         }
     }
-    void engineToolbarTracksReloadedMetrics()
+    void engineToolbarAndPlotActionsTrackReloadedMetrics()
     {
         QToolBar toolbar;
         toolbar.setObjectName("EngineToolBar");
@@ -211,6 +211,12 @@ private slots:
         toolbar.show(); QApplication::processEvents();
         auto* button = qobject_cast<QToolButton*>(toolbar.widgetForAction(action));
         QVERIFY(button);
+        QToolButton plot, namedPlot;
+        plot.setProperty("plotActionRole", "action");
+        namedPlot.setObjectName("PlotViewActionButton");
+        plot.show(); namedPlot.show(); QApplication::processEvents();
+        QCOMPARE(plot.minimumSize(), QSize(20, 20));
+        QCOMPARE(namedPlot.minimumSize(), plot.minimumSize());
         const auto original = button->minimumSize();
         QTemporaryDir candidate; QVERIFY(copyFactory(candidate.path()));
         auto values = metricSource(candidate.path());
@@ -222,6 +228,8 @@ private slots:
         QApplication::processEvents();
         QCOMPARE(button->minimumSize(), QSize(36, 36));
         QVERIFY(button->minimumSize().width() > original.width());
+        QCOMPARE(plot.minimumSize(), QSize(28, 28));
+        QCOMPARE(namedPlot.minimumSize(), plot.minimumSize());
     }
     void reloadUpdatesQssAndRuntimeMaskTogether()
     {

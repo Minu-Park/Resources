@@ -20,14 +20,10 @@ QMainWindow#MainWindow[maximized="true"] {
     background-color: @SURFACE@;
     border: none;
 }/* Main Window Title Bar Styles */
-QWidget#ThemedMainTitleBar {
-    background-color: @SURFACE@;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-    border-bottom: 1px solid @BORDER@;
-}
-
-QWidget#ThemedMainTitleBar[maximized="true"] {
+QWidget#ThemedMainTitleBar,
+QWidget#ThemedMainTitleBar[maximized="true"],
+QWidget#ThemedDialogTitleBar,
+QWidget#ThemedMdiTitleBar {
     background-color: @SURFACE@;
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
@@ -72,7 +68,13 @@ QLabel#MainTitleLabel {
 
 QPushButton#MainMinButton,
 QPushButton#MainMaxButton,
-QPushButton#MainCloseButton {
+QPushButton#MainCloseButton,
+QPushButton#ThemedDialogCloseButton,
+QPushButton#TitleMinButton,
+QPushButton#TitleMaxButton,
+QPushButton#TitleCloseButton,
+QPushButton#DockMaxButton,
+QPushButton#DockCloseButton {
     border: none;
     background: transparent;
     border-radius: 6px;
@@ -84,20 +86,38 @@ QPushButton#MainCloseButton {
 
 QPushButton#MainMinButton[resourcesIconButton="true"],
 QPushButton#MainMaxButton[resourcesIconButton="true"],
-QPushButton#MainCloseButton[resourcesIconButton="true"] {
+QPushButton#MainCloseButton[resourcesIconButton="true"],
+QPushButton#ThemedDialogCloseButton[resourcesIconButton="true"],
+QPushButton#TitleMinButton[resourcesIconButton="true"],
+QPushButton#TitleMaxButton[resourcesIconButton="true"],
+QPushButton#TitleCloseButton[resourcesIconButton="true"],
+QPushButton#DockMaxButton[resourcesIconButton="true"],
+QPushButton#DockCloseButton[resourcesIconButton="true"] {
     border: none;
     outline: none;
 }
 
 QPushButton#MainMinButton:hover,
 QPushButton#MainMaxButton:hover,
-QPushButton#MainCloseButton:hover {
+QPushButton#MainCloseButton:hover,
+QPushButton#ThemedDialogCloseButton:hover,
+QPushButton#TitleMinButton:hover,
+QPushButton#TitleMaxButton:hover,
+QPushButton#TitleCloseButton:hover,
+QPushButton#DockMaxButton:hover,
+QPushButton#DockCloseButton:hover {
     background: transparent;
 }
 
 QPushButton#MainMinButton:pressed,
 QPushButton#MainMaxButton:pressed,
-QPushButton#MainCloseButton:pressed {
+QPushButton#MainCloseButton:pressed,
+QPushButton#ThemedDialogCloseButton:pressed,
+QPushButton#TitleMinButton:pressed,
+QPushButton#TitleMaxButton:pressed,
+QPushButton#TitleCloseButton:pressed,
+QPushButton#DockMaxButton:pressed,
+QPushButton#DockCloseButton:pressed {
     background-color: transparent;
 }/* MDI SubWindow Custom Container */
 QWidget#ThemedMdiShadow {
@@ -162,57 +182,7 @@ QWidget#ThemedDialogContainer {
     border-radius: 12px;
 }
 
-QWidget#ThemedDialogTitleBar {
-    background-color: @SURFACE@;
-    border-bottom: 1px solid @BORDER@;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-}
-
-QLabel#ThemedDialogTitleLabel {
-    background: transparent;
-    color: @TEXT@;
-    margin: 0px;
-    padding: 0px;
-
-    font-size: @FONT_CHROME_TITLE@px;
-    font-weight: @WEIGHT_WIDGET_BOLD@;
-}
-
-QPushButton#ThemedDialogCloseButton {
-    border: none;
-    background: transparent;
-    border-radius: 6px;
-    width: 20px;
-    height: 20px;
-    margin: 0px;
-    padding: 0px;
-}
-
-QPushButton#ThemedDialogCloseButton[resourcesIconButton="true"] {
-    border: none;
-    outline: none;
-}
-
-QPushButton#ThemedDialogCloseButton:hover {
-    background: transparent;
-}
-
-QPushButton#ThemedDialogCloseButton:pressed {
-    background-color: transparent;
-}/* Custom SubWindow Title Bar */
-QWidget#ThemedMdiTitleBar {
-    background-color: @SURFACE@;
-    border-bottom: 1px solid @BORDER@;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-}
-
-QWidget#ThemedMdiTitleBar[maximized="true"] {
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}
-
+QLabel#ThemedDialogTitleLabel,
 QLabel#ThemedMdiTitleBarLabel {
     background: transparent;
     color: @TEXT@;
@@ -223,36 +193,14 @@ QLabel#ThemedMdiTitleBarLabel {
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
-QPushButton#TitleMinButton,
-QPushButton#TitleMaxButton,
-QPushButton#TitleCloseButton {
-    border: none;
-    background: transparent;
-    border-radius: 6px;
-    width: 20px;
-    height: 20px;
-    margin: 0px;
-    padding: 0px;
+/* Custom SubWindow Title Bar */
+
+QWidget#ThemedMdiTitleBar[maximized="true"] {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
 }
 
-QPushButton#TitleMinButton[resourcesIconButton="true"],
-QPushButton#TitleMaxButton[resourcesIconButton="true"],
-QPushButton#TitleCloseButton[resourcesIconButton="true"] {
-    border: none;
-    outline: none;
-}
-
-QPushButton#TitleMinButton:hover,
-QPushButton#TitleMaxButton:hover,
-QPushButton#TitleCloseButton:hover {
-    background: transparent;
-}
-
-QPushButton#TitleMinButton:pressed,
-QPushButton#TitleMaxButton:pressed,
-QPushButton#TitleCloseButton:pressed {
-    background-color: transparent;
-}/* Custom Dock Title Bar */
+/* Custom Dock Title Bar */
 QWidget#ThemedDockTitleBar {
     background-color: @SURFACE@;
     border-bottom: 1px solid @BORDER@;
@@ -267,33 +215,6 @@ QLabel#ThemedDockTitleBarLabel {
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
-QPushButton#DockMaxButton,
-QPushButton#DockCloseButton {
-    border: none;
-    background: transparent;
-    border-radius: 6px;
-    width: 20px;
-    height: 20px;
-    margin: 0px;
-    padding: 0px;
-}
-
-QPushButton#DockMaxButton[resourcesIconButton="true"],
-QPushButton#DockCloseButton[resourcesIconButton="true"] {
-    border: none;
-    outline: none;
-}
-
-QPushButton#DockMaxButton:hover,
-QPushButton#DockCloseButton:hover {
-    background: transparent;
-}
-
-QPushButton#DockMaxButton:pressed,
-QPushButton#DockCloseButton:pressed {
-    background-color: transparent;
-}
-
 QFrame#DockContainerWidget {
     background-color: @SURFACE@;
     border: none;
@@ -301,7 +222,7 @@ QFrame#DockContainerWidget {
 
 QDockWidget[floatingState="true"] {
     background: transparent;
-    background-color: transparent;
+
     border: none;
 }
 
@@ -319,7 +240,7 @@ QDockWidget[floatingState="true"] QFrame#DockContainerWidget {
 QDockWidget[floatingState="true"] QWidget#ThemedDockTitleBar {
     background-color: @SURFACE@;
     border: 1px solid @BORDER@;
-    border-bottom: 1px solid @BORDER@;
+
     border-top-left-radius: 11px;
     border-top-right-radius: 11px;
     border-bottom-left-radius: 0px;
@@ -362,7 +283,12 @@ QDialog QLabel#RuntimePathsHeading {
 QDialog QLabel[textRole="body"],
 QDialog QLabel[textRole="fieldName"],
 QDialog QLineEdit#RuntimePathsNameEdit,
-QDialog QLabel#RuntimePathsNameLabel {
+QDialog QLabel#RuntimePathsNameLabel,
+QDialog QHeaderView::section,
+QDialog QHeaderView[fileDialogRole="itemHeader"],
+QDialog QTreeWidget#RuntimePathsListWidget,
+QDialog QTreeWidget#RuntimePathsListWidget::item:selected,
+QDialog QWidget#RuntimePathsFormContainer QLabel#RuntimePathsLabel {
     font-size: @FONT_BODY@px;
     font-weight: @WEIGHT_NORMAL@;
     color: @TEXT@;
@@ -373,13 +299,6 @@ QDialog QLabel[textRole="caption"] {
     font-size: @FONT_CAPTION@px;
     font-weight: @WEIGHT_NORMAL@;
     color: @SECONDARYTEXT@;
-}
-
-QDialog QHeaderView::section,
-QDialog QHeaderView[fileDialogRole="itemHeader"] {
-    font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_NORMAL@;
-    color: @TEXT@;
 }
 
 QDialog QLabel:disabled { color: @DISABLEDTEXT@; }
@@ -396,13 +315,7 @@ QDialog QTabBar::tab:selected {
     background: transparent;
 }
 
-QDialog QTreeWidget#RuntimePathsListWidget,
-QDialog QTreeWidget#RuntimePathsListWidget::item:selected,
-QDialog QWidget#RuntimePathsFormContainer QLabel#RuntimePathsLabel {
-    font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_NORMAL@;
-    color: @TEXT@;
-}/* Fixed chrome scale: nested dialog typography must not enlarge title bars. */
+/* Fixed chrome scale: nested dialog typography must not enlarge title bars. */
 QDialog QLabel#ThemedDialogTitleLabel,
 QDialog QLabel#ThemedMdiTitleBarLabel,
 QDialog QLabel#ThemedDockTitleBarLabel {
