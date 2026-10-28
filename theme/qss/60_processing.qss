@@ -39,10 +39,6 @@ QToolBar#RuntimePathsActionToolBar QToolButton {
     padding: 1px;
     margin: 0;
     qproperty-iconSize: 14px 14px;
-}
-
-QToolBar#RuntimePathsActionToolBar QToolButton:hover {
-    background: @SURFACE@;
 }/* Dialog typography is owned by 40_chrome.qss; retain only layout here. */
 QWidget#RuntimePathsFormContainer QLabel#RuntimePathsLabel {
     min-width: 112px;
