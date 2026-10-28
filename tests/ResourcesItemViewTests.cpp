@@ -1,4 +1,5 @@
 #include "Resources.h"
+#include "Chrome/ThemedTreeWidget.h"
 #include "ItemViewTheme.h"
 #include "Widgets/SearchableTreeWidget.h"
 #include <QSignalSpy>
@@ -313,6 +314,76 @@ class ResourcesItemViewTests : public QObject
                                       qRound(point.y() * image.devicePixelRatio())),
                      row == 1 ? Resources::themePalette().value(QStringLiteral("current")) : list.palette().highlight().color());
         }
+    }
+    void rowSwitchRetainsHoverArtwork_data()
+    {
+        QTest::addColumn<bool>("table");
+        QTest::addColumn<int>("sample");
+        QTest::addColumn<bool>("hovered");
+        for (bool table : {false, true})
+            for (int sample = 0; sample < 6; ++sample)
+                for (bool hovered : {false, true})
+                    QTest::newRow(qPrintable(QString("%1-%2-%3").arg(table ? "table" : "tree")
+                        .arg(sample).arg(hovered))) << table << sample << hovered;
+    }
+    void rowSwitchRetainsHoverArtwork()
+    {
+        QFETCH(bool, table);
+        QFETCH(int, sample);
+        QFETCH(bool, hovered);
+        const auto state = sample % 3 == 0 ? Qt::Unchecked
+            : sample % 3 == 1 ? Qt::Checked : Qt::PartiallyChecked;
+        const bool enabled = sample < 3;
+        std::unique_ptr<QAbstractItemView> view;
+        QModelIndex index;
+        if (table) {
+            auto* widget = new QTableWidget(1, 1);
+            auto* item = new QTableWidgetItem("Producer.cti");
+            item->setCheckState(state);
+            widget->setItem(0, 0, item);
+            view.reset(widget);
+            index = widget->model()->index(0, 0);
+        } else {
+            auto* widget = new ThemedTreeWidget;
+            widget->setHeaderHidden(true);
+            widget->setRootIsDecorated(false);
+            auto* item = new QTreeWidgetItem(widget, {"Producer.cti"});
+            item->setCheckState(0, state);
+            view.reset(widget);
+            index = widget->model()->index(0, 0);
+        }
+        view->setProperty("interactionMode", "row");
+        view->setEnabled(enabled);
+        view->resize(400, 160);
+        view->show();
+        QApplication::processEvents();
+        view->clearFocus();
+        struct Probe : QStyledItemDelegate { using QStyledItemDelegate::initStyleOption; } probe;
+        QStyleOptionViewItem option;
+        option.initFrom(view.get());
+        option.widget = view.get();
+        option.rect = view->visualRect(index);
+        probe.initStyleOption(&option, index);
+        option.state.setFlag(QStyle::State_Enabled, enabled);
+        option.state.setFlag(QStyle::State_MouseOver, hovered);
+        option.state &= ~(QStyle::State_HasFocus | QStyle::State_Selected);
+        const QRect indicator = view->style()->subElementRect(
+            QStyle::SE_ItemViewItemCheckIndicator, &option, view.get());
+        QCOMPARE(indicator.size(), QSize(40, 24));
+        QImage image(400, 40, QImage::Format_ARGB32_Premultiplied);
+        image.fill(Qt::white);
+        QPainter painter(&image);
+        view->itemDelegate()->paint(&painter, option, index);
+        painter.end();
+        const QString asset = ":/Resources/icon/switch-outline-"
+            + QStringList{"off", "on", "mixed"}[sample % 3]
+            + (!enabled ? "-disabled" : hovered ? "-hover" : "") + ".svg";
+        QImage expected(36, 20, QImage::Format_ARGB32_Premultiplied);
+        expected.fill(image.pixelColor(indicator.topLeft() + QPoint(2, 2)));
+        QPainter expectedPainter(&expected);
+        expectedPainter.drawPixmap(QPoint(), QIcon(asset).pixmap(QSize(36, 20)));
+        expectedPainter.end();
+        QCOMPARE(image.copy(QRect(indicator.topLeft() + QPoint(2, 2), QSize(36, 20))), expected);
     }
     void itemSwitchUsesLeadingEdgeAndMatchingHitRect()
     {

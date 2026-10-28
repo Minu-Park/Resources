@@ -158,6 +158,10 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
         if (selected)
             contents.features &= ~QStyleOptionViewItem::Alternate;
         contents.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver | QStyle::State_HasFocus);
+        // Row content delegates suppress native backgrounds themselves, retaining indicator feedback.
+        if (source_->property("_resourcesOwnsItemBackground").toBool()
+            && view_->property("interactionMode").toString() == QLatin1String("row"))
+            contents.state.setFlag(QStyle::State_MouseOver, option.state.testFlag(QStyle::State_MouseOver));
         source_->paint(painter, contents, index);
         if (!selected && current)
         {
