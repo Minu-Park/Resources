@@ -6,8 +6,6 @@
 #include <QPointer>
 #include <QStringList>
 
-class QAbstractButton;
-
 namespace Resources {
 
 /** @brief Shared logical-pixel geometry consumed by QSS and runtime painting. */
@@ -27,8 +25,7 @@ struct ControlMetrics {
 class ResourcesTheme final : public QObject {
 public:
     enum class ControlKind { Field, ToolButton, TreeFrame };
-    enum class Density { Default, Compact, Toolbar };
-    enum class ControlRole { Default, Borderless };
+    enum class Density { Default, Compact };
 
     /** @brief Returns the sole owner, adopted by QApplication at installation. */
     static ResourcesTheme& instance();
@@ -56,8 +53,6 @@ public:
     ControlMetrics metrics(ControlKind kind, Density density = Density::Default) const;
     /** @brief Selects density for a line edit, spin box, combo box or tool button and refreshes geometry. */
     void setDensity(QWidget& widget, Density density);
-    /** @brief Selects standard or borderless control chrome without changing native input behavior. */
-    void setRole(QAbstractButton& widget, ControlRole role);
     /** @brief Admits existing compact consumer surfaces to the shared density template. */
     void polishWidget(QWidget& widget);
 

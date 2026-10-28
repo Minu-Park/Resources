@@ -34,9 +34,9 @@ QToolBar#EngineToolBar {
 }
 
 QToolBar#EngineToolBar QToolButton {
-    min-width: 18px;
-    min-height: 18px;
-    padding: 2px;
+    min-width: @COMPACT_ACTION_CONTENT_SIZE@px;
+    min-height: @COMPACT_ACTION_CONTENT_SIZE@px;
+    padding: @TOOLBAR_ACTION_PADDING@px;
 }
 
 QToolBar::separator {

@@ -1,7 +1,7 @@
 #include "ResourcesTheme.h"
 #include "ThemeRuntime.h"
+#include "ThemeStyleSheet.h"
 #include <QApplication>
-#include <QAbstractButton>
 #include <QWidget>
 #include <QVariant>
 #include <QDir>
@@ -41,7 +41,7 @@ QString canonicalSelector(const QString& selector)
 struct ThemeDeclaration { QString property; QString value; int id; };
 struct ThemeRule { QStringList selectors; QList<ThemeDeclaration> declarations; };
 
-QList<ThemeRule> themeRules(QString source)
+QList<ThemeRule> themeRules(QString source, QString* error = nullptr)
 {
     source.remove(QRegularExpression(QStringLiteral("/\\*.*?\\*/"), QRegularExpression::DotMatchesEverythingOption));
     static const QRegularExpression block(QStringLiteral("([^{}]+)\\{([^{}]*)\\}"));
@@ -54,12 +54,23 @@ QList<ThemeRule> themeRules(QString source)
         ThemeRule rule;
         for (const auto& selector : match.captured(1).split(QLatin1Char(','), Qt::SkipEmptyParts))
             rule.selectors.append(selector.simplified());
-        auto declarations = declaration.globalMatch(match.captured(2));
+        const auto body = match.captured(2);
+        auto declarations = declaration.globalMatch(body);
+        int parsedEnd = 0;
         while (declarations.hasNext()) {
             const auto item = declarations.next();
+            if (!body.mid(parsedEnd, item.capturedStart() - parsedEnd).trimmed().isEmpty()) {
+                if (error) *error = QStringLiteral("Unparsed theme declaration in %1").arg(match.captured(1).trimmed());
+                return {};
+            }
+            parsedEnd = item.capturedEnd();
             auto property = item.captured(1);
             if (!property.startsWith(QLatin1String("qproperty-"))) property = property.toLower();
             rule.declarations.append({property, item.captured(2).trimmed(), id++});
+        }
+        if (!body.mid(parsedEnd).trimmed().isEmpty()) {
+            if (error) *error = QStringLiteral("Unparsed theme declaration in %1").arg(match.captured(1).trimmed());
+            return {};
         }
         rules.append(rule);
     }
@@ -87,7 +98,8 @@ QString definitionKey(const QString& selector, const QString& property)
 }
 
 // Platform variants are explicit manager-owned patches, resolved before Qt receives QSS.
-QString composePlatformVariant(const QString& source, const QString& platform)
+} // namespace
+QString detail::composePlatformVariant(const QString& source, const QString& platform)
 {
     if (platform.isEmpty()) return source;
     const auto rules = themeRules(source + platform);
@@ -113,6 +125,7 @@ QString composePlatformVariant(const QString& source, const QString& platform)
     return result;
 }
 
+namespace {
 QJsonObject readObject(const QString& path, QString* error)
 {
     QFile file(path);
@@ -197,7 +210,7 @@ void ResourcesTheme::applyInstalledStyleSheet()
         return;
     }
 
-    const QString styleSheet = renderStyleSheet(composePlatformVariant(styleSheetTemplate_, platformStyleSheet_), metrics_, palette_);
+    const QString styleSheet = renderStyleSheet(detail::composePlatformVariant(styleSheetTemplate_, platformStyleSheet_), metrics_, palette_);
     app_->setStyleSheet(styleSheet);
 
     QPalette palette = app_->palette();
@@ -345,7 +358,13 @@ bool ResourcesTheme::validateStyleSheet(const QString& source, const QJsonObject
                                         QString* error)
 {
     QSet<QString> definitions;
-    for (const auto& rule : themeRules(source)) {
+    QString parseError;
+    const auto rules = themeRules(source, &parseError);
+    if (!parseError.isEmpty()) {
+        if (error) *error = parseError;
+        return false;
+    }
+    for (const auto& rule : rules) {
         for (const auto& selector : rule.selectors) {
             for (const auto& declaration : rule.declarations) {
                 const auto key = definitionKey(selector, declaration.property);
@@ -385,10 +404,6 @@ ControlMetrics ResourcesTheme::metrics(ControlKind kind, Density density) const
     if (density == Density::Compact)
         return {metric("COMPACT_ACTION_CONTENT_SIZE"), metric("COMPACT_ACTION_CONTENT_SIZE"), 0, 0,
                 metric("CONTROL_BORDER_WIDTH"), metric("COMPACT_ACTION_RADIUS")};
-    if (density == Density::Toolbar)
-        return {metric("COMPACT_ACTION_CONTENT_SIZE"), metric("COMPACT_ACTION_CONTENT_SIZE"),
-                metric("TOOLBAR_ACTION_PADDING"), metric("TOOLBAR_ACTION_PADDING"),
-                metric("CONTROL_BORDER_WIDTH"), metric("TOOLBUTTON_RADIUS")};
     return {metric("CONTROL_HEIGHT"), 0, metric("TOOLBUTTON_PADDING_X"), metric("TOOLBUTTON_PADDING_Y"),
             metric("CONTROL_BORDER_WIDTH"), metric("TOOLBUTTON_RADIUS")};
 }
@@ -405,19 +420,10 @@ void ResourcesTheme::setDensity(QWidget& widget, Density density)
 {
     Q_ASSERT(QThread::currentThread() == widget.thread());
     const QString name = density == Density::Compact ? QStringLiteral("compact")
-        : density == Density::Toolbar ? QStringLiteral("toolbar") : QStringLiteral("default");
+        : QStringLiteral("default");
     widget.setProperty("resourcesAutomaticDensity", false);
     if (widget.property("resourcesDensity").toString() == name) return;
     widget.setProperty("resourcesDensity", name);
-    refreshWidget(widget);
-}
-
-void ResourcesTheme::setRole(QAbstractButton& widget, ControlRole role)
-{
-    Q_ASSERT(QThread::currentThread() == widget.thread());
-    const QString name = role == ControlRole::Borderless ? QStringLiteral("borderless") : QStringLiteral("default");
-    if (widget.property("resourcesControlRole").toString() == name) return;
-    widget.setProperty("resourcesControlRole", name);
     refreshWidget(widget);
 }
 
@@ -429,6 +435,8 @@ void ResourcesTheme::polishWidget(QWidget& widget)
     bool compact = false;
     // Existing consumer surfaces are admitted here once; their QSS shares one density rule.
     for (auto* parent = widget.parentWidget(); parent; parent = parent->parentWidget()) {
+        // Qt's tab scrollers own their borderless slot, including inside device panels.
+        if (parent->inherits("QTabBar")) break;
         if (parent->inherits("QFramegrabberWidget") || parent->inherits("QCameraWidget")
             || parent->inherits("QGocatorWidget") || parent->inherits("QHeliotisC4Widget")
             || parent->inherits("QOneGenWidget") || parent->inherits("QOneGenDeviceWidget")

@@ -13,10 +13,12 @@ without adding fonts, event filters or delegates a second time.
   match the built-in contract; values must be positive integer logical pixels up to 256.
 - `qss/00_base.qss` owns standard control templates, including spin frames, embedded
   editors and arrow states. Reusable `resourcesDensity` selectors own compact fields,
-  compact actions and toolbar actions. Later fragments may add named exceptions;
+  and compact actions. The engine toolbar consumes shared action-size and padding
+  tokens in its named QSS rule. Later fragments may add named exceptions;
   they must not introduce another type-wide standard-control template. The manager
   rejects duplicate selector/property assignments across the whole candidate,
-  including reordered equivalent pseudo-states. Explicit platform variants are
+  including reordered equivalent pseudo-states, and unparsed declaration text.
+  Explicit platform variants are
   resolved to one final assignment before QSS is installed.
 - `ResourcesTheme::metrics()` resolves field, tool-button and tree-frame geometry
   from the same values substituted into the installed stylesheet.
@@ -25,19 +27,21 @@ without adding fonts, event filters or delegates a second time.
 - Existing Resources namespace functions are the host-facing facade. They contain
   no palette, metric, stylesheet or installation state of their own.
 
-`ResourcesTheme::setDensity()` selects default, compact or toolbar density for a
-line edit, spin box, combo box or tool button. `setRole()` selects standard or
-borderless button chrome. Both refresh the current widget immediately. Native
+`ResourcesTheme::setDensity()` selects default or compact density for a
+line edit, spin box, combo box or tool button and refreshes the widget immediately. Native
 input behavior, signals and accessibility remain with Qt. Existing device and
 static-source tool buttons are admitted to compact density centrally; an explicit
 density selection takes precedence, including after reparenting. Current narrow
-Qt tab-scroll and chrome exceptions retain their own geometry.
+Qt tab-scroll descendants are excluded from automatic compact admission. Device
+tab-scroll buttons reserve borderless 20x20 slots without control padding/margins;
+chrome exceptions retain their own geometry.
 
 ## Source reload
 
 `reloadThemeFromDirectory(qssDirectory)` reads every installed QSS fragment and
 `qssDirectory/../metrics.json` into a candidate. It validates supported metric names,
-integer bounds, template ownership, duplicate assignments and token references before replacing either active source or
+integer bounds, template ownership, duplicate assignments, unparsed declaration text
+and token references before replacing either active source or
 metrics. Failed candidates leave installed QSS, metrics and palette unchanged.
 Successful reload preserves user colors and platform additions. Presentation
 font/layout tokens remain the compiled contract. QSS authoring still requires Qt
