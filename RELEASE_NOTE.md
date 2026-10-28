@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject unmatched theme braces and text outside complete rule blocks before fragment ownership checks, atomic reload or platform composition; mirror structural rejection in the source policy guard.
+
 - Validate source and platform theme layers at installation and reload, propagate composition errors without replacing output, and explicitly require extension-menu coverage in the overflow acceptance fixture.
 
 - Keep an open combo's connecting edge white over hover, focus and pressed borders; verify the popup and control share the active focus palette color, including live palette changes. Make UI acceptance use native horizontal style options, matching high-DPI rasters, menu-overflow access and completed desktop composition.

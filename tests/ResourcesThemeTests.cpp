@@ -165,6 +165,15 @@ private slots:
         QTest::newRow("source-missing-semicolon") << QString("QLabel { padding: 2px }")
             << QString("QLabel { padding: 4px; }");
         QTest::newRow("source-without-platform") << QString("QLabel { padding: 2px }") << QString();
+        QTest::newRow("patch-unclosed-nested") << QString("QLabel { padding: 2px; }")
+            << QString("QLabel { padding: 2px;\nQToolButton { margin: 1px; }");
+        QTest::newRow("patch-unclosed-tail") << QString("QLabel { padding: 2px; }")
+            << QString("QLabel { padding: 4px; } QToolButton { margin: 1px;");
+        QTest::newRow("patch-extra-close") << QString("QLabel { padding: 2px; }")
+            << QString("QLabel { padding: 4px; }}");
+        QTest::newRow("source-unclosed-without-platform") << QString("QLabel { padding: 2px;") << QString();
+        QTest::newRow("source-unclosed-before-platform") << QString("QLabel { padding: 2px;")
+            << QString("QToolButton { margin: 1px; }");
     }
     void malformedPlatformCompositionPreservesOutput()
     {
@@ -173,7 +182,7 @@ private slots:
         const QString installed("QLabel { padding: 7px; }");
         QString composed = installed, error;
         QVERIFY(!Resources::detail::composePlatformVariant(source, patch, composed, &error));
-        QVERIFY2(error.contains("Unparsed theme declaration"), qPrintable(error));
+        QVERIFY2(error.contains("Unparsed theme"), qPrintable(error));
         QCOMPARE(composed, installed);
     }
     void deviceTabScrollButtonsRetainBorderlessSlots()
@@ -244,7 +253,7 @@ private slots:
     void invalidSnapshotPreservesPaletteMetricsAndStyle_data()
     {
         QTest::addColumn<QString>("fault");
-        for (const auto& fault : {"missing-fragment", "unknown-token", "duplicate-definition", "reordered-state", "subtype-template", "unterminated-declaration", "stray-text", "missing-metrics", "unknown-metric", "fractional-metric", "negative-metric"})
+        for (const auto& fault : {"missing-fragment", "unknown-token", "duplicate-definition", "reordered-state", "subtype-template", "unterminated-declaration", "stray-text", "unclosed-block", "unclosed-tail", "extra-block-close", "unclosed-owned-block", "stray-block-text", "missing-metrics", "unknown-metric", "fractional-metric", "negative-metric"})
             QTest::newRow(fault) << QString::fromLatin1(fault);
     }
     void invalidSnapshotPreservesPaletteMetricsAndStyle()
@@ -269,6 +278,15 @@ private slots:
             file.write(fault == "unterminated-declaration"
                 ? "\nQLabel#InvalidCandidate { padding: 2px; border-radius: 7px }\n"
                 : "\nQLabel#InvalidCandidate { invalid; padding: 2px; }\n");
+        } else if (fault == "unclosed-block" || fault == "unclosed-tail" || fault == "extra-block-close"
+                   || fault == "unclosed-owned-block" || fault == "stray-block-text") {
+            QFile file(candidate.path() + "/qss/" + (fault == "unclosed-owned-block" ? "70_plugin_manager.qss" : "00_base.qss"));
+            QVERIFY(file.open(QIODevice::Append));
+            file.write(fault == "unclosed-block" || fault == "unclosed-owned-block"
+                ? "\nQLabel { padding: 2px;\nQToolButton { margin: 1px; }\n"
+                : fault == "unclosed-tail" ? "\nQLabel#BrokenTail { padding: 2px;\n"
+                : fault == "extra-block-close" ? "\nQLabel#ExtraClose { padding: 2px; }}\n"
+                : "\nUnparsedTrailingText\n");
         } else if (fault == "missing-metrics") QVERIFY(QFile::remove(candidate.path() + "/metrics.json"));
         else {
             auto values = metricSource(candidate.path());
@@ -284,6 +302,9 @@ private slots:
         QVERIFY(!error.isEmpty());
         if (fault == "unterminated-declaration" || fault == "stray-text")
             QVERIFY2(error.contains("Unparsed theme declaration"), qPrintable(error));
+        if (fault == "unclosed-block" || fault == "unclosed-tail" || fault == "extra-block-close"
+            || fault == "unclosed-owned-block" || fault == "stray-block-text")
+            QVERIFY2(error.contains("Unparsed theme block"), qPrintable(error));
         QCOMPARE(Resources::themePalette(), colors);
         QCOMPARE(qApp->styleSheet(), style);
         QCOMPARE(ResourcesTheme::instance().metric("FIELD_CONTENT_HEIGHT"), height);
