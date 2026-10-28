@@ -17,7 +17,8 @@ without adding fonts, event filters or delegates a second time.
   tokens in its named QSS rule. Later fragments may add named exceptions;
   they must not introduce another type-wide standard-control template. The manager
   rejects duplicate selector/property assignments across the whole candidate,
-  including reordered equivalent pseudo-states, and unparsed declaration text.
+  including reordered equivalent pseudo-states, and unparsed declaration or block
+  text. Unbalanced braces are rejected in each fragment before ownership checks.
   Source and platform layers are each validated during installation and reload;
   a platform layer may intentionally override a source definition. Composition
   reports parse errors without replacing its output. Invalid embedded layers

@@ -41,16 +41,22 @@ QString canonicalSelector(const QString& selector)
 struct ThemeDeclaration { QString property; QString value; int id; };
 struct ThemeRule { QStringList selectors; QList<ThemeDeclaration> declarations; };
 
-QList<ThemeRule> themeRules(QString source, QString* error = nullptr)
+QList<ThemeRule> themeRules(QString source, QString* error)
 {
     source.remove(QRegularExpression(QStringLiteral("/\\*.*?\\*/"), QRegularExpression::DotMatchesEverythingOption));
     static const QRegularExpression block(QStringLiteral("([^{}]+)\\{([^{}]*)\\}"));
     static const QRegularExpression declaration(QStringLiteral("([\\w-]+)\\s*:\\s*([^;{}]+);"));
     QList<ThemeRule> rules;
     int id = 0;
+    int parsedBlockEnd = 0;
     auto blocks = block.globalMatch(source);
     while (blocks.hasNext()) {
         const auto match = blocks.next();
+        if (!source.mid(parsedBlockEnd, match.capturedStart() - parsedBlockEnd).trimmed().isEmpty()) {
+            if (error) *error = QStringLiteral("Unparsed theme block before %1").arg(match.captured(1).trimmed());
+            return {};
+        }
+        parsedBlockEnd = match.capturedEnd();
         ThemeRule rule;
         for (const auto& selector : match.captured(1).split(QLatin1Char(','), Qt::SkipEmptyParts))
             rule.selectors.append(selector.simplified());
@@ -74,15 +80,25 @@ QList<ThemeRule> themeRules(QString source, QString* error = nullptr)
         }
         rules.append(rule);
     }
+    if (!source.mid(parsedBlockEnd).trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("Unparsed theme block after the last complete rule.");
+        return {};
+    }
     return rules;
 }
 bool validateFragmentOwnership(const QString& name, const QString& source, QString* error)
 {
+    QString parseError;
+    const auto rules = themeRules(source, &parseError);
+    if (!parseError.isEmpty()) {
+        if (error) *error = name + QStringLiteral(": ") + parseError;
+        return false;
+    }
     if (name == QLatin1String("00_base.qss")) return true;
     static const QSet<QString> commonTypes = {QStringLiteral("QPushButton"), QStringLiteral("QToolButton"),
         QStringLiteral("QLineEdit"), QStringLiteral("QComboBox"), QStringLiteral("QAbstractSpinBox"),
         QStringLiteral("QSpinBox"), QStringLiteral("QDoubleSpinBox"), QStringLiteral("QCheckBox"), QStringLiteral("QRadioButton")};
-    for (const auto& rule : themeRules(source)) {
+    for (const auto& rule : rules) {
         for (const auto& selector : rule.selectors) {
             if (!commonTypes.contains(selector)) continue;
             if (error) *error = QStringLiteral("%1 redefines %2; standard control templates belong to 00_base.qss.").arg(name, selector);
