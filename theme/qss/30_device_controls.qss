@@ -26,20 +26,7 @@ QTabWidget[tabRole="DeviceControls"] > QTabBar {
     padding-top: 0;
 }
 
-/* 20px compact actions: 18px contents plus the shared 1px state border. */
-QFramegrabberWidget QToolButton,
-QCameraWidget QToolButton,
-QGocatorWidget QToolButton,
-QHeliotisC4Widget QToolButton,
-QOneGenWidget QToolButton,
-QOneGenDeviceWidget QToolButton {
-    min-width: 18px;
-    min-height: 18px;
-    max-width: 18px;
-    max-height: 18px;
-    padding: 0;
-    border-radius: 6px;
-}
+
 
 /* Borderless tab scroll arrows keep their full 20px slot. */
 QFramegrabberWidget QTabBar QToolButton,
@@ -140,9 +127,6 @@ QToolButton#DeviceFeatureSearchClear:enabled:focus:!pressed:!checked {
 
 QToolButton#DeviceFeatureSearchClear:enabled:pressed {
     background: transparent;
-
-    border: none;
-    outline: none;
 }
 
 QToolButton#DeviceFeatureFavoritesOnly {
@@ -163,12 +147,14 @@ QToolButton#DeviceFeatureFavoritesOnly {
 }
 
 QToolButton#DeviceFeatureFavoritesOnly:hover,
-QToolButton#DeviceFeatureFavoritesOnly:pressed,
-QToolButton#DeviceFeatureFavoritesOnly:checked {
+QToolButton#DeviceFeatureFavoritesOnly:pressed {
     background: transparent;
-
     border: none;
     outline: none;
+}
+
+QToolButton#DeviceFeatureFavoritesOnly:checked {
+    background: transparent;
 }
 
 QToolButton#DeviceFeatureFavoritesOnly:checked {

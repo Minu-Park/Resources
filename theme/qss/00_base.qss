@@ -8,8 +8,6 @@
     font-size: @FONT_BODY@px;
 }
 
-QDialog,
-QDockWidget,
 QMainWindow,
 QFrame {
     background: @SURFACE@;
@@ -59,17 +57,23 @@ QDockWidget {
 }
 
 QTabWidget,
-QGroupBox,
 QTableWidget,
 QTreeWidget,
 QMenu,
-QLineEdit,
-QComboBox,
-QAbstractSpinBox,
 QPlainTextEdit,
 QTextEdit,
 QTextBrowser {
     background: @SURFACE@;
+    color: @TEXT@;
+}
+
+QGroupBox {
+    background: @SURFACE@;
+}
+
+QLineEdit,
+QComboBox,
+QAbstractSpinBox {
     color: @TEXT@;
 }
 
@@ -240,11 +244,19 @@ QTabBar QToolButton::right-arrow:disabled {
 }
 
 QTableView,
-QTreeView,
+QTreeView {
+    border: @TREE_FRAME_BORDER_WIDTH@px solid @BORDER@;
+    border-radius: @TREE_FRAME_RADIUS@px;
+    padding: 3px;
+    gridline-color: @BORDER@;
+    alternate-background-color: @DISABLEDSURFACE@;
+    background-color: @SURFACE@;
+}
+
 QTableWidget,
 QTreeWidget {
-    border: 1px solid @BORDER@;
-    border-radius: 10px;
+    border: @TREE_FRAME_BORDER_WIDTH@px solid @BORDER@;
+    border-radius: @TREE_FRAME_RADIUS@px;
     padding: 3px;
     gridline-color: @BORDER@;
     alternate-background-color: @DISABLEDSURFACE@;
@@ -415,9 +427,9 @@ QLineEdit,
 QPlainTextEdit,
 QTextEdit,
 QTextBrowser {
-    border: 1px solid @CONTROLBORDER@;
-    border-radius: 8px;
-    padding: 5px 4px;
+    border: @CONTROL_BORDER_WIDTH@px solid @CONTROLBORDER@;
+    border-radius: @CONTROL_RADIUS@px;
+    padding: 5px @FIELD_PADDING_X@px;
     selection-background-color: @SELECTION@;
     selection-color: @TEXT@;
 }
@@ -444,8 +456,8 @@ QTextBrowser[frameRole="none"]:focus {
 QComboBox,
 QAbstractSpinBox,
 QLineEdit {
-    min-height: 22px;
-    max-height: 22px;
+    min-height: @FIELD_CONTENT_HEIGHT@px;
+    max-height: @FIELD_CONTENT_HEIGHT@px;
     padding-top: 0;
     padding-bottom: 0;
     background: @SURFACE@;
@@ -466,7 +478,7 @@ QLineEdit:focus,
 QPlainTextEdit:focus,
 QTextEdit:focus,
 QTextBrowser:focus {
-    border: 1px solid @HOVERBORDER@;
+    border-color: @HOVERBORDER@;
 }
 
 QComboBox:enabled:on,
@@ -540,8 +552,8 @@ QAbstractSpinBox QLineEdit,
 QAbstractSpinBox QLineEdit:focus,
 QAbstractSpinBox QLineEdit:hover,
 QAbstractSpinBox QLineEdit:disabled {
-    padding-left: 5px;
-    padding-right: 5px;
+    padding-left: @FIELD_TEXT_INSET@px;
+    padding-right: @FIELD_TEXT_INSET@px;
 }
 
 QComboBox::drop-down {
@@ -555,8 +567,8 @@ QComboBox::drop-down {
 
 QComboBox::down-arrow {
     image: url(:/Resources/icon/chevron-down-neutral.svg);
-    width: 4px;
-    height: 2px;
+    width: @INDICATOR_WIDTH@px;
+    height: @INDICATOR_HEIGHT@px;
 }
 
 QComboBox QAbstractItemView {
@@ -584,17 +596,10 @@ QComboBox QAbstractItemView::item:selected {
     color: @TEXT@;
 }
 
-QAbstractSpinBox {
-    padding-right: 4px;
-    border: 1px solid @CONTROLBORDER@;
-    border-radius: 8px;
-    background: @SURFACE@;
-}
-
 QAbstractSpinBox::up-button,
 QAbstractSpinBox::down-button {
     subcontrol-origin: padding;
-    width: 16px;
+    width: @SPIN_BUTTON_WIDTH@px;
     background: transparent;
     border: none;
     margin: 0;
@@ -613,19 +618,56 @@ QAbstractSpinBox::down-button {
 
 QAbstractSpinBox::up-arrow {
     image: url(:/Resources/icon/chevron-up-neutral.svg);
-    width: 4px;
-    height: 2px;
+    width: @INDICATOR_WIDTH@px;
+    height: @INDICATOR_HEIGHT@px;
 }
 
 QAbstractSpinBox::down-arrow {
     image: url(:/Resources/icon/chevron-down-neutral.svg);
-    width: 4px;
-    height: 2px;
+    width: @INDICATOR_WIDTH@px;
+    height: @INDICATOR_HEIGHT@px;
 }
 
+/* Shared compact vector arrows: neutral at rest, light-blue hover, dark-blue active. */
+QComboBox[resourcesIndicatorHovered="true"]::down-arrow,
+QAbstractSpinBox[resourcesIndicatorHovered="true"]::down-arrow,
+QDateTimeEdit[resourcesIndicatorHovered="true"]::down-arrow {
+    image: url(:/Resources/icon/chevron-down-hover.svg);
+}
+QAbstractSpinBox[resourcesIndicatorHovered="true"]::up-arrow {
+    image: url(:/Resources/icon/chevron-up-hover.svg);
+}
+QComboBox::down-arrow:on,
+QComboBox[popupDirection="below"]::down-arrow,
+QComboBox[popupDirection="above"]::down-arrow,
+QDateTimeEdit::down-arrow:on {
+    image: url(:/Resources/icon/chevron-down-blue.svg);
+}
+QAbstractSpinBox::up-arrow:pressed {
+    image: url(:/Resources/icon/chevron-up-blue.svg);
+}
+QAbstractSpinBox::down-arrow:pressed {
+    image: url(:/Resources/icon/chevron-down-blue.svg);
+}
+QComboBox::down-arrow:disabled,
+QAbstractSpinBox::down-arrow:disabled,
+QAbstractSpinBox::down-arrow:off,
+QDateTimeEdit::down-arrow:disabled {
+    image: url(:/Resources/icon/chevron-down-disabled.svg);
+}
+QAbstractSpinBox::up-arrow:disabled,
+QAbstractSpinBox::up-arrow:off {
+    image: url(:/Resources/icon/chevron-up-disabled.svg);
+}
+QComboBox,
+QAbstractSpinBox {
+    image: none;
+}
+
+
 QPushButton {
-    min-height: 22px;
-    max-height: 22px;
+    min-height: @FIELD_CONTENT_HEIGHT@px;
+    max-height: @FIELD_CONTENT_HEIGHT@px;
     padding-top: 0;
     padding-bottom: 0;
     padding-left: 12px;
@@ -679,15 +721,53 @@ QPushButton[resourcesIconButton="true"]:disabled {
 /* Tool buttons share the icon-button state outline; padding absorbs the reserved 1px border. */
 QToolButton {
     min-height: @CONTROL_HEIGHT@px;
-    padding: 2px 7px;
+    padding: @TOOLBUTTON_PADDING_Y@px @TOOLBUTTON_PADDING_X@px;
     margin: 0;
-    border: 1px solid transparent;
-    border-radius: 7px;
+    border: @CONTROL_BORDER_WIDTH@px solid transparent;
+    border-radius: @TOOLBUTTON_RADIUS@px;
     background: transparent;
     color: @TEXT@;
     outline: none;
 
     font-weight: @WEIGHT_EMPHASIS@;
+}
+
+
+/* Reusable densities are selected by ResourcesTheme rather than screen-local templates. */
+QToolButton[resourcesDensity="compact"] {
+    min-width: @COMPACT_ACTION_CONTENT_SIZE@px;
+    max-width: @COMPACT_ACTION_CONTENT_SIZE@px;
+    min-height: @COMPACT_ACTION_CONTENT_SIZE@px;
+    max-height: @COMPACT_ACTION_CONTENT_SIZE@px;
+    padding: 0;
+    border-radius: @COMPACT_ACTION_RADIUS@px;
+}
+
+QToolButton[resourcesDensity="toolbar"] {
+    min-width: @COMPACT_ACTION_CONTENT_SIZE@px;
+    min-height: @COMPACT_ACTION_CONTENT_SIZE@px;
+    padding: @TOOLBAR_ACTION_PADDING@px;
+}
+
+QLineEdit[resourcesDensity="compact"],
+QComboBox[resourcesDensity="compact"],
+QAbstractSpinBox[resourcesDensity="compact"] {
+    min-height: @COMPACT_FIELD_CONTENT_HEIGHT@px;
+    max-height: @COMPACT_FIELD_CONTENT_HEIGHT@px;
+}
+
+/* A transparent reserved border preserves the input target and state geometry. */
+QPushButton[resourcesControlRole="borderless"],
+QPushButton[resourcesControlRole="borderless"]:enabled:hover,
+QPushButton[resourcesControlRole="borderless"]:enabled:focus,
+QPushButton[resourcesControlRole="borderless"]:enabled:pressed,
+QPushButton[resourcesControlRole="borderless"]:enabled:checked,
+QToolButton[resourcesControlRole="borderless"],
+QToolButton[resourcesControlRole="borderless"]:enabled:hover,
+QToolButton[resourcesControlRole="borderless"]:enabled:focus,
+QToolButton[resourcesControlRole="borderless"]:enabled:pressed,
+QToolButton[resourcesControlRole="borderless"]:enabled:checked {
+    border-color: transparent;
 }
 
 QToolButton:enabled:hover,
@@ -715,6 +795,9 @@ QRadioButton {
     background: transparent;
     padding: 0;
     border: none;
+}
+
+QRadioButton {
     min-height: 22px;
     max-height: 22px;
 }
@@ -888,39 +971,13 @@ QScrollBar::sub-page {
     border: none;
 }
 
-QScrollBar#ImageViewOverlayScrollBar:horizontal,
-QScrollBar#ImageViewOverlayScrollBar:vertical {
-    background: transparent;
-    border: none;
-    margin: 0;
-    width: 10px;
-    height: 10px;
-}
 
-QScrollBar#ImageViewOverlayScrollBar::handle:horizontal,
-QScrollBar#ImageViewOverlayScrollBar::handle:vertical {
-    background: rgba(110, 110, 110, 150);
-    border: none;
-    border-radius: 5px;
-    min-width: 34px;
-    min-height: 34px;
-    margin: 1px;
-}
 
-QScrollBar#ImageViewOverlayScrollBar::handle:horizontal:hover,
-QScrollBar#ImageViewOverlayScrollBar::handle:vertical:hover {
-    background: rgba(95, 95, 95, 190);
-}
 
-QScrollBar#ImageViewOverlayScrollBar::add-line,
-QScrollBar#ImageViewOverlayScrollBar::sub-line,
-QScrollBar#ImageViewOverlayScrollBar::add-page,
-QScrollBar#ImageViewOverlayScrollBar::sub-page {
-    background: transparent;
-    border: none;
-    width: 0px;
-    height: 0px;
-}
+
+
+
+
 
 QMenu {
     margin: @MENU_SHADOW_GUTTER@px;
@@ -1265,8 +1322,8 @@ QDateTimeEdit::drop-down {
 
 QDateTimeEdit::down-arrow {
     image: url(:/Resources/icon/chevron-down-neutral.svg);
-    width: 4px;
-    height: 2px;
+    width: @INDICATOR_WIDTH@px;
+    height: @INDICATOR_HEIGHT@px;
 }
 
 QCalendarWidget QWidget#qt_calendar_navigationbar { background: @SURFACE@; border-bottom: 1px solid @CONTROLBORDER@;
@@ -1316,40 +1373,4 @@ QRadioButton[radioPreview="outline"]::indicator:disabled {
 }
 QRadioButton[radioPreview="outline"]::indicator:checked:disabled {
     image: url(:/Resources/icon/radio-outline-on-disabled.svg);
-}
-
-/* Shared compact vector arrows: neutral at rest, light-blue hover, dark-blue active. */
-QComboBox[resourcesIndicatorHovered="true"]::down-arrow,
-QAbstractSpinBox[resourcesIndicatorHovered="true"]::down-arrow,
-QDateTimeEdit[resourcesIndicatorHovered="true"]::down-arrow {
-    image: url(:/Resources/icon/chevron-down-hover.svg);
-}
-QAbstractSpinBox[resourcesIndicatorHovered="true"]::up-arrow {
-    image: url(:/Resources/icon/chevron-up-hover.svg);
-}
-QComboBox::down-arrow:on,
-QComboBox[popupDirection="below"]::down-arrow,
-QComboBox[popupDirection="above"]::down-arrow,
-QDateTimeEdit::down-arrow:on {
-    image: url(:/Resources/icon/chevron-down-blue.svg);
-}
-QAbstractSpinBox::up-arrow:pressed {
-    image: url(:/Resources/icon/chevron-up-blue.svg);
-}
-QAbstractSpinBox::down-arrow:pressed {
-    image: url(:/Resources/icon/chevron-down-blue.svg);
-}
-QComboBox::down-arrow:disabled,
-QAbstractSpinBox::down-arrow:disabled,
-QAbstractSpinBox::down-arrow:off,
-QDateTimeEdit::down-arrow:disabled {
-    image: url(:/Resources/icon/chevron-down-disabled.svg);
-}
-QAbstractSpinBox::up-arrow:disabled,
-QAbstractSpinBox::up-arrow:off {
-    image: url(:/Resources/icon/chevron-up-disabled.svg);
-}
-QComboBox,
-QAbstractSpinBox {
-    image: none;
 }

@@ -10,16 +10,7 @@ Static3DDataControlWidget {
     font-weight: @WEIGHT_EMPHASIS@;
 }
 
-/* 20px compact actions: 18px contents plus the shared 1px state border. */
-StaticImageControlWidget QToolButton,
-Static3DDataControlWidget QToolButton {
-    min-width: 18px;
-    min-height: 18px;
-    max-width: 18px;
-    max-height: 18px;
-    padding: 0;
-    border-radius: 6px;
-}StaticImageControlWidget QListWidget,
+StaticImageControlWidget QListWidget,
 Static3DDataControlWidget QListWidget {
     background-color: @SURFACE@;
     border: 1px solid @BORDER@;

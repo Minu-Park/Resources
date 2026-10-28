@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Centralize palette, widget metrics, source reload and application installation in `ResourcesTheme`; keep the existing namespace API as a stateless host facade and runtime painters as private adapters.
+- Reject repeated selector/property definitions and late type-wide control templates during source reload; resolve explicit platform variants before installing QSS. Remove repeated base, overlay-scrollbar, status-button and search-button assignments without changing their final values.
+- Share spin-box geometry and compact action densities through one theme definition. Reload QSS and widget metrics together, reject incomplete/invalid candidates atomically, and update tree corner masks from the active metrics instead of cached QSS parsing.
+
 - Fill the Libraries list panel and its action strip with the white surface instead of hover gray; the top divider alone separates the actions.
 
 - Add the `itemHover` palette role (`#f6f9fc` by default) for a light-blue tree, list and table hover that stays lighter than the selection. Saved `theme.json` files without this role are incomplete and restore the built-in palette.
