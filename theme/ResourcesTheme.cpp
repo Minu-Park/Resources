@@ -99,10 +99,20 @@ QString definitionKey(const QString& selector, const QString& property)
 
 // Platform variants are explicit manager-owned patches, resolved before Qt receives QSS.
 } // namespace
-QString detail::composePlatformVariant(const QString& source, const QString& platform)
+bool detail::composePlatformVariant(const QString& source, const QString& platform,
+                                    QString& output, QString* error)
 {
-    if (platform.isEmpty()) return source;
-    const auto rules = themeRules(source + platform);
+    if (error) error->clear();
+    QString parseError;
+    const auto rules = themeRules(source + QLatin1Char('\n') + platform, &parseError);
+    if (!parseError.isEmpty()) {
+        if (error) *error = parseError;
+        return false;
+    }
+    if (platform.isEmpty()) {
+        output = source;
+        return true;
+    }
     QHash<QString, int> finalDefinitions;
     for (const auto& rule : rules)
         for (const auto& selector : rule.selectors)
@@ -122,7 +132,8 @@ QString detail::composePlatformVariant(const QString& source, const QString& pla
         for (auto group = groups.begin(); group != groups.end(); ++group)
             result += group.value().join(QLatin1Char(',')) + QLatin1Char('{') + group.key() + QStringLiteral("}\n");
     }
-    return result;
+    output = result;
+    return true;
 }
 
 namespace {
@@ -210,7 +221,10 @@ void ResourcesTheme::applyInstalledStyleSheet()
         return;
     }
 
-    const QString styleSheet = renderStyleSheet(detail::composePlatformVariant(styleSheetTemplate_, platformStyleSheet_), metrics_, palette_);
+    QString composed, error;
+    if (!detail::composePlatformVariant(styleSheetTemplate_, platformStyleSheet_, composed, &error))
+        qFatal("Invalid theme composition: %s", qPrintable(error));
+    const QString styleSheet = renderStyleSheet(composed, metrics_, palette_);
     app_->setStyleSheet(styleSheet);
 
     QPalette palette = app_->palette();
@@ -483,7 +497,9 @@ bool ResourcesTheme::reloadThemeFromDirectory(const QString& directory, QString*
         if (!validateFragmentOwnership(name, fragment, error)) return false;
         candidate += fragment + QLatin1Char('\n');
     }
-    if (!validateStyleSheet(candidate, candidateMetrics, error)) return false;
+    // A platform patch intentionally overrides source definitions; validate each layer separately.
+    if (!validateStyleSheet(candidate, candidateMetrics, error)
+        || !validateStyleSheet(platformStyleSheet_, candidateMetrics, error)) return false;
     metrics_ = candidateMetrics;
     styleSheetTemplate_ = candidate;
     applyInstalledStyleSheet();
@@ -556,7 +572,9 @@ void ResourcesTheme::install(QApplication& app)
 
     styleSheetTemplate_ = source;
     QString error;
-    if (!validateStyleSheet(styleSheetTemplate_, metrics_, &error)) qFatal("Invalid embedded theme: %s", qPrintable(error));
+    if (!validateStyleSheet(styleSheetTemplate_, metrics_, &error)
+        || !validateStyleSheet(platformStyleSheet_, metrics_, &error))
+        qFatal("Invalid embedded theme: %s", qPrintable(error));
     // Install before applying QSS so native geometry, states and metrics agree during polish.
     runtime_ = installThemeRuntime(app, this);
     applyInstalledStyleSheet();

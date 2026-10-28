@@ -18,8 +18,11 @@ without adding fonts, event filters or delegates a second time.
   they must not introduce another type-wide standard-control template. The manager
   rejects duplicate selector/property assignments across the whole candidate,
   including reordered equivalent pseudo-states, and unparsed declaration text.
-  Explicit platform variants are
-  resolved to one final assignment before QSS is installed.
+  Source and platform layers are each validated during installation and reload;
+  a platform layer may intentionally override a source definition. Composition
+  reports parse errors without replacing its output. Invalid embedded layers
+  stop installation, while invalid reload candidates preserve the active snapshot.
+  Valid platform variants resolve to one final assignment before QSS is installed.
 - `ResourcesTheme::metrics()` resolves field, tool-button and tree-frame geometry
   from the same values substituted into the installed stylesheet.
 - `ThemeRuntime.cpp` contains private event, delegate and native-style adapters.
