@@ -158,6 +158,44 @@ private slots:
         }
     }
 
+    void menuHoverUsesItemHoverCapsule()
+    {
+        Resources::installResources(*qApp);
+        const auto palette = Resources::themePalette();
+        const auto restore = qScopeGuard([&] { Resources::setThemePalette(palette); });
+        const QColor hover("#65c89b");
+        QVERIFY(Resources::setThemePalette({{"itemHover", hover}, {"selection", QColor("#e05b70")}}));
+        QMenu menu;
+        menu.addAction("Open sample");
+        auto* action = menu.addAction("Export image");
+        menu.addAction("Unavailable action")->setEnabled(false);
+        menu.setMinimumWidth(280);
+        menu.popup(QPoint(60, 60));
+        QTRY_VERIFY(menu.isVisible());
+        menu.setActiveAction(action);
+        QApplication::processEvents();
+        const QImage image = menu.grab().toImage();
+        const qreal dpr = image.devicePixelRatio();
+        QRect fill;
+        for (int y = 0; y < image.height(); ++y) {
+            for (int x = 0; x < image.width(); ++x) {
+                if (image.pixelColor(x, y) == hover) fill |= QRect(x, y, 1, 1);
+            }
+        }
+        QVERIFY2(!fill.isEmpty(), "Menu hover did not consume the live itemHover palette role.");
+        QVERIFY(fill.height() >= qFloor(23 * dpr));
+        const auto pixel = [&](qreal x, qreal y) {
+            return image.pixelColor(fill.left() + qRound(x * dpr), fill.top() + qRound(y * dpr));
+        };
+        QVERIFY2(pixel(2, 2) != hover, "Menu hover retained a small corner or square body.");
+        QCOMPARE(pixel(5, 5), hover);
+        QCOMPARE(image.pixelColor(fill.left(), fill.center().y()), hover);
+        QCOMPARE(image.pixelColor(fill.right(), fill.center().y()), hover);
+        QCOMPARE(image.pixelColor(fill.center().x(), fill.top()), hover);
+        QCOMPARE(image.pixelColor(fill.center().x(), fill.bottom()), hover);
+        menu.close();
+    }
+
     void menuShellCorners_data()
     {
         QTest::addColumn<bool>("rtl");

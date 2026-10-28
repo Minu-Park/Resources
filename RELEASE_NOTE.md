@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Match menu hover to item-view hover with the shared `itemHover` palette role, 12px capsule corners and enough vertical padding for the rounded row body.
+
 - Remove redundant shorthand/edge assignments and share matching chrome, status-bubble, processing-header and indicator selector groups while preserving their state scopes. Resolve plot action size and radius from the same compact-action metrics as other consumers.
 
 - Reject unmatched theme braces and text outside complete rule blocks before fragment ownership checks, atomic reload or platform composition; mirror structural rejection in the source policy guard.

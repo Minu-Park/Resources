@@ -57,9 +57,9 @@ rendering checks; token validation is not a complete QSS syntax validator.
 Qt QSS has no import mechanism, so fragment order in `ResourcesTheme::install()`
 is part of the theme contract. The design catalog watches both QSS and metrics.
 
-Source-only proposals under `previews/` are not embedded or installed. An authoring
-consumer may append a proposal to an isolated copy of the complete source theme;
-the ordinary installation and source-reload contracts still validate that copy.
+Menu hover uses the same `itemHover` role as tree, list and table hover. The shared
+menu template owns 12px capsule corners and 4px vertical padding so the native
+row has enough height to render the rounded body.
 
 - Put generic widget defaults in the lowest-numbered files.
 - Put semantic role and state selectors after their defaults.
