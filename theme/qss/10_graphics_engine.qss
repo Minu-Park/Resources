@@ -36,10 +36,7 @@ QToolBar#EngineToolBar {
 QToolBar#EngineToolBar QToolButton {
     min-width: 18px;
     min-height: 18px;
-    padding: 3px;
-
-    border: none;
-    outline: none;
+    padding: 2px;
 }
 
 QToolBar::separator {
@@ -278,50 +275,15 @@ QToolButton#AnalysisTabCloseButton {
     outline: none;
 }
 
-QToolButton#PlotViewActionButton {
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px;
-    padding: 0;
-    background: transparent;
-
-    border: none;
-    outline: none;
-}
-
+/* 20px compact actions: 18px contents plus the shared 1px state border. */
+QToolButton#PlotViewActionButton,
 QToolButton[plotActionRole="action"] {
-    min-width: 20px;
-    max-width: 20px;
-    min-height: 20px;
-    max-height: 20px;
+    min-width: 18px;
+    max-width: 18px;
+    min-height: 18px;
+    max-height: 18px;
     padding: 0;
-    background: transparent;
-
-    border: none;
-    outline: none;
-}
-
-QToolButton#PlotViewActionButton:enabled:hover:!pressed:!checked,
-QToolButton#PlotViewActionButton:enabled:focus:!pressed:!checked,
-QToolButton[plotActionRole="action"]:enabled:hover:!pressed:!checked,
-QToolButton[plotActionRole="action"]:enabled:focus:!pressed:!checked {
-    background: transparent;
     border-radius: 6px;
-
-    border: none;
-    outline: none;
-}
-
-QToolButton#PlotViewActionButton:enabled:pressed,
-QToolButton#PlotViewActionButton:enabled:checked,
-QToolButton[plotActionRole="action"]:enabled:pressed,
-QToolButton[plotActionRole="action"]:enabled:checked {
-    background: transparent;
-    border-radius: 6px;
-
-    border: none;
-    outline: none;
 }
 
 QFrame#PlotViewReadout {
@@ -334,13 +296,6 @@ QFrame#PlotViewReadout {
 QLabel#PlotViewReadoutText {
     background: transparent;
     color: @TEXT@;
-}
-
-QToolButton[plotActionRole="action"]:disabled {
-    background: transparent;
-
-    border: none;
-    outline: none;
 }
 
 QFrame#PlotViewYRangePopup,
@@ -385,12 +340,4 @@ QTabBar#GraphicsSourceTabBar::tab:selected,
 QTabWidget#AnalysisPanelTabs QTabBar::tab:selected,
 QTabWidget#GraphicsSettingsPanelTabs QTabBar::tab:selected {
     background: transparent;
-}/* Active interaction takes precedence over hover and keyboard focus. */
-QToolButton#PlotViewActionButton:enabled:pressed,
-QToolButton#PlotViewActionButton:enabled:checked,
-QToolButton[plotActionRole="action"]:enabled:pressed,
-QToolButton[plotActionRole="action"]:enabled:checked {
-
-    border: none;
-    outline: none;
 }
