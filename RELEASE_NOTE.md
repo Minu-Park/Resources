@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Select layout patterns by semantic Qt roles and shared layout metrics instead of consumer object names. Read action density from the nearest explicit scope, preserving individual overrides and tab-scroller geometry without consumer class-name admission. Share compact processing actions and status-button patterns.
+
 - Match menu hover to item-view hover with the shared `itemHover` palette role, 12px capsule corners and enough vertical padding for the rounded row body.
 
 - Remove redundant shorthand/edge assignments and share matching chrome, status-bubble, processing-header and indicator selector groups while preserving their state scopes. Resolve plot action size and radius from the same compact-action metrics as other consumers.

@@ -773,6 +773,19 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+        if (event->type() == QEvent::DynamicPropertyChange) {
+            const auto name = static_cast<QDynamicPropertyChangeEvent*>(event)->propertyName();
+            if (name == "layoutRole")
+                applyLayoutTheme(qobject_cast<QLayout*>(obj));
+            if (name == "actionDensity") {
+                if (auto* scope = qobject_cast<QWidget*>(obj)) {
+                    for (auto* button : scope->findChildren<QToolButton*>())
+                        Resources::ResourcesTheme::instance().polishWidget(*button);
+                }
+            }
+        }
+        if (event->type() == QEvent::StyleChange)
+            applyLayoutTheme(qobject_cast<QWidget*>(obj));
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show
             || event->type() == QEvent::ParentChange) {
             if (auto* widget = qobject_cast<QWidget*>(obj))
@@ -1406,7 +1419,7 @@ private:
     {
         if (!layout) return;
 
-        const QString name = layout->objectName();
+        const QString role = layout->property("layoutRole").toString();
         const QString presentation = layout->property("presentationLayout").toString();
         if (!presentation.isEmpty()) {
             const bool page = presentation == QLatin1String("page");
@@ -1426,145 +1439,65 @@ private:
                     ? QFormLayout::WrapAllRows : QFormLayout::WrapLongRows);
             }
         }
-        else if (name == QLatin1String("ScriptExecutionLimitsFormLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
-            if (auto* form = qobject_cast<QFormLayout*>(layout)) {
-                form->setHorizontalSpacing(24);
-                form->setVerticalSpacing(12);
+        else if (!role.isEmpty()) {
+            const int tight = presentationMetric("SPACE_TIGHT");
+            const int row = presentationMetric("SPACE_ROW");
+            const int content = presentationMetric("SPACE_CONTENT");
+            const int section = presentationMetric("SPACE_SECTION");
+            const auto& theme = Resources::ResourcesTheme::instance();
+            const int compact = theme.metric("LAYOUT_COMPACT_SPACING");
+            const int compactInset = theme.metric("LAYOUT_COMPACT_INSET");
+            const int caption = theme.metric("LAYOUT_CAPTION_SPACING");
+            const int text = theme.metric("LAYOUT_TEXT_SPACING");
+            const int cardY = theme.metric("LAYOUT_CARD_INSET_Y");
+            const int searchX = theme.metric("LAYOUT_SEARCH_INSET_X");
+            struct Pattern { const char* role; QMargins margins; int spacing; };
+            const Pattern patterns[] = {
+                {"flush", {}, 0}, {"actions", {}, compact}, {"stack", {}, tight},
+                {"row", {}, row}, {"caption-stack", {}, caption}, {"text-stack", {}, text},
+                {"sections", {}, section}, {"form", {}, content}, {"wide-form", {}, content},
+                {"content", {content, content, content, content}, row},
+                {"page", {content, content, content, content}, content},
+                {"compact-panel", {row, row, row, row}, compact},
+                {"card", {compactInset, cardY, compactInset, cardY}, compact},
+                {"bottom-panel", {content, 0, content, content}, row},
+                {"tabbed-panel", {content, row, content, content}, row},
+                {"search", {searchX, 0, searchX, 0}, compact},
+                {"tab-strip", {content, cardY, compactInset, cardY}, tight},
+                {"inset", {content, content, content, content}, 0},
+                {"header", {content, tight, content, tight}, compact},
+                {"section", {row, row, row, row}, row},
+                {"field-grid", {}, row}, {"label-form", {}, row},
+            };
+            for (const auto& pattern : patterns) {
+                if (role != QLatin1String(pattern.role)) continue;
+                setLayoutMetrics(layout, pattern.margins, pattern.spacing);
+                break;
             }
-        }
-        else if (name == QLatin1String("PluginMarketplaceRootLayout")) {
-            setLayoutMetrics(layout, QMargins(8, 8, 8, 8), 6);
-        }
-        else if (name == QLatin1String("PluginMarketplaceToolbarLayout")
-            || name == QLatin1String("PluginMarketplaceActionsLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 6);
-        }
-        else if (name == QLatin1String("PluginMarketplaceListLayout")
-                 || name == QLatin1String("PluginMarketplaceShellLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 4);
-        }
-        else if (name == QLatin1String("PluginMarketplaceCardLayout")) {
-            setLayoutMetrics(layout, QMargins(6, 5, 6, 5), 6);
-        }
-        else if (name == QLatin1String("PluginMarketplaceCardTextLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 1);
-        }
-        else if (name == QLatin1String("PluginMarketplaceCardStatusLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 4);
-        }
-        else if (name == QLatin1String("PluginMarketplaceDetailsLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 8);
-        }
-        else if (name == QLatin1String("PluginMarketplaceIdentityLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
-        }
-        else if (name == QLatin1String("PluginMarketplaceTextLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 2);
-        }
-        else if (name == QLatin1String("DeviceRootLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
-        }
-        else if (name == QLatin1String("DeviceTopBarLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 8);
-        }
-        else if (name == QLatin1String("DeviceSelectorLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
-        }
-        else if (name == QLatin1String("DeviceToolLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 6);
-        }
-        else if (name == QLatin1String("DeviceInfoLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 0, 12, 12), 0);
-        }
-        else if (name == QLatin1String("DeviceFeatureSearchLayout")) {
-            setLayoutMetrics(layout, QMargins(7, 0, 7, 0), 6);
-            for (int index = 0; index < layout->count(); ++index)
-                layout->itemAt(index)->setAlignment(Qt::AlignVCenter);
-        }
-        else if (name == QLatin1String("DeviceTreePanelLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 0, 12, 12), 8);
-        }
-        else if (name == QLatin1String("DeviceTabbedTreePanelLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 8, 12, 12), 8);
-        }
-        else if (name == QLatin1String("ProcessingRootLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 8);
-        }
-        else if (name == QLatin1String("ProcessingTabBarLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 5, 6, 5), 4);
-        }
-        else if (name == QLatin1String("GraphicsSourceControlsLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
-        }
-        else if (name == QLatin1String("AnalysisPanelRootLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
-        }
-        else if (name == QLatin1String("AnalysisStatisticsTableLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 0);
-        }
-        else if (name == QLatin1String("GraphicsSettingsPanelRootLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
-        }
-        else if (name == QLatin1String("GraphicsSettingsPanelHeaderLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 4, 12, 4), 6);
-        }
-        else if (name == QLatin1String("GraphicsSettingsGeneralPageLayout") ||
-                 name == QLatin1String("GraphicsSettingsColorPageLayout") ||
-                 name == QLatin1String("GraphicsSettingsDiagnosticsPageLayout") ||
-                 name == QLatin1String("GraphicsSettingsSurfacePageLayout") ||
-                 name == QLatin1String("GraphicsSettingsPointCloudPageLayout") ||
-                 name == QLatin1String("GraphicsSettingsRangePageLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 12);
-        }
-        else if (layout->property("graphicsSettingsRole").toString() == QLatin1String("section")) {
-            setLayoutMetrics(layout, QMargins(8, 8, 8, 8), 8);
-        }
-        else if (layout->property("graphicsSettingsRole").toString() == QLatin1String("form")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
-            if (auto* form = qobject_cast<QFormLayout*>(layout)) {
-                form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-                form->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
-                form->setHorizontalSpacing(8);
-                for (int row = 0; row < form->rowCount(); ++row) {
-                    auto* item = form->itemAt(row, QFormLayout::LabelRole);
-                    auto* label = item ? qobject_cast<QLabel*>(item->widget()) : nullptr;
-                    if (!label) continue;
-                    // A font-relative shared column keeps independent sections aligned.
-                    const int width = label->fontMetrics().horizontalAdvance(
-                        QStringLiteral("Minimum (mm)"));
-                    label->setFixedWidth(width);
-                    label->setWordWrap(true);
+            if (role == QLatin1String("search")) {
+                for (int index = 0; index < layout->count(); ++index)
+                    layout->itemAt(index)->setAlignment(Qt::AlignVCenter);
+            } else if (role == QLatin1String("field-grid")) {
+                if (auto* grid = qobject_cast<QGridLayout*>(layout))
+                    setGridLayoutMetrics(grid, {}, content, row);
+            } else if (role == QLatin1String("wide-form")) {
+                if (auto* form = qobject_cast<QFormLayout*>(layout)) {
+                    form->setHorizontalSpacing(2 * content);
+                    form->setVerticalSpacing(content);
                 }
-            }
-        }
-        else if (name == QLatin1String("ProcessingInteractiveGroupLayout")) {
-            setLayoutMetrics(layout, QMargins(12, 12, 12, 12), 8);
-        }
-        else if (name == QLatin1String("ProcessingInteractiveGridLayout")) {
-            if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
-                setGridLayoutMetrics(grid, QMargins(0, 0, 0, 0), 12, 8);
-            } else {
-                setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
-            }
-        }
-        else if (name == QLatin1String("RuntimePathsBodyLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 16);
-        }
-        else if (name == QLatin1String("RuntimePathsToolbarPanelLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 0);
-        }
-        else if (name == QLatin1String("RuntimePathsLeftPanelLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
-        }
-        else if (name == QLatin1String("RuntimePathsFormLayout")) {
-            setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 12);
-        }
-        else if (name == QLatin1String("RuntimePathsFormGridLayout")) {
-            if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
-                setGridLayoutMetrics(grid, QMargins(0, 0, 0, 0), 8, 8);
-            } else {
-                setLayoutMetrics(layout, QMargins(0, 0, 0, 0), 8);
+            } else if (role == QLatin1String("label-form")) {
+                if (auto* form = qobject_cast<QFormLayout*>(layout)) {
+                    form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+                    form->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
+                    form->setHorizontalSpacing(row);
+                    for (int index = 0; index < form->rowCount(); ++index) {
+                        auto* item = form->itemAt(index, QFormLayout::LabelRole);
+                        auto* label = item ? qobject_cast<QLabel*>(item->widget()) : nullptr;
+                        if (!label) continue;
+                        label->setFixedWidth(label->fontMetrics().horizontalAdvance(QStringLiteral("Minimum (mm)")));
+                        label->setWordWrap(true);
+                    }
+                }
             }
         }
 
