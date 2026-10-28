@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preserve toggle hover artwork in shared row-mode tree/table delegates while keeping row backgrounds independently painted.
+
 - Add neutral vertical `plug-connected` and `plug-disconnected` glyphs in 24px and 48px sizes for attach/detach commands.
 
 - Add blue hover feedback to outline toggles: light-blue Off outline/thumb on a pale-blue track and tinted On/Mixed, preserving disabled artwork, geometry and native interaction.

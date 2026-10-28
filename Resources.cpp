@@ -155,6 +155,7 @@ public:
         : QStyledItemDelegate(tree),
           _tree(tree)
     {
+        setProperty("_resourcesOwnsItemBackground", true);
     }
 
     /**
@@ -183,6 +184,8 @@ public:
 
         if (cellOption.features & QStyleOptionViewItem::HasCheckIndicator) {
             QStyleOptionViewItem checkOption(cellOption);
+            // Row surfaces own background feedback; indicators retain their native hover state.
+            checkOption.state.setFlag(QStyle::State_MouseOver, option.state.testFlag(QStyle::State_MouseOver));
             // Primitive painting reads state flags, not the model's checkState.
             checkOption.state &= ~(QStyle::State_On | QStyle::State_Off | QStyle::State_NoChange);
             checkOption.state |= cellOption.checkState == Qt::Checked ? QStyle::State_On
@@ -261,6 +264,7 @@ public:
         : QStyledItemDelegate(table)
         , _table(table)
     {
+        setProperty("_resourcesOwnsItemBackground", true);
     }
 
     /**
@@ -289,6 +293,8 @@ public:
 
         if (cellOption.features & QStyleOptionViewItem::HasCheckIndicator) {
             QStyleOptionViewItem checkOption(cellOption);
+            // Row surfaces own background feedback; indicators retain their native hover state.
+            checkOption.state.setFlag(QStyle::State_MouseOver, option.state.testFlag(QStyle::State_MouseOver));
             // Item primitives read style flags, including the unchecked and mixed states.
             checkOption.state &= ~(QStyle::State_On | QStyle::State_Off | QStyle::State_NoChange);
             checkOption.state |= cellOption.checkState == Qt::Checked ? QStyle::State_On
