@@ -79,6 +79,7 @@ qt_add_library(PlaygroundResources STATIC
     Resources.h
     Resources.cpp
     theme/ResourcesTheme.h theme/ResourcesTheme.cpp
+    theme/ThemeStyleSheet.h
     theme/ThemeRuntime.h theme/ThemeRuntime.cpp
     ItemViewTheme.h ItemViewTheme.cpp
     Chrome/ThemedTreeWidget.h

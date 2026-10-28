@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject unparsed QSS declarations before installation or atomic reload, exercise platform patch composition independently of the operating system, preserve device tab-scroll buttons' borderless 20px slots, and apply shared metrics to the engine toolbar. Remove unused toolbar-density and borderless-role APIs.
+
 - Centralize palette, widget metrics, source reload and application installation in `ResourcesTheme`; keep the existing namespace API as a stateless host facade and runtime painters as private adapters.
 - Reject repeated selector/property definitions and late type-wide control templates during source reload; resolve explicit platform variants before installing QSS. Remove repeated base, overlay-scrollbar, status-button and search-button assignments without changing their final values.
 - Share spin-box geometry and compact action densities through one theme definition. Reload QSS and widget metrics together, reject incomplete/invalid candidates atomically, and update tree corner masks from the active metrics instead of cached QSS parsing.

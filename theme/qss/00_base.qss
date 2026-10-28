@@ -743,31 +743,11 @@ QToolButton[resourcesDensity="compact"] {
     border-radius: @COMPACT_ACTION_RADIUS@px;
 }
 
-QToolButton[resourcesDensity="toolbar"] {
-    min-width: @COMPACT_ACTION_CONTENT_SIZE@px;
-    min-height: @COMPACT_ACTION_CONTENT_SIZE@px;
-    padding: @TOOLBAR_ACTION_PADDING@px;
-}
-
 QLineEdit[resourcesDensity="compact"],
 QComboBox[resourcesDensity="compact"],
 QAbstractSpinBox[resourcesDensity="compact"] {
     min-height: @COMPACT_FIELD_CONTENT_HEIGHT@px;
     max-height: @COMPACT_FIELD_CONTENT_HEIGHT@px;
-}
-
-/* A transparent reserved border preserves the input target and state geometry. */
-QPushButton[resourcesControlRole="borderless"],
-QPushButton[resourcesControlRole="borderless"]:enabled:hover,
-QPushButton[resourcesControlRole="borderless"]:enabled:focus,
-QPushButton[resourcesControlRole="borderless"]:enabled:pressed,
-QPushButton[resourcesControlRole="borderless"]:enabled:checked,
-QToolButton[resourcesControlRole="borderless"],
-QToolButton[resourcesControlRole="borderless"]:enabled:hover,
-QToolButton[resourcesControlRole="borderless"]:enabled:focus,
-QToolButton[resourcesControlRole="borderless"]:enabled:pressed,
-QToolButton[resourcesControlRole="borderless"]:enabled:checked {
-    border-color: transparent;
 }
 
 QToolButton:enabled:hover,

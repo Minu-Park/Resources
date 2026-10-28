@@ -1,5 +1,6 @@
 #include "Resources.h"
 #include "theme/ResourcesTheme.h"
+#include "theme/ThemeStyleSheet.h"
 #include <QApplication>
 #include <QDir>
 #include <QDoubleSpinBox>
@@ -7,9 +8,11 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLineEdit>
-#include <QPushButton>
+#include <QRegularExpression>
 #include <QSpinBox>
+#include <QTabBar>
 #include <QTemporaryDir>
+#include <QToolBar>
 #include <QToolButton>
 #include <QTreeWidget>
 #include <QtTest>
@@ -130,22 +133,60 @@ private slots:
         spin.resize(180, 100);
         QCOMPARE(spin.height(), normalHeight);
     }
-    void borderlessRolePreservesButtonInputAndGeometry()
+    void platformCompositionPreservesDeclarationsAndResolvesOverrides()
     {
-        QPushButton button("Action");
-        button.setCheckable(true);
-        button.resize(120, 24); button.show(); QApplication::processEvents();
-        const auto size = button.size();
-        auto& theme = ResourcesTheme::instance();
-        theme.setRole(button, ResourcesTheme::ControlRole::Borderless);
-        QTest::mouseMove(&button, button.rect().center()); QApplication::processEvents();
-        const auto image = button.grab().toImage();
-        QCOMPARE(image.pixelColor(image.width() / 2, 0), Resources::themePalette().value("surface"));
-        QTest::mouseClick(&button, Qt::LeftButton);
-        QVERIFY(button.isChecked());
-        QCOMPARE(button.size(), size);
-        theme.setRole(button, ResourcesTheme::ControlRole::Default);
-        QCOMPARE(button.property("resourcesControlRole").toString(), QString("default"));
+        const QString source = "QLabel, QToolButton { padding: 2px; border-radius: 7px; }\n"
+                               "QToolButton:enabled:hover { margin: 1px; }\n";
+        const QString patch = "QToolButton { border-radius: 18px; }\n"
+                              "QToolButton:hover:enabled { margin: 3px; }\n";
+        QCOMPARE(Resources::detail::composePlatformVariant(source, {}), source);
+        const auto composed = Resources::detail::composePlatformVariant(source, patch);
+        QVERIFY(composed.contains("QLabel{padding:2px;border-radius:7px;}"));
+        QVERIFY(composed.contains("QToolButton{padding:2px;}"));
+        QVERIFY(composed.contains("QToolButton{border-radius:18px;}"));
+        QVERIFY(!composed.contains("margin:1px"));
+        QCOMPARE(composed.count("margin:3px;"), 1);
+        QCOMPARE(composed.count("border-radius:18px;"), 1);
+        // Run the same composition path even on platforms without a native patch.
+        QCOMPARE(Resources::detail::composePlatformVariant(composed, patch), composed);
+    }
+    void deviceTabScrollButtonsRetainBorderlessSlots()
+    {
+        QCameraWidget device;
+        QTabBar tabs(&device);
+        tabs.setUsesScrollButtons(true);
+        tabs.setExpanding(false);
+        tabs.setGeometry(0, 0, 180, 32);
+        for (int i = 0; i < 12; ++i) tabs.addTab(QString("Device tab %1").arg(i));
+        device.resize(200, 70); device.show();
+        QApplication::processEvents();
+        const auto buttons = tabs.findChildren<QToolButton*>();
+        QCOMPARE(buttons.size(), 2);
+        for (auto* button : buttons) {
+            QVERIFY(button->isVisible());
+            QVERIFY(button->property("resourcesDensity").toString() != "compact");
+            QCOMPARE(button->size(), QSize(20, 20));
+        }
+    }
+    void engineToolbarTracksReloadedMetrics()
+    {
+        QToolBar toolbar;
+        toolbar.setObjectName("EngineToolBar");
+        auto* action = toolbar.addAction("Action");
+        toolbar.show(); QApplication::processEvents();
+        auto* button = qobject_cast<QToolButton*>(toolbar.widgetForAction(action));
+        QVERIFY(button);
+        const auto original = button->minimumSize();
+        QTemporaryDir candidate; QVERIFY(copyFactory(candidate.path()));
+        auto values = metricSource(candidate.path());
+        values["COMPACT_ACTION_CONTENT_SIZE"] = 26;
+        values["TOOLBAR_ACTION_PADDING"] = 4;
+        QVERIFY(write(candidate.path() + "/metrics.json", QJsonDocument(values).toJson()));
+        QString error;
+        QVERIFY2(Resources::reloadThemeFromDirectory(candidate.path() + "/qss", &error), qPrintable(error));
+        QApplication::processEvents();
+        QCOMPARE(button->minimumSize(), QSize(36, 36));
+        QVERIFY(button->minimumSize().width() > original.width());
     }
     void reloadUpdatesQssAndRuntimeMaskTogether()
     {
@@ -169,7 +210,7 @@ private slots:
         QCOMPARE(resolved.radius, 18);
         QCOMPARE(resolved.borderWidth, 2);
         QVERIFY(tree.viewport()->mask() != oldMask);
-        QVERIFY(qApp->styleSheet().contains("border-radius: 18px"));
+        QVERIFY(qApp->styleSheet().contains(QRegularExpression("border-radius:\\s*18px")));
         spin.resize(180, 100);
         QCOMPARE(spin.height(), 30);
         QCOMPARE(Resources::fontColor(), QColor("#234567"));
@@ -177,7 +218,7 @@ private slots:
     void invalidSnapshotPreservesPaletteMetricsAndStyle_data()
     {
         QTest::addColumn<QString>("fault");
-        for (const auto& fault : {"missing-fragment", "unknown-token", "duplicate-definition", "reordered-state", "subtype-template", "missing-metrics", "unknown-metric", "fractional-metric", "negative-metric"})
+        for (const auto& fault : {"missing-fragment", "unknown-token", "duplicate-definition", "reordered-state", "subtype-template", "unterminated-declaration", "stray-text", "missing-metrics", "unknown-metric", "fractional-metric", "negative-metric"})
             QTest::newRow(fault) << QString::fromLatin1(fault);
     }
     void invalidSnapshotPreservesPaletteMetricsAndStyle()
@@ -196,6 +237,12 @@ private slots:
                 ? "\nQAbstractSpinBox { background: @SURFACE@; }\n"
                 : fault == "reordered-state" ? "\nQToolButton:hover:enabled { border-color: @HOVERBORDER@; }\n"
                 : "\nQSpinBox { min-height: 26px; }\n");
+        } else if (fault == "unterminated-declaration" || fault == "stray-text") {
+            QFile file(candidate.path() + "/qss/00_base.qss");
+            QVERIFY(file.open(QIODevice::Append));
+            file.write(fault == "unterminated-declaration"
+                ? "\nQLabel#InvalidCandidate { padding: 2px; border-radius: 7px }\n"
+                : "\nQLabel#InvalidCandidate { invalid; padding: 2px; }\n");
         } else if (fault == "missing-metrics") QVERIFY(QFile::remove(candidate.path() + "/metrics.json"));
         else {
             auto values = metricSource(candidate.path());
@@ -209,6 +256,8 @@ private slots:
         QString error;
         QVERIFY(!Resources::reloadThemeFromDirectory(candidate.path() + "/qss", &error));
         QVERIFY(!error.isEmpty());
+        if (fault == "unterminated-declaration" || fault == "stray-text")
+            QVERIFY2(error.contains("Unparsed theme declaration"), qPrintable(error));
         QCOMPARE(Resources::themePalette(), colors);
         QCOMPARE(qApp->styleSheet(), style);
         QCOMPARE(ResourcesTheme::instance().metric("FIELD_CONTENT_HEIGHT"), height);

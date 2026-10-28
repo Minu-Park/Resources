@@ -34,11 +34,21 @@ QCameraWidget QTabBar QToolButton,
 QGocatorWidget QTabBar QToolButton,
 QHeliotisC4Widget QTabBar QToolButton,
 QOneGenWidget QTabBar QToolButton,
-QOneGenDeviceWidget QTabBar QToolButton {
+QOneGenDeviceWidget QTabBar QToolButton,
+QFramegrabberWidget QTabBar QToolButton#ScrollLeftButton,
+QCameraWidget QTabBar QToolButton#ScrollLeftButton,
+QGocatorWidget QTabBar QToolButton#ScrollLeftButton,
+QHeliotisC4Widget QTabBar QToolButton#ScrollLeftButton,
+QOneGenWidget QTabBar QToolButton#ScrollLeftButton,
+QOneGenDeviceWidget QTabBar QToolButton#ScrollLeftButton {
+    width: 20px;
+    height: 20px;
     min-width: 20px;
     min-height: 20px;
     max-width: 20px;
     max-height: 20px;
+    padding: 0;
+    margin: 0;
 }
 
 QTreeWidget[treeRole="DeviceFeatureTree"] {
