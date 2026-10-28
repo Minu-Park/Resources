@@ -87,6 +87,10 @@
         <file>icon/pause-48.png</file>
         <file>icon/play-24.png</file>
         <file>icon/play-48.png</file>
+        <file>icon/plug-connected-24.png</file>
+        <file>icon/plug-connected-48.png</file>
+        <file>icon/plug-disconnected-24.png</file>
+        <file>icon/plug-disconnected-48.png</file>
         <file>icon/plus-math-24.png</file>
         <file>icon/plus-math-48.png</file>
         <file>icon/add-image-24.png</file>
