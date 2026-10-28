@@ -1,11 +1,6 @@
 /* theme/qss/30_device_controls.qss: shared device-control theme; keep load order in Resources.cpp. */
 
-QFramegrabberWidget,
-QCameraWidget,
-QGocatorWidget,
-QHeliotisC4Widget,
-QOneGenWidget,
-QOneGenDeviceWidget {
+QWidget[controlRole="devicePanel"] {
     background: @SURFACE@;
 }
 
@@ -27,18 +22,8 @@ QTabWidget[tabRole="DeviceControls"] > QTabBar {
 }
 
 /* Borderless tab scroll arrows keep their full 20px slot. */
-QFramegrabberWidget QTabBar QToolButton,
-QCameraWidget QTabBar QToolButton,
-QGocatorWidget QTabBar QToolButton,
-QHeliotisC4Widget QTabBar QToolButton,
-QOneGenWidget QTabBar QToolButton,
-QOneGenDeviceWidget QTabBar QToolButton,
-QFramegrabberWidget QTabBar QToolButton#ScrollLeftButton,
-QCameraWidget QTabBar QToolButton#ScrollLeftButton,
-QGocatorWidget QTabBar QToolButton#ScrollLeftButton,
-QHeliotisC4Widget QTabBar QToolButton#ScrollLeftButton,
-QOneGenWidget QTabBar QToolButton#ScrollLeftButton,
-QOneGenDeviceWidget QTabBar QToolButton#ScrollLeftButton {
+QWidget[controlRole="devicePanel"] QTabBar QToolButton,
+QWidget[controlRole="devicePanel"] QTabBar QToolButton#ScrollLeftButton {
     width: 20px;
     height: 20px;
     min-width: 20px;

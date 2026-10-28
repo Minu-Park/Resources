@@ -725,7 +725,8 @@ QToolButton {
 /* Reusable densities are selected by ResourcesTheme rather than screen-local templates. */
 QToolButton[resourcesDensity="compact"],
 QToolButton#PlotViewActionButton,
-QToolButton[plotActionRole="action"] {
+QToolButton[plotActionRole="action"],
+QToolButton[controlRole="compactAction"] {
     min-width: @COMPACT_ACTION_CONTENT_SIZE@px;
     max-width: @COMPACT_ACTION_CONTENT_SIZE@px;
     min-height: @COMPACT_ACTION_CONTENT_SIZE@px;

@@ -258,6 +258,7 @@ SearchableTreeController::SearchableTreeController(QTreeWidget* tree, const Opti
   search_bubble_->setObjectName(QStringLiteral("DeviceFeatureSearchBubble"));
   auto* layout = new QHBoxLayout(search_bubble_);
   layout->setObjectName(QStringLiteral("DeviceFeatureSearchLayout"));
+  layout->setProperty("layoutRole", "search");
 
   search_ = new QLineEdit(search_bubble_);
   search_->setObjectName(QStringLiteral("DeviceFeatureSearchInput"));

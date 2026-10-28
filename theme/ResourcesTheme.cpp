@@ -463,15 +463,12 @@ void ResourcesTheme::polishWidget(QWidget& widget)
     if (widget.property("resourcesDensity").isValid()
         && !widget.property("resourcesAutomaticDensity").toBool()) return;
     bool compact = false;
-    // Existing consumer surfaces are admitted here once; their QSS shares one density rule.
+    // The nearest explicit consumer scope owns action density; Qt tab scrollers stay independent.
     for (auto* parent = widget.parentWidget(); parent; parent = parent->parentWidget()) {
-        // Qt's tab scrollers own their borderless slot, including inside device panels.
         if (parent->inherits("QTabBar")) break;
-        if (parent->inherits("QFramegrabberWidget") || parent->inherits("QCameraWidget")
-            || parent->inherits("QGocatorWidget") || parent->inherits("QHeliotisC4Widget")
-            || parent->inherits("QOneGenWidget") || parent->inherits("QOneGenDeviceWidget")
-            || parent->inherits("StaticImageControlWidget") || parent->inherits("Static3DDataControlWidget")) {
-            compact = true;
+        const QString scope = parent->property("actionDensity").toString();
+        if (scope == QLatin1String("compact") || scope == QLatin1String("default")) {
+            compact = scope == QLatin1String("compact");
             break;
         }
     }

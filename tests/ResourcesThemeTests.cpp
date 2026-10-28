@@ -15,11 +15,21 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QTreeWidget>
+#include <QVBoxLayout>
+#include <QGridLayout>
+#include <QFormLayout>
+#include <QLabel>
 #include <QtTest>
 
-// These identities exercise the existing consumer admission without loading a device backend.
-class QCameraWidget : public QWidget { Q_OBJECT public: using QWidget::QWidget; };
-class StaticImageControlWidget : public QWidget { Q_OBJECT public: using QWidget::QWidget; };
+// Unrelated consumer identities must opt into density using the Qt-only contract.
+class CompactConsumerWidget : public QWidget {
+    Q_OBJECT
+public:
+    explicit CompactConsumerWidget(QWidget* parent = nullptr) : QWidget(parent) {
+        setProperty("actionDensity", "compact");
+        setProperty("controlRole", "devicePanel");
+    }
+};
 
 using Resources::ResourcesTheme;
 
@@ -74,8 +84,8 @@ private slots:
     }
     void fieldsResolveOneGeometryAcrossParents()
     {
-        QCameraWidget device;
-        StaticImageControlWidget source;
+        CompactConsumerWidget device;
+        CompactConsumerWidget source;
         QSpinBox integer(&device);
         QDoubleSpinBox floating(&source);
         QLineEdit field;
@@ -90,8 +100,8 @@ private slots:
     }
     void compactActionsShareDensityAndAllowExplicitOverride()
     {
-        QCameraWidget device;
-        StaticImageControlWidget source;
+        CompactConsumerWidget device;
+        CompactConsumerWidget source;
         QToolButton first(&device), second(&source);
         device.show(); source.show();
         QApplication::processEvents();
@@ -132,6 +142,56 @@ private slots:
         theme.setDensity(spin, ResourcesTheme::Density::Default);
         spin.resize(180, 100);
         QCOMPARE(spin.height(), normalHeight);
+    }
+    void actionDensityScopesAreExplicitAndFollowLiveChanges()
+    {
+        QWidget root;
+        root.setObjectName("UnrelatedFutureConsumer");
+        QToolButton action(&root);
+        root.show(); action.show(); QApplication::processEvents();
+        QCOMPARE(action.property("resourcesDensity").toString(), QString("default"));
+        root.setProperty("actionDensity", "compact");
+        QCOMPARE(action.property("resourcesDensity").toString(), QString("compact"));
+        QWidget boundary(&root);
+        boundary.setProperty("actionDensity", "default");
+        QToolButton nested(&boundary);
+        nested.ensurePolished();
+        QCOMPARE(nested.property("resourcesDensity").toString(), QString("default"));
+        ResourcesTheme::instance().setDensity(action, ResourcesTheme::Density::Default);
+        root.setProperty("actionDensity", "default");
+        root.setProperty("actionDensity", "compact");
+        QCOMPARE(action.property("resourcesDensity").toString(), QString("default"));
+    }
+    void layoutRolesIgnoreNamesAndFollowReloadedMetrics()
+    {
+        QWidget root;
+        auto* layout = new QVBoxLayout(&root);
+        layout->setObjectName("UnrelatedFutureLayout");
+        layout->setProperty("layoutRole", "content");
+        root.show(); QApplication::processEvents();
+        QCOMPARE(layout->contentsMargins(), QMargins(12, 12, 12, 12));
+        QCOMPARE(layout->spacing(), 8);
+        layout->setProperty("layoutRole", "actions");
+        QCOMPARE(layout->contentsMargins(), QMargins());
+        QCOMPARE(layout->spacing(), 6);
+        QTemporaryDir candidate; QVERIFY(copyFactory(candidate.path()));
+        auto values = metricSource(candidate.path());
+        values["LAYOUT_COMPACT_SPACING"] = 10;
+        QVERIFY(write(candidate.path() + "/metrics.json", QJsonDocument(values).toJson()));
+        QString error;
+        QVERIFY2(Resources::reloadThemeFromDirectory(candidate.path() + "/qss", &error), qPrintable(error));
+        QApplication::processEvents();
+        QCOMPARE(layout->spacing(), 10);
+        auto* grid = new QGridLayout;
+        layout->addLayout(grid);
+        grid->setProperty("layoutRole", "field-grid");
+        QCOMPARE(grid->horizontalSpacing(), 12);
+        QCOMPARE(grid->verticalSpacing(), 8);
+        auto* form = new QFormLayout;
+        layout->addLayout(form);
+        form->setProperty("layoutRole", "wide-form");
+        QCOMPARE(form->horizontalSpacing(), 24);
+        QCOMPARE(form->verticalSpacing(), 12);
     }
     void platformCompositionPreservesDeclarationsAndResolvesOverrides()
     {
@@ -187,7 +247,7 @@ private slots:
     }
     void deviceTabScrollButtonsRetainBorderlessSlots()
     {
-        QCameraWidget device;
+        CompactConsumerWidget device;
         QTabBar tabs(&device);
         tabs.setUsesScrollButtons(true);
         tabs.setExpanding(false);
@@ -211,12 +271,14 @@ private slots:
         toolbar.show(); QApplication::processEvents();
         auto* button = qobject_cast<QToolButton*>(toolbar.widgetForAction(action));
         QVERIFY(button);
-        QToolButton plot, namedPlot;
+        QToolButton plot, namedPlot, compactAction;
         plot.setProperty("plotActionRole", "action");
         namedPlot.setObjectName("PlotViewActionButton");
-        plot.show(); namedPlot.show(); QApplication::processEvents();
+        compactAction.setProperty("controlRole", "compactAction");
+        plot.show(); namedPlot.show(); compactAction.show(); QApplication::processEvents();
         QCOMPARE(plot.minimumSize(), QSize(20, 20));
         QCOMPARE(namedPlot.minimumSize(), plot.minimumSize());
+        QCOMPARE(compactAction.minimumSize(), plot.minimumSize());
         const auto original = button->minimumSize();
         QTemporaryDir candidate; QVERIFY(copyFactory(candidate.path()));
         auto values = metricSource(candidate.path());
@@ -230,6 +292,7 @@ private slots:
         QVERIFY(button->minimumSize().width() > original.width());
         QCOMPARE(plot.minimumSize(), QSize(28, 28));
         QCOMPARE(namedPlot.minimumSize(), plot.minimumSize());
+        QCOMPARE(compactAction.minimumSize(), plot.minimumSize());
     }
     void reloadUpdatesQssAndRuntimeMaskTogether()
     {

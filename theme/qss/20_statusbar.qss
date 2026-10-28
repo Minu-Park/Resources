@@ -1,3 +1,4 @@
+
 /* theme/qss/20_statusbar.qss: single-theme stylesheet part; keep load order in Resources.cpp. */
 
 QStatusBar {
@@ -12,13 +13,11 @@ QStatusBar {
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
 }
-
 QStatusBar[maximized="true"] {
     background: @SURFACE@;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
 }
-
 QTextEdit#SystemLogViewer {
     background-color: @SURFACE@;
     color: @TEXT@;
@@ -29,21 +28,20 @@ QTextEdit#SystemLogViewer {
     font-family: "@FONT_MONO@";
     font-size: @FONT_CAPTION@px;
 }
-
 QStatusBar::item {
     border: none;
     background: transparent;
     margin: 0;
     padding: 0;
-}/* Device state labels and the full GraphicsEngine statusbar use bubble geometry. */
+}
+/* Device state labels and the full GraphicsEngine statusbar use bubble geometry. */
 QLabel#CameraStatusLabel,
 QLabel#FramegrabberStatusLabel,
 QLabel#GocatorStatusLabel,
 QLabel#HeliotisC4StatusLabel,
 QLabel#EngineStatusMode,
 QLabel#EngineStatusZoom,
-QToolButton#EngineStatusModeButton,
-QToolButton#EngineStatusViewButton {
+QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"] {
     background: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
@@ -53,7 +51,6 @@ QToolButton#EngineStatusViewButton {
     max-height: @CONTROL_HEIGHT@px;
     margin: 0 2px 0 0;
 }
-
 QLabel#EngineStatusSummary,
 QLabel#EngineStatusRenderPath,
 QLabel#EngineStatusPointer,
@@ -68,15 +65,12 @@ QLabel#EngineStatusFps {
     margin: 0 2px 0 0;
     color: @TEXT@;
 }
-
 QLabel#EngineStatusSummary[performancePath="native-tile"] {
     border-color: @NATIVEPATH@;
 }
-
 QLabel#EngineStatusSummary[performancePath="fit-sampling"] {
     border-color: @SAMPLEDPATH@;
 }
-
 QLabel#CameraStatusLabel,
 QLabel#FramegrabberStatusLabel,
 QLabel#GocatorStatusLabel,
@@ -87,13 +81,10 @@ QLabel#EngineStatusZoom {
 
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
-
-QToolButton#EngineStatusModeButton,
-QToolButton#EngineStatusViewButton {
+QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"] {
     color: @TEXT@;
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
-
 QStatusBar QLabel[statusRole="message"] {
     background: transparent;
     border: none;
@@ -105,101 +96,68 @@ QStatusBar QLabel[statusRole="message"] {
 
     font-weight: @WEIGHT_NORMAL@;
 }
-
 QStatusBar QLabel[statusRole="message"][messageState="error"] {
 
     color: @TEXT@;
 
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
-
 QLabel[statusRole="coordinates"],
 QLabel[statusRole="fps"] {
 
     font-family: "@FONT_MONO@", "@FONT_UI@";
 }
-
 QLabel#EngineStatusMode,
 QLabel#EngineStatusSummary,
 QLabel#EngineStatusRenderPath {
 
     font-family: "@FONT_UI@";
 }
-
-QToolButton#EngineStatusModeButton,
-QToolButton#EngineStatusViewButton {
+QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"] {
     font-family: "@FONT_UI@";
 }
-
 QLabel#EngineStatusPointer,
 QLabel#EngineStatusZoom,
 QLabel#EngineStatusFps {
 
     font-family: "@FONT_MONO@";
 }
-
-QToolButton#EngineStatusModeButton,
-QToolButton#EngineStatusViewButton {
+QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"] {
     icon-size: 16px;
 
     outline: none;
 }
-
-QToolButton#EngineStatusModeButton:disabled,
-QToolButton#EngineStatusViewButton:disabled {
+QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:disabled {
     background: @SURFACE@;
     color: @TEXT@;
 
     border-color: @CONTROLBORDER@;
     outline: none;
 }
-
-QToolButton#EngineStatusModeButton:enabled:hover:!pressed:!checked,
-QToolButton#EngineStatusViewButton:enabled:hover:!pressed:!checked {
+QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled:hover:!pressed:!checked {
     background: @SURFACE@;
     color: @TEXT@;
 
     border-color: @HOVERBORDER@;
     outline: none;
 }
-
-QToolButton#EngineStatusModeButton:enabled:pressed,
-QToolButton#EngineStatusViewButton:enabled:pressed {
+QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled:pressed {
     background: @SURFACE@;
 }
-
-QToolButton#EngineStatusModeButton:enabled:focus:!pressed:!checked,
-QToolButton#EngineStatusViewButton:enabled:focus:!pressed:!checked {
+QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled:focus:!pressed:!checked {
 
     border-color: @HOVERBORDER@;
     outline: none;
 }
-
-QToolButton#EngineStatusModeButton::menu-indicator,
-QToolButton#EngineStatusViewButton::menu-indicator {
+QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]::menu-indicator {
     image: none;
     width: 0px;
 
     border: none;
     outline: none;
 }
-
-QPushButton#MainLogToggleBtn {
-    background: @SURFACE@;
-    border: 1px solid @STATUSBORDER@;
-    border-radius: 9px;
-    padding: 0 8px;
-    height: 24px;
-    min-height: @CONTROL_HEIGHT@px;
-    max-height: @CONTROL_HEIGHT@px;
-    margin: 0 2px 0 0;
-    color: @TEXT@;
-
-    font-weight: @WEIGHT_WIDGET_BOLD@;
-    font-size: @FONT_CAPTION@px;
-}
-
-QPushButton#RuntimeLibrariesStatusButton {
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"],
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"] {
     background: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
@@ -214,47 +172,43 @@ QPushButton#RuntimeLibrariesStatusButton {
     font-size: @FONT_CAPTION@px;
 }
 
-QPushButton#RuntimeLibrariesStatusButton:enabled:hover:!pressed:!checked {
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"] {
+    border-color: @STATUSBORDER@;
+}
+
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"]:enabled:hover:!pressed:!checked {
     background: @SURFACE@;
     border-color: @HOVERBORDER@;
     color: @TEXT@;
 }
-
-QPushButton#RuntimeLibrariesStatusButton:enabled:pressed {
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"]:enabled:pressed {
     background: @SURFACE@;
 }
-
-QPushButton#MainLogToggleBtn:enabled:hover:!pressed:!checked {
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:hover:!pressed:!checked {
     color: @TEXT@;
 }
-
-QPushButton#MainLogToggleBtn:checked,
-QPushButton#MainLogToggleBtn:checked:hover {
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:checked,
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:checked:hover {
     background: @SURFACE@;
     border-color: @FOCUSBORDER@;
     color: @TEXT@;
 }
-
-QPushButton#MainLogToggleBtn[logState="warning"] {
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"][logState="warning"] {
     border-color: @WARNING@;
 }
-
-QPushButton#MainLogToggleBtn[logState="error"] {
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"][logState="error"] {
     border-color: @ERROR@;
 }
-
-QPushButton#MainLogToggleBtn:enabled:hover:!pressed:!checked,
-QPushButton#MainLogToggleBtn:enabled:focus:!pressed:!checked,
-QPushButton#RuntimeLibrariesStatusButton:enabled:focus:!pressed:!checked {
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:hover:!pressed:!checked,
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:focus:!pressed:!checked,
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"]:enabled:focus:!pressed:!checked {
     background: @SURFACE@;
     border-color: @HOVERBORDER@;
 }
-
-QPushButton#MainLogToggleBtn:enabled:pressed,
-QPushButton#MainLogToggleBtn:enabled:checked {
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:pressed,
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:checked {
     background: @SURFACE@;
 }
-
 QWidget#MinimizedSessionIndicator {
     background: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
@@ -265,11 +219,9 @@ QWidget#MinimizedSessionIndicator {
     margin: 0 2px 0 0;
     padding: 0;
 }
-
 QWidget#MinimizedSessionIndicator[minimized="true"] {
     background: @HOVER@;
 }
-
 QPushButton#MinimizedSessionRestore {
     background: transparent;
     border: none;
@@ -280,11 +232,9 @@ QPushButton#MinimizedSessionRestore {
     font-size: @FONT_CAPTION@px;
     font-weight: @WEIGHT_EMPHASIS@;
 }
-
 QPushButton#MinimizedSessionRestore:hover {
     color: @TEXT@;
 }
-
 QPushButton#MinimizedSessionClose {
     background: transparent;
     border: none;
@@ -297,19 +247,15 @@ QPushButton#MinimizedSessionClose {
     max-width: 16px;
     max-height: 16px;
 }
-
-QPushButton#RuntimeLibrariesStatusButton:enabled:pressed,
-QPushButton#RuntimeLibrariesStatusButton:enabled:checked,
-QPushButton#MainLogToggleBtn:enabled:pressed,
-QPushButton#MainLogToggleBtn:enabled:checked {
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"]:enabled:pressed,
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"]:enabled:checked,
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:pressed,
+QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:checked {
     border-color: @FOCUSBORDER@;
 }
-
 /* Active interaction takes precedence over hover and keyboard focus. */
-QToolButton#EngineStatusModeButton:enabled:pressed,
-QToolButton#EngineStatusModeButton:enabled:checked,
-QToolButton#EngineStatusViewButton:enabled:pressed,
-QToolButton#EngineStatusViewButton:enabled:checked {
+QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled:pressed,
+QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled:checked {
 
     border-color: @FOCUSBORDER@;
     outline: none;

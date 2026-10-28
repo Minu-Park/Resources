@@ -36,12 +36,42 @@ without adding fonts, event filters or delegates a second time.
 
 `ResourcesTheme::setDensity()` selects default or compact density for a
 line edit, spin box, combo box or tool button and refreshes the widget immediately. Native
-input behavior, signals and accessibility remain with Qt. Existing device and
-static-source tool buttons are admitted to compact density centrally; an explicit
-density selection takes precedence, including after reparenting. Current narrow
+input behavior, signals and accessibility remain with Qt. Consumers declare
+`actionDensity="compact"` or `"default"` on an action scope using Qt properties
+alone. The nearest scope controls descendant tool buttons; an explicit
+`resourcesDensity` selection takes precedence after reparenting or a live scope
+change. Consumer class names are not recognized. Current narrow
 Qt tab-scroll descendants are excluded from automatic compact admission. Device
 tab-scroll buttons reserve borderless 20x20 slots without control padding/margins;
 chrome exceptions retain their own geometry.
+
+## Semantic patterns
+
+Consumers expose intent through Qt dynamic properties without linking Resources.
+Object names remain useful for diagnostics and composition but do not select layout
+metrics. `presentationLayout` retains its existing general page/form contract and
+takes precedence when present. Otherwise `layoutRole` selects one shared pattern:
+
+| Roles | Purpose |
+| --- | --- |
+| `flush`, `actions`, `row`, `stack`, `sections` | Zero-inset action/row/stack composition with the corresponding spacing. |
+| `caption-stack`, `text-stack` | Dense text composition; spacing comes from layout metrics. |
+| `content`, `page`, `compact-panel`, `section`, `inset` | Shared inset panel and page compositions. |
+| `card`, `header`, `tab-strip` | Compact chrome compositions with retained factory insets. |
+| `bottom-panel`, `tabbed-panel`, `search` | Asymmetric content and search compositions. |
+| `form`, `wide-form`, `label-form`, `field-grid` | Form/grid spacing and label-column behavior. |
+
+Common spacing reads presentation tokens. Compact spacing/insets, caption/text
+spacing, card vertical inset and search inset read `LAYOUT_*` metrics from the same
+atomic source snapshot as QSS. Live role changes and source reload update existing
+layouts. Unknown roles retain Qt/consumer layout behavior.
+
+`controlRole="compactAction"` shares the compact-action template and metrics.
+`controlRole="statusBubble"` uses `statusBubbleVariant="menu"`, `"action"` or
+`"alert"` for existing menu/text/alert states. `logState` and `performancePath`
+retain their diagnostic meaning; disabled, hover/focus and active border roles
+remain distinct. A shared pattern does not erase icon gutters, close hit targets,
+native popup corrections or content-owned rendering.
 
 ## Source reload
 

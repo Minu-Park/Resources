@@ -53,7 +53,7 @@ public:
     ControlMetrics metrics(ControlKind kind, Density density = Density::Default) const;
     /** @brief Selects density for a line edit, spin box, combo box or tool button and refreshes geometry. */
     void setDensity(QWidget& widget, Density density);
-    /** @brief Admits existing compact consumer surfaces to the shared density template. */
+    /** @brief Applies the nearest consumer actionDensity scope unless density is explicit. */
     void polishWidget(QWidget& widget);
 
 private:
