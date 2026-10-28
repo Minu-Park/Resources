@@ -139,8 +139,10 @@ private slots:
                                "QToolButton:enabled:hover { margin: 1px; }\n";
         const QString patch = "QToolButton { border-radius: 18px; }\n"
                               "QToolButton:hover:enabled { margin: 3px; }\n";
-        QCOMPARE(Resources::detail::composePlatformVariant(source, {}), source);
-        const auto composed = Resources::detail::composePlatformVariant(source, patch);
+        QString composed, error;
+        QVERIFY2(Resources::detail::composePlatformVariant(source, {}, composed, &error), qPrintable(error));
+        QCOMPARE(composed, source);
+        QVERIFY2(Resources::detail::composePlatformVariant(source, patch, composed, &error), qPrintable(error));
         QVERIFY(composed.contains("QLabel{padding:2px;border-radius:7px;}"));
         QVERIFY(composed.contains("QToolButton{padding:2px;}"));
         QVERIFY(composed.contains("QToolButton{border-radius:18px;}"));
@@ -148,7 +150,31 @@ private slots:
         QCOMPARE(composed.count("margin:3px;"), 1);
         QCOMPARE(composed.count("border-radius:18px;"), 1);
         // Run the same composition path even on platforms without a native patch.
-        QCOMPARE(Resources::detail::composePlatformVariant(composed, patch), composed);
+        const auto original = composed;
+        QVERIFY2(Resources::detail::composePlatformVariant(original, patch, composed, &error), qPrintable(error));
+        QCOMPARE(composed, original);
+    }
+    void malformedPlatformCompositionPreservesOutput_data()
+    {
+        QTest::addColumn<QString>("source");
+        QTest::addColumn<QString>("patch");
+        QTest::newRow("patch-missing-semicolon") << QString("QLabel { padding: 2px; }")
+            << QString("QLabel { padding: 4px }");
+        QTest::newRow("patch-stray-text") << QString("QLabel { padding: 2px; }")
+            << QString("QLabel { invalid; padding: 4px; }");
+        QTest::newRow("source-missing-semicolon") << QString("QLabel { padding: 2px }")
+            << QString("QLabel { padding: 4px; }");
+        QTest::newRow("source-without-platform") << QString("QLabel { padding: 2px }") << QString();
+    }
+    void malformedPlatformCompositionPreservesOutput()
+    {
+        QFETCH(QString, source);
+        QFETCH(QString, patch);
+        const QString installed("QLabel { padding: 7px; }");
+        QString composed = installed, error;
+        QVERIFY(!Resources::detail::composePlatformVariant(source, patch, composed, &error));
+        QVERIFY2(error.contains("Unparsed theme declaration"), qPrintable(error));
+        QCOMPARE(composed, installed);
     }
     void deviceTabScrollButtonsRetainBorderlessSlots()
     {

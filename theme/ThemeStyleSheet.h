@@ -3,6 +3,7 @@
 #include <QString>
 
 namespace Resources::detail {
-/** @brief Composes validated theme declarations with a platform patch before Qt installation. */
-QString composePlatformVariant(const QString& source, const QString& platform);
+/** @brief Composes theme declarations, preserving output on a source or patch parse failure. */
+bool composePlatformVariant(const QString& source, const QString& platform,
+                            QString& output, QString* error = nullptr);
 }

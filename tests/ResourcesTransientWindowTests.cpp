@@ -398,16 +398,18 @@ private slots:
     {
         QTest::addColumn<int>("width");
         QTest::addColumn<bool>("maximized");
-        QTest::newRow("normal") << 720 << false;
-        QTest::newRow("narrow") << 520 << false;
-        QTest::newRow("overflow") << 380 << false;
-        QTest::newRow("maximized") << 720 << true;
+        QTest::addColumn<bool>("expectOverflow");
+        QTest::newRow("normal") << 720 << false << false;
+        QTest::newRow("narrow") << 520 << false << false;
+        QTest::newRow("overflow") << 380 << false << true;
+        QTest::newRow("maximized") << 720 << true << false;
     }
 
     void titleBarMenuTextHitArea()
     {
         QFETCH(int, width);
         QFETCH(bool, maximized);
+        QFETCH(bool, expectOverflow);
         Resources::installResources(*qApp);
         struct MenuHitWindow : ThemedMainWindow {
             using ThemedMainWindow::determineResizeMode;
@@ -427,6 +429,7 @@ private slots:
         window.activateWindow();
         QVERIFY(QTest::qWaitForWindowActive(&window));
         QCoreApplication::processEvents();
+        int overflowCount = 0;
         for (auto* menu : menus) {
             const QRect action = bar->actionGeometry(menu->menuAction());
             QVERIFY2(action.height() >= 34, "Main menu target must include comfortable vertical padding");
@@ -434,6 +437,7 @@ private slots:
             const bool overflowed = extension && extension->isVisible() && extension->menu()
                 && extension->menu()->actions().contains(menu->menuAction());
             if (overflowed) {
+                ++overflowCount;
                 // A maximized high-DPI virtual screen can be narrower than the normal test window.
                 // Overflowed commands must remain reachable through Qt's extension menu.
                 QVERIFY(extension);
@@ -481,6 +485,11 @@ private slots:
                 menu->close();
                 QTest::keyClick(bar, Qt::Key_Escape);
             }
+        }
+        if (expectOverflow) {
+            auto* extension = bar->findChild<QToolButton*>("qt_menubar_ext_button");
+            QVERIFY(extension && extension->isVisible());
+            QVERIFY2(overflowCount > 0, "The overflow fixture must exercise extension-menu access.");
         }
         if (!maximized) QVERIFY(window.determineResizeMode(QPoint(window.width() / 2, 0)) != 0);
         const QString captures = qEnvironmentVariable("PLAYGROUND_MENU_HIT_CAPTURE_DIR");
