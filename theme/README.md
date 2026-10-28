@@ -67,11 +67,23 @@ atomic source snapshot as QSS. Live role changes and source reload update existi
 layouts. Unknown roles retain Qt/consumer layout behavior.
 
 `controlRole="compactAction"` shares the compact-action template and metrics.
+`controlRole="devicePanel"` selects the shared device surface and borderless
+20px tab-scroll slots; the separate `actionDensity` scope selects its action sizes.
 `controlRole="statusBubble"` uses `statusBubbleVariant="menu"`, `"action"` or
 `"alert"` for existing menu/text/alert states. `logState` and `performancePath`
 retain their diagnostic meaning; disabled, hover/focus and active border roles
 remain distinct. A shared pattern does not erase icon gutters, close hit targets,
 native popup corrections or content-owned rendering.
+
+Before adding a role, record its meaning, supported widget/layout kinds, states,
+metric inputs and owning implementation here. Validate live role changes,
+explicit/nested density scopes, reparenting and metric reload where applicable,
+and render the affected production and fixture surfaces. Unknown roles preserve
+Qt/consumer behavior but still require review for misspellings or an unsupported
+contract. The current source policy report identifies structural design candidates;
+it does not yet validate literal `layoutRole`, `controlRole` or
+`statusBubbleVariant` values. Review those values against this contract rather
+than treating a clean policy result as role-value validation.
 
 ## Source reload
 
