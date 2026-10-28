@@ -176,6 +176,9 @@
         <file>icon/wrench-48.png</file>
         <file>icon/radio-empty-disabled.svg</file>
         <file>icon/radio-selected-disabled.svg</file>
+        <file>icon/switch-outline-off-hover.svg</file>
+        <file>icon/switch-outline-on-hover.svg</file>
+        <file>icon/switch-outline-mixed-hover.svg</file>
         <file>icon/switch-outline-off.svg</file>
         <file>icon/switch-outline-on.svg</file>
         <file>icon/switch-outline-mixed.svg</file>

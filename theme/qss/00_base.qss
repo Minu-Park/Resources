@@ -797,6 +797,24 @@ QGroupBox::indicator:indeterminate:hover {
     image: url(:/Resources/icon/switch-outline-mixed.svg);
 }
 
+QCheckBox::indicator:unchecked:enabled:hover,
+QAbstractItemView::indicator:unchecked:enabled:hover,
+QGroupBox::indicator:unchecked:enabled:hover {
+    image: url(:/Resources/icon/switch-outline-off-hover.svg);
+}
+
+QCheckBox::indicator:checked:enabled:hover,
+QAbstractItemView::indicator:checked:enabled:hover,
+QGroupBox::indicator:checked:enabled:hover {
+    image: url(:/Resources/icon/switch-outline-on-hover.svg);
+}
+
+QCheckBox::indicator:indeterminate:enabled:hover,
+QAbstractItemView::indicator:indeterminate:enabled:hover,
+QGroupBox::indicator:indeterminate:enabled:hover {
+    image: url(:/Resources/icon/switch-outline-mixed-hover.svg);
+}
+
 QCheckBox::indicator:focus,
 QAbstractItemView::indicator:focus,
 QGroupBox::indicator:focus {

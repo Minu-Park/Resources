@@ -4,6 +4,8 @@
 
 - Add neutral vertical `plug-connected` and `plug-disconnected` glyphs in 24px and 48px sizes for attach/detach commands.
 
+- Add blue hover feedback to outline toggles: light-blue Off outline/thumb on a pale-blue track and tinted On/Mixed, preserving disabled artwork, geometry and native interaction.
+
 - Keep the search bubble height stable under plain Qt styling when typing reveals the clear button.
 
 - Restore GraphicsEngine mode/view status-bubble outlines: neutral at rest or disabled, light blue on hover/focus, and accent while pressed, checked or open.
