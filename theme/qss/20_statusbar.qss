@@ -41,7 +41,9 @@ QLabel#FramegrabberStatusLabel,
 QLabel#GocatorStatusLabel,
 QLabel#HeliotisC4StatusLabel,
 QLabel#EngineStatusMode,
-QLabel#EngineStatusZoom {
+QLabel#EngineStatusZoom,
+QToolButton#EngineStatusModeButton,
+QToolButton#EngineStatusViewButton {
     background: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
@@ -73,18 +75,6 @@ QLabel#EngineStatusSummary[performancePath="native-tile"] {
 
 QLabel#EngineStatusSummary[performancePath="fit-sampling"] {
     border-color: @SAMPLEDPATH@;
-}
-
-QToolButton#EngineStatusModeButton,
-QToolButton#EngineStatusViewButton {
-    background: @SURFACE@;
-    border-radius: 9px;
-    padding: 0 7px;
-    height: 24px;
-    min-height: @CONTROL_HEIGHT@px;
-    max-height: @CONTROL_HEIGHT@px;
-    margin: 0 2px 0 0;
-    border: 1px solid @CONTROLBORDER@;
 }
 
 QLabel#CameraStatusLabel,
@@ -238,12 +228,7 @@ QPushButton#MainLogToggleBtn:enabled:hover:!pressed:!checked {
     color: @TEXT@;
 }
 
-QPushButton#MainLogToggleBtn:checked {
-    background: @SURFACE@;
-    border-color: @FOCUSBORDER@;
-    color: @TEXT@;
-}
-
+QPushButton#MainLogToggleBtn:checked,
 QPushButton#MainLogToggleBtn:checked:hover {
     background: @SURFACE@;
     border-color: @FOCUSBORDER@;

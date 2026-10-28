@@ -21,7 +21,7 @@ QToolTip {
 }
 
 QMainWindow {
-    background-color: @SURFACE@;
+
     color: @TEXT@;
 }
 
@@ -81,7 +81,7 @@ QTabWidget::pane {
     background: @SURFACE@;
     border: 1px solid @BORDER@;
     border-radius: 10px;
-    border-top: 1px solid @BORDER@;
+
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     top: 0;
@@ -89,7 +89,7 @@ QTabWidget::pane {
 }
 
 QGroupBox {
-    background-color: @SURFACE@;
+
     border: 1px solid @BORDER@;
     border-radius: 8px;
     margin-top: 22px;
@@ -197,13 +197,7 @@ QTabBar QToolButton:hover:!pressed:!checked {
     outline: none;
 }
 
-QTabBar QToolButton:pressed {
-    background-color: @SURFACE@;
-
-    border: none;
-    outline: none;
-}
-
+QTabBar QToolButton:pressed,
 QTabBar QToolButton:disabled {
     background-color: @SURFACE@;
 
@@ -262,7 +256,7 @@ QTreeWidget {
     alternate-background-color: @DISABLEDSURFACE@;
     selection-background-color: @HOVER@;
     selection-color: @TEXT@;
-    background-color: @SURFACE@;
+
 }
 
 QTableView::viewport,
@@ -566,7 +560,9 @@ QComboBox::drop-down {
     background: transparent;
 }
 
-QComboBox::down-arrow {
+QComboBox::down-arrow,
+QAbstractSpinBox::down-arrow,
+QDateTimeEdit::down-arrow {
     image: url(:/Resources/icon/chevron-down-neutral.svg);
     width: @INDICATOR_WIDTH@px;
     height: @INDICATOR_HEIGHT@px;
@@ -623,12 +619,6 @@ QAbstractSpinBox::up-arrow {
     height: @INDICATOR_HEIGHT@px;
 }
 
-QAbstractSpinBox::down-arrow {
-    image: url(:/Resources/icon/chevron-down-neutral.svg);
-    width: @INDICATOR_WIDTH@px;
-    height: @INDICATOR_HEIGHT@px;
-}
-
 /* Shared compact vector arrows: neutral at rest, light-blue hover, dark-blue active. */
 QComboBox[resourcesIndicatorHovered="true"]::down-arrow,
 QAbstractSpinBox[resourcesIndicatorHovered="true"]::down-arrow,
@@ -664,7 +654,6 @@ QComboBox,
 QAbstractSpinBox {
     image: none;
 }
-
 
 QPushButton {
     min-height: @FIELD_CONTENT_HEIGHT@px;
@@ -733,9 +722,10 @@ QToolButton {
     font-weight: @WEIGHT_EMPHASIS@;
 }
 
-
 /* Reusable densities are selected by ResourcesTheme rather than screen-local templates. */
-QToolButton[resourcesDensity="compact"] {
+QToolButton[resourcesDensity="compact"],
+QToolButton#PlotViewActionButton,
+QToolButton[plotActionRole="action"] {
     min-width: @COMPACT_ACTION_CONTENT_SIZE@px;
     max-width: @COMPACT_ACTION_CONTENT_SIZE@px;
     min-height: @COMPACT_ACTION_CONTENT_SIZE@px;
@@ -952,19 +942,11 @@ QScrollBar::sub-page {
     border: none;
 }
 
-
-
-
-
-
-
-
-
 QMenu {
     margin: @MENU_SHADOW_GUTTER@px;
     border: 1px solid @BORDER@;
     border-radius: 8px;
-    background-color: @SURFACE@;
+
     padding: 4px 2px;
 }
 
@@ -1299,12 +1281,6 @@ QDateTimeEdit::drop-down {
     border: none;
     background: transparent;
     image: none;
-}
-
-QDateTimeEdit::down-arrow {
-    image: url(:/Resources/icon/chevron-down-neutral.svg);
-    width: @INDICATOR_WIDTH@px;
-    height: @INDICATOR_HEIGHT@px;
 }
 
 QCalendarWidget QWidget#qt_calendar_navigationbar { background: @SURFACE@; border-bottom: 1px solid @CONTROLBORDER@;
