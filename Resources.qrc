@@ -26,6 +26,7 @@
         <file>Resources.rc</file>
         <file>Style.qss</file>
         <file>theme/presentation.json</file>
+        <file>theme/metrics.json</file>
         <file>theme/qss/00_base.qss</file>
         <file>theme/qss/10_graphics_engine.qss</file>
         <file>theme/qss/20_statusbar.qss</file>

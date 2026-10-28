@@ -62,8 +62,9 @@ bool savePaletteFile(const QString& path, QString* error = nullptr);
 bool loadPaletteFile(const QString& path, QString* error = nullptr);
 
 /**
- * @brief Reloads the complete installed QSS fragment set from a host-selected directory.
- * @param directory Directory containing every installed qss fragment; missing files reject the whole reload.
+ * @brief Reloads the complete installed QSS fragment set and its adjacent metrics.json.
+ * @param directory QSS directory containing every installed fragment; ../metrics.json is required.
+ *  Missing files, invalid metrics and unresolved tokens reject the whole candidate.
  * @param error Optional failure description. Current colors and platform chrome rules are preserved.
  * @return Whether the complete source theme was installed. Call on the GUI thread after installResources().
  */

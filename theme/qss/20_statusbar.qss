@@ -41,10 +41,20 @@ QLabel#FramegrabberStatusLabel,
 QLabel#GocatorStatusLabel,
 QLabel#HeliotisC4StatusLabel,
 QLabel#EngineStatusMode,
+QLabel#EngineStatusZoom {
+    background: @SURFACE@;
+    border: 1px solid @CONTROLBORDER@;
+    border-radius: 9px;
+    padding: 0 7px;
+    height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
+    max-height: @CONTROL_HEIGHT@px;
+    margin: 0 2px 0 0;
+}
+
 QLabel#EngineStatusSummary,
 QLabel#EngineStatusRenderPath,
 QLabel#EngineStatusPointer,
-QLabel#EngineStatusZoom,
 QLabel#EngineStatusFps {
     background: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
@@ -74,10 +84,7 @@ QToolButton#EngineStatusViewButton {
     min-height: @CONTROL_HEIGHT@px;
     max-height: @CONTROL_HEIGHT@px;
     margin: 0 2px 0 0;
-    color: @TEXT@;
-
     border: 1px solid @CONTROLBORDER@;
-    outline: none;
 }
 
 QLabel#CameraStatusLabel,
@@ -94,10 +101,7 @@ QLabel#EngineStatusZoom {
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
     color: @TEXT@;
-
     font-weight: @WEIGHT_WIDGET_BOLD@;
-
-    outline: none;
 }
 
 QStatusBar QLabel[statusRole="message"] {
@@ -134,10 +138,7 @@ QLabel#EngineStatusRenderPath {
 
 QToolButton#EngineStatusModeButton,
 QToolButton#EngineStatusViewButton {
-
     font-family: "@FONT_UI@";
-
-    outline: none;
 }
 
 QLabel#EngineStatusPointer,
@@ -175,9 +176,6 @@ QToolButton#EngineStatusViewButton:enabled:hover:!pressed:!checked {
 QToolButton#EngineStatusModeButton:enabled:pressed,
 QToolButton#EngineStatusViewButton:enabled:pressed {
     background: @SURFACE@;
-
-    border-color: @FOCUSBORDER@;
-    outline: none;
 }
 
 QToolButton#EngineStatusModeButton:enabled:focus:!pressed:!checked,
@@ -234,12 +232,9 @@ QPushButton#RuntimeLibrariesStatusButton:enabled:hover:!pressed:!checked {
 
 QPushButton#RuntimeLibrariesStatusButton:enabled:pressed {
     background: @SURFACE@;
-    border-color: @FOCUSBORDER@;
 }
 
 QPushButton#MainLogToggleBtn:enabled:hover:!pressed:!checked {
-    background: @SURFACE@;
-    border-color: @HOVERBORDER@;
     color: @TEXT@;
 }
 
@@ -273,7 +268,6 @@ QPushButton#RuntimeLibrariesStatusButton:enabled:focus:!pressed:!checked {
 QPushButton#MainLogToggleBtn:enabled:pressed,
 QPushButton#MainLogToggleBtn:enabled:checked {
     background: @SURFACE@;
-    border-color: @FOCUSBORDER@;
 }
 
 QWidget#MinimizedSessionIndicator {

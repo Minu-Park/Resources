@@ -78,6 +78,8 @@ qt_add_library(PlaygroundResources STATIC
     Resources.qrc
     Resources.h
     Resources.cpp
+    theme/ResourcesTheme.h theme/ResourcesTheme.cpp
+    theme/ThemeRuntime.h theme/ThemeRuntime.cpp
     ItemViewTheme.h ItemViewTheme.cpp
     Chrome/ThemedTreeWidget.h
     Chrome/ThemedMdiTitleBar.h
@@ -119,6 +121,13 @@ target_include_directories(PlaygroundResources
 )
 
 if(RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS)
+    qt_add_executable(ResourcesThemeTests tests/ResourcesThemeTests.cpp)
+    target_link_libraries(ResourcesThemeTests PRIVATE Resources::Resources Qt6::Test)
+    set_target_properties(ResourcesThemeTests PROPERTIES WIN32_EXECUTABLE FALSE)
+    add_test(NAME ResourcesThemeTests COMMAND ResourcesThemeTests)
+    set_tests_properties(ResourcesThemeTests PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+        ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>")
     qt_add_executable(ResourcesProgressTests tests/ResourcesProgressTests.cpp)
     target_link_libraries(ResourcesProgressTests PRIVATE Resources::Resources Qt6::Test)
     set_target_properties(ResourcesProgressTests PROPERTIES WIN32_EXECUTABLE FALSE)

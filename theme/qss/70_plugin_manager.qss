@@ -300,15 +300,22 @@ QWidget#UpdateNotificationActions {
     background: transparent;
 }
 
-QPushButton#UpdateNotificationLaterButton,
-QPushButton#UpdateNotificationUpdateButton {
+QPushButton#UpdateNotificationLaterButton {
     min-height: 28px;
     padding: 2px 12px;
     border: 1px solid @CONTROLBORDER@;
     border-radius: 8px;
     background: transparent;
     color: @TEXT@;
+    font-weight: @WEIGHT_EMPHASIS@;
+}
 
+QPushButton#UpdateNotificationUpdateButton {
+    min-height: 28px;
+    padding: 2px 12px;
+    border: 1px solid @CONTROLBORDER@;
+    border-radius: 8px;
+    color: @TEXT@;
     font-weight: @WEIGHT_EMPHASIS@;
 }
 
@@ -331,7 +338,6 @@ QPushButton#UpdateNotificationUpdateButton:enabled:focus:!pressed:!checked {
 
 QPushButton#UpdateNotificationLaterButton:enabled:pressed,
 QPushButton#UpdateNotificationUpdateButton:enabled:pressed {
-    border-color: @FOCUSBORDER@;
     color: @TEXT@;
 }
 
