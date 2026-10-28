@@ -107,9 +107,9 @@ with its containing tree or theme metrics. Configure
 
 ## Theme Contract
 
-Consumers expose semantic dynamic properties such as `status`, `state`, or `messageState`, plus stable role-oriented object names only when Qt lacks a suitable semantic selector. The QSS owns colors, spacing, radii, weights, and icon variants. After changing a dynamic property, repolish the widget when an immediate visual update is required.
+Consumers expose shared presentation through semantic Qt properties such as `controlRole`, `layoutRole`, density scopes and state properties. Stable object names identify widgets for diagnostics/tests and narrowly documented chrome/native exceptions. Resources owns colors, spacing, radii, weights and icon variants. After changing a dynamic property, repolish the widget when an immediate visual update is required.
 
-Legacy consumer-specific object-name selectors remain in the current theme for compatibility. New selectors must use generic widget defaults or documented semantic roles; expanding the legacy set would make this module dependent on an unknown consumer topology.
+Existing object-name selectors cover specific chrome, native geometry and content contracts; retain a narrow exception only with its current owner and reason. Repeated consumer design patterns are consolidation candidates, while old-version compatibility alone does not justify a selector. New shared designs use generic defaults or documented semantic roles. Review any new object-name exception explicitly instead of expanding consumer-specific design branches by default.
 
 See [theme/README.md](theme/README.md) for file ordering and extension rules.
 
