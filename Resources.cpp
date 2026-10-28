@@ -1365,6 +1365,10 @@ private:
         tree->setAlternatingRowColors(false);
         tree->setUniformRowHeights(false);
         tree->setIndentation(18);
+        // Feature rows select as one row; omit the current-cell capsule so the Feature
+        // cell is not emphasized separately from its value editor.
+        tree->setSelectionBehavior(QAbstractItemView::SelectRows);
+        Resources::setItemSelectionAppearance(tree, Resources::ItemSelectionAppearance::JoinedOnly);
         tree->setItemDelegate(new DeviceFeatureTreeDelegate(tree));
 
         QHeaderView* header = tree->header();
@@ -1805,6 +1809,7 @@ ThemePalette defaultThemePalette()
         {QStringLiteral("disabledSurface"), QColor(QStringLiteral("#f7f7f7"))},
         {QStringLiteral("selection"), QColor(QStringLiteral("#f4f7fb"))},
         {QStringLiteral("current"), QColor(QStringLiteral("#eef3f9"))},
+        {QStringLiteral("itemHover"), QColor(QStringLiteral("#f6f9fc"))},
         {QStringLiteral("statusBorder"), QColor(QStringLiteral("#d4d4d3"))},
         {QStringLiteral("progressTrack"), QColor(QStringLiteral("#ededed"))},
         {QStringLiteral("progressFill"), QColor(QStringLiteral("#1e5ea6"))},
