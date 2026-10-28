@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fill the Libraries list panel and its action strip with the white surface instead of hover gray; the top divider alone separates the actions.
+
 - Add the `itemHover` palette role (`#f6f9fc` by default) for a light-blue tree, list and table hover that stays lighter than the selection. Saved `theme.json` files without this role are incomplete and restore the built-in palette.
 
 - Hover and select device feature-tree rows as one row with the shared blue selection, without a separate current-cell capsule.

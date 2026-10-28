@@ -4,7 +4,7 @@
 
 /* Libraries use one frame around the list and its compact action strip. */
 QFrame#RuntimePathsListPanel {
-    background: @HOVER@;
+    background: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
 }
@@ -19,7 +19,7 @@ QTreeWidget#RuntimePathEntriesList {
 }
 
 QToolBar#RuntimePathsActionToolBar {
-    background: @HOVER@;
+    background: @SURFACE@;
     border: none;
     border-top: 1px solid @CONTROLBORDER@;
     border-bottom-left-radius: 8px;
