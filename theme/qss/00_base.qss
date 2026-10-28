@@ -369,7 +369,7 @@ QTableView::item:selected {
 
 QWidget#ResourcesItemSelectionSurface {
     qproperty-radius: 12;
-    qproperty-hoverColor: @HOVER@;
+    qproperty-hoverColor: @ITEMHOVER@;
     qproperty-currentColor: @CURRENT@;
     qproperty-focusColor: @FOCUSBORDER@;
 }

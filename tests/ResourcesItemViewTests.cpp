@@ -59,6 +59,7 @@ class ResourcesItemViewTests : public QObject
         QCOMPARE(colors.value("selection"), QColor("#f4f7fb"));
         QCOMPARE(colors.value("pressed"), QColor("#eeeeed"));
         QCOMPARE(colors.value("current"), QColor("#eef3f9"));
+        QCOMPARE(colors.value("itemHover"), QColor("#f6f9fc"));
         QCOMPARE(colors.value("border"), QColor("#d9d9d8"));
         QCOMPARE(colors.value("controlBorder"), QColor("#d9d9d8"));
         QCOMPARE(colors.value("hoverBorder"), QColor("#8eafd1"));
@@ -87,6 +88,35 @@ class ResourcesItemViewTests : public QObject
         const int y = qRound(tree.visualItemRect(row).center().y() * dpr);
         for (int x = qRound(2 * dpr); x < qRound(16 * dpr); ++x)
             QVERIFY2(qGray(image.pixelColor(x, y).rgb()) > 200, "A native selection rail remains outside the row capsule.");
+    }
+    void deviceFeatureTreeHoversAndSelectsWholeRows()
+    {
+        QTreeWidget tree;
+        tree.setProperty("treeRole", "DeviceFeatureTree");
+        tree.setHeaderLabels({"Feature", "Value"});
+        auto* hovered = new QTreeWidgetItem(&tree, {"Exposure", "120"});
+        auto* selected = new QTreeWidgetItem(&tree, {"Gain", "1.25"});
+        tree.resize(360, 150);
+        tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        QCOMPARE(tree.selectionBehavior(), QAbstractItemView::SelectRows);
+        QVERIFY(tree.property("joinedSelectionOnly").toBool());
+        tree.setFocus();
+        // Clicking the Feature cell selects the row without a separate current-cell capsule.
+        QTest::mouseClick(tree.viewport(), Qt::LeftButton, {}, tree.visualRect(tree.indexFromItem(selected, 0)).center());
+        QCOMPARE(tree.selectionModel()->selectedIndexes().size(), 2);
+        movePointer(tree.viewport(), tree.visualRect(tree.indexFromItem(hovered, 1)).center());
+        tree.viewport()->repaint();
+        const auto image = tree.viewport()->grab().toImage();
+        const auto sample = [&](QTreeWidgetItem* item, int column) {
+            const QPoint point = tree.visualRect(tree.indexFromItem(item, column)).center();
+            return image.pixelColor(qRound(point.x() * image.devicePixelRatio()), qRound(point.y() * image.devicePixelRatio()));
+        };
+        const auto colors = Resources::themePalette();
+        for (int column : {0, 1}) {
+            QCOMPARE(sample(selected, column), colors.value("selection"));
+            QCOMPARE(sample(hovered, column), colors.value("itemHover"));
+        }
     }
     void incompleteThemeReloadIsAtomic()
     {

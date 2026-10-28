@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add the `itemHover` palette role (`#f6f9fc` by default) for a light-blue tree, list and table hover that stays lighter than the selection. Saved `theme.json` files without this role are incomplete and restore the built-in palette.
+
+- Hover and select device feature-tree rows as one row with the shared blue selection, without a separate current-cell capsule.
+
 - Preserve toggle hover artwork in shared row-mode tree/table delegates while keeping row backgrounds independently painted.
 
 - Add neutral vertical `plug-connected` and `plug-disconnected` glyphs in 24px and 48px sizes for attach/detach commands.

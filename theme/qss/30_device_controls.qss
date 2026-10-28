@@ -57,7 +57,6 @@ QOneGenDeviceWidget QTabBar QToolButton {
 QTreeWidget[treeRole="DeviceFeatureTree"] {
     background: @SURFACE@;
     alternate-background-color: @SURFACE@;
-    selection-background-color: @HOVER@;
     selection-color: @TEXT@;
     show-decoration-selected: 0;
 }
