@@ -400,7 +400,9 @@ class ResourcesItemViewTests : public QObject
         const QRect indicator = view->style()->subElementRect(
             QStyle::SE_ItemViewItemCheckIndicator, &option, view.get());
         QCOMPARE(indicator.size(), QSize(40, 24));
-        QImage image(400, 40, QImage::Format_ARGB32_Premultiplied);
+        const qreal dpr = view->devicePixelRatioF();
+        QImage image(QSize(400, 40) * dpr, QImage::Format_ARGB32_Premultiplied);
+        image.setDevicePixelRatio(dpr);
         image.fill(Qt::white);
         QPainter painter(&image);
         view->itemDelegate()->paint(&painter, option, index);
@@ -408,12 +410,15 @@ class ResourcesItemViewTests : public QObject
         const QString asset = ":/Resources/icon/switch-outline-"
             + QStringList{"off", "on", "mixed"}[sample % 3]
             + (!enabled ? "-disabled" : hovered ? "-hover" : "") + ".svg";
-        QImage expected(36, 20, QImage::Format_ARGB32_Premultiplied);
-        expected.fill(image.pixelColor(indicator.topLeft() + QPoint(2, 2)));
+        const QRect glyph(indicator.topLeft() + QPoint(2, 2), QSize(36, 20));
+        const QRect pixels(QPoint(qRound(glyph.x() * dpr), qRound(glyph.y() * dpr)), glyph.size() * dpr);
+        QImage expected(image.size(), QImage::Format_ARGB32_Premultiplied);
+        expected.setDevicePixelRatio(dpr);
+        expected.fill(image.pixelColor(pixels.topLeft()));
         QPainter expectedPainter(&expected);
-        expectedPainter.drawPixmap(QPoint(), QIcon(asset).pixmap(QSize(36, 20)));
+        expectedPainter.drawPixmap(glyph.topLeft(), QIcon(asset).pixmap(glyph.size(), dpr));
         expectedPainter.end();
-        QCOMPARE(image.copy(QRect(indicator.topLeft() + QPoint(2, 2), QSize(36, 20))), expected);
+        QCOMPARE(image.copy(pixels), expected.copy(pixels));
     }
     void itemSwitchUsesLeadingEdgeAndMatchingHitRect()
     {

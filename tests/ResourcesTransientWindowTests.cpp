@@ -20,10 +20,12 @@
 #include <QLineEdit>
 #include <QPainter>
 #include <QPushButton>
+#include <QToolButton>
 #include <QRegularExpression>
 #include <QProcess>
 #include <QScreen>
 #include <QSignalSpy>
+#include <QScopeGuard>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
@@ -128,6 +130,13 @@ static QString comboJoinError(const QImage& image, qreal joinY)
     }
     return {};
 }
+
+class InspectableSlider final : public QSlider
+{
+public:
+    using QSlider::QSlider;
+    using QSlider::initStyleOption;
+};
 
 class ResourcesTransientWindowTests : public QObject
 {
@@ -391,6 +400,7 @@ private slots:
         QTest::addColumn<bool>("maximized");
         QTest::newRow("normal") << 720 << false;
         QTest::newRow("narrow") << 520 << false;
+        QTest::newRow("overflow") << 380 << false;
         QTest::newRow("maximized") << 720 << true;
     }
 
@@ -420,6 +430,30 @@ private slots:
         for (auto* menu : menus) {
             const QRect action = bar->actionGeometry(menu->menuAction());
             QVERIFY2(action.height() >= 34, "Main menu target must include comfortable vertical padding");
+            auto* extension = bar->findChild<QToolButton*>("qt_menubar_ext_button");
+            const bool overflowed = extension && extension->isVisible() && extension->menu()
+                && extension->menu()->actions().contains(menu->menuAction());
+            if (overflowed) {
+                // A maximized high-DPI virtual screen can be narrower than the normal test window.
+                // Overflowed commands must remain reachable through Qt's extension menu.
+                QVERIFY(extension);
+                QVERIFY(extension->isVisible());
+                QVERIFY(bar->rect().contains(extension->geometry()));
+                QTest::mouseClick(extension, Qt::LeftButton);
+                auto* overflow = extension->menu();
+                QVERIFY(overflow);
+                QTRY_VERIFY(overflow->isVisible());
+                QVERIFY(overflow->actions().contains(menu->menuAction()));
+                const auto overflowAction = overflow->actionGeometry(menu->menuAction());
+                QVERIFY(overflow->rect().contains(overflowAction));
+                overflow->setActiveAction(menu->menuAction());
+                QTest::keyClick(overflow, Qt::Key_Right);
+                QTRY_VERIFY_WITH_TIMEOUT(menu->isVisible(), 1000);
+                menu->close();
+                overflow->close();
+                QTest::keyClick(bar, Qt::Key_Escape);
+                continue;
+            }
             QVERIFY(bar->rect().contains(action));
             const QImage image = bar->grab().toImage();
             const qreal dpr = image.devicePixelRatio();
@@ -492,7 +526,7 @@ private slots:
         QWidget panel;
         auto* form = new QFormLayout(&panel);
         auto* label = new QLabel(QStringLiteral("Threshold"));
-        auto* slider = new QSlider(Qt::Horizontal);
+        auto* slider = new InspectableSlider(Qt::Horizontal);
         form->addRow(label, slider);
         panel.resize(360, 100);
         panel.show();
@@ -502,17 +536,18 @@ private slots:
             slider->setRange(0, 100);
             slider->setValue(value);
             QStyleOptionSlider option;
-            option.initFrom(slider);
-            option.orientation = Qt::Horizontal;
-            option.minimum = 0;
-            option.maximum = 100;
-            option.sliderPosition = value;
-            option.sliderValue = value;
+            // Use the option used for painting, including State_Horizontal for QSS matching.
+            slider->initStyleOption(&option);
             const QRect groove = slider->style()->subControlRect(QStyle::CC_Slider, &option,
                 QStyle::SC_SliderGroove, slider);
             const QRect handle = slider->style()->subControlRect(QStyle::CC_Slider, &option,
                 QStyle::SC_SliderHandle, slider);
-            QVERIFY(qAbs(groove.center().y() - slider->rect().center().y()) <= 1);
+            QCOMPARE(groove.height(), 4);
+            QVERIFY2(qAbs(groove.center().y() - slider->rect().center().y()) <= 1,
+                qPrintable(QStringLiteral("Slider %1,%2 %3x%4 groove %5,%6 %7x%8 handle %9,%10 %11x%12")
+                    .arg(slider->x()).arg(slider->y()).arg(slider->width()).arg(slider->height())
+                    .arg(groove.x()).arg(groove.y()).arg(groove.width()).arg(groove.height())
+                    .arg(handle.x()).arg(handle.y()).arg(handle.width()).arg(handle.height())));
             QVERIFY(qAbs(handle.center().y() - groove.center().y()) <= 1);
         }
     }
@@ -1109,6 +1144,38 @@ private slots:
         QVERIFY(ownsPopupShell());
     }
 
+    void comboPopupFollowsLivePaletteWithoutReintroducingJoinBorder()
+    {
+        Resources::installResources(*qApp);
+        const auto restorePalette = qScopeGuard([] { Resources::resetThemePalette(); });
+        QCOMPARE(Resources::themePalette().value("focusBorder"), QColor("#15487f"));
+        QWidget owner;
+        owner.resize(320, 120);
+        const auto screen = owner.screen()->availableGeometry();
+        owner.move(screen.topLeft() + QPoint(30, 30));
+        QComboBox combo(&owner);
+        combo.addItems({"First", "Second", "Third"});
+        combo.setGeometry(12, 12, 260, 24);
+        owner.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&owner));
+        combo.showPopup();
+        auto* popup = combo.view()->window();
+        QTRY_VERIFY(popup->isVisible());
+        for (const QColor focus : {QColor("#15487f"), QColor("#356a42")}) {
+            QVERIFY(Resources::setThemePalette({{"focusBorder", focus}}));
+            QCoreApplication::processEvents();
+            QVERIFY(popup->isVisible());
+            const auto shell = popup->grab().toImage();
+            QCOMPARE(shell.pixelColor(0, shell.height() / 2), focus);
+            const auto control = combo.grab().toImage();
+            QCOMPARE(control.pixelColor(0, control.height() / 2), focus);
+            QCOMPARE(control.pixelColor(control.width() / 2, control.height() - 1), QColor(Qt::white));
+        }
+        combo.hidePopup();
+        QTRY_VERIFY(!popup->isVisible());
+        QCOMPARE(combo.property("popupDirection").toString(), QString());
+    }
+
     void comboPopupLifecycle_data()
     {
         QTest::addColumn<bool>("compact");
@@ -1221,11 +1288,38 @@ private slots:
             QVERIFY2(joinError.isEmpty(), qPrintable(joinError));
             if (QGuiApplication::platformName() == QStringLiteral("windows") && !captures.isEmpty() && nativeCapture) {
                 const QPoint captureOrigin = joinBounds.topLeft() - popup->screen()->geometry().topLeft();
-                const QPixmap nativeJoin = popup->screen()->grabWindow(0, captureOrigin.x(), captureOrigin.y(), joinBounds.width(), joinBounds.height());
+                QPixmap nativeJoin;
+                QString nativeJoinError;
+                // The desktop compositor can still show the previous popup after QWidget::grab.
+                // Wait for the same exact join coverage required of the widget raster.
+                const auto captureJoinedDesktop = [&] {
+                    nativeJoin = popup->screen()->grabWindow(0, captureOrigin.x(), captureOrigin.y(), joinBounds.width(), joinBounds.height());
+                    const auto raster = nativeJoin.toImage();
+                    nativeJoinError = comboJoinError(raster, joinY);
+                    if (!nativeJoinError.isEmpty()) return false;
+                    // Dark desktop content must not count as a completed popup border.
+                    const QColor border("#15487f");
+                    const qreal dpr = raster.devicePixelRatio();
+                    for (int y = qFloor((joinY - 2) * dpr); y < qCeil((joinY + 2) * dpr); ++y) {
+                        for (const bool right : {false, true}) {
+                            bool hasBorder = false;
+                            for (int x = 0; x < qCeil(2 * dpr); ++x) {
+                                const auto color = raster.pixelColor(right ? raster.width() - 1 - x : x, y);
+                                hasBorder |= qAbs(color.red() - border.red()) <= 12
+                                    && qAbs(color.green() - border.green()) <= 12
+                                    && qAbs(color.blue() - border.blue()) <= 12;
+                            }
+                            if (!hasBorder) {
+                                nativeJoinError = QStringLiteral("The desktop has not presented the themed join border.");
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                };
+                QTRY_VERIFY2_WITH_TIMEOUT(captureJoinedDesktop(), qPrintable(nativeJoinError), 1000);
                 QVERIFY(nativeJoin.save(QDir(captures).filePath(QStringLiteral("native-join-%1-%2.png")
                     .arg(QString::fromLatin1(QTest::currentDataTag()), above ? "above" : "below"))));
-                const QString nativeJoinError = comboJoinError(nativeJoin.toImage(), joinY);
-                QVERIFY2(nativeJoinError.isEmpty(), qPrintable(nativeJoinError));
             }
             if (!captures.isEmpty() && !editable) {
                 QDir().mkpath(captures);
@@ -1251,7 +1345,7 @@ private slots:
             }
             const QString cornerError = comboCornerError(shell, popup->size(), above);
             QVERIFY2(cornerError.isEmpty(), qPrintable(cornerError));
-            const QColor border(QStringLiteral("#8a8a89"));
+            const QColor border(QStringLiteral("#15487f"));
             const auto isBorder = [&](const QColor& color, qreal coverage = 1) {
                 return qAbs(color.alpha() - qRound(255 * coverage)) <= 8 && qAbs(color.red() - border.red()) <= 12
                     && qAbs(color.green() - border.green()) <= 12
@@ -1326,8 +1420,9 @@ private slots:
             popup->resize(popup->width(), popup->height() + 12);
             QTest::qWait(30);
             QVERIFY(popup->mask().isEmpty());
-            const QString resizedCornerError = comboCornerError(popup->grab().toImage(), popup->size(), above);
-            QVERIFY2(resizedCornerError.isEmpty(), qPrintable(resizedCornerError));
+            QString resizedCornerError;
+            QTRY_VERIFY2_WITH_TIMEOUT((resizedCornerError = comboCornerError(popup->grab().toImage(), popup->size(), above)).isEmpty(),
+                qPrintable(resizedCornerError), 1000);
             combo.hidePopup();
             QCOMPARE(combo.property("popupDirection").toString(), QString());
         }
@@ -1389,7 +1484,7 @@ private slots:
             const auto checkBorder = [](QColor color, qreal coverage) {
                 QVERIFY(qAbs(color.alpha() - qRound(255 * coverage)) <= 2);
                 color.setAlpha(255);
-                const QColor border(QStringLiteral("#8a8a89"));
+                const QColor border(QStringLiteral("#15487f"));
                 // Fractional coverage can round an unpremultiplied channel by one.
                 QVERIFY(qAbs(color.red() - border.red()) <= 1);
                 QVERIFY(qAbs(color.green() - border.green()) <= 1);

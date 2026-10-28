@@ -491,13 +491,14 @@ QTextBrowser:enabled[interactionPressed="true"] {
     border-color: @FOCUSBORDER@;
 }
 
-QComboBox[popupDirection="below"] {
+/* Match the enabled/open rule's specificity so the joined edge stays white. */
+QComboBox:enabled[popupDirection="below"] {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     border-bottom: 1px solid @SURFACE@;
 }
 
-QComboBox[popupDirection="above"] {
+QComboBox:enabled[popupDirection="above"] {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     border-top: 1px solid @SURFACE@;

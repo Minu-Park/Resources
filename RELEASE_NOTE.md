@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep an open combo's connecting edge white over hover, focus and pressed borders; verify the popup and control share the active focus palette color, including live palette changes. Make UI acceptance use native horizontal style options, matching high-DPI rasters, menu-overflow access and completed desktop composition.
+
 - Reject unparsed QSS declarations before installation or atomic reload, exercise platform patch composition independently of the operating system, preserve device tab-scroll buttons' borderless 20px slots, and apply shared metrics to the engine toolbar. Remove unused toolbar-density and borderless-role APIs.
 
 - Centralize palette, widget metrics, source reload and application installation in `ResourcesTheme`; keep the existing namespace API as a stateless host facade and runtime painters as private adapters.
