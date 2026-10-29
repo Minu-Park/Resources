@@ -291,6 +291,7 @@ QWidget#UpdateNotificationActions {
 
 QPushButton#UpdateNotificationLaterButton {
     min-height: 28px;
+    max-height: 28px;
     padding: 2px 12px;
     border: 1px solid @CONTROLBORDER@;
     border-radius: 8px;
@@ -301,6 +302,7 @@ QPushButton#UpdateNotificationLaterButton {
 
 QPushButton#UpdateNotificationUpdateButton {
     min-height: 28px;
+    max-height: 28px;
     padding: 2px 12px;
     border: 1px solid @CONTROLBORDER@;
     border-radius: 8px;
