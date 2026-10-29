@@ -378,6 +378,8 @@ QWidget#ResourcesItemSelectionSurface {
     qproperty-hoverColor: @ITEMHOVER@;
     qproperty-currentColor: @CURRENT@;
     qproperty-focusColor: @FOCUSBORDER@;
+    qproperty-accentColor: @SELECTIONACCENT@;
+    qproperty-emphasisWeight: @WEIGHT_EMPHASIS@;
 }
 
 QTableView QLabel { background: transparent;
@@ -723,6 +725,12 @@ QToolButton {
 }
 
 /* Reusable densities are selected by ResourcesTheme rather than screen-local templates. */
+QToolButton[controlRole="disclosure"] {
+    icon-size: @DISCLOSURE_ICON_SIZE@px;
+    qproperty-iconSize: @DISCLOSURE_ICON_SIZE@px @DISCLOSURE_ICON_SIZE@px;
+    padding: 0;
+}
+
 QToolButton[resourcesDensity="compact"],
 QToolButton#PlotViewActionButton,
 QToolButton[plotActionRole="action"],
@@ -1382,4 +1390,14 @@ QRadioButton[radioPreview="outline"]::indicator:disabled {
 }
 QRadioButton[radioPreview="outline"]::indicator:checked:disabled {
     image: url(:/Resources/icon/radio-outline-on-disabled.svg);
+}
+
+/* Menu-style identities share fill-free hover/selection ink with QMenu. */
+QLabel[itemRole="title"] {
+    color: @TEXT@;
+    font-weight: @WEIGHT_NORMAL@;
+}
+QWidget[itemInkState="active"] QLabel[itemRole="title"] {
+    color: @SELECTIONACCENT@;
+    font-weight: @WEIGHT_EMPHASIS@;
 }

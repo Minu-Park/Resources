@@ -97,10 +97,6 @@ ThemedMainTitleBar::ThemedMainTitleBar(QMainWindow* mainWindow, QMenuBar* menuBa
     _closeButton->setObjectName(QStringLiteral("MainCloseButton"));
     _closeButton->setFocusPolicy(Qt::NoFocus);
 
-    // Main window controls keep their supplied artwork in every interaction state.
-    for (auto* button : {_minButton, _maxButton, _closeButton})
-        button->setProperty("glyphStateTint", false);
-
     buttonLayout->addWidget(_minButton, 0, Qt::AlignVCenter);
     buttonLayout->addWidget(_maxButton, 0, Qt::AlignVCenter);
     buttonLayout->addWidget(_closeButton, 0, Qt::AlignVCenter);

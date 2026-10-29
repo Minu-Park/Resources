@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add shared menu-style identity rows: neutral resting text/icons, blue semibold hover/selection and no row fills. Device feature trees use the same appearance while retaining value editors and check state.
+
+- Enforce monochrome window controls centrally for main, MDI, dialog and dock title bars, including hover, press and runtime icon replacement.
+
+- Give disclosure tool buttons a legible 20px icon slot for the padded arrow artwork and remove the leading action-button inset.
+
 - Keep the Plugins detail heading on `selectionAccent` when dialog typography rules are applied.
 
 - Anchor the graphics-settings tab strip at zero with no margins, avoiding native tab-frame overlap offsets at its edges.

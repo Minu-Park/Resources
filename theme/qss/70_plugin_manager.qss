@@ -64,10 +64,7 @@ QWidget#PluginMarketplaceContent QLabel#PluginMarketplaceCardIcon {
 }
 
 QLabel#PluginMarketplaceCardName {
-    color: @TEXT@;
-
     font-size: @FONT_BODY@px;
-    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QLabel#PluginMarketplaceCardStatus {

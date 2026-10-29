@@ -14,6 +14,7 @@
 #include <QSet>
 #include <QStyledItemDelegate>
 #include <QTableView>
+#include <QLabel>
 
 /** @brief Receives shared surface metrics from QSS without changing the consumer layout. */
 class ResourcesItemSelectionSurface final : public QWidget
@@ -23,6 +24,8 @@ class ResourcesItemSelectionSurface final : public QWidget
     Q_PROPERTY(QColor hoverColor MEMBER hoverColor)
     Q_PROPERTY(QColor currentColor MEMBER currentColor)
     Q_PROPERTY(QColor focusColor MEMBER focusColor)
+    Q_PROPERTY(QColor accentColor MEMBER accentColor)
+    Q_PROPERTY(int emphasisWeight MEMBER emphasisWeight)
   public:
     explicit ResourcesItemSelectionSurface(QWidget *parent) : QWidget(parent)
     {
@@ -33,10 +36,51 @@ class ResourcesItemSelectionSurface final : public QWidget
     QColor hoverColor;
     QColor currentColor;
     QColor focusColor;
+    QColor accentColor;
+    int emphasisWeight = QFont::DemiBold;
 };
 
 namespace
 {
+/** @brief Uses the same neutral-glyph recoloring as QMenu, retaining multicolor artwork. */
+QIcon menuInkIcon(const QIcon& source, const QSize& size, qreal dpr, QStyle* style, bool active)
+{
+    if (!active || source.isNull()) return source;
+    const QPixmap original = source.pixmap(size, dpr, QIcon::Normal);
+    const QPixmap ink = style->generatedIconPixmap(QIcon::Active, original, nullptr);
+    QIcon result(ink);
+    result.addPixmap(ink, QIcon::Active);
+    result.addPixmap(ink, QIcon::Selected);
+    return result;
+}
+
+/** @brief Projects shared row ink onto explicitly marked title/icon labels in index widgets. */
+void syncMenuItemWidget(QWidget* widget, bool active, const QColor& accent)
+{
+    if (!widget) return;
+    const QString state = active ? QStringLiteral("active") : QStringLiteral("normal");
+    const bool changed = widget->property("itemInkState") != state;
+    if (changed) widget->setProperty("itemInkState", state);
+    for (auto* label : widget->findChildren<QLabel*>()) {
+        if (changed && label->property("itemRole") == QStringLiteral("title")) {
+            label->style()->unpolish(label);
+            label->style()->polish(label);
+            label->update();
+        } else if (label->property("itemRole") == QStringLiteral("icon")) {
+            const QIcon source = qvariant_cast<QIcon>(label->property("itemIcon"));
+            const QSize size = label->property("itemIconSize").toSize();
+            const QString key = QStringLiteral("%1:%2:%3:%4:%5x%6")
+                .arg(source.cacheKey()).arg(accent.rgba()).arg(active).arg(label->devicePixelRatioF())
+                .arg(size.width()).arg(size.height());
+            if (label->property("_resourcesMenuIcon") != key) {
+                label->setPixmap(menuInkIcon(source, size, label->devicePixelRatioF(), label->style(), active)
+                                     .pixmap(size, label->devicePixelRatioF()));
+                label->setProperty("_resourcesMenuIcon", key);
+            }
+        }
+    }
+}
+
 /** @brief Adds adjoining selection corners around an existing delegate, preserving its contracts. */
 class ItemSurfaceDelegate final : public QStyledItemDelegate
 {
@@ -77,6 +121,30 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
                                       : bool(option.state & QStyle::State_MouseOver);
         const bool hovered = view_->selectionMode() != QAbstractItemView::NoSelection && mouseOver &&
                              (option.state & QStyle::State_Enabled);
+        if (view_->property("menuItemInk").toBool()) {
+            QStyleOptionViewItem contents(option);
+            initStyleOption(&contents, index);
+            const bool active = (selected || hovered) && (option.state & QStyle::State_Enabled);
+            contents.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver | QStyle::State_HasFocus);
+            contents.features &= ~QStyleOptionViewItem::Alternate;
+            contents.backgroundBrush = Qt::NoBrush;
+            // Only the identity column uses menu ink; values retain diagnostic and editor colors.
+            if (index.column() == 0 && active) {
+                contents.palette.setColor(QPalette::Text, surface_->accentColor);
+                contents.palette.setColor(QPalette::HighlightedText, surface_->accentColor);
+                contents.font.setWeight(QFont::Weight(surface_->emphasisWeight));
+                contents.fontMetrics = QFontMetrics(contents.font);
+                contents.icon = menuInkIcon(contents.icon, contents.decorationSize,
+                                             view_->devicePixelRatioF(), view_->style(), true);
+            }
+            syncMenuItemWidget(view_->indexWidget(index), active, surface_->accentColor);
+            // Identity painting follows QMenu; value delegates and editor contracts remain consumer-owned.
+            if (index.column() == 0)
+                view_->style()->drawControl(QStyle::CE_ItemViewItem, &contents, painter, view_);
+            else
+                source_->paint(painter, contents, index);
+            return;
+        }
         if (selected || hovered)
         {
             const QRect rect = view_->visualRect(index);
@@ -178,7 +246,16 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
     }
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
     {
-        return source_ ? source_->sizeHint(option, index) : QStyledItemDelegate::sizeHint(option, index);
+        QSize hint = source_ ? source_->sizeHint(option, index) : QStyledItemDelegate::sizeHint(option, index);
+        if (view_->property("menuItemInk").toBool() && index.column() == 0) {
+            QStyleOptionViewItem contents(option);
+            initStyleOption(&contents, index);
+            QFont emphasis(contents.font);
+            emphasis.setWeight(QFont::Weight(surface_->emphasisWeight));
+            hint.rwidth() += qMax(0, QFontMetrics(emphasis).horizontalAdvance(contents.text)
+                                      - QFontMetrics(contents.font).horizontalAdvance(contents.text));
+        }
+        return hint;
     }
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
                           const QModelIndex &index) const override
@@ -284,6 +361,7 @@ void Resources::setItemSelectionAppearance(QAbstractItemView *view, ItemSelectio
     if (!view)
         return;
     view->setProperty("joinedSelectionOnly", appearance == ItemSelectionAppearance::JoinedOnly);
+    view->setProperty("menuItemInk", appearance == ItemSelectionAppearance::MenuInk);
     view->viewport()->update();
 }
 

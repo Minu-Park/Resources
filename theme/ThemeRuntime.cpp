@@ -866,6 +866,20 @@ static bool toggleGlyphPreviewSuppressed(QAbstractButton& button)
     return suppressed;
 }
 
+/** @brief Keeps shared window chrome and explicit opt-outs on their supplied neutral artwork. */
+static bool keepsOriginalButtonInk(const QAbstractButton& button)
+{
+    if (button.property("glyphStateTint") == QVariant(false)) return true;
+    for (const QWidget* parent = button.parentWidget(); parent; parent = parent->parentWidget()) {
+        const QString name = parent->objectName();
+        if (name == QStringLiteral("ThemedMainTitleBar")
+            || name == QStringLiteral("ThemedMdiTitleBar")
+            || name == QStringLiteral("ThemedDialogTitleBar")
+            || name == QStringLiteral("ThemedDockTitleBar")) return true;
+    }
+    return false;
+}
+
 /** @brief Paints a button's glyph in hover and pressed palette roles.
  *  Qt selects icon modes only from enabled, focus and auto-raise hover state; a press or open
  *  menu never selects a mode. The engine therefore reads its owning button at paint time.
@@ -909,6 +923,9 @@ public:
     }
     QPixmap scaledPixmap(const QSize& size, QIcon::Mode mode, QIcon::State state, qreal scale) override
     {
+        // Window controls must also bypass Qt's generated Active/Selected menu accent.
+        if (owner_ && keepsOriginalButtonInk(*owner_))
+            return source_.pixmap(size, scale, mode == QIcon::Disabled ? mode : QIcon::Normal, state);
         QIcon::State shown = state;
         const QColor ink = mode == QIcon::Disabled ? QColor() : interactionInk(state, &shown);
         if (!ink.isValid()) return source_.pixmap(size, scale, mode, shown);
@@ -934,7 +951,7 @@ private:
     QColor interactionInk(QIcon::State state, QIcon::State* shown) const
     {
         QAbstractButton* button = owner_.data();
-        if (!button || !button->isEnabled() || button->property("glyphStateTint") == QVariant(false)) return {};
+        if (!button || !button->isEnabled() || keepsOriginalButtonInk(*button)) return {};
         const QMenu* menu = nullptr;
         if (const auto* tool = qobject_cast<const QToolButton*>(button)) menu = tool->menu();
         else if (const auto* push = qobject_cast<const QPushButton*>(button)) menu = push->menu();
@@ -981,9 +998,8 @@ static void adoptButtonGlyphStates(QAbstractButton& button)
     static constexpr char adoptedKey[] = "_resourcesGlyphStateIcon";
     static constexpr char neutralKey[] = "_resourcesGlyphStateNeutral";
     const QIcon icon = button.icon();
-    // `glyphStateTint=false` keeps the supplied artwork and the button's own state styling.
-    const bool optedOut = button.property("glyphStateTint") == QVariant(false);
-    if (!optedOut && !icon.isNull() && button.property(adoptedKey) != QVariant(icon.cacheKey())) {
+    const bool optedOut = keepsOriginalButtonInk(button);
+    if (!icon.isNull() && button.property(adoptedKey) != QVariant(icon.cacheKey())) {
         const QSize size = button.iconSize().isValid() ? button.iconSize() : QSize(16, 16);
         const QColor text = Resources::ResourcesTheme::instance().themePalette().value(QStringLiteral("text"));
         const bool neutral = isNeutralGlyph(icon.pixmap(size, button.devicePixelRatio()), text);
@@ -1690,10 +1706,9 @@ private:
         tree->setAlternatingRowColors(false);
         tree->setUniformRowHeights(false);
         tree->setIndentation(18);
-        // Feature rows select as one row; omit the current-cell capsule so the Feature
-        // cell is not emphasized separately from its value editor.
+        // Feature rows retain row selection while their identity uses fill-free menu ink.
         tree->setSelectionBehavior(QAbstractItemView::SelectRows);
-        Resources::setItemSelectionAppearance(tree, Resources::ItemSelectionAppearance::JoinedOnly);
+        Resources::setItemSelectionAppearance(tree, Resources::ItemSelectionAppearance::MenuInk);
         tree->setItemDelegate(new DeviceFeatureTreeDelegate(tree));
 
         QHeaderView* header = tree->header();
