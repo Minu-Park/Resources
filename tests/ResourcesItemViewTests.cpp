@@ -187,6 +187,37 @@ class ResourcesItemViewTests : public QObject
         QCOMPARE(title->font().weight(), QFont::Normal);
         QCOMPARE(icon->pixmap().toImage(), originalIcon);
     }
+    void menuInkPreservesCheckIndicatorAndClickTarget()
+    {
+        ThemedTreeWidget tree;
+        tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Row);
+        Resources::setItemSelectionAppearance(&tree, Resources::ItemSelectionAppearance::MenuInk);
+        tree.setHeaderHidden(true);
+        tree.setRootIsDecorated(false);
+        auto* item = new QTreeWidgetItem(&tree, {"Producer.cti"});
+        item->setCheckState(0, Qt::Unchecked);
+        tree.resize(360, 160);
+        tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        const QModelIndex index = tree.model()->index(0, 0);
+        struct Probe : QStyledItemDelegate { using QStyledItemDelegate::initStyleOption; } probe;
+        QStyleOptionViewItem option;
+        option.initFrom(&tree);
+        option.rect = tree.visualRect(index);
+        probe.initStyleOption(&option, index);
+        const QRect indicator = tree.style()->subElementRect(QStyle::SE_ItemViewItemCheckIndicator, &option, &tree);
+        QCOMPARE(indicator.size(), QSize(40, 24));
+        movePointer(tree.viewport(), indicator.center());
+        const qreal dpr = tree.devicePixelRatioF();
+        const QRect pixels(QPoint(indicator.topLeft() * dpr), QSize(indicator.size() * dpr));
+        const QImage unchecked = tree.viewport()->grab().toImage().copy(pixels);
+        QTest::mouseClick(tree.viewport(), Qt::LeftButton, Qt::NoModifier, indicator.center());
+        QCOMPARE(item->checkState(0), Qt::Checked);
+        QVERIFY(tree.viewport()->grab().toImage().copy(pixels) != unchecked);
+        QTest::mouseClick(tree.viewport(), Qt::LeftButton, Qt::NoModifier, indicator.center());
+        QCOMPARE(item->checkState(0), Qt::Unchecked);
+        QCOMPARE(tree.viewport()->grab().toImage().copy(pixels), unchecked);
+    }
     void menuInkPreservesValueDelegateAndEditorContract()
     {
         QTreeWidget tree;
