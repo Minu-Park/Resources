@@ -12,6 +12,7 @@
 #include <QHash>
 #include <QSet>
 #include <QPalette>
+#include <QPixmapCache>
 #include <QRegularExpression>
 #include <QSaveFile>
 #include <QStyle>
@@ -278,6 +279,8 @@ bool ResourcesTheme::setThemePalette(const ThemePalette& colors)
     }
     if (candidate == palette_) return true;
     palette_ = candidate;
+    // Qt caches generated Active-mode icon pixmaps without the palette in their keys.
+    QPixmapCache::clear();
     applyInstalledStyleSheet();
     // Existing popups and custom-painted chrome may not receive another style event until shown.
     refreshWidgets();

@@ -761,6 +761,18 @@ QToolButton:disabled {
     border-color: transparent;
 }
 
+/* Icon-only neutral glyphs show hover, focus, press and checked state by glyph color. */
+QToolButton[resourcesGlyphButton="true"]:enabled:hover,
+QToolButton[resourcesGlyphButton="true"]:enabled:focus,
+QToolButton[resourcesGlyphButton="true"]:enabled:pressed,
+QToolButton[resourcesGlyphButton="true"]:enabled:checked,
+QPushButton[resourcesGlyphButton="true"]:enabled:hover,
+QPushButton[resourcesGlyphButton="true"]:enabled:focus,
+QPushButton[resourcesGlyphButton="true"]:enabled:pressed,
+QPushButton[resourcesGlyphButton="true"]:enabled:checked {
+    border-color: transparent;
+}
+
 QCheckBox,
 QRadioButton {
     color: @TEXT@;
@@ -958,17 +970,22 @@ QMenu::item {
     border-radius: 12px;
 }
 
+/* Icon, check and radio rows share the 16px small-icon content height and one row pitch. */
 QMenu[resourcesMenuHasLeadingColumn="true"]::item {
     padding-left: 16px;
+    min-height: 16px;
 }
 
 QMenu::icon {
     padding-left: 22px;
 }
 
+/* Menu hover recolors the row text and its neutral glyph and emphasizes the label; it paints no fill.
+ * The theme runtime reserves the emphasized label width, so hover never clips or resizes a row. */
 QMenu::item:selected {
-    background-color: @ITEMHOVER@;
-    color: @TEXT@;
+    background-color: transparent;
+    color: @SELECTIONACCENT@;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 
 QMenu::item:disabled {
@@ -985,12 +1002,29 @@ QMenu::indicator {
     image: none;
 }
 
+/* Nonexclusive actions use checkbox glyphs drawn like the menu icons; hover follows the row accent. */
+QMenu::indicator:non-exclusive:unchecked {
+    image: url(:/Resources/icon/checkbox-unchecked.svg);
+}
+
+QMenu::indicator:non-exclusive:unchecked:selected {
+    image: url(:/Resources/icon/checkbox-unchecked-hover.svg);
+}
+
 QMenu::indicator:non-exclusive:checked {
-    image: url(:/Resources/icon/done-48.png);
+    image: url(:/Resources/icon/checkbox-checked.svg);
+}
+
+QMenu::indicator:non-exclusive:checked:selected {
+    image: url(:/Resources/icon/checkbox-checked-hover.svg);
+}
+
+QMenu::indicator:non-exclusive:unchecked:disabled {
+    image: url(:/Resources/icon/checkbox-unchecked-disabled.svg);
 }
 
 QMenu::indicator:non-exclusive:checked:disabled {
-    image: url(:/Resources/icon/done-48.png);
+    image: url(:/Resources/icon/checkbox-checked-disabled.svg);
 }
 
 QMenu::indicator:exclusive {
@@ -1000,19 +1034,28 @@ QMenu::indicator:exclusive {
     padding: 0;
     border: none;
     background: transparent;
-    image: url(:/Resources/icon/round-48.png);
+    image: url(:/Resources/icon/radio-unchecked.svg);
+}
+
+/* Exclusive actions use radio glyphs in the same weight, size and state colors as the checkboxes. */
+QMenu::indicator:exclusive:unchecked:selected {
+    image: url(:/Resources/icon/radio-unchecked-hover.svg);
 }
 
 QMenu::indicator:exclusive:checked {
-    image: url(:/Resources/icon/unchecked-radio-button-48.png);
+    image: url(:/Resources/icon/radio-checked.svg);
+}
+
+QMenu::indicator:exclusive:checked:selected {
+    image: url(:/Resources/icon/radio-checked-hover.svg);
 }
 
 QMenu::indicator:exclusive:disabled {
-    image: url(:/Resources/icon/radio-empty-disabled.svg);
+    image: url(:/Resources/icon/radio-unchecked-disabled.svg);
 }
 
 QMenu::indicator:exclusive:checked:disabled {
-    image: url(:/Resources/icon/radio-selected-disabled.svg);
+    image: url(:/Resources/icon/radio-checked-disabled.svg);
 }/* Qt only queries the common check slot when this menu contains checkable actions. */
 QMenu::indicator:!exclusive:!non-exclusive {
     width: 18px;

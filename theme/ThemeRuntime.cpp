@@ -10,6 +10,10 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QIcon>
+#include <QIconEngine>
+#include <QImage>
+#include <QPixmapCache>
+#include <QAbstractButton>
 #include <QStringList>
 #include <QTextStream>
 #include <QFontDatabase>
@@ -21,6 +25,7 @@
 #include <QGridLayout>
 #include <QFormLayout>
 #include <QFontMetrics>
+#include <QKeySequence>
 #include <QGraphicsDropShadowEffect>
 #include <QComboBox>
 #include <QLabel>
@@ -754,6 +759,185 @@ public:
     }
 };
 
+/** @brief Returns whether every visible pixel uses the neutral glyph ink or the active text role. */
+static bool isNeutralGlyph(const QPixmap& pixmap, const QColor& text)
+{
+    const QImage image = pixmap.toImage().convertToFormat(QImage::Format_ARGB32);
+    const QColor assetInk(0x3c, 0x3c, 0x3b);
+    const auto near = [](QRgb pixel, const QColor& ink) {
+        return qAbs(qRed(pixel) - ink.red()) <= 40 && qAbs(qGreen(pixel) - ink.green()) <= 40
+            && qAbs(qBlue(pixel) - ink.blue()) <= 40;
+    };
+    bool visible = false;
+    for (int y = 0; y < image.height(); ++y) {
+        const auto* row = reinterpret_cast<const QRgb*>(image.constScanLine(y));
+        for (int x = 0; x < image.width(); ++x) {
+            // Faint antialiasing edges carry little reliable color; their alpha still follows the glyph.
+            if (qAlpha(row[x]) < 32) continue;
+            if (!near(row[x], assetInk) && !near(row[x], text)) return false;
+            visible = true;
+        }
+    }
+    return visible;
+}
+
+/** @brief Recolors neutral glyph artwork with an interaction role, leaving other artwork unchanged. */
+static QPixmap tintedGlyph(const QPixmap& base, const QColor& ink, const QColor& text)
+{
+    if (base.isNull()) return base;
+    const QString key = QStringLiteral("resources-glyph-state:%1:%2:%3")
+        .arg(base.cacheKey()).arg(ink.rgb(), 0, 16).arg(text.rgb(), 0, 16);
+    QPixmap result;
+    if (QPixmapCache::find(key, &result)) return result;
+    result = base;
+    if (isNeutralGlyph(base, text)) {
+        QImage image = base.toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied);
+        image.setDevicePixelRatio(1.0);
+        QPainter painter(&image);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(image.rect(), ink);
+        painter.end();
+        result = QPixmap::fromImage(std::move(image));
+        result.setDevicePixelRatio(base.devicePixelRatio());
+    }
+    QPixmapCache::insert(key, result);
+    return result;
+}
+
+/** @brief Recolors generated Active-mode glyphs, which Qt requests for hovered menu rows.
+ *  Qt derives a missing Active pixmap through the application style, so menu actions keep
+ *  their consumer-owned icons. Non-neutral artwork and other modes keep the base behavior.
+ */
+class ResourcesIconStateStyle final : public QProxyStyle
+{
+public:
+    using QProxyStyle::QProxyStyle;
+
+    QPixmap generatedIconPixmap(QIcon::Mode mode, const QPixmap& pixmap, const QStyleOption* option) const override
+    {
+        if (mode != QIcon::Active) return QProxyStyle::generatedIconPixmap(mode, pixmap, option);
+        const auto palette = Resources::ResourcesTheme::instance().themePalette();
+        return tintedGlyph(pixmap, palette.value(QStringLiteral("selectionAccent")),
+                           palette.value(QStringLiteral("text")));
+    }
+};
+
+/** @brief Paints a button's glyph in hover and pressed palette roles.
+ *  Qt selects icon modes only from enabled, focus and auto-raise hover state; a press or open
+ *  menu never selects a mode. The engine therefore reads its owning button at paint time.
+ *  Disabled rendering and non-neutral artwork remain the source icon's own.
+ */
+class ButtonGlyphStateEngine final : public QIconEngine
+{
+public:
+    ButtonGlyphStateEngine(const QIcon& source, QAbstractButton* owner) : source_(source), owner_(owner) {}
+
+    QIconEngine* clone() const override { return new ButtonGlyphStateEngine(source_, owner_); }
+    QString key() const override { return QStringLiteral("ResourcesButtonGlyphState"); }
+    QString iconName() override { return source_.name(); }
+    bool isNull() override { return source_.isNull(); }
+    QSize actualSize(const QSize& size, QIcon::Mode mode, QIcon::State state) override
+    {
+        return source_.actualSize(size, mode, state);
+    }
+    QList<QSize> availableSizes(QIcon::Mode mode, QIcon::State state) override
+    {
+        return source_.availableSizes(mode, state);
+    }
+    void addPixmap(const QPixmap& pixmap, QIcon::Mode mode, QIcon::State state) override
+    {
+        source_.addPixmap(pixmap, mode, state);
+    }
+    void addFile(const QString& fileName, const QSize& size, QIcon::Mode mode, QIcon::State state) override
+    {
+        source_.addFile(fileName, size, mode, state);
+    }
+    QPixmap pixmap(const QSize& size, QIcon::Mode mode, QIcon::State state) override
+    {
+        return scaledPixmap(size, mode, state, 1.0);
+    }
+    QPixmap scaledPixmap(const QSize& size, QIcon::Mode mode, QIcon::State state, qreal scale) override
+    {
+        const QColor ink = mode == QIcon::Disabled ? QColor() : interactionInk(state);
+        if (!ink.isValid()) return source_.pixmap(size, scale, mode, state);
+        const QColor text = Resources::ResourcesTheme::instance().themePalette().value(QStringLiteral("text"));
+        return tintedGlyph(source_.pixmap(size, scale, QIcon::Normal, state), ink, text);
+    }
+    void paint(QPainter* painter, const QRect& rect, QIcon::Mode mode, QIcon::State state) override
+    {
+        const qreal scale = painter->device() ? painter->device()->devicePixelRatio() : qApp->devicePixelRatio();
+        const QPixmap pixmap = scaledPixmap(rect.size(), mode, state, scale);
+        QRect target(QPoint(), pixmap.deviceIndependentSize().toSize());
+        target.moveCenter(rect.center());
+        painter->drawPixmap(target, pixmap);
+    }
+
+private:
+    /** @brief Mirrors the button state outline: press, open menu or checked wins over hover/focus.
+     *  Checked follows the requested icon state so an Off-state query keeps the supplied artwork.
+     */
+    QColor interactionInk(QIcon::State state) const
+    {
+        const QAbstractButton* button = owner_.data();
+        if (!button || !button->isEnabled() || button->property("glyphStateTint") == QVariant(false)) return {};
+        const QMenu* menu = nullptr;
+        if (const auto* tool = qobject_cast<const QToolButton*>(button)) menu = tool->menu();
+        else if (const auto* push = qobject_cast<const QPushButton*>(button)) menu = push->menu();
+        const auto palette = Resources::ResourcesTheme::instance().themePalette();
+        if (button->isDown() || (menu && menu->isVisible())
+            || (state == QIcon::On && button->isCheckable() && button->isChecked()))
+            return palette.value(QStringLiteral("focusBorder"));
+        if (button->underMouse() || button->hasFocus()) return palette.value(QStringLiteral("hoverBorder"));
+        return {};
+    }
+
+    QIcon source_;
+    QPointer<QAbstractButton> owner_;
+};
+
+/** @brief Returns whether a tool or push button shows its icon without visible text. */
+static bool showsIconOnly(const QAbstractButton& button)
+{
+    if (const auto* tool = qobject_cast<const QToolButton*>(&button)) {
+        const auto style = tool->toolButtonStyle();
+        if (style == Qt::ToolButtonTextOnly) return false;
+        return style == Qt::ToolButtonIconOnly || style == Qt::ToolButtonFollowStyle || tool->text().isEmpty();
+    }
+    return button.text().isEmpty();
+}
+
+/** @brief Gives a tool or push button's current icon glyph states once per icon value.
+ *  `resourcesGlyphButton` marks icon-only neutral glyphs, whose state is shown by glyph color
+ *  instead of an outline. Icon, text and style changes are re-evaluated on the next paint.
+ */
+static void adoptButtonGlyphStates(QAbstractButton& button)
+{
+    static constexpr char adoptedKey[] = "_resourcesGlyphStateIcon";
+    static constexpr char neutralKey[] = "_resourcesGlyphStateNeutral";
+    const QIcon icon = button.icon();
+    // `glyphStateTint=false` keeps the supplied artwork and the button's own state styling.
+    const bool optedOut = button.property("glyphStateTint") == QVariant(false);
+    if (!optedOut && !icon.isNull() && button.property(adoptedKey) != QVariant(icon.cacheKey())) {
+        const QSize size = button.iconSize().isValid() ? button.iconSize() : QSize(16, 16);
+        const QColor text = Resources::ResourcesTheme::instance().themePalette().value(QStringLiteral("text"));
+        const bool neutral = isNeutralGlyph(icon.pixmap(size, button.devicePixelRatio()), text);
+        button.setIcon(QIcon(new ButtonGlyphStateEngine(icon, &button)));
+        button.setProperty(adoptedKey, button.icon().cacheKey());
+        button.setProperty(neutralKey, neutral);
+    }
+    const bool glyphButton = !optedOut && !icon.isNull() && button.property(neutralKey).toBool()
+        && showsIconOnly(button);
+    if (button.property("resourcesGlyphButton") != QVariant(glyphButton)) {
+        button.setProperty("resourcesGlyphButton", glyphButton);
+        if (button.testAttribute(Qt::WA_WState_Polished)) {
+            button.style()->unpolish(&button);
+            button.style()->polish(&button);
+            // A direct repolish sends no StyleChange; the dropped outline changes the size hint.
+            button.updateGeometry();
+        }
+    }
+}
+
 class ResourceStyleFilter : public QObject
 {
 public:
@@ -828,6 +1012,10 @@ protected:
                     }
                 }
             }
+            // Runtime icon replacement is admitted at the next paint, before the button draws it.
+            if (auto* button = qobject_cast<QAbstractButton*>(obj);
+                button && (qobject_cast<QToolButton*>(button) || qobject_cast<QPushButton*>(button)))
+                adoptButtonGlyphStates(*button);
         }
         if (event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::ApplicationDeactivate
             || (obj == pressedInput_ && (event->type() == QEvent::Hide || event->type() == QEvent::EnabledChange))) {
@@ -1168,10 +1356,66 @@ private:
         menu->move(position);
     }
 
+    /** @brief Reserves the semibold hover label width, so hovering never clips or resizes a row.
+     *  Qt sizes every row with its normal-state font, while QSS paints the selected row with
+     *  `WEIGHT_EMPHASIS`. The reservation runs before each popup sizes its rows; a consumer's
+     *  own minimum width is retained.
+     */
+    static void reserveMenuSelectionWidth(QMenu* menu)
+    {
+        static constexpr char baseKey[] = "_resourcesMenuBaseMinimumWidth";
+        static constexpr char reservedKey[] = "_resourcesMenuReservedMinimumWidth";
+        int base = menu->minimumWidth();
+        if (menu->property(reservedKey) == QVariant(base)) base = menu->property(baseKey).toInt();
+        const auto width = [](const QFontMetrics& metrics, const QString& text) {
+            return metrics.boundingRect(QRect(), Qt::TextSingleLine | Qt::TextShowMnemonic, text).width();
+        };
+        int labelExtra = 0;
+        int shortcutExtra = 0;
+        for (QAction* action : menu->actions()) {
+            if (!action->isVisible() || action->isSeparator()) continue;
+            const QFont normal = action->font().resolve(menu->font());
+            QFont emphasis = normal;
+            emphasis.setWeight(QFont::Weight(presentationMetric("WEIGHT_EMPHASIS")));
+            const QFontMetrics normalMetrics(normal);
+            const QFontMetrics emphasisMetrics(emphasis);
+            QString label = action->text();
+            QString shortcut;
+            if (const auto tab = label.indexOf(u'\t'); tab >= 0) {
+                shortcut = label.mid(tab + 1);
+                label.truncate(tab);
+            } else if (!action->shortcut().isEmpty()) {
+                shortcut = action->shortcut().toString(QKeySequence::NativeText);
+            }
+            labelExtra = qMax(labelExtra, width(emphasisMetrics, label) - width(normalMetrics, label));
+            if (!shortcut.isEmpty())
+                shortcutExtra = qMax(shortcutExtra, emphasisMetrics.horizontalAdvance(shortcut)
+                                                        - normalMetrics.horizontalAdvance(shortcut));
+        }
+        // QMenu recomputes cached row geometry, which reads minimumWidth(), only after a font,
+        // style or action change; a font-change notification requests exactly that.
+        const auto invalidateRows = [menu] {
+            QEvent change(QEvent::FontChange);
+            QCoreApplication::sendEvent(menu, &change);
+        };
+        menu->setMinimumWidth(base);
+        invalidateRows();
+        const int extra = labelExtra + shortcutExtra;
+        const int reserved = extra > 0 ? qMax(base, menu->sizeHint().width() + extra) : base;
+        menu->setMinimumWidth(reserved);
+        invalidateRows();
+        menu->setProperty(baseKey, base);
+        menu->setProperty(reservedKey, reserved);
+    }
+
     /** @brief Gives the single QSS shell a bounded Resources-owned shadow across native-style polish. */
     static void prepareMenuPopup(QMenu* menu)
     {
         prepareMenuCheckIndicators(menu);
+        if (!menu->property("_resourcesMenuSelectionWidth").toBool()) {
+            menu->setProperty("_resourcesMenuSelectionWidth", true);
+            QObject::connect(menu, &QMenu::aboutToShow, menu, [menu] { reserveMenuSelectionWidth(menu); });
+        }
         const auto flags = menu->windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint;
         const QRect geometry = menu->geometry();
         const bool visible = menu->isVisible();
@@ -1703,6 +1947,8 @@ QObject* installThemeRuntime(QApplication& app, QObject* owner)
         app.setStyle(nativeStyle);
     }
 #endif
+    // The proxy adopts the current style; QApplication deletes only styles it parents itself.
+    app.setStyle(new ResourcesIconStateStyle(app.style()));
     auto* filter = new ResourceStyleFilter(owner);
     app.installEventFilter(filter);
     return filter;

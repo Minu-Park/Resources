@@ -24,6 +24,8 @@
 #include <QRegularExpression>
 #include <QProcess>
 #include <QScreen>
+#include <QHash>
+#include <QSet>
 #include <QSignalSpy>
 #include <QScopeGuard>
 #include <QSpinBox>
@@ -158,17 +160,20 @@ private slots:
         }
     }
 
-    void menuHoverUsesItemHoverCapsule()
+    void menuHoverRecolorsTextAndIconWithoutFill()
     {
         Resources::installResources(*qApp);
         const auto palette = Resources::themePalette();
         const auto restore = qScopeGuard([&] { Resources::setThemePalette(palette); });
-        const QColor hover("#65c89b");
-        QVERIFY(Resources::setThemePalette({{"itemHover", hover}, {"selection", QColor("#e05b70")}}));
+        const QColor accent("#c0392b");
+        const QColor itemHover("#65c89b");
+        const QColor selection("#e05b70");
+        QVERIFY(Resources::setThemePalette({{"selectionAccent", accent}, {"itemHover", itemHover}, {"selection", selection}}));
         QMenu menu;
-        menu.addAction("Open sample");
-        auto* action = menu.addAction("Export image");
+        auto* idle = menu.addAction(QIcon(QStringLiteral(":/Resources/icon/folder-48.png")), "Open sample");
+        auto* action = menu.addAction(QIcon(QStringLiteral(":/Resources/icon/save-48.png")), "Export image");
         menu.addAction("Unavailable action")->setEnabled(false);
+        const qint64 iconKey = action->icon().cacheKey();
         menu.setMinimumWidth(280);
         menu.popup(QPoint(60, 60));
         QTRY_VERIFY(menu.isVisible());
@@ -176,26 +181,112 @@ private slots:
         QApplication::processEvents();
         const QImage image = menu.grab().toImage();
         const qreal dpr = image.devicePixelRatio();
-        QRect fill;
-        for (int y = 0; y < image.height(); ++y) {
-            for (int x = 0; x < image.width(); ++x) {
-                if (image.pixelColor(x, y) == hover) fill |= QRect(x, y, 1, 1);
-            }
-        }
-        QVERIFY2(!fill.isEmpty(), "Menu hover did not consume the live itemHover palette role.");
-        QVERIFY(fill.height() >= qFloor(23 * dpr));
-        const auto pixel = [&](qreal x, qreal y) {
-            return image.pixelColor(fill.left() + qRound(x * dpr), fill.top() + qRound(y * dpr));
+        const auto rowPixels = [&](QAction* row) {
+            const QRect logical = menu.actionGeometry(row);
+            const QRect rect(qRound(logical.x() * dpr), qRound(logical.y() * dpr),
+                             qRound(logical.width() * dpr), qRound(logical.height() * dpr));
+            QHash<QRgb, int> counts;
+            for (int y = rect.top(); y <= rect.bottom(); ++y)
+                for (int x = rect.left(); x <= rect.right(); ++x) counts[image.pixel(x, y) & 0xffffff]++;
+            return counts;
         };
-        QVERIFY2(pixel(2, 2) != hover, "Menu hover retained a small corner or square body.");
-        QCOMPARE(pixel(5, 5), hover);
-        QCOMPARE(image.pixelColor(fill.left(), fill.center().y()), hover);
-        QCOMPARE(image.pixelColor(fill.right(), fill.center().y()), hover);
-        QCOMPARE(image.pixelColor(fill.center().x(), fill.top()), hover);
-        QCOMPARE(image.pixelColor(fill.center().x(), fill.bottom()), hover);
+        const auto hovered = rowPixels(action);
+        QVERIFY2(!hovered.contains(itemHover.rgb() & 0xffffff) && !hovered.contains(selection.rgb() & 0xffffff),
+                 "Menu hover painted a row fill.");
+        // The neutral glyph's opaque pixels take the accent exactly; text is antialiased toward it.
+        QVERIFY2(hovered.value(accent.rgb() & 0xffffff) > 0, "Menu hover did not recolor the row glyph.");
+        QCOMPARE(rowPixels(idle).value(accent.rgb() & 0xffffff), 0);
+        QCOMPARE(action->icon().cacheKey(), iconKey);
         menu.close();
     }
 
+    void menuHoverEmphasizesLabelWithinReservedWidth()
+    {
+        Resources::installResources(*qApp);
+        const auto palette = Resources::themePalette();
+        const auto restore = qScopeGuard([&] { Resources::setThemePalette(palette); });
+        const QColor accent("#c0392b");
+        QVERIFY(Resources::setThemePalette({{"selectionAccent", accent}}));
+        QMenu menu;
+        auto* brief = menu.addAction(QStringLiteral("Open"));
+        auto* widest = menu.addAction(QStringLiteral("Export the complete diagnostic support bundle"));
+        menu.popup(QPoint(60, 60));
+        QTRY_VERIFY(menu.isVisible());
+        menu.setActiveAction(nullptr);
+        QApplication::processEvents();
+        const QSize idleSize = menu.size();
+        const QColor surface = Resources::themePalette().value(QStringLiteral("surface"));
+        // Ink spans the row's text: pixels that differ clearly from the row surface.
+        const auto ink = [&](const QImage& image, QAction* action) {
+            const qreal dpr = image.devicePixelRatio();
+            const QRect row = menu.actionGeometry(action);
+            QRect result;
+            for (int y = qCeil(row.top() * dpr) + 2; y < qFloor((row.bottom() + 1) * dpr) - 2; ++y)
+                for (int x = qCeil((row.left() + 6) * dpr); x < qFloor((row.right() - 4) * dpr); ++x) {
+                    const QColor pixel = image.pixelColor(x, y);
+                    if (pixel.alpha() > 128 && qAbs(qGray(pixel.rgb()) - qGray(surface.rgb())) > 60)
+                        result = result.united(QRect(x, y, 1, 1));
+                }
+            return result;
+        };
+        const QImage idle = menu.grab().toImage();
+        const QRect idleInk = ink(idle, widest);
+        QVERIFY(!idleInk.isEmpty());
+        menu.setActiveAction(widest);
+        QApplication::processEvents();
+        const QImage hovered = menu.grab().toImage();
+        const qreal dpr = hovered.devicePixelRatio();
+        const QRect hoveredInk = ink(hovered, widest);
+        QCOMPARE(menu.size(), idleSize);
+        QVERIFY2(hoveredInk.width() >= idleInk.width() + qRound(2 * dpr),
+                 qPrintable(QStringLiteral("Hover label is not emphasized: %1 -> %2 device px")
+                                .arg(idleInk.width()).arg(hoveredInk.width())));
+        // The row keeps its margin, border and right padding (4 + 1 + 7 px) clear of the label.
+        const QRect row = menu.actionGeometry(widest);
+        QVERIFY2(hoveredInk.right() <= qCeil((row.right() + 1 - 12) * dpr),
+                 qPrintable(QStringLiteral("Emphasized label reaches x=%1, padding starts at %2")
+                                .arg(hoveredInk.right()).arg(qCeil((row.right() + 1 - 12) * dpr))));
+        QCOMPARE(ink(hovered, brief).width(), ink(idle, brief).width());
+        // Reopening reuses the consumer minimum rather than accumulating reservations.
+        const int reserved = menu.minimumWidth();
+        menu.close();
+        menu.popup(QPoint(60, 60));
+        QTRY_VERIFY(menu.isVisible());
+        QCOMPARE(menu.minimumWidth(), reserved);
+        QCOMPARE(menu.size(), idleSize);
+        menu.close();
+    }
+    void statusMenuBubbleLabelFollowsOpenState()
+    {
+        Resources::installResources(*qApp);
+        const auto palette = Resources::themePalette();
+        const auto restore = qScopeGuard([&] { Resources::setThemePalette(palette); });
+        const QColor accent("#c0392b");
+        QVERIFY(Resources::setThemePalette({{"selectionAccent", accent}}));
+        QToolButton bubble;
+        bubble.setProperty("controlRole", "statusBubble");
+        bubble.setProperty("statusBubbleVariant", "menu");
+        bubble.setToolButtonStyle(Qt::ToolButtonTextOnly);
+        bubble.setText(QStringLiteral("Mono 8"));
+        bubble.resize(96, 24);
+        bubble.show();
+        QApplication::processEvents();
+        const auto accentInk = [&] {
+            const QImage image = bubble.grab().toImage();
+            int count = 0;
+            for (int y = 4; y < image.height() - 4; ++y)
+                for (int x = 4; x < image.width() - 4; ++x) {
+                    const QColor pixel = image.pixelColor(x, y);
+                    count += pixel.red() > 150 && pixel.green() < 120 && pixel.blue() < 120;
+                }
+            return count;
+        };
+        QCOMPARE(accentInk(), 0);
+        bubble.setDown(true);
+        QApplication::processEvents();
+        QVERIFY2(accentInk() > 0, "An open status menu bubble kept its rest label color.");
+        bubble.setDown(false);
+    }
     void menuShellCorners_data()
     {
         QTest::addColumn<bool>("rtl");
@@ -349,6 +440,23 @@ private slots:
         QVERIFY(!action->isIconVisibleInMenu());
         QCOMPARE(action->icon().cacheKey(), key);
         QVERIFY(command->isIconVisibleInMenu());
+        // Both states draw a neutral checkbox glyph in the indicator slot; checked adds the mark.
+        auto* unchecked = menu.addAction(QStringLiteral("Unchecked action"));
+        unchecked->setCheckable(true);
+        QApplication::processEvents();
+        const auto indicatorInk = [&menu](QAction* row) {
+            const QImage image = menu.grab().toImage();
+            const qreal dpr = image.devicePixelRatio();
+            const QRect logical = menu.actionGeometry(row);
+            int ink = 0;
+            for (int y = qRound(logical.top() * dpr); y <= qRound(logical.bottom() * dpr); ++y)
+                for (int x = qRound(logical.left() * dpr); x < qRound((logical.left() + 40) * dpr); ++x)
+                    ink += qGray(image.pixel(x, y)) < 150;
+            return ink;
+        };
+        const int uncheckedInk = indicatorInk(unchecked);
+        QVERIFY2(uncheckedInk > 0, "Unchecked menu action lacks its checkbox glyph.");
+        QVERIFY2(indicatorInk(action) > uncheckedInk, "Checked menu action lacks its check mark.");
         QSignalSpy triggered(action, &QAction::triggered);
         menu.setActiveAction(action);
         QTest::keyClick(&menu, Qt::Key_Return);
@@ -381,10 +489,28 @@ private slots:
             group.addAction(action);
         }
         image->setChecked(true);
+        const auto palette = Resources::themePalette();
+        const auto restore = qScopeGuard([&] { Resources::setThemePalette(palette); });
+        const QColor hover("#65c89b");
+        QVERIFY(Resources::setThemePalette({{"hover", hover}, {"itemHover", hover}, {"selection", hover}}));
         menu.popup(QPoint(60, 60));
         QTRY_VERIFY(menu.isVisible());
         QVERIFY(image->isIconVisibleInMenu());
         QVERIFY(surface->isIconVisibleInMenu());
+        // The current mode follows ordinary menu rows: neither checked nor hovered rows paint a fill.
+        for (QAction* active : {static_cast<QAction*>(nullptr), surface}) {
+            menu.setActiveAction(active);
+            QApplication::processEvents();
+            const QImage rows = menu.grab().toImage();
+            const qreal dpr = rows.devicePixelRatio();
+            for (QAction* row : {image, surface}) {
+                const QRect logical = menu.actionGeometry(row);
+                for (int y = qCeil(logical.top() * dpr); y < qFloor((logical.bottom() + 1) * dpr); ++y)
+                    for (int x = qCeil(logical.left() * dpr); x < qFloor((logical.right() + 1) * dpr); ++x)
+                        QVERIFY2((rows.pixel(x, y) & 0xffffff) != (hover.rgb() & 0xffffff),
+                                 qPrintable(QStringLiteral("%1 row painted a fill").arg(row->text())));
+            }
+        }
         QSignalSpy triggered(surface, &QAction::triggered);
         menu.setActiveAction(surface);
         QTest::keyClick(&menu, Qt::Key_Return);
@@ -627,18 +753,15 @@ private slots:
             for (int y = qFloor(row.top() * dpr); y < qCeil((row.bottom() + 1) * dpr); ++y) {
                 for (int x = qFloor(row.left() * dpr);
                      x < qCeil((row.left() + 35) * dpr) && x < exclusive.width(); ++x) {
-                    const QColor pixel = exclusive.pixelColor(x, y);
-                    if (pixel.red() > 180 && pixel.red() < 249
-                        && qAbs(pixel.red() - pixel.green()) <= 2 && qAbs(pixel.green() - pixel.blue()) <= 2)
-                        result = result.united(QRect(x, y, 1, 1));
+                    if (qGray(exclusive.pixel(x, y)) < 200) result = result.united(QRect(x, y, 1, 1));
                 }
             }
             return result;
         };
         const QRect outline = indicatorOutline(firstRow);
         QVERIFY(!outline.isEmpty());
-        // The supplied 48px radio has a 40px visible circle inside its 18px menu slot.
-        constexpr qreal radioInkSize = 18.0 * 40.0 / 48.0;
+        // Menu radios share the checkbox's 12px outer size, the ink box of 16px menu icons.
+        constexpr qreal radioInkSize = 12.0;
         QVERIFY2(qAbs(outline.width() - qRound(radioInkSize * dpr)) <= 1,
                  qPrintable(QStringLiteral("Radio outline width %1 at DPR %2").arg(outline.width()).arg(dpr)));
         QVERIFY(qAbs(outline.height() - qRound(radioInkSize * dpr)) <= 1);
