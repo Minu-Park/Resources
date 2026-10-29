@@ -107,6 +107,8 @@ with its containing tree or theme metrics. Configure
 
 ## Theme Contract
 
+Checkable command buttons with paired icons can set `iconStateRole="action"`: Off/On artwork names the next command for each checked state, and hover/press changes only ink; keyboard focus adds the shared outline. Other paired-icon toggles retain current-state artwork and opposite-state previews. Resources owns `resourcesKeyboardFocus` for tool and push buttons. Keyboard navigation draws a thin focus border; pointer hover alone tints glyphs and previews toggle artwork. Mouse-click focus retains normal artwork without the keyboard ring. Pressed/checked artwork keeps its active ink. Input editors retain their ordinary caret/focus presentation. Native tab order and focus transfers remain intact, including disabled actions and popup restoration.
+
 Consumers expose shared presentation through semantic Qt properties such as `controlRole`, `layoutRole`, density scopes and state properties. Stable object names identify widgets for diagnostics/tests and narrowly documented chrome/native exceptions. Resources owns colors, spacing, radii, weights and icon variants. After changing a dynamic property, repolish the widget when an immediate visual update is required.
 
 Existing object-name selectors cover specific chrome, native geometry and content contracts; retain a narrow exception only with its current owner and reason. Repeated consumer design patterns are consolidation candidates, while old-version compatibility alone does not justify a selector. New shared designs use generic defaults or documented semantic roles. Review any new object-name exception explicitly instead of expanding consumer-specific design branches by default.

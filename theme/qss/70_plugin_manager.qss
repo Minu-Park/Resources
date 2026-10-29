@@ -213,8 +213,8 @@ QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:pressed {
     border-color: @FOCUSBORDER@;
 }
 
-QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"]:focus:!pressed:!checked,
-QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove:focus:!pressed:!checked {
+QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"][resourcesKeyboardFocus="true"]:!pressed:!checked,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove[resourcesKeyboardFocus="true"]:!pressed:!checked {
     border-color: @HOVERBORDER@;
 }
 
@@ -330,8 +330,8 @@ QPushButton#UpdateNotificationUpdateButton {
 
 QPushButton#UpdateNotificationLaterButton:enabled:hover:!pressed:!checked,
 QPushButton#UpdateNotificationUpdateButton:enabled:hover:!pressed:!checked,
-QPushButton#UpdateNotificationLaterButton:enabled:focus:!pressed:!checked,
-QPushButton#UpdateNotificationUpdateButton:enabled:focus:!pressed:!checked {
+QPushButton#UpdateNotificationLaterButton:enabled[resourcesKeyboardFocus="true"]:!pressed:!checked,
+QPushButton#UpdateNotificationUpdateButton:enabled[resourcesKeyboardFocus="true"]:!pressed:!checked {
     border-color: @HOVERBORDER@;
     color: @TEXT@;
 }
@@ -353,4 +353,13 @@ QPushButton#UpdateNotificationLaterButton:enabled:checked,
 QPushButton#UpdateNotificationUpdateButton:enabled:pressed,
 QPushButton#UpdateNotificationUpdateButton:enabled:checked {
     border-color: @FOCUSBORDER@;
+}
+
+/* Keyboard focus remains distinct from pointer hover on named action surfaces. */
+QWidget#PluginMarketplaceContent QPushButton[commandRole="primary"][resourcesKeyboardFocus="true"]:focus:!pressed:!checked,
+QWidget#PluginMarketplaceContent QPushButton#PluginMarketplaceRemove[resourcesKeyboardFocus="true"]:focus:!pressed:!checked,
+QPushButton#UpdateNotificationLaterButton:enabled[resourcesKeyboardFocus="true"]:focus:!pressed:!checked,
+QPushButton#UpdateNotificationUpdateButton:enabled[resourcesKeyboardFocus="true"]:focus:!pressed:!checked {
+    border-color: @FOCUSBORDER@;
+    outline: none;
 }

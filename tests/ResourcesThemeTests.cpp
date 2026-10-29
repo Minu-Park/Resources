@@ -1,4 +1,8 @@
 #include "Resources.h"
+#include "Chrome/ThemedMdiTitleBar.h"
+#include <QMdiSubWindow>
+#include <QPushButton>
+#include <QMenu>
 #include "theme/ResourcesTheme.h"
 #include "theme/ThemeStyleSheet.h"
 #include <QApplication>
@@ -381,6 +385,166 @@ private slots:
         QCOMPARE(ResourcesTheme::instance().metric("FIELD_CONTENT_HEIGHT"), height);
     }
 
+    void mouseFocusDoesNotLeaveASecondHoveredCommand()
+    {
+        Resources::resetThemePalette();
+        QWidget root;
+        QHBoxLayout layout(&root);
+        QToolButton live, single;
+        QIcon liveIcon;
+        liveIcon.addFile(":/Resources/icon/cameras-48.png", {}, QIcon::Normal, QIcon::Off);
+        liveIcon.addFile(":/Resources/icon/stop-48.png", {}, QIcon::Normal, QIcon::On);
+        live.setIcon(liveIcon);
+        live.setCheckable(true);
+        live.setProperty("iconStateRole", "action");
+        single.setIcon(QIcon(":/Resources/icon/camera-48.png"));
+        for (auto* button : {&live, &single}) {
+            button->setFocusPolicy(Qt::StrongFocus);
+            layout.addWidget(button);
+        }
+        root.show(); root.activateWindow();
+        QApplication::processEvents();
+        const auto ink = [](QToolButton& button) {
+            const auto state = button.isChecked() ? QIcon::On : QIcon::Off;
+            const QImage image = button.icon().pixmap(QSize(16, 16), QIcon::Normal, state).toImage();
+            for (int y = 0; y < image.height(); ++y)
+                for (int x = 0; x < image.width(); ++x)
+                    if (image.pixelColor(x, y).alpha() == 255) return image.pixelColor(x, y).rgb();
+            return QRgb(0);
+        };
+        QTest::mouseClick(&live, Qt::LeftButton);
+        QTest::mouseClick(&live, Qt::LeftButton);
+        QVERIFY(!live.isChecked());
+        live.setFocus(Qt::MouseFocusReason);
+        QVERIFY(live.hasFocus());
+        QTest::mouseMove(&single, single.rect().center());
+        live.setAttribute(Qt::WA_UnderMouse, false);
+        single.setAttribute(Qt::WA_UnderMouse, true);
+        QApplication::processEvents();
+        QCOMPARE(ink(live), Resources::themePalette().value("text").rgb());
+        QCOMPARE(ink(single), Resources::themePalette().value("hoverBorder").rgb());
+        // Tab navigation still receives visible focus even with the pointer elsewhere.
+        single.setAttribute(Qt::WA_UnderMouse, false);
+        QTest::keyClick(&live, Qt::Key_Tab);
+        QTRY_VERIFY(single.hasFocus());
+        QVERIFY(root.testAttribute(Qt::WA_KeyboardFocusChange));
+        QCOMPARE(single.property("resourcesKeyboardFocus"), QVariant(true));
+        QCOMPARE(live.property("resourcesKeyboardFocus"), QVariant(false));
+        QCOMPARE(ink(single), Resources::themePalette().value("text").rgb());
+        QCOMPARE(ink(live), Resources::themePalette().value("text").rgb());
+    }
+
+    void keyboardOutlineFollowsAvailabilityAndPopupRestoration()
+    {
+        QWidget root;
+        QHBoxLayout layout(&root);
+        QToolButton first;
+        QPushButton second("Run");
+        first.setIcon(QIcon(":/Resources/icon/camera-48.png"));
+        first.setFocusPolicy(Qt::StrongFocus);
+        second.setFocusPolicy(Qt::StrongFocus);
+        layout.addWidget(&first); layout.addWidget(&second);
+        root.show(); root.activateWindow();
+        QApplication::processEvents();
+        first.setFocus(Qt::MouseFocusReason);
+        QTest::keyClick(&first, Qt::Key_Tab);
+        QTRY_VERIFY(second.hasFocus());
+        QCOMPARE(second.property("resourcesKeyboardFocus"), QVariant(true));
+        QCOMPARE(first.property("resourcesKeyboardFocus"), QVariant(false));
+        const QImage keyboard = second.grab().toImage();
+        QCOMPARE(keyboard.pixelColor(keyboard.width() / 2, 0), Resources::themePalette().value("focusBorder"));
+        // Disabling the focused action keeps keyboard navigation visible on its successor.
+        second.setEnabled(false);
+        QTRY_VERIFY(first.hasFocus());
+        QCOMPARE(second.property("resourcesKeyboardFocus"), QVariant(false));
+        QCOMPARE(first.property("resourcesKeyboardFocus"), QVariant(true));
+        const QImage glyph = first.grab().toImage();
+        QCOMPARE(glyph.pixelColor(glyph.width() / 2, 0), Resources::themePalette().value("focusBorder"));
+        // Clicking the same focused control clears the ring without clearing real focus.
+        QTest::mouseClick(&first, Qt::LeftButton);
+        QVERIFY(first.hasFocus());
+        QCOMPARE(first.property("resourcesKeyboardFocus"), QVariant(false));
+        second.setEnabled(true);
+        QTest::keyClick(&first, Qt::Key_Tab);
+        QTRY_VERIFY(second.hasFocus());
+        QMenu menu;
+        menu.addAction("Example command");
+        menu.popup(root.mapToGlobal(QPoint(0, root.height())));
+        QApplication::processEvents();
+        menu.close();
+        root.activateWindow();
+        QTRY_VERIFY(second.hasFocus());
+        QCOMPARE(second.property("resourcesKeyboardFocus"), QVariant(true));
+        root.hide();
+        QApplication::processEvents();
+        QCOMPARE(second.property("resourcesKeyboardFocus"), QVariant(false));
+        QVERIFY(qApp->property("_resourcesKeyboardNavigation").toBool());
+    }
+
+    void borderlessCommandsKeepGeometry_data()
+    {
+        QTest::addColumn<QString>("name");
+        for (const auto& name : {"DeviceFeatureFavoritesOnly", "ProcessingConsoleClear", "ProcessingConsoleClose"})
+            QTest::newRow(name) << QString::fromLatin1(name);
+    }
+    void borderlessCommandsKeepGeometry()
+    {
+        QFETCH(QString, name);
+        QWidget root;
+        QHBoxLayout layout(&root);
+        QToolButton button;
+        button.setObjectName(name);
+        if (name == "DeviceFeatureFavoritesOnly") button.setIcon(QIcon(":/Resources/icon/camera-48.png"));
+        else button.setText("Clear");
+        button.setFocusPolicy(Qt::StrongFocus);
+        layout.addWidget(&button);
+        root.show(); root.activateWindow();
+        button.setFocus(Qt::MouseFocusReason);
+        QApplication::processEvents();
+        const QSize initial = button.size();
+        button.clearFocus();
+        button.setFocus(Qt::ShortcutFocusReason);
+        QApplication::processEvents();
+        QCOMPARE(button.property("resourcesKeyboardFocus"), QVariant(true));
+        QCOMPARE(button.size(), initial);
+        const QImage image = button.grab().toImage();
+        QCOMPARE(image.pixelColor(image.width() / 2, 0), Resources::themePalette().value("focusBorder"));
+    }
+
+    void mdiWindowControlsKeepTheirOriginalInk()
+    {
+        QMdiSubWindow window;
+        ThemedMdiTitleBar title(&window, nullptr);
+        title.show();
+        QApplication::processEvents();
+        for (const auto& name : {"TitleMinButton", "TitleMaxButton", "TitleCloseButton"}) {
+            auto* button = title.findChild<QPushButton*>(name);
+            QVERIFY(button);
+            QCOMPARE(button->property("glyphStateTint"), QVariant(false));
+            for (bool hover : {false, true}) {
+                button->setAttribute(Qt::WA_UnderMouse, hover);
+                if (hover) { QEvent enter(QEvent::Enter); QApplication::sendEvent(button, &enter); }
+                else { QEvent leave(QEvent::Leave); QApplication::sendEvent(button, &leave); }
+                button->setDown(hover);
+                button->repaint();
+                QApplication::processEvents();
+                const QImage image = button->icon().pixmap(QSize(16, 16), QIcon::Normal).toImage();
+                bool hasInk = false;
+                for (int y = 0; y < image.height(); ++y)
+                    for (int x = 0; x < image.width(); ++x) {
+                        const QColor ink = image.pixelColor(x, y);
+                        if (ink.alpha() < 240) continue;
+                        hasInk = true;
+                        QVERIFY(qAbs(ink.red() - ink.green()) <= 1);
+                        QVERIFY(qAbs(ink.green() - ink.blue()) <= 1);
+                        QVERIFY(ink.red() <= 60);
+                    }
+                QVERIFY(hasInk);
+                button->setDown(false);
+            }
+        }
+    }
+
     // Checkable buttons with distinct Off/On artwork show their state and preview the other one.
     void stateTogglePreviewsTheOppositeArtwork()
     {
@@ -458,6 +622,25 @@ private slots:
         toggle->setEnabled(false);
         QCOMPARE(alphaOf(shown(toggle)), onAlpha);
         toggle->setEnabled(true);
+
+        // Command artwork remains the next action even during hover, press and blocked updates.
+        toggle->setProperty("iconStateRole", "action");
+        for (bool checked : {false, true}) {
+            { const QSignalBlocker blocker(toggle); toggle->setChecked(checked); }
+            const QImage expected = checked ? onAlpha : offAlpha;
+            hover(toggle, true);
+            QCOMPARE(alphaOf(shown(toggle)), expected);
+            toggle->setDown(true);
+            QCOMPARE(alphaOf(shown(toggle)), expected);
+            QCOMPARE(inkOf(shown(toggle)), activeInk);
+            toggle->setDown(false);
+            hover(toggle, false);
+            toggle->setFocusPolicy(Qt::StrongFocus);
+            toggle->setFocus();
+            QApplication::processEvents();
+            QCOMPARE(alphaOf(shown(toggle)), expected);
+            toggle->clearFocus();
+        }
 
         // Single-artwork toggles keep their glyph and only change ink.
         hover(single, true);

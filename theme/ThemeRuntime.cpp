@@ -5,6 +5,7 @@
 #include "Chrome/ProgressShine.h"
 
 #include <QApplication>
+#include <QFocusEvent>
 #include <QPointer>
 #include <QFile>
 #include <QDir>
@@ -823,8 +824,32 @@ public:
     }
 };
 
-/** @brief Returns whether a hovered or focused toggle must keep showing its new state.
- *  A toggle that changed while engaged keeps its state glyph until the pointer and focus leave,
+/** @brief Uses Qt's keyboard-navigation state to avoid highlighting retained mouse focus. */
+static bool hasButtonKeyboardFocus(const QAbstractButton& button)
+{
+    const QVariant keyboard = qApp->property("_resourcesKeyboardNavigation");
+    const bool navigation = keyboard.isValid() ? keyboard.toBool()
+        : button.window()->testAttribute(Qt::WA_KeyboardFocusChange);
+    return button.isEnabled() && button.isVisible() && button.hasFocus()
+        && button.isActiveWindow() && navigation;
+}
+
+/** @brief Shares focus-visible state with QSS without changing focus ownership or tab order. */
+static void syncButtonKeyboardFocus(QAbstractButton* button)
+{
+    if (!button || (!qobject_cast<QToolButton*>(button) && !qobject_cast<QPushButton*>(button))) return;
+    const bool visible = hasButtonKeyboardFocus(*button);
+    if (button->property("resourcesKeyboardFocus") == QVariant(visible)) return;
+    button->setProperty("resourcesKeyboardFocus", visible);
+    if (button->testAttribute(Qt::WA_WState_Polished)) {
+        button->style()->unpolish(button);
+        button->style()->polish(button);
+    }
+    button->update();
+}
+
+/** @brief Returns whether a hovered toggle must keep showing its new state.
+ *  A toggle that changed while engaged keeps its state glyph until the pointer leaves,
  *  so a click never flips straight to the opposite preview and reads as a failed command.
  *  State is sampled at paint time because consumers often toggle under a QSignalBlocker.
  */
@@ -832,7 +857,7 @@ static bool toggleGlyphPreviewSuppressed(QAbstractButton& button)
 {
     static constexpr char lastCheckedKey[] = "_resourcesGlyphLastChecked";
     static constexpr char suppressedKey[] = "_resourcesGlyphPreviewSuppressed";
-    const bool engaged = button.underMouse() || button.hasFocus();
+    const bool engaged = button.underMouse();
     const QVariant lastChecked = button.property(lastCheckedKey);
     bool suppressed = engaged && button.property(suppressedKey).toBool();
     if (engaged && lastChecked.isValid() && lastChecked.toBool() != button.isChecked()) suppressed = true;
@@ -902,7 +927,7 @@ public:
 private:
     /** @brief Selects the ink and, for state toggles, the artwork state to draw.
      *  Single-artwork buttons mirror the state outline: press, open menu or checked wins over
-     *  hover/focus. State toggles draw a preview of the opposite state in `hoverBorder` and the
+     *  pointer hover. State toggles draw a preview of the opposite state in `hoverBorder` and the
      *  pressed target in `focusBorder`; at rest, checked follows the requested icon state so an
      *  Off-state query keeps the supplied artwork.
      */
@@ -915,9 +940,10 @@ private:
         else if (const auto* push = qobject_cast<const QPushButton*>(button)) menu = push->menu();
         const auto palette = Resources::ResourcesTheme::instance().themePalette();
         const bool active = button->isDown() || (menu && menu->isVisible());
-        const bool engaged = button->underMouse() || button->hasFocus();
+        const bool engaged = button->underMouse();
         const bool checkedState = state == QIcon::On && button->isCheckable() && button->isChecked();
-        if (pairedStates_ && button->isCheckable()) {
+        if (pairedStates_ && button->isCheckable()
+            && button->property("iconStateRole").toString() != QStringLiteral("action")) {
             const bool suppressed = toggleGlyphPreviewSuppressed(*button);
             if (active || (engaged && !suppressed)) {
                 *shown = state == QIcon::On ? QIcon::Off : QIcon::On;
@@ -983,8 +1009,13 @@ class ResourceStyleFilter : public QObject
 public:
     explicit ResourceStyleFilter(QObject* parent = nullptr) : QObject(parent)
     {
+        connect(qApp, &QApplication::focusChanged, this, [](QWidget* before, QWidget* after) {
+            syncButtonKeyboardFocus(qobject_cast<QAbstractButton*>(before));
+            syncButtonKeyboardFocus(qobject_cast<QAbstractButton*>(after));
+        });
         connect(qApp, &QGuiApplication::applicationStateChanged, this,
                 [](Qt::ApplicationState state) {
+            syncButtonKeyboardFocus(qobject_cast<QAbstractButton*>(QApplication::focusWidget()));
             if (state == Qt::ApplicationActive) return;
             for (QWidget* widget : QApplication::topLevelWidgets()) {
                 if (auto* menu = qobject_cast<QMenu*>(widget); menu && menu->isVisible()) {
@@ -997,6 +1028,26 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+        // Modality survives automatic focus transfers and popup restoration. Pointer movement
+        // alone must not erase a keyboard user's focus indicator.
+        if (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::TouchBegin
+            || event->type() == QEvent::Wheel) {
+            qApp->setProperty("_resourcesKeyboardNavigation", false);
+            syncButtonKeyboardFocus(qobject_cast<QAbstractButton*>(QApplication::focusWidget()));
+        } else if (event->type() == QEvent::KeyPress || event->type() == QEvent::Shortcut) {
+            qApp->setProperty("_resourcesKeyboardNavigation", true);
+            syncButtonKeyboardFocus(qobject_cast<QAbstractButton*>(QApplication::focusWidget()));
+        } else if (event->type() == QEvent::FocusIn) {
+            const auto reason = static_cast<QFocusEvent*>(event)->reason();
+            if (reason == Qt::MouseFocusReason) qApp->setProperty("_resourcesKeyboardNavigation", false);
+            else if (reason == Qt::ShortcutFocusReason) qApp->setProperty("_resourcesKeyboardNavigation", true);
+        }
+        if (event->type() == QEvent::FocusIn || event->type() == QEvent::FocusOut
+            || event->type() == QEvent::EnabledChange || event->type() == QEvent::Show
+            || event->type() == QEvent::Hide || event->type() == QEvent::WindowActivate
+            || event->type() == QEvent::WindowDeactivate || event->type() == QEvent::Paint) {
+            syncButtonKeyboardFocus(qobject_cast<QAbstractButton*>(obj));
+        }
         if (event->type() == QEvent::DynamicPropertyChange) {
             const auto name = static_cast<QDynamicPropertyChangeEvent*>(event)->propertyName();
             if (name == "layoutRole")

@@ -169,6 +169,11 @@ QTabWidget#GraphicsSettingsPanelTabs::pane {
     top: 0;
 }
 
+/* Own the strip origin instead of inheriting native frame-overlap offsets. */
+QTabWidget#GraphicsSettingsPanelTabs::tab-bar {
+    left: 0;
+}
+
 QTabWidget#GraphicsSettingsPanelTabs > QTabBar {
     background: transparent;
     border-top: none;
@@ -176,7 +181,7 @@ QTabWidget#GraphicsSettingsPanelTabs > QTabBar {
 }
 
 QTabWidget#GraphicsSettingsPanelTabs QTabBar {
-    margin-left: 0;
+    margin: 0;
 }
 
 QTabWidget#GraphicsSettingsPanelTabs QTabBar::tab {
@@ -304,6 +309,8 @@ PlotViewWidget {
     qproperty-plotBorderColor: @BORDER@;
     qproperty-plotSecondaryTextColor: @SECONDARYTEXT@;
     qproperty-plotWarningColor: @WARNINGTEXT@;
+    qproperty-plotHoverColor: @HOVERBORDER@;
+    qproperty-plotActiveColor: @FOCUSBORDER@;
     color: @TEXT@;
     font-size: @FONT_BODY@px;
     font-weight: @WEIGHT_NORMAL@;
