@@ -114,7 +114,7 @@ The shared menu template keeps 4px vertical padding for the existing row height.
 - Use dynamic properties for reusable states and density.
 - Keep icons under stable `:/Resources/...` virtual paths.
 - Ship one neutral (`#3c3c3b`) artwork per glyph. The theme runtime wraps tool- and
-  push-button icons and recolors neutral pixels with `hoverBorder` (hover/focus) or
+  push-button icons and recolors neutral pixels with `hoverBorder` (pointer hover) or
   `focusBorder` (pressed/checked/open), because Qt selects no icon mode for a press.
   Non-neutral artwork, disabled rendering and the rest state pass through unchanged.
   Icon-only neutral buttons get `resourcesGlyphButton="true"`, and `00_base.qss` drops
@@ -124,3 +124,5 @@ The shared menu template keeps 4px vertical padding for the existing row height.
 Current consumer-specific object names identify narrow presentation exceptions.
 Replace repeated exceptions with shared roles as the corresponding surfaces are
 updated; do not copy a base template into another fragment.
+
+Button keyboard navigation uses the Resources-owned `resourcesKeyboardFocus` state and a thin `focusBorder` outline, including icon-only glyph buttons. Pointer clicks clear this visual state without clearing native focus. The event filter preserves keyboard modality across automatic focus transfers and popup restoration; text-entry focus remains unchanged.

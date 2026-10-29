@@ -686,7 +686,7 @@ QPushButton:pressed {
     color: @TEXT@;
 }
 
-QPushButton:enabled:focus {
+QPushButton:enabled[resourcesKeyboardFocus="true"] {
     border-color: @HOVERBORDER@;
     outline: none;
 }
@@ -743,7 +743,7 @@ QAbstractSpinBox[resourcesDensity="compact"] {
 }
 
 QToolButton:enabled:hover,
-QToolButton:enabled:focus {
+QToolButton:enabled[resourcesKeyboardFocus="true"] {
     background: transparent;
     color: @TEXT@;
     border-color: @HOVERBORDER@;
@@ -761,16 +761,24 @@ QToolButton:disabled {
     border-color: transparent;
 }
 
-/* Icon-only neutral glyphs show hover, focus, press and checked state by glyph color. */
+/* Icon-only neutral glyphs show hover, press and checked state by glyph color. */
 QToolButton[resourcesGlyphButton="true"]:enabled:hover,
-QToolButton[resourcesGlyphButton="true"]:enabled:focus,
 QToolButton[resourcesGlyphButton="true"]:enabled:pressed,
 QToolButton[resourcesGlyphButton="true"]:enabled:checked,
 QPushButton[resourcesGlyphButton="true"]:enabled:hover,
-QPushButton[resourcesGlyphButton="true"]:enabled:focus,
 QPushButton[resourcesGlyphButton="true"]:enabled:pressed,
 QPushButton[resourcesGlyphButton="true"]:enabled:checked {
     border-color: transparent;
+}
+
+
+/* Keyboard navigation owns a thin outline, including otherwise borderless glyph actions. */
+QToolButton[resourcesKeyboardFocus="true"]:focus:enabled,
+QPushButton[resourcesKeyboardFocus="true"]:focus:enabled,
+QToolButton[resourcesGlyphButton="true"][resourcesKeyboardFocus="true"]:focus:enabled,
+QPushButton[resourcesGlyphButton="true"][resourcesKeyboardFocus="true"]:focus:enabled {
+    border-color: @FOCUSBORDER@;
+    outline: none;
 }
 
 QCheckBox,

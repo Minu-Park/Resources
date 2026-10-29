@@ -288,3 +288,13 @@ QLabel#SignatureHelpLabel {
     border: 1px solid transparent;
     padding: 1px 3px;
 }
+
+/* Absorb the keyboard outline into existing padding to preserve console action geometry. */
+QToolButton#ProcessingConsoleClear[resourcesKeyboardFocus="true"]:enabled:focus {
+    border: @CONTROL_BORDER_WIDTH@px solid @FOCUSBORDER@;
+    padding: @CONTROL_BORDER_WIDTH@px @TOOLBUTTON_PADDING_X@px;
+}
+QToolButton#ProcessingConsoleClose[resourcesKeyboardFocus="true"]:enabled:focus {
+    border: @CONTROL_BORDER_WIDTH@px solid @FOCUSBORDER@;
+    padding: @CONTROL_BORDER_WIDTH@px;
+}

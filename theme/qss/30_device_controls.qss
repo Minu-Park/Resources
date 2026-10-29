@@ -109,7 +109,7 @@ QToolButton#DeviceFeatureSearchClear {
 }
 
 QToolButton#DeviceFeatureSearchClear:enabled:hover:!pressed:!checked,
-QToolButton#DeviceFeatureSearchClear:enabled:focus:!pressed:!checked,
+QToolButton#DeviceFeatureSearchClear:enabled[resourcesKeyboardFocus="true"]:!pressed:!checked,
 QToolButton#DeviceFeatureFavoritesOnly:hover,
 QToolButton#DeviceFeatureFavoritesOnly:pressed {
     background: transparent;
@@ -167,4 +167,19 @@ QFrame#DeviceFeatureSearchBubble[searchPreview="state-border"][searchPressed="tr
 }
 QFrame#DeviceFeatureSearchBubble[searchPreview="state-border"]:disabled {
     border-color: @CONTROLBORDER@;
+}
+
+/* Keyboard focus remains distinct from pointer hover on named action surfaces. */
+QToolButton#DeviceFeatureSearchClear:enabled[resourcesKeyboardFocus="true"]:focus:!pressed:!checked {
+    border-color: @FOCUSBORDER@;
+    outline: none;
+}
+
+/* Borderless favorites reserve the same 20px outer target during keyboard navigation. */
+QToolButton#DeviceFeatureFavoritesOnly[resourcesKeyboardFocus="true"]:enabled:focus {
+    border: @CONTROL_BORDER_WIDTH@px solid @FOCUSBORDER@;
+    min-width: @COMPACT_ACTION_CONTENT_SIZE@px;
+    max-width: @COMPACT_ACTION_CONTENT_SIZE@px;
+    min-height: @COMPACT_ACTION_CONTENT_SIZE@px;
+    max-height: @COMPACT_ACTION_CONTENT_SIZE@px;
 }

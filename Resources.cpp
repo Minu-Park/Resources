@@ -88,7 +88,7 @@ QString formatLogHtml(int messageType, const QString& timestamp, const QString& 
     QString color;
     switch (messageType) {
         case QtDebugMsg:    typeStr = QStringLiteral("DEBUG"); color = themePalette().value(QStringLiteral("secondaryText")).name(QColor::HexRgb); break;
-        case QtInfoMsg:     typeStr = QStringLiteral("INFO");  color = themePalette().value(QStringLiteral("text")).name(QColor::HexRgb); break;
+        case QtInfoMsg:     typeStr = QStringLiteral("INFO");  color = themePalette().value(QStringLiteral("selectionAccent")).name(QColor::HexRgb); break;
         case QtWarningMsg:  typeStr = QStringLiteral("WARN");  color = themePalette().value(QStringLiteral("warning")).name(QColor::HexRgb); break;
         case QtCriticalMsg: typeStr = QStringLiteral("CRIT");  color = themePalette().value(QStringLiteral("error")).name(QColor::HexRgb); break;
         case QtFatalMsg:    typeStr = QStringLiteral("FATAL"); color = themePalette().value(QStringLiteral("errorText")).name(QColor::HexRgb); break;

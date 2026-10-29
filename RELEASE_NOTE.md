@@ -2,7 +2,22 @@
 
 ## Unreleased
 
-- Treat checkable tool and push buttons with distinct Off/On artwork as state toggles: the rest glyph names the current state, hover/focus previews the opposite state in `hoverBorder`, a press shows it in `focusBorder`, and a state change under the pointer keeps the new glyph until the pointer and focus leave. Add `fit-on`/`fit-off` and `layout-tabs`/`layout-grid` glyphs in 24px and 48px.
+- Keep the Plugins detail heading on `selectionAccent` when dialog typography rules are applied.
+
+- Anchor the graphics-settings tab strip at zero with no margins, avoiding native tab-frame overlap offsets at its edges.
+
+- Supply shared hover/active colors to plot axis editor titles without drawing axis bubbles.
+
+- Match menu status-bubble hover text to the light-blue border and icon feedback; retain dark active/open text.
+
+- Unify tool and push button focus-visible feedback across the shared theme: pointer hover colors glyphs, keyboard navigation draws a thin outline, mouse-retained focus stays neutral, and disabled actions have no focus feedback. Preserve native focus movement and editor focus.
+
+- Color the Info log level label with `selectionAccent` blue; retain warning, error, timestamp and message colors.
+
+- Preserve original neutral MDI minimize, maximize/restore and close artwork during interaction.
+- Let command buttons expose `iconStateRole="action"` to keep their next-command artwork on hover, focus and press while retaining shared ink feedback.
+
+- Treat checkable tool and push buttons with distinct Off/On artwork as state toggles: the rest glyph names the current state, pointer hover previews the opposite state in `hoverBorder`, a press shows it in `focusBorder`, and a state change under the pointer keeps the new glyph until the pointer leaves. Add `fit-on`/`fit-off` and `layout-tabs`/`layout-grid` glyphs in 24px and 48px.
 
 - Add `checkbox-unchecked` and `checkbox-checked` vector glyphs, with hover and disabled variants, drawn in the menu-icon weight and size. Nonexclusive menu actions use them instead of the bare check mark and empty unchecked slot.
 

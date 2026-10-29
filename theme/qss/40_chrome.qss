@@ -264,11 +264,16 @@ QDialog QWidget {
     font-weight: @WEIGHT_NORMAL@;
 }
 
-QDialog QLabel[textRole="title"],
-QDialog QLabel#PluginMarketplaceDetailName {
+QDialog QLabel[textRole="title"] {
     font-size: @FONT_TITLE@px;
     font-weight: @WEIGHT_EMPHASIS@;
     color: @TEXT@;
+}
+
+QDialog QLabel#PluginMarketplaceDetailName {
+    font-size: @FONT_TITLE@px;
+    font-weight: @WEIGHT_EMPHASIS@;
+    color: @SELECTIONACCENT@;
 }
 
 QDialog QGroupBox::title,
