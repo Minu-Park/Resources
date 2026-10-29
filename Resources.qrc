@@ -56,6 +56,14 @@
         <file>icon/minimize-window-rounded-48.png</file>
         <file>icon/full-page-view-24.png</file>
         <file>icon/full-page-view-48.png</file>
+        <file>icon/fit-on-24.png</file>
+        <file>icon/fit-on-48.png</file>
+        <file>icon/fit-off-24.png</file>
+        <file>icon/fit-off-48.png</file>
+        <file>icon/layout-tabs-24.png</file>
+        <file>icon/layout-tabs-48.png</file>
+        <file>icon/layout-grid-24.png</file>
+        <file>icon/layout-grid-48.png</file>
         <file>icon/image-24.png</file>
         <file>icon/image-48.png</file>
         <file>icon/info-24.png</file>

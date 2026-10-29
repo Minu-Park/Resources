@@ -380,6 +380,93 @@ private slots:
         QCOMPARE(qApp->styleSheet(), style);
         QCOMPARE(ResourcesTheme::instance().metric("FIELD_CONTENT_HEIGHT"), height);
     }
+
+    // Checkable buttons with distinct Off/On artwork show their state and preview the other one.
+    void stateTogglePreviewsTheOppositeArtwork()
+    {
+        Resources::resetThemePalette();
+        const auto palette = Resources::themePalette();
+        const QString offFile = QStringLiteral(":/Resources/icon/layout-tabs-48.png");
+        const QString onFile = QStringLiteral(":/Resources/icon/layout-grid-48.png");
+        const QSize size(18, 18);
+        // Alpha identifies the artwork; the first opaque pixel identifies its ink.
+        const auto alphaOf = [](const QPixmap& pixmap) {
+            return pixmap.toImage().convertToFormat(QImage::Format_Alpha8);
+        };
+        const auto inkOf = [](const QPixmap& pixmap) {
+            const QImage image = pixmap.toImage().convertToFormat(QImage::Format_ARGB32);
+            for (int y = 0; y < image.height(); ++y)
+                for (int x = 0; x < image.width(); ++x)
+                    if (qAlpha(image.pixel(x, y)) == 255) return QColor(image.pixel(x, y)).rgb();
+            return QRgb(0);
+        };
+        const QImage offAlpha = alphaOf(QIcon(offFile).pixmap(size));
+        const QImage onAlpha = alphaOf(QIcon(onFile).pixmap(size));
+        QVERIFY(offAlpha != onAlpha);
+        QWidget root;
+        QVBoxLayout layout(&root);
+        auto* toggle = new QToolButton;
+        QIcon icon;
+        icon.addFile(offFile, QSize(), QIcon::Normal, QIcon::Off);
+        icon.addFile(onFile, QSize(), QIcon::Normal, QIcon::On);
+        toggle->setIcon(icon);
+        toggle->setIconSize(size);
+        toggle->setCheckable(true);
+        toggle->setFocusPolicy(Qt::NoFocus);
+        auto* single = new QToolButton;
+        single->setIcon(QIcon(offFile));
+        single->setIconSize(size);
+        single->setCheckable(true);
+        single->setFocusPolicy(Qt::NoFocus);
+        layout.addWidget(toggle);
+        layout.addWidget(single);
+        root.show();
+        QApplication::processEvents();
+        const auto shown = [&](QToolButton* button) {
+            return button->icon().pixmap(size, QIcon::Normal, button->isChecked() ? QIcon::On : QIcon::Off);
+        };
+        const auto hover = [](QToolButton* button, bool on) {
+            button->setAttribute(Qt::WA_UnderMouse, on);
+            button->update();
+            QApplication::processEvents();
+        };
+        const QRgb neutral = QColor("#3c3c3b").rgb();
+        const QRgb hoverInk = palette.value("hoverBorder").rgb();
+        const QRgb activeInk = palette.value("focusBorder").rgb();
+
+        QCOMPARE(alphaOf(shown(toggle)), offAlpha);
+        QCOMPARE(inkOf(shown(toggle)), neutral);
+        hover(toggle, true);
+        QCOMPARE(alphaOf(shown(toggle)), onAlpha);
+        QCOMPARE(inkOf(shown(toggle)), hoverInk);
+        toggle->setDown(true);
+        QCOMPARE(alphaOf(shown(toggle)), onAlpha);
+        QCOMPARE(inkOf(shown(toggle)), activeInk);
+        toggle->setDown(false);
+        // A state change under the pointer shows the new state, not the opposite preview.
+        toggle->setChecked(true);
+        QApplication::processEvents();
+        QCOMPARE(alphaOf(shown(toggle)), onAlpha);
+        QCOMPARE(inkOf(shown(toggle)), activeInk);
+        hover(toggle, false);
+        QCOMPARE(alphaOf(shown(toggle)), onAlpha);
+        QCOMPARE(inkOf(shown(toggle)), activeInk);
+        hover(toggle, true);
+        QCOMPARE(alphaOf(shown(toggle)), offAlpha);
+        QCOMPARE(inkOf(shown(toggle)), hoverInk);
+        hover(toggle, false);
+        toggle->setEnabled(false);
+        QCOMPARE(alphaOf(shown(toggle)), onAlpha);
+        toggle->setEnabled(true);
+
+        // Single-artwork toggles keep their glyph and only change ink.
+        hover(single, true);
+        QCOMPARE(alphaOf(shown(single)), offAlpha);
+        QCOMPARE(inkOf(shown(single)), hoverInk);
+        single->setChecked(true);
+        QCOMPARE(alphaOf(shown(single)), offAlpha);
+        QCOMPARE(inkOf(shown(single)), activeInk);
+    }
 };
 
 int main(int argc, char** argv)
