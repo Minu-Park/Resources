@@ -28,6 +28,11 @@ public:
         QWidget* parent,
         const QString& title,
         const QString& directory = {});
+    /** @brief Selects one existing directory, or returns an empty string when cancelled. */
+    static QString getExistingDirectory(
+        QWidget* parent,
+        const QString& title,
+        const QString& directory = {});
     static QString getSaveFileName(
         QWidget* parent,
         const QString& title,
@@ -51,7 +56,7 @@ private:
     enum class Mode {
         OpenOne,
         OpenMany,
-        DirectoryMany,
+        Directory,
         Save
     };
 

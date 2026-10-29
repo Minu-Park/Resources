@@ -96,7 +96,7 @@ ThemedFileDialog::ThemedFileDialog(
         _fileDialog->setFileMode(QFileDialog::ExistingFiles);
         _fileDialog->setAcceptMode(QFileDialog::AcceptOpen);
         break;
-    case Mode::DirectoryMany:
+    case Mode::Directory:
         _fileDialog->setOption(QFileDialog::ShowDirsOnly, true);
         _fileDialog->setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
         _fileDialog->setFileMode(QFileDialog::Directory);
@@ -364,8 +364,17 @@ QStringList ThemedFileDialog::getExistingDirectories(
     const QString& title,
     const QString& directory)
 {
-    ThemedFileDialog dialog(parent, title, directory, {}, Mode::DirectoryMany);
+    ThemedFileDialog dialog(parent, title, directory, {}, Mode::Directory);
     return dialog.exec() == QDialog::Accepted ? dialog._fileDialog->selectedFiles() : QStringList{};
+}
+
+QString ThemedFileDialog::getExistingDirectory(
+    QWidget* parent,
+    const QString& title,
+    const QString& directory)
+{
+    ThemedFileDialog dialog(parent, title, directory, {}, Mode::Directory);
+    return dialog.exec() == QDialog::Accepted ? dialog._fileDialog->selectedFiles().value(0) : QString{};
 }
 
 QString ThemedFileDialog::getSaveFileName(
