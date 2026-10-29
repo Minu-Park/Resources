@@ -8,6 +8,7 @@
 #include <QMdiSubWindow>
 #include <QPushButton>
 #include <QMenu>
+#include <QPainter>
 #include "theme/ResourcesTheme.h"
 #include "theme/ThemeStyleSheet.h"
 #include <QApplication>
@@ -558,6 +559,71 @@ private slots:
                 }
             }
         }
+    }
+
+    void buttonGlyphClassificationAndInteraction()
+    {
+        const QSize size(16, 16);
+        QPixmap neutral(size); neutral.fill(QColor("#3c3c3b"));
+        QPixmap multicolor(size); multicolor.fill(Qt::red);
+        { QPainter painter(&multicolor); painter.fillRect(0, 0, 8, 16, Qt::green); }
+        QWidget root;
+        QVBoxLayout layout(&root);
+        QToolButton glyph, artwork, text, optedOut;
+        for (auto* button : {&glyph, &artwork, &text, &optedOut}) {
+            button->setIcon(QIcon(neutral));
+            button->setIconSize(size);
+            button->setFocusPolicy(Qt::NoFocus);
+            layout.addWidget(button);
+        }
+        glyph.setCheckable(true);
+        artwork.setIcon(QIcon(multicolor));
+        text.setText("Run"); text.setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        optedOut.setProperty("glyphStateTint", false);
+        root.show();
+        QApplication::processEvents();
+        const auto colors = Resources::themePalette();
+        const auto shown = [&](QToolButton& button) {
+            return button.icon().pixmap(size, QIcon::Normal,
+                button.isChecked() ? QIcon::On : QIcon::Off).toImage();
+        };
+        const auto outline = [](QToolButton& button) {
+            const QImage image = button.grab().toImage();
+            return image.pixelColor(image.width() / 2, 0);
+        };
+        for (auto* button : {&glyph, &artwork, &text, &optedOut}) {
+            button->setAttribute(Qt::WA_UnderMouse, true);
+            button->update();
+        }
+        QApplication::processEvents();
+        QCOMPARE(glyph.property("resourcesGlyphButton"), QVariant(true));
+        QCOMPARE(shown(glyph).pixelColor(8, 8), colors.value("hoverBorder"));
+        QVERIFY(outline(glyph) != colors.value("hoverBorder"));
+        glyph.setDown(true);
+        QCOMPARE(shown(glyph).pixelColor(8, 8), colors.value("focusBorder"));
+        QVERIFY(outline(glyph) != colors.value("focusBorder"));
+        glyph.setDown(false); glyph.setChecked(true);
+        QCOMPARE(shown(glyph).pixelColor(8, 8), colors.value("focusBorder"));
+        QVERIFY(outline(glyph) != colors.value("focusBorder"));
+        for (auto* button : {&artwork, &text, &optedOut}) {
+            QCOMPARE(button->property("resourcesGlyphButton"), QVariant(false));
+            QCOMPARE(outline(*button), colors.value("hoverBorder"));
+        }
+        QCOMPARE(shown(artwork), multicolor.toImage());
+        QCOMPARE(shown(optedOut), neutral.toImage());
+        // Neutral icons beside text share the ink rule while retaining the button outline.
+        QCOMPARE(shown(text).pixelColor(8, 8), colors.value("hoverBorder"));
+        glyph.setChecked(false);
+        glyph.setIcon(QIcon(multicolor));
+        QVERIFY(!glyph.grab().isNull());
+        QCOMPARE(glyph.property("resourcesGlyphButton"), QVariant(false));
+        QCOMPARE(shown(glyph), multicolor.toImage());
+        QCOMPARE(outline(glyph), colors.value("hoverBorder"));
+        glyph.setIcon(QIcon(neutral));
+        QVERIFY(!glyph.grab().isNull());
+        QCOMPARE(glyph.property("resourcesGlyphButton"), QVariant(true));
+        QCOMPARE(shown(glyph).pixelColor(8, 8), colors.value("hoverBorder"));
+        QVERIFY(outline(glyph) != colors.value("hoverBorder"));
     }
 
     // Checkable buttons with distinct Off/On artwork show their state and preview the other one.

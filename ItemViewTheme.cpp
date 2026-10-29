@@ -113,7 +113,10 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
         const bool selected = option.state & QStyle::State_Selected;
         const bool rowMode = view_->selectionBehavior() == QAbstractItemView::SelectRows;
         const QPoint cursor = view_->viewport()->mapFromGlobal(QCursor::pos());
-        const QModelIndex hoverIndex = view_->viewport()->underMouse() &&
+        const QWidget* pointerTarget = QApplication::widgetAt(QCursor::pos());
+        const bool overIdentityWidget = view_->property("menuItemInk").toBool() && pointerTarget &&
+                                       view_->viewport()->isAncestorOf(pointerTarget);
+        const QModelIndex hoverIndex = (view_->viewport()->underMouse() || overIdentityWidget) &&
                                                view_->viewport()->rect().contains(cursor)
                                            ? view_->indexAt(cursor) : QModelIndex{};
         const bool mouseOver = rowMode ? hoverIndex.isValid() && hoverIndex.row() == index.row() &&
@@ -137,7 +140,12 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
                 contents.icon = menuInkIcon(contents.icon, contents.decorationSize,
                                              view_->devicePixelRatioF(), view_->style(), true);
             }
-            syncMenuItemWidget(view_->indexWidget(index), active, surface_->accentColor);
+            QWidget* identity = view_->indexWidget(index);
+            if (identity) {
+                observeIdentityWidget(identity);
+                for (auto* child : identity->findChildren<QWidget*>()) observeIdentityWidget(child);
+            }
+            syncMenuItemWidget(identity, active, surface_->accentColor);
             // Identity painting follows QMenu; value delegates and editor contracts remain consumer-owned.
             if (index.column() == 0)
                 view_->style()->drawControl(QStyle::CE_ItemViewItem, &contents, painter, view_);
@@ -310,6 +318,9 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
   protected:
     bool eventFilter(QObject *watched, QEvent *event) override
     {
+        if (identityWidgets_.contains(qobject_cast<QWidget*>(watched)) &&
+            (event->type() == QEvent::Enter || event->type() == QEvent::Leave))
+            view_->viewport()->update();
         // Qt tables invalidate only the hovered cell; joined row feedback needs both rows repainted.
         if (watched == view_->viewport() &&
             view_->selectionBehavior() == QAbstractItemView::SelectRows &&
@@ -329,6 +340,14 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
         return false;
     } // The source owns its editor event policy.
   private:
+    /** @brief Observes card enter/leave without changing consumer mouse tracking or event delivery. */
+    void observeIdentityWidget(QWidget* widget) const
+    {
+        if (identityWidgets_.contains(widget)) return;
+        identityWidgets_.insert(widget);
+        widget->installEventFilter(const_cast<ItemSurfaceDelegate*>(this));
+        connect(widget, &QObject::destroyed, this, [this, widget] { identityWidgets_.remove(widget); });
+    }
     /** @brief Repaints adjoining corners when a selection changes or its model is replaced. */
     void observeSelection() const
     {
@@ -349,6 +368,7 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
     mutable QMetaObject::Connection selectionConnection_;
     mutable QMetaObject::Connection currentConnection_;
     mutable QSet<QWidget *> forwardedEditors_;
+    mutable QSet<QWidget *> identityWidgets_;
     QPersistentModelIndex hoveredRow_;
     QAbstractItemView *view_;
     QPointer<QAbstractItemDelegate> source_;
