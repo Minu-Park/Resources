@@ -270,12 +270,6 @@ QDialog QLabel[textRole="title"] {
     color: @TEXT@;
 }
 
-QDialog QLabel#PluginMarketplaceDetailName {
-    font-size: @FONT_TITLE@px;
-    font-weight: @WEIGHT_EMPHASIS@;
-    color: @SELECTIONACCENT@;
-}
-
 QDialog QGroupBox::title,
 QDialog QLabel[textRole="sectionTitle"],
 QDialog QLabel#PluginMarketplaceSectionLabel,

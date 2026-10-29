@@ -44,6 +44,8 @@ protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
+    /** @brief Waits for a native window-modal picker while preserving synchronous results. */
+    int execWindowModal();
     void applyBottomCornerMask();
     void scheduleActionButtonAlignment();
     void alignActionButtons();

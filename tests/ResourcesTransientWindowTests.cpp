@@ -3,6 +3,11 @@
 #include "Chrome/ThemedMainWindow.h"
 #include "Chrome/ThemedTreeWidget.h"
 #include "Chrome/ThemedMessageBox.h"
+#include "Chrome/ThemedFileDialog.h"
+#include <QFileDialog>
+#include <QFile>
+#include <QTemporaryDir>
+#include <QTimer>
 #include "Resources.h"
 
 #include <QApplication>
@@ -144,6 +149,97 @@ class ResourcesTransientWindowTests : public QObject
 {
     Q_OBJECT
 private slots:
+    void filePickersUseNativeWindowModality_data()
+    {
+        QTest::addColumn<int>("mode");
+        for (int mode = 0; mode < 5; ++mode)
+            QTest::newRow(qPrintable(QString::number(mode))) << mode;
+    }
+
+    void filePickersUseNativeWindowModality()
+    {
+        QFETCH(int, mode);
+        QWidget host;
+        host.show();
+        bool observed = false;
+        Qt::WindowModality modality = Qt::NonModal;
+        Qt::WindowType type = Qt::Widget;
+        QTimer::singleShot(0, &host, [&] {
+            auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+            if (!dialog) return;
+            observed = dialog->findChild<QFileDialog*>() != nullptr;
+            modality = dialog->windowModality();
+            type = dialog->windowType();
+            dialog->reject();
+        });
+        QString filter = QStringLiteral("unchanged");
+        QStringList result;
+        switch (mode) {
+        case 0: result = {ThemedFileDialog::getOpenFileName(&host, "Open")}; break;
+        case 1: result = ThemedFileDialog::getOpenFileNames(&host, "Open multiple"); break;
+        case 2: result = {ThemedFileDialog::getExistingDirectory(&host, "Folder")}; break;
+        case 3: result = ThemedFileDialog::getExistingDirectories(&host, "Folders"); break;
+        case 4: result = {ThemedFileDialog::getSaveFileName(&host, "Save", {}, "Data (*.dat)", &filter)}; break;
+        }
+        QVERIFY(observed);
+        QCOMPARE(modality, Qt::WindowModal);
+#ifdef Q_OS_MACOS
+        QCOMPARE(type, Qt::Sheet);
+#else
+        Q_UNUSED(type);
+#endif
+        result.removeAll(QString{});
+        QVERIFY(result.isEmpty());
+        QCOMPARE(filter, QStringLiteral("unchanged"));
+    }
+
+    void filePickerKeepsSelectionAndSaveFilter_data()
+    {
+        QTest::addColumn<bool>("save");
+        QTest::newRow("open") << false;
+        QTest::newRow("save") << true;
+    }
+
+    void filePickerKeepsSelectionAndSaveFilter()
+    {
+        QFETCH(bool, save);
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        const QString path = root.filePath("sample.dat");
+        if (!save) {
+            QFile file(path);
+            QVERIFY(file.open(QIODevice::WriteOnly));
+        }
+        QWidget host;
+        host.show();
+        bool selected = false;
+        QTimer::singleShot(150, &host, [&] {
+            auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+            if (!dialog) return;
+            auto* picker = dialog->findChild<QFileDialog*>();
+            if (!picker) { dialog->reject(); return; }
+            picker->selectNameFilter("Data (*.dat)");
+            auto* fileName = picker->findChild<QLineEdit*>("fileNameEdit");
+            if (!fileName) { dialog->reject(); return; }
+            fileName->setText(path);
+            selected = QMetaObject::invokeMethod(picker, "accept", Qt::DirectConnection);
+            if (!selected) dialog->reject();
+        });
+        QTimer watchdog;
+        watchdog.setSingleShot(true);
+        connect(&watchdog, &QTimer::timeout, &host, [] {
+            if (auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget())) dialog->reject();
+        });
+        watchdog.start(5000);
+        QString filter;
+        const auto chosen = save
+            ? ThemedFileDialog::getSaveFileName(&host, "Save", root.path(), "Data (*.dat);;All files (*)", &filter)
+            : ThemedFileDialog::getOpenFileName(&host, "Open", root.path(), "Data (*.dat)");
+        QVERIFY(selected);
+        QCOMPARE(QDir::cleanPath(chosen), QDir::cleanPath(path));
+        if (save) QCOMPARE(filter, QStringLiteral("Data (*.dat)"));
+    }
+
     void messageIconBalancesShortAndWrappedText()
     {
         Resources::installResources(*qApp);
