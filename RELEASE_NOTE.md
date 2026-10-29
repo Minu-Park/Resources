@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Bound file-picker modality tests with a watchdog so a missing modal observation fails instead of waiting indefinitely. Verify menu-style checkable rows retain switch artwork and click targets; initialize toggle tests at rest independently of the preceding pointer position.
+
 - Apply menu identity hover ink over index-widget cards as well as viewport rows; restore title weight and icon colors when the pointer leaves. Test glyph classification, state ink, tint opt-out and icon replacement independently of the classification result.
 
 - Open file and folder pickers as native window-modal dialogs (sheets on macOS), preserving synchronous selection results, save filters and overwrite confirmation.

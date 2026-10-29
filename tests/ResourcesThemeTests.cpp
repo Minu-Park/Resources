@@ -679,6 +679,8 @@ private slots:
         const QRgb hoverInk = palette.value("hoverBorder").rgb();
         const QRgb activeInk = palette.value("focusBorder").rgb();
 
+        // A preceding test may leave the native pointer over this newly shown button.
+        hover(toggle, false);
         QCOMPARE(alphaOf(shown(toggle)), offAlpha);
         QCOMPARE(inkOf(shown(toggle)), neutral);
         hover(toggle, true);

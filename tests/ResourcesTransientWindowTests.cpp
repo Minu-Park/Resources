@@ -164,6 +164,15 @@ private slots:
         bool observed = false;
         Qt::WindowModality modality = Qt::NonModal;
         Qt::WindowType type = Qt::Widget;
+        bool watchdogFired = false;
+        QTimer watchdog;
+        watchdog.setSingleShot(true);
+        connect(&watchdog, &QTimer::timeout, &host, [&] {
+            watchdogFired = true;
+            for (auto* widget : QApplication::topLevelWidgets())
+                if (auto* dialog = qobject_cast<QDialog*>(widget); dialog && dialog->isVisible()) dialog->reject();
+        });
+        watchdog.start(5000);
         QTimer::singleShot(0, &host, [&] {
             auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
             if (!dialog) return;
@@ -181,6 +190,8 @@ private slots:
         case 3: result = ThemedFileDialog::getExistingDirectories(&host, "Folders"); break;
         case 4: result = {ThemedFileDialog::getSaveFileName(&host, "Save", {}, "Data (*.dat)", &filter)}; break;
         }
+        watchdog.stop();
+        QVERIFY2(!watchdogFired, "File picker did not reach the modal observation callback.");
         QVERIFY(observed);
         QCOMPARE(modality, Qt::WindowModal);
 #ifdef Q_OS_MACOS
