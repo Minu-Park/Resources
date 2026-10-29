@@ -100,9 +100,9 @@ class ResourcesItemViewTests : public QObject
         tree.show();
         QVERIFY(QTest::qWaitForWindowExposed(&tree));
         QCOMPARE(tree.selectionBehavior(), QAbstractItemView::SelectRows);
-        QVERIFY(tree.property("joinedSelectionOnly").toBool());
+        QVERIFY(tree.property("menuItemInk").toBool());
         tree.setFocus();
-        // Clicking the Feature cell selects the row without a separate current-cell capsule.
+        // Menu ink changes presentation while selecting the complete feature row.
         QTest::mouseClick(tree.viewport(), Qt::LeftButton, {}, tree.visualRect(tree.indexFromItem(selected, 0)).center());
         QCOMPARE(tree.selectionModel()->selectedIndexes().size(), 2);
         movePointer(tree.viewport(), tree.visualRect(tree.indexFromItem(hovered, 1)).center());
@@ -114,9 +114,86 @@ class ResourcesItemViewTests : public QObject
         };
         const auto colors = Resources::themePalette();
         for (int column : {0, 1}) {
-            QCOMPARE(sample(selected, column), colors.value("selection"));
-            QCOMPARE(sample(hovered, column), colors.value("itemHover"));
+            QCOMPARE(sample(selected, column), colors.value("surface"));
+            QCOMPARE(sample(hovered, column), colors.value("surface"));
         }
+    }
+    void menuInkColorsIdentityWithoutRowFills()
+    {
+        ThemedTreeWidget tree;
+        tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Row);
+        Resources::setItemSelectionAppearance(&tree, Resources::ItemSelectionAppearance::MenuInk);
+        tree.setHeaderHidden(true);
+        tree.setRootIsDecorated(false);
+        auto* selected = new QTreeWidgetItem(&tree, {"Selected identity"});
+        auto* hovered = new QTreeWidgetItem(&tree, {"Hovered identity"});
+        selected->setIcon(0, QIcon(":/Resources/icon/camera-48.png"));
+        hovered->setIcon(0, selected->icon(0));
+        auto* cardRow = new QTreeWidgetItem(&tree);
+        cardRow->setSizeHint(0, QSize(240, 30));
+        auto* card = new QWidget;
+        auto* layout = new QHBoxLayout(card);
+        auto* title = new QLabel("Card identity", card);
+        title->setProperty("itemRole", "title");
+        auto* icon = new QLabel(card);
+        icon->setProperty("itemRole", "icon");
+        icon->setProperty("itemIcon", selected->icon(0));
+        icon->setProperty("itemIconSize", QSize(16, 16));
+        layout->addWidget(icon); layout->addWidget(title);
+        tree.setItemWidget(cardRow, 0, card);
+        tree.resize(360, 170); tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        tree.setCurrentItem(selected);
+        movePointer(tree.viewport(), tree.visualItemRect(hovered).center());
+        const QImage image = tree.viewport()->grab().toImage();
+        const auto colors = Resources::themePalette();
+        for (auto* item : {selected, hovered}) {
+            const QRect row = tree.visualItemRect(item);
+            const QPoint blank(row.right() - 8, row.center().y());
+            QCOMPARE(image.pixelColor(blank * image.devicePixelRatio()), colors.value("surface"));
+            int blue = 0;
+            const QRect pixels(QPoint(row.topLeft() * image.devicePixelRatio()),
+                               QSize(row.size() * image.devicePixelRatio()));
+            for (int y = pixels.top(); y < pixels.bottom(); ++y)
+                for (int x = pixels.left() + qRound(40 * image.devicePixelRatio()); x < pixels.right(); ++x)
+                    if (image.pixelColor(x, y) == colors.value("selectionAccent")) ++blue;
+            QVERIFY2(blue > 10, "Menu identities must contain blue title and glyph ink.");
+        }
+        tree.setCurrentItem(cardRow);
+        movePointer(tree.viewport(), tree.visualItemRect(cardRow).center());
+        QVERIFY(!tree.viewport()->grab().isNull());
+        QCOMPARE(card->property("itemInkState").toString(), QString("active"));
+        QCOMPARE(title->palette().color(QPalette::WindowText), colors.value("selectionAccent"));
+        QVERIFY(title->font().weight() >= QFont::DemiBold);
+        tree.setCurrentItem(selected);
+        movePointer(tree.viewport(), QPoint(tree.viewport()->width() - 8, tree.viewport()->height() - 8));
+        QVERIFY(!tree.viewport()->grab().isNull());
+        QCOMPARE(card->property("itemInkState").toString(), QString("normal"));
+        QCOMPARE(title->palette().color(QPalette::WindowText), colors.value("text"));
+        QCOMPARE(title->font().weight(), QFont::Normal);
+    }
+    void menuInkPreservesValueDelegateAndEditorContract()
+    {
+        QTreeWidget tree;
+        tree.setColumnCount(2);
+        tree.setHeaderLabels({"Feature", "Value"});
+        auto* source = new TrackingDelegate(&tree);
+        tree.setItemDelegate(source);
+        Resources::setItemSelectionAppearance(&tree, Resources::ItemSelectionAppearance::MenuInk);
+        auto* row = new QTreeWidgetItem(&tree, {"Exposure", "120"});
+        row->setFlags(row->flags() | Qt::ItemIsEditable);
+        tree.resize(360, 150); tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        tree.setCurrentItem(row);
+        QVERIFY(!tree.viewport()->grab().isNull());
+        QVERIFY(source->paints > 0);
+        tree.editItem(row, 1);
+        QTRY_COMPARE(source->editors, 1);
+        auto* editor = tree.findChild<QLineEdit*>();
+        QVERIFY(editor);
+        editor->setText("240");
+        QTest::keyClick(editor, Qt::Key_Return);
+        QTRY_COMPARE(row->text(1), QString("240"));
     }
     void incompleteThemeReloadIsAtomic()
     {

@@ -1,5 +1,10 @@
 #include "Resources.h"
 #include "Chrome/ThemedMdiTitleBar.h"
+#include "Chrome/ThemedMainTitleBar.h"
+#include "Chrome/ThemedDockTitleBar.h"
+#include "Chrome/ThemedDialog.h"
+#include <QMainWindow>
+#include <QDockWidget>
 #include <QMdiSubWindow>
 #include <QPushButton>
 #include <QMenu>
@@ -511,36 +516,46 @@ private slots:
         QCOMPARE(image.pixelColor(image.width() / 2, 0), Resources::themePalette().value("focusBorder"));
     }
 
-    void mdiWindowControlsKeepTheirOriginalInk()
+    void windowControlsKeepTheirOriginalInk()
     {
         QMdiSubWindow window;
+        QMainWindow mainWindow;
+        QDockWidget dockWindow;
         ThemedMdiTitleBar title(&window, nullptr);
-        title.show();
-        QApplication::processEvents();
-        for (const auto& name : {"TitleMinButton", "TitleMaxButton", "TitleCloseButton"}) {
-            auto* button = title.findChild<QPushButton*>(name);
-            QVERIFY(button);
-            QCOMPARE(button->property("glyphStateTint"), QVariant(false));
-            for (bool hover : {false, true}) {
-                button->setAttribute(Qt::WA_UnderMouse, hover);
-                if (hover) { QEvent enter(QEvent::Enter); QApplication::sendEvent(button, &enter); }
-                else { QEvent leave(QEvent::Leave); QApplication::sendEvent(button, &leave); }
-                button->setDown(hover);
-                button->repaint();
-                QApplication::processEvents();
-                const QImage image = button->icon().pixmap(QSize(16, 16), QIcon::Normal).toImage();
-                bool hasInk = false;
-                for (int y = 0; y < image.height(); ++y)
-                    for (int x = 0; x < image.width(); ++x) {
-                        const QColor ink = image.pixelColor(x, y);
-                        if (ink.alpha() < 240) continue;
-                        hasInk = true;
-                        QVERIFY(qAbs(ink.red() - ink.green()) <= 1);
-                        QVERIFY(qAbs(ink.green() - ink.blue()) <= 1);
-                        QVERIFY(ink.red() <= 60);
+        ThemedMainTitleBar mainTitle(&mainWindow, nullptr);
+        ThemedDockTitleBar dockTitle(&dockWindow);
+        ThemedDialog dialog("Neutral window controls");
+        for (QWidget* surface : {static_cast<QWidget*>(&title), static_cast<QWidget*>(&mainTitle),
+                                 static_cast<QWidget*>(&dockTitle), static_cast<QWidget*>(&dialog)}) {
+            surface->show();
+            QApplication::processEvents();
+            const auto buttons = surface->findChildren<QPushButton*>();
+            QVERIFY(!buttons.isEmpty());
+            for (auto* button : buttons) {
+                QVERIFY(!button->property("glyphStateTint").isValid());
+                for (bool hover : {false, true}) {
+                    button->setAttribute(Qt::WA_UnderMouse, hover);
+                    if (hover) { QEvent enter(QEvent::Enter); QApplication::sendEvent(button, &enter); }
+                    else { QEvent leave(QEvent::Leave); QApplication::sendEvent(button, &leave); }
+                    button->setDown(hover);
+                    QVERIFY(!button->grab().isNull());
+                    QApplication::processEvents();
+                    for (const auto mode : {QIcon::Normal, QIcon::Active, QIcon::Selected}) {
+                        const QImage image = button->icon().pixmap(QSize(16, 16), mode).toImage();
+                        bool hasInk = false;
+                        for (int y = 0; y < image.height(); ++y)
+                            for (int x = 0; x < image.width(); ++x) {
+                                const QColor ink = image.pixelColor(x, y);
+                                if (ink.alpha() < 240) continue;
+                                hasInk = true;
+                                QVERIFY2(qAbs(ink.red() - ink.green()) <= 1, qPrintable(button->objectName() + QStringLiteral(" mode=%1 hover=%2 visible=%3").arg(mode).arg(hover).arg(button->isVisible())));
+                                QVERIFY(qAbs(ink.green() - ink.blue()) <= 1);
+                                QVERIFY(ink.red() <= 60);
+                            }
+                        QVERIFY(hasInk);
                     }
-                QVERIFY(hasInk);
-                button->setDown(false);
+                    button->setDown(false);
+                }
             }
         }
     }
