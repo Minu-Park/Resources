@@ -823,17 +823,42 @@ public:
     }
 };
 
+/** @brief Returns whether a hovered or focused toggle must keep showing its new state.
+ *  A toggle that changed while engaged keeps its state glyph until the pointer and focus leave,
+ *  so a click never flips straight to the opposite preview and reads as a failed command.
+ *  State is sampled at paint time because consumers often toggle under a QSignalBlocker.
+ */
+static bool toggleGlyphPreviewSuppressed(QAbstractButton& button)
+{
+    static constexpr char lastCheckedKey[] = "_resourcesGlyphLastChecked";
+    static constexpr char suppressedKey[] = "_resourcesGlyphPreviewSuppressed";
+    const bool engaged = button.underMouse() || button.hasFocus();
+    const QVariant lastChecked = button.property(lastCheckedKey);
+    bool suppressed = engaged && button.property(suppressedKey).toBool();
+    if (engaged && lastChecked.isValid() && lastChecked.toBool() != button.isChecked()) suppressed = true;
+    if (lastChecked != QVariant(button.isChecked())) button.setProperty(lastCheckedKey, button.isChecked());
+    if (button.property(suppressedKey).toBool() != suppressed) button.setProperty(suppressedKey, suppressed);
+    return suppressed;
+}
+
 /** @brief Paints a button's glyph in hover and pressed palette roles.
  *  Qt selects icon modes only from enabled, focus and auto-raise hover state; a press or open
  *  menu never selects a mode. The engine therefore reads its owning button at paint time.
+ *  A checkable button whose icon supplies distinct Off and On artwork is a state toggle: Off and
+ *  On name the current state, and hover, focus or press preview the opposite state's artwork.
  *  Disabled rendering and non-neutral artwork remain the source icon's own.
  */
 class ButtonGlyphStateEngine final : public QIconEngine
 {
 public:
-    ButtonGlyphStateEngine(const QIcon& source, QAbstractButton* owner) : source_(source), owner_(owner) {}
+    ButtonGlyphStateEngine(const QIcon& source, QAbstractButton* owner)
+        : source_(source), owner_(owner),
+          pairedStates_(!source.availableSizes(QIcon::Normal, QIcon::Off).isEmpty()
+                        && !source.availableSizes(QIcon::Normal, QIcon::On).isEmpty())
+    {
+    }
 
-    QIconEngine* clone() const override { return new ButtonGlyphStateEngine(source_, owner_); }
+    QIconEngine* clone() const override { return new ButtonGlyphStateEngine(source_, owner_.data()); }
     QString key() const override { return QStringLiteral("ResourcesButtonGlyphState"); }
     QString iconName() override { return source_.name(); }
     bool isNull() override { return source_.isNull(); }
@@ -859,10 +884,11 @@ public:
     }
     QPixmap scaledPixmap(const QSize& size, QIcon::Mode mode, QIcon::State state, qreal scale) override
     {
-        const QColor ink = mode == QIcon::Disabled ? QColor() : interactionInk(state);
-        if (!ink.isValid()) return source_.pixmap(size, scale, mode, state);
+        QIcon::State shown = state;
+        const QColor ink = mode == QIcon::Disabled ? QColor() : interactionInk(state, &shown);
+        if (!ink.isValid()) return source_.pixmap(size, scale, mode, shown);
         const QColor text = Resources::ResourcesTheme::instance().themePalette().value(QStringLiteral("text"));
-        return tintedGlyph(source_.pixmap(size, scale, QIcon::Normal, state), ink, text);
+        return tintedGlyph(source_.pixmap(size, scale, QIcon::Normal, shown), ink, text);
     }
     void paint(QPainter* painter, const QRect& rect, QIcon::Mode mode, QIcon::State state) override
     {
@@ -874,26 +900,39 @@ public:
     }
 
 private:
-    /** @brief Mirrors the button state outline: press, open menu or checked wins over hover/focus.
-     *  Checked follows the requested icon state so an Off-state query keeps the supplied artwork.
+    /** @brief Selects the ink and, for state toggles, the artwork state to draw.
+     *  Single-artwork buttons mirror the state outline: press, open menu or checked wins over
+     *  hover/focus. State toggles draw a preview of the opposite state in `hoverBorder` and the
+     *  pressed target in `focusBorder`; at rest, checked follows the requested icon state so an
+     *  Off-state query keeps the supplied artwork.
      */
-    QColor interactionInk(QIcon::State state) const
+    QColor interactionInk(QIcon::State state, QIcon::State* shown) const
     {
-        const QAbstractButton* button = owner_.data();
+        QAbstractButton* button = owner_.data();
         if (!button || !button->isEnabled() || button->property("glyphStateTint") == QVariant(false)) return {};
         const QMenu* menu = nullptr;
         if (const auto* tool = qobject_cast<const QToolButton*>(button)) menu = tool->menu();
         else if (const auto* push = qobject_cast<const QPushButton*>(button)) menu = push->menu();
         const auto palette = Resources::ResourcesTheme::instance().themePalette();
-        if (button->isDown() || (menu && menu->isVisible())
-            || (state == QIcon::On && button->isCheckable() && button->isChecked()))
-            return palette.value(QStringLiteral("focusBorder"));
-        if (button->underMouse() || button->hasFocus()) return palette.value(QStringLiteral("hoverBorder"));
+        const bool active = button->isDown() || (menu && menu->isVisible());
+        const bool engaged = button->underMouse() || button->hasFocus();
+        const bool checkedState = state == QIcon::On && button->isCheckable() && button->isChecked();
+        if (pairedStates_ && button->isCheckable()) {
+            const bool suppressed = toggleGlyphPreviewSuppressed(*button);
+            if (active || (engaged && !suppressed)) {
+                *shown = state == QIcon::On ? QIcon::Off : QIcon::On;
+                return palette.value(active ? QStringLiteral("focusBorder") : QStringLiteral("hoverBorder"));
+            }
+            return checkedState ? palette.value(QStringLiteral("focusBorder")) : QColor();
+        }
+        if (active || checkedState) return palette.value(QStringLiteral("focusBorder"));
+        if (engaged) return palette.value(QStringLiteral("hoverBorder"));
         return {};
     }
 
     QIcon source_;
     QPointer<QAbstractButton> owner_;
+    bool pairedStates_ = false;
 };
 
 /** @brief Returns whether a tool or push button shows its icon without visible text. */

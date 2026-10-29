@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Treat checkable tool and push buttons with distinct Off/On artwork as state toggles: the rest glyph names the current state, hover/focus previews the opposite state in `hoverBorder`, a press shows it in `focusBorder`, and a state change under the pointer keeps the new glyph until the pointer and focus leave. Add `fit-on`/`fit-off` and `layout-tabs`/`layout-grid` glyphs in 24px and 48px.
+
 - Add `checkbox-unchecked` and `checkbox-checked` vector glyphs, with hover and disabled variants, drawn in the menu-icon weight and size. Nonexclusive menu actions use them instead of the bare check mark and empty unchecked slot.
 
 - Add matching `radio-unchecked` and `radio-checked` glyphs, with hover and disabled variants, for exclusive menu actions. Standalone radio buttons keep the supplied artwork.
