@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Apply menu identity hover ink over index-widget cards as well as viewport rows; restore title weight and icon colors when the pointer leaves. Test glyph classification, state ink, tint opt-out and icon replacement independently of the classification result.
+
 - Open file and folder pickers as native window-modal dialogs (sheets on macOS), preserving synchronous selection results, save filters and overwrite confirmation.
 
 - Add shared menu-style identity rows: neutral resting text/icons, blue semibold hover/selection and no row fills. Device feature trees use the same appearance while retaining value editors and check state.

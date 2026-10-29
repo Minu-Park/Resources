@@ -141,8 +141,9 @@ class ResourcesItemViewTests : public QObject
         icon->setProperty("itemIconSize", QSize(16, 16));
         layout->addWidget(icon); layout->addWidget(title);
         tree.setItemWidget(cardRow, 0, card);
-        tree.resize(360, 170); tree.show();
+        tree.resize(360, 170); tree.show(); tree.activateWindow();
         QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        QVERIFY(QTest::qWaitForWindowActive(&tree));
         tree.setCurrentItem(selected);
         movePointer(tree.viewport(), tree.visualItemRect(hovered).center());
         const QImage image = tree.viewport()->grab().toImage();
@@ -157,20 +158,34 @@ class ResourcesItemViewTests : public QObject
             for (int y = pixels.top(); y < pixels.bottom(); ++y)
                 for (int x = pixels.left() + qRound(40 * image.devicePixelRatio()); x < pixels.right(); ++x)
                     if (image.pixelColor(x, y) == colors.value("selectionAccent")) ++blue;
-            QVERIFY2(blue > 10, "Menu identities must contain blue title and glyph ink.");
+            QVERIFY2(blue > 10, qPrintable(item->text(0)));
         }
-        tree.setCurrentItem(cardRow);
-        movePointer(tree.viewport(), tree.visualItemRect(cardRow).center());
+        movePointer(tree.viewport(), QPoint(tree.viewport()->width() - 8, tree.viewport()->height() - 8));
         QVERIFY(!tree.viewport()->grab().isNull());
+        const QImage originalIcon = icon->pixmap().toImage();
+        QVERIFY(!originalIcon.isNull());
+        // Keep selection elsewhere: index-widget hover must activate the identity on its own.
+        movePointer(title, title->rect().center());
+        QTRY_COMPARE(card->property("itemInkState").toString(), QString("active"));
+        QVERIFY(!tree.viewport()->grab().isNull());
+        QCOMPARE(tree.currentItem(), selected);
+        QVERIFY(!cardRow->isSelected());
         QCOMPARE(card->property("itemInkState").toString(), QString("active"));
         QCOMPARE(title->palette().color(QPalette::WindowText), colors.value("selectionAccent"));
         QVERIFY(title->font().weight() >= QFont::DemiBold);
-        tree.setCurrentItem(selected);
+        const QImage activeIcon = icon->pixmap().toImage();
+        QVERIFY(activeIcon != originalIcon);
+        bool accentInk = false;
+        for (int y = 0; y < activeIcon.height(); ++y)
+            for (int x = 0; x < activeIcon.width(); ++x)
+                accentInk |= activeIcon.pixelColor(x, y) == colors.value("selectionAccent");
+        QVERIFY(accentInk);
         movePointer(tree.viewport(), QPoint(tree.viewport()->width() - 8, tree.viewport()->height() - 8));
         QVERIFY(!tree.viewport()->grab().isNull());
         QCOMPARE(card->property("itemInkState").toString(), QString("normal"));
         QCOMPARE(title->palette().color(QPalette::WindowText), colors.value("text"));
         QCOMPARE(title->font().weight(), QFont::Normal);
+        QCOMPARE(icon->pixmap().toImage(), originalIcon);
     }
     void menuInkPreservesValueDelegateAndEditorContract()
     {
