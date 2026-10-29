@@ -253,10 +253,12 @@ QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:pre
 QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:checked {
     border-color: @FOCUSBORDER@;
 }
-/* Active interaction takes precedence over hover and keyboard focus. */
+/* Active interaction, including an open menu, takes precedence over hover and keyboard focus.
+ * Its label takes the selection accent text role, as in menu rows. */
 QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled:pressed,
 QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled:checked {
 
     border-color: @FOCUSBORDER@;
+    color: @SELECTIONACCENT@;
     outline: none;
 }

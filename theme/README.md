@@ -72,7 +72,7 @@ layouts. Unknown roles retain Qt/consumer layout behavior.
 `controlRole="statusBubble"` uses `statusBubbleVariant="menu"`, `"action"` or
 `"alert"` for existing menu/text/alert states. `logState` and `performancePath`
 retain their diagnostic meaning; disabled, hover/focus and active border roles
-remain distinct. A shared pattern does not erase icon gutters, close hit targets,
+remain distinct. A pressed or open menu bubble also draws its label in `selectionAccent`. A shared pattern does not erase icon gutters, close hit targets,
 native popup corrections or content-owned rendering.
 
 Before adding a role, record its meaning, supported widget/layout kinds, states,
@@ -99,14 +99,26 @@ rendering checks; token validation is not a complete QSS syntax validator.
 Qt QSS has no import mechanism, so fragment order in `ResourcesTheme::install()`
 is part of the theme contract. The design catalog watches both QSS and metrics.
 
-Menu hover uses the same `itemHover` role as tree, list and table hover. The shared
-menu template owns 12px capsule corners and 4px vertical padding so the native
-row has enough height to render the rounded body.
+Menu hover paints no fill: the row text uses `selectionAccent`, and the theme
+runtime's style proxy recolors Qt's generated Active-mode pixmap of neutral action
+glyphs with the same role. Action icons are not replaced. Palette changes clear
+`QPixmapCache` because Qt caches generated pixmaps without the palette in the key.
+The hovered label also uses `WEIGHT_EMPHASIS`; rest labels stay normal weight. Before each
+popup the runtime reserves the emphasized label width through the menu's minimum width,
+keeping any consumer minimum, so hover neither clips nor resizes a row. Checked rows paint
+no fill; check and radio glyphs, or the invoking control, show the current value.
+The shared menu template keeps 4px vertical padding for the existing row height.
 
 - Put generic widget defaults in the lowest-numbered files.
 - Put semantic role and state selectors after their defaults.
 - Use dynamic properties for reusable states and density.
 - Keep icons under stable `:/Resources/...` virtual paths.
+- Ship one neutral (`#3c3c3b`) artwork per glyph. The theme runtime wraps tool- and
+  push-button icons and recolors neutral pixels with `hoverBorder` (hover/focus) or
+  `focusBorder` (pressed/checked/open), because Qt selects no icon mode for a press.
+  Non-neutral artwork, disabled rendering and the rest state pass through unchanged.
+  Icon-only neutral buttons get `resourcesGlyphButton="true"`, and `00_base.qss` drops
+  their state outline; selectors with their own state pattern still take precedence.
 - The consuming application installs the theme; reusable libraries do not.
 
 Current consumer-specific object names identify narrow presentation exceptions.

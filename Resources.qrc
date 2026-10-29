@@ -190,6 +190,18 @@
         <file>icon/radio-outline-on.svg</file>
         <file>icon/radio-outline-off-disabled.svg</file>
         <file>icon/radio-outline-on-disabled.svg</file>
+        <file>icon/checkbox-unchecked.svg</file>
+        <file>icon/checkbox-unchecked-hover.svg</file>
+        <file>icon/checkbox-unchecked-disabled.svg</file>
+        <file>icon/checkbox-checked.svg</file>
+        <file>icon/checkbox-checked-hover.svg</file>
+        <file>icon/checkbox-checked-disabled.svg</file>
+        <file>icon/radio-unchecked.svg</file>
+        <file>icon/radio-unchecked-hover.svg</file>
+        <file>icon/radio-unchecked-disabled.svg</file>
+        <file>icon/radio-checked.svg</file>
+        <file>icon/radio-checked-hover.svg</file>
+        <file>icon/radio-checked-disabled.svg</file>
         <file>icon/chevron-up-blue.svg</file>
         <file>icon/chevron-up-disabled.svg</file>
         <file>icon/chevron-down-blue.svg</file>

@@ -2,11 +2,25 @@
 
 ## Unreleased
 
+- Add `checkbox-unchecked` and `checkbox-checked` vector glyphs, with hover and disabled variants, drawn in the menu-icon weight and size. Nonexclusive menu actions use them instead of the bare check mark and empty unchecked slot.
+
+- Add matching `radio-unchecked` and `radio-checked` glyphs, with hover and disabled variants, for exclusive menu actions. Standalone radio buttons keep the supplied artwork.
+
+- Draw menu checkbox and radio glyphs at the 16px menu-icon scale (12px ink, 1.33px stroke) on the icons' left edge, and give every row in a menu with a leading column the icon content height so rows share one pitch.
+
+- Replace the menu hover fill with `selectionAccent` row text and neutral action glyphs, recolored from Qt's generated Active-mode pixmap without replacing action icons. Clear the pixmap cache on palette changes.
+
+- Emphasize the hovered menu label with `WEIGHT_EMPHASIS`; rows reserve the emphasized label width before each popup, so hover neither clips nor resizes a menu. Rest labels keep the normal weight.
+
+- Remove the display-mode menu's checked-row fill, which matched the hover capsule; its rows follow the shared menu states. Open status-menu bubbles draw their label in `selectionAccent`.
+
 - Add `ThemedFileDialog::getExistingDirectory()` for single-folder selection.
 
-- Select layout patterns by semantic Qt roles and shared layout metrics instead of consumer object names. Read action density from the nearest explicit scope, preserving individual overrides and tab-scroller geometry without consumer class-name admission. Share compact processing actions and status-button patterns.
+- Keep the main window minimize, maximize and close buttons on their supplied artwork; `glyphStateTint=false` opts a button out of glyph state colors.
 
-- Match menu hover to item-view hover with the shared `itemHover` palette role, 12px capsule corners and enough vertical padding for the rounded row body.
+- Draw neutral tool- and push-button glyphs in `hoverBorder` on hover/focus and `focusBorder` while pressed, checked or with an open menu, from the live palette. Icon-only neutral glyph buttons (`resourcesGlyphButton`) drop their state outline. The single supplied artwork is adopted at runtime, including icon, text and style changes; rest, disabled and non-neutral artwork are unchanged.
+
+- Select layout patterns by semantic Qt roles and shared layout metrics instead of consumer object names. Read action density from the nearest explicit scope, preserving individual overrides and tab-scroller geometry without consumer class-name admission. Share compact processing actions and status-button patterns.
 
 - Remove redundant shorthand/edge assignments and share matching chrome, status-bubble, processing-header and indicator selector groups while preserving their state scopes. Resolve plot action size and radius from the same compact-action metrics as other consumers.
 
