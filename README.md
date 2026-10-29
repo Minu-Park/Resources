@@ -7,7 +7,7 @@ Resources is a standalone Qt 6 resource, theme, and reusable window-chrome libra
 - Compile icons, images, and ordered `theme/qss/*.qss` fragments into a Qt resource collection.
 - Install the resource collection and stylesheet through `Resources::installResources()`.
 - Persist the complete theme, including font roles, with `savePaletteFile()` and `loadPaletteFile()`. Consumers choose the path and loading time. JSON contains one `colors` object with every supported `#RRGGBB` value. Loading a missing, malformed, incomplete or unknown-role file restores the complete built-in palette.
-- Provide reusable main-window, MDI, dock, dialog, file-dialog, message-box, splash, loading, and progress chrome.
+- Provide reusable main-window, MDI, dock, dialog, file-dialog, message-box, splash, loading, and progress chrome. `ThemedFileDialog` presents its outer shell through `QDialog::open()` with native window modality (a sheet on macOS); its synchronous selection helpers wait for completion and preserve selected paths, save filters and cancellation results.
 - Provide a Qt-only searchable tree base with stable-key favorites, editor-preserving filtering, shortcuts, and scrollbar-independent overlay geometry.
 - Expose an opt-in cached MDI shadow implementation with a focused offscreen test target.
 

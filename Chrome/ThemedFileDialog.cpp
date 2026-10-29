@@ -6,6 +6,7 @@
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QEvent>
+#include <QEventLoop>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFrame>
@@ -339,6 +340,16 @@ void ThemedFileDialog::alignActionButtons()
     alignTo(_cancelButton, _fileTypeComboBox);
 }
 
+int ThemedFileDialog::execWindowModal()
+{
+    QEventLoop completion;
+    connect(this, &QDialog::finished, &completion, &QEventLoop::quit);
+    // QDialog::exec() resets open()'s modality; wait without replacing its native sheet.
+    open();
+    if (isVisible()) completion.exec(QEventLoop::DialogExec);
+    return result();
+}
+
 QString ThemedFileDialog::getOpenFileName(
     QWidget* parent,
     const QString& title,
@@ -346,7 +357,7 @@ QString ThemedFileDialog::getOpenFileName(
     const QString& filter)
 {
     ThemedFileDialog dialog(parent, title, directory, filter, Mode::OpenOne);
-    return dialog.exec() == QDialog::Accepted ? dialog._fileDialog->selectedFiles().value(0) : QString{};
+    return dialog.execWindowModal() == QDialog::Accepted ? dialog._fileDialog->selectedFiles().value(0) : QString{};
 }
 
 QStringList ThemedFileDialog::getOpenFileNames(
@@ -356,7 +367,7 @@ QStringList ThemedFileDialog::getOpenFileNames(
     const QString& filter)
 {
     ThemedFileDialog dialog(parent, title, directory, filter, Mode::OpenMany);
-    return dialog.exec() == QDialog::Accepted ? dialog._fileDialog->selectedFiles() : QStringList{};
+    return dialog.execWindowModal() == QDialog::Accepted ? dialog._fileDialog->selectedFiles() : QStringList{};
 }
 
 QStringList ThemedFileDialog::getExistingDirectories(
@@ -365,7 +376,7 @@ QStringList ThemedFileDialog::getExistingDirectories(
     const QString& directory)
 {
     ThemedFileDialog dialog(parent, title, directory, {}, Mode::Directory);
-    return dialog.exec() == QDialog::Accepted ? dialog._fileDialog->selectedFiles() : QStringList{};
+    return dialog.execWindowModal() == QDialog::Accepted ? dialog._fileDialog->selectedFiles() : QStringList{};
 }
 
 QString ThemedFileDialog::getExistingDirectory(
@@ -374,7 +385,7 @@ QString ThemedFileDialog::getExistingDirectory(
     const QString& directory)
 {
     ThemedFileDialog dialog(parent, title, directory, {}, Mode::Directory);
-    return dialog.exec() == QDialog::Accepted ? dialog._fileDialog->selectedFiles().value(0) : QString{};
+    return dialog.execWindowModal() == QDialog::Accepted ? dialog._fileDialog->selectedFiles().value(0) : QString{};
 }
 
 QString ThemedFileDialog::getSaveFileName(
@@ -385,7 +396,7 @@ QString ThemedFileDialog::getSaveFileName(
     QString* selectedFilter)
 {
     ThemedFileDialog dialog(parent, title, filePath, filter, Mode::Save);
-    if (dialog.exec() != QDialog::Accepted)
+    if (dialog.execWindowModal() != QDialog::Accepted)
     {
         return {};
     }
