@@ -764,7 +764,8 @@ static bool isNeutralGlyph(const QPixmap& pixmap, const QColor& text)
 {
     const QImage image = pixmap.toImage().convertToFormat(QImage::Format_ARGB32);
     const QColor assetInk(0x3c, 0x3c, 0x3b);
-    const auto near = [](QRgb pixel, const QColor& ink) {
+    // Not `near`: Windows headers define it as an empty macro.
+    const auto matchesInk = [](QRgb pixel, const QColor& ink) {
         return qAbs(qRed(pixel) - ink.red()) <= 40 && qAbs(qGreen(pixel) - ink.green()) <= 40
             && qAbs(qBlue(pixel) - ink.blue()) <= 40;
     };
@@ -774,7 +775,7 @@ static bool isNeutralGlyph(const QPixmap& pixmap, const QColor& text)
         for (int x = 0; x < image.width(); ++x) {
             // Faint antialiasing edges carry little reliable color; their alpha still follows the glyph.
             if (qAlpha(row[x]) < 32) continue;
-            if (!near(row[x], assetInk) && !near(row[x], text)) return false;
+            if (!matchesInk(row[x], assetInk) && !matchesInk(row[x], text)) return false;
             visible = true;
         }
     }
