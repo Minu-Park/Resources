@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `ThemedFileDialog::getExistingDirectory()` for single-folder selection.
+
 - Select layout patterns by semantic Qt roles and shared layout metrics instead of consumer object names. Read action density from the nearest explicit scope, preserving individual overrides and tab-scroller geometry without consumer class-name admission. Share compact processing actions and status-button patterns.
 
 - Match menu hover to item-view hover with the shared `itemHover` palette role, 12px capsule corners and enough vertical padding for the rounded row body.
