@@ -146,7 +146,7 @@ QWidget#HmiWorkspace {
 
 QWidget#HmiViewWrapper[hmiEditable="true"] {
     background-color: @SURFACE@;
-    border: 1px solid @BORDER@;
+    border: none;
     border-radius: 8px;
 }
 
