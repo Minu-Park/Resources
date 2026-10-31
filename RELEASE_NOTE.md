@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Give resting editable HMI cards surface fill, rounded corners, a translucent secondary-title chip and transparent resize targets without an outer outline border; locked shells remain chrome-free.
+
 - Keep update-notification decision buttons inside their action row by matching their minimum and maximum content heights.
 
 - Bound file-picker modality tests with a watchdog so a missing modal observation fails instead of waiting indefinitely. Verify menu-style checkable rows retain switch artwork and click targets; initialize toggle tests at rest independently of the preceding pointer position.
