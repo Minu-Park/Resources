@@ -24,6 +24,7 @@
 #include <QListView>
 #include <QLineEdit>
 #include <QPainter>
+#include <QPointer>
 #include <QPushButton>
 #include <QToolButton>
 #include <QRegularExpression>
@@ -173,6 +174,22 @@ protected:
     }
 };
 
+/** @brief Drops native pointer motion and crossing so a test can drive hover state explicitly. */
+class PointerMoveBlocker final : public QObject
+{
+protected:
+    bool eventFilter(QObject*, QEvent* event) override
+    {
+        switch (event->type()) {
+        case QEvent::MouseMove: case QEvent::HoverMove: case QEvent::HoverEnter: case QEvent::HoverLeave:
+        case QEvent::Enter: case QEvent::Leave:
+            return true;
+        default:
+            return false;
+        }
+    }
+};
+
 class InspectableSlider final : public QSlider
 {
 public:
@@ -183,7 +200,33 @@ public:
 class ResourcesTransientWindowTests : public QObject
 {
     Q_OBJECT
+#ifdef Q_OS_WIN
+    QPointer<QWidget> activationAnchor_;
+#endif
 private slots:
+    void initTestCase()
+    {
+#ifdef Q_OS_WIN
+        // When a test destroys its last window, Windows hands activation to another process, and
+        // its foreground lock may then refuse later test windows. They open behind that process
+        // and receive no native pointer input. A visible anchor keeps activation in this process.
+        // A tool window is skipped when Windows picks the next window to activate.
+        activationAnchor_ = new QWidget;
+        activationAnchor_->setWindowTitle(QStringLiteral("Resources test activation anchor"));
+        activationAnchor_->setFixedSize(16, 16);
+        if (const QScreen* screen = QGuiApplication::primaryScreen())
+            activationAnchor_->move(screen->availableGeometry().bottomRight() - QPoint(16, 16));
+        activationAnchor_->show();
+        activationAnchor_->activateWindow();
+        QVERIFY(QTest::qWaitForWindowActive(activationAnchor_));
+#endif
+    }
+    void cleanupTestCase()
+    {
+#ifdef Q_OS_WIN
+        delete activationAnchor_;
+#endif
+    }
     void filePickersUseNativeWindowModality_data()
     {
         QTest::addColumn<int>("mode");
@@ -352,6 +395,10 @@ private slots:
         QMenu menu;
         auto* brief = menu.addAction(QStringLiteral("Open"));
         auto* widest = menu.addAction(QStringLiteral("Export the complete diagnostic support bundle"));
+        // Hover is driven by setActiveAction(). Showing and capturing the popup delivers a move and
+        // a leave at the resting cursor, which would clear or re-target the active row at any time.
+        PointerMoveBlocker blocker;
+        menu.installEventFilter(&blocker);
         menu.popup(QPoint(60, 60));
         QTRY_VERIFY(menu.isVisible());
         menu.setActiveAction(nullptr);
@@ -454,23 +501,8 @@ private slots:
         root.show();
         root.activateWindow();
         QVERIFY(QTest::qWaitForWindowActive(&root));
-        // Reproduce Qt's enter/leave dispatch for the hovered path. Native pointer delivery is
-        // not reliable after earlier native modal dialogs in the same test process.
-        const auto hoverPath = [](QWidget* target, bool entered) {
-            QList<QWidget*> path;
-            for (QWidget* widget = target; widget; widget = widget->parentWidget()) path.prepend(widget);
-            for (QWidget* widget : path) {
-                widget->setAttribute(Qt::WA_UnderMouse, entered);
-                if (entered) {
-                    const QPointF local = widget->mapFromGlobal(target->mapToGlobal(QPointF(target->rect().center())));
-                    QEnterEvent enter(local, local, widget->mapToGlobal(local));
-                    QApplication::sendEvent(widget, &enter);
-                } else {
-                    QEvent leave(QEvent::Leave);
-                    QApplication::sendEvent(widget, &leave);
-                }
-            }
-        };
+        // Park the pointer outside the bubble so the rest sample cannot pick up hover.
+        QTest::mouseMove(&root, QPoint(1, 1));
         const auto sample = [&] {
             QApplication::processEvents();
             const QImage frame = bubble->grab().toImage();
@@ -501,8 +533,9 @@ private slots:
         QCOMPARE(restRed, 0);
 
         if (close) {
-            hoverPath(close, true);
-            QCOMPARE(bubble->property("interactionHovered").toBool(), true);
+            QTest::mouseMove(close, close->rect().center());
+            // Native pointer moves arrive asynchronously.
+            QTRY_COMPARE(bubble->property("interactionHovered").toBool(), true);
         } else if (auto* button = dynamic_cast<HoverPushButton*>(label)) {
             button->hovered = true;
         } else {
@@ -530,11 +563,11 @@ private slots:
             bubble->setEnabled(false);
             QCOMPARE(bubble->property("interactionHovered").toBool(), false);
             bubble->setEnabled(true);
-            QVERIFY(bubble->underMouse());
+            QVERIFY2(bubble->underMouse(), "Qt no longer reports the resting pointer after re-enabling.");
             QCOMPARE(bubble->property("interactionHovered").toBool(), true);
             QCOMPARE(std::get<0>(sample()), QColor("#20c040"));
-            hoverPath(close, false);
-            QCOMPARE(bubble->property("interactionHovered").toBool(), false);
+            QTest::mouseMove(&root, QPoint(1, 1));
+            QTRY_COMPARE(bubble->property("interactionHovered").toBool(), false);
             auto [leftBorder, leftGreen, leftRed] = sample();
             QCOMPARE(leftBorder, restBorder);
             QCOMPARE(leftGreen + leftRed, 0);
