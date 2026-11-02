@@ -202,18 +202,28 @@ class ResourcesTransientWindowTests : public QObject
     Q_OBJECT
 #ifdef Q_OS_WIN
     QPointer<QWidget> activationAnchor_;
+    bool anchorActive_ = false;
 #endif
-    bool anchorActive_ = true;
+
+    static QString widgetName(const QWidget* widget)
+    {
+        if (!widget) return QStringLiteral("no application widget");
+        return widget->objectName().isEmpty() ? QString::fromLatin1(widget->metaObject()->className())
+                                              : widget->objectName();
+    }
 
     /** @brief Describes a native pointer step that did not take effect, for skip or failure messages. */
-    static QString pointerState(const QWidget* target, bool anchorActive)
+    QString pointerState(const QWidget* target) const
     {
-        const QWidget* hit = QApplication::widgetAt(QCursor::pos());
+#ifdef Q_OS_WIN
+        const QString anchor = anchorActive_ ? QStringLiteral("active") : QStringLiteral("not active");
+#else
+        const QString anchor = QStringLiteral("not used on this platform");
+#endif
         return QStringLiteral("cursor (%1,%2) over %3; Qt enter delivered to %4: %5; activation anchor %6")
             .arg(QCursor::pos().x()).arg(QCursor::pos().y())
-            .arg(hit ? hit->objectName() : QStringLiteral("no application widget"), target->objectName(),
-                 target->underMouse() ? QStringLiteral("yes") : QStringLiteral("no"),
-                 anchorActive ? QStringLiteral("active") : QStringLiteral("not active"));
+            .arg(widgetName(QApplication::widgetAt(QCursor::pos())), widgetName(target),
+                 target->underMouse() ? QStringLiteral("yes") : QStringLiteral("no"), anchor);
     }
 private slots:
     void initTestCase()
@@ -554,12 +564,16 @@ private slots:
             QTest::mouseMove(close, close->rect().center());
             // Native pointer moves arrive asynchronously.
             // Qt sets underMouse() when it delivers the enter. Without it the environment withheld
-            // native input (activation loss, locked desktop), which is skipped; with it, a missing
-            // hover is a regression in the runtime.
+            // native input (activation loss, locked desktop), which an interactive run skips; an
+            // automated run (CI set) fails instead so the close-glyph checks cannot go unexercised.
+            // With it, a missing hover is a regression in the runtime.
             if (!QTest::qWaitFor([&] { return bubble->property("interactionHovered").toBool(); })) {
-                const QString state = pointerState(bubble, anchorActive_);
-                if (!bubble->underMouse())
-                    QSKIP(qPrintable(QStringLiteral("Native pointer input did not reach the test window: ") + state));
+                const QString state = pointerState(bubble);
+                if (!bubble->underMouse()) {
+                    const QString message = QStringLiteral("Native pointer input did not reach the test window: ") + state;
+                    if (qEnvironmentVariableIsSet("CI")) QFAIL(qPrintable(message));
+                    QSKIP(qPrintable(message));
+                }
                 QFAIL(qPrintable(QStringLiteral("Qt delivered the enter but the bubble took no hover: ") + state));
             }
         } else if (auto* button = dynamic_cast<HoverPushButton*>(label)) {
