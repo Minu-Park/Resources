@@ -210,7 +210,8 @@ private slots:
         // When a test destroys its last window, Windows hands activation to another process, and
         // its foreground lock may then refuse later test windows. They open behind that process
         // and receive no native pointer input. A visible anchor keeps activation in this process.
-        // A tool window is skipped when Windows picks the next window to activate.
+        // Windows skips tool windows when it picks the next window to activate, so the anchor is a
+        // normal window, not Qt::Tool.
         activationAnchor_ = new QWidget;
         activationAnchor_->setWindowTitle(QStringLiteral("Resources test activation anchor"));
         activationAnchor_->setFixedSize(16, 16);
@@ -218,7 +219,10 @@ private slots:
             activationAnchor_->move(screen->availableGeometry().bottomRight() - QPoint(16, 16));
         activationAnchor_->show();
         activationAnchor_->activateWindow();
-        QVERIFY(QTest::qWaitForWindowActive(activationAnchor_));
+        // A runner without the foreground (service session, locked desktop) still runs the class;
+        // only native-pointer checks are then exposed to activation loss.
+        if (!QTest::qWaitForWindowActive(activationAnchor_))
+            qWarning("Test activation anchor did not become active; native pointer tests may be unreliable.");
 #endif
     }
     void cleanupTestCase()
@@ -395,8 +399,9 @@ private slots:
         QMenu menu;
         auto* brief = menu.addAction(QStringLiteral("Open"));
         auto* widest = menu.addAction(QStringLiteral("Export the complete diagnostic support bundle"));
-        // Hover is driven by setActiveAction(). Showing and capturing the popup delivers a move and
-        // a leave at the resting cursor, which would clear or re-target the active row at any time.
+        // Scope: rendering of the active row, driven by setActiveAction() as before; pointer-to-row
+        // mapping is QMenu's own. Showing and capturing the popup delivers a move and a leave at the
+        // resting cursor, which would clear or re-target the active row at any time.
         PointerMoveBlocker blocker;
         menu.installEventFilter(&blocker);
         menu.popup(QPoint(60, 60));
