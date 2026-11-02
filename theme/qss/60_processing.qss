@@ -80,11 +80,40 @@ QLabel#ProcessingEditorTitle {
     font-weight: @WEIGHT_EMPHASIS@;
 }
 
-QWidget#ProcessingEditorContainer {
-    background: transparent;
+/* One surface owns the frame; page tabs join the unchanged file toolbar. */
+QFrame#ProcessingEditorSurface {
+    background: @SURFACE@;
+    border: 1px solid @BORDER@;
+    border-radius: 8px;
 }
 
-QWidget#ProcessingTabBar,
+QWidget#ProcessingEditorContainer,
+QWidget#ProcessingParameterPage,
+QStackedWidget#ProcessingViewPages {
+    background: @SURFACE@;
+    border: none;
+}
+
+QTabBar#ProcessingViewTabs {
+    background: transparent;
+    margin-left: 0px;
+}
+
+QFrame#ProcessingViewSeparator {
+    background: @BORDER@;
+    border: none;
+    min-height: 1px;
+    max-height: 1px;
+}
+
+QWidget#ProcessingTabBar {
+    background: @SURFACE@;
+    border: none;
+    border-bottom: 1px solid @BORDER@;
+    min-height: 32px;
+    max-height: 32px;
+}
+
 QWidget#ProcessingConsoleHeader {
     background-color: @HOVER@;
     border: 1px solid @CONTROLBORDER@;
@@ -113,7 +142,7 @@ QComboBox#ProcessingScriptComboBox {
 QPlainTextEdit#ProcessingCodeEditor {
     background-color: @SURFACE@;
     color: @TEXT@;
-    border: 1px solid @CONTROLBORDER@;
+    border: none;
 
     border-bottom: none;
     border-bottom-left-radius: 0px;
@@ -247,7 +276,8 @@ QToolBar#ProcessingToolBar {
 }/* Editor StatusBar */
 QFrame#EditorStatusBar {
     background-color: @SURFACE@;
-    border: 1px solid @CONTROLBORDER@;
+    border: none;
+    border-top: 1px solid @BORDER@;
 
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;

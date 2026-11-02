@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Join editor page tabs, the existing file controls, code and status into one surface-colored frame. Keep the editor toolbar and code background on the white factory surface, with a single outer border and a theme-colored separator directly below the tabs.
+
 - Apply one state rule to every clickable status bubble: light-blue hover border and label, dark-blue active border with `selectionAccent` label. Action and alert bubbles no longer keep a neutral label while hovered or active. Plain-widget `statusBubble` containers become composite bubbles with runtime `interactionHovered`/`interactionPressed` state shared by their text buttons.
 
 - Keep window activation inside the transient-window test process on Windows with a visible anchor window, so later tests still receive native pointer input after file-picker tests hand activation away. The composite bubble test uses the real pointer again, and the menu hover-emphasis test isolates its menu from native pointer motion and crossing while it drives hover with `setActiveAction()`.
