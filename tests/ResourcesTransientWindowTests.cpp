@@ -242,10 +242,11 @@ private slots:
         activationAnchor_->show();
         activationAnchor_->activateWindow();
         // A runner without the foreground (service session, locked desktop) still runs the class;
-        // only native-pointer checks are then exposed to activation loss.
+        // native-pointer steps then skip interactively and fail in automated runs.
         anchorActive_ = QTest::qWaitForWindowActive(activationAnchor_);
         if (!anchorActive_)
-            qWarning("Test activation anchor did not become active; native pointer steps may be skipped.");
+            qWarning("Test activation anchor did not become active; native pointer steps may be skipped "
+                     "(or fail in automated runs).");
 #endif
     }
     void cleanupTestCase()
@@ -571,7 +572,8 @@ private slots:
                 const QString state = pointerState(bubble);
                 if (!bubble->underMouse()) {
                     const QString message = QStringLiteral("Native pointer input did not reach the test window: ") + state;
-                    if (qEnvironmentVariableIsSet("CI")) QFAIL(qPrintable(message));
+                    const QByteArray ci = qgetenv("CI").trimmed().toLower();
+                    if (!ci.isEmpty() && ci != "false" && ci != "0") QFAIL(qPrintable(message));
                     QSKIP(qPrintable(message));
                 }
                 QFAIL(qPrintable(QStringLiteral("Qt delivered the enter but the bubble took no hover: ") + state));
