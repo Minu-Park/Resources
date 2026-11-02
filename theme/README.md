@@ -69,11 +69,17 @@ layouts. Unknown roles retain Qt/consumer layout behavior.
 `controlRole="compactAction"` shares the compact-action template and metrics.
 `controlRole="devicePanel"` selects the shared device surface and borderless
 20px tab-scroll slots; the separate `actionDensity` scope selects its action sizes.
-`controlRole="statusBubble"` uses `statusBubbleVariant="menu"`, `"action"` or
-`"alert"` for existing menu/text/alert states. `logState` and `performancePath`
-retain their diagnostic meaning; disabled, hover/focus and active border roles
-remain distinct. A pressed or open menu bubble also draws its label in `selectionAccent`. A shared pattern does not erase icon gutters, close hit targets,
-native popup corrections or content-owned rendering.
+`controlRole="statusBubble"` marks every clickable status bubble, and all of them
+share one state rule: pointer hover draws border and label in `hoverBorder`; pressed,
+checked or open draws the border in `focusBorder` and the label in `selectionAccent`;
+active interaction takes precedence over hover and keyboard focus. Buttons use
+`statusBubbleVariant="menu"`, `"action"` or `"alert"` only for rest presentation
+(menu indicator, `statusBorder`, `logState`). A plain `QWidget` with the role is a
+composite bubble: Resources sets transient `interactionHovered` while the pointer is
+anywhere inside it and `interactionPressed` while a press inside it is held, and its
+text buttons follow the bubble state. `logState` and `performancePath` retain their
+diagnostic meaning at rest. A shared pattern does not erase icon gutters, close hit
+targets, native popup corrections or content-owned rendering.
 
 Before adding a role, record its meaning, supported widget/layout kinds, states,
 metric inputs and owning implementation here. Validate live role changes,

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Apply one state rule to every clickable status bubble: light-blue hover border and label, dark-blue active border with `selectionAccent` label. Action and alert bubbles no longer keep a neutral label while hovered or active. Plain-widget `statusBubble` containers become composite bubbles with runtime `interactionHovered`/`interactionPressed` state shared by their text buttons.
+
 - Use `Q_OS_MACOS` for macOS theme and dock-chrome branches to avoid deprecated-macro warnings with Qt 6.12.
 
 - Give resting editable HMI cards surface fill, rounded corners, a translucent secondary-title chip and transparent resize targets without an outer outline border; locked shells remain chrome-free.

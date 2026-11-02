@@ -134,21 +134,6 @@ QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:disabled {
     border-color: @CONTROLBORDER@;
     outline: none;
 }
-QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled:hover:!pressed:!checked {
-    background: @SURFACE@;
-    color: @HOVERBORDER@;
-
-    border-color: @HOVERBORDER@;
-    outline: none;
-}
-QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled:pressed {
-    background: @SURFACE@;
-}
-QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled[resourcesKeyboardFocus="true"]:!pressed:!checked {
-
-    border-color: @HOVERBORDER@;
-    outline: none;
-}
 QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]::menu-indicator {
     image: none;
     width: 0px;
@@ -175,41 +160,14 @@ QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"] {
 QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"] {
     border-color: @STATUSBORDER@;
 }
-
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"]:enabled:hover:!pressed:!checked {
-    background: @SURFACE@;
-    border-color: @HOVERBORDER@;
-    color: @TEXT@;
-}
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"]:enabled:pressed {
-    background: @SURFACE@;
-}
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:hover:!pressed:!checked {
-    color: @TEXT@;
-}
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:checked,
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:checked:hover {
-    background: @SURFACE@;
-    border-color: @FOCUSBORDER@;
-    color: @TEXT@;
-}
 QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"][logState="warning"] {
     border-color: @WARNING@;
 }
 QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"][logState="error"] {
     border-color: @ERROR@;
 }
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:hover:!pressed:!checked,
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled[resourcesKeyboardFocus="true"]:!pressed:!checked,
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"]:enabled[resourcesKeyboardFocus="true"]:!pressed:!checked {
-    background: @SURFACE@;
-    border-color: @HOVERBORDER@;
-}
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:pressed,
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:checked {
-    background: @SURFACE@;
-}
-QWidget#MinimizedSessionIndicator {
+/* A composite bubble is a plain QWidget container; `.QWidget` excludes button bubbles. */
+.QWidget[controlRole="statusBubble"] {
     background: @SURFACE@;
     border: 1px solid @CONTROLBORDER@;
     border-radius: 9px;
@@ -222,18 +180,18 @@ QWidget#MinimizedSessionIndicator {
 QWidget#MinimizedSessionIndicator[minimized="true"] {
     background: @HOVER@;
 }
+.QWidget[controlRole="statusBubble"] QPushButton {
+    color: @TEXT@;
+}
+/* Its label color follows the composite bubble state below. */
 QPushButton#MinimizedSessionRestore {
     background: transparent;
     border: none;
-    color: @TEXT@;
     padding: 0 4px 0 6px;
     margin: 0;
 
     font-size: @FONT_CAPTION@px;
     font-weight: @WEIGHT_EMPHASIS@;
-}
-QPushButton#MinimizedSessionRestore:hover {
-    color: @TEXT@;
 }
 QPushButton#MinimizedSessionClose {
     background: transparent;
@@ -247,26 +205,48 @@ QPushButton#MinimizedSessionClose {
     max-width: 16px;
     max-height: 16px;
 }
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"]:enabled:pressed,
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"]:enabled:checked,
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:pressed,
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled:checked {
-    border-color: @FOCUSBORDER@;
-}
-/* Active interaction, including an open menu, takes precedence over hover and keyboard focus.
- * Its label takes the selection accent text role, as in menu rows. */
-QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled:pressed,
-QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled:checked {
 
+/* Every clickable status bubble shares one state rule; variants keep only their rest presentation.
+ * Composite bubbles take interactionHovered/interactionPressed from the Resources runtime, and
+ * their text buttons follow the bubble. Active interaction, including an open menu, takes
+ * precedence over hover and keyboard focus; its label takes the selection accent, as in menu rows. */
+QToolButton[controlRole="statusBubble"]:enabled[resourcesKeyboardFocus="true"]:!pressed:!checked,
+QPushButton[controlRole="statusBubble"]:enabled[resourcesKeyboardFocus="true"]:!pressed:!checked {
+    border-color: @HOVERBORDER@;
+    outline: none;
+}
+QToolButton[controlRole="statusBubble"]:enabled:hover:!pressed:!checked,
+QPushButton[controlRole="statusBubble"]:enabled:hover:!pressed:!checked {
+    background: @SURFACE@;
+    border-color: @HOVERBORDER@;
+    color: @HOVERBORDER@;
+    outline: none;
+}
+.QWidget[controlRole="statusBubble"][interactionHovered="true"]:enabled {
+    border-color: @HOVERBORDER@;
+}
+.QWidget[controlRole="statusBubble"][interactionHovered="true"]:enabled QPushButton {
+    color: @HOVERBORDER@;
+}
+QToolButton[controlRole="statusBubble"]:enabled:pressed,
+QToolButton[controlRole="statusBubble"]:enabled:checked,
+QPushButton[controlRole="statusBubble"]:enabled:pressed,
+QPushButton[controlRole="statusBubble"]:enabled:checked {
+    background: @SURFACE@;
     border-color: @FOCUSBORDER@;
     color: @SELECTIONACCENT@;
     outline: none;
 }
+.QWidget[controlRole="statusBubble"][interactionPressed="true"]:enabled {
+    border-color: @FOCUSBORDER@;
+}
+.QWidget[controlRole="statusBubble"][interactionPressed="true"]:enabled QPushButton {
+    color: @SELECTIONACCENT@;
+}
 
 /* Keyboard focus remains distinct from pointer hover on named action surfaces. */
-QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"]:enabled[resourcesKeyboardFocus="true"]:focus:!pressed:!checked,
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="alert"]:enabled[resourcesKeyboardFocus="true"]:focus:!pressed:!checked,
-QPushButton[controlRole="statusBubble"][statusBubbleVariant="action"]:enabled[resourcesKeyboardFocus="true"]:focus:!pressed:!checked {
+QToolButton[controlRole="statusBubble"]:enabled[resourcesKeyboardFocus="true"]:focus:!pressed:!checked,
+QPushButton[controlRole="statusBubble"]:enabled[resourcesKeyboardFocus="true"]:focus:!pressed:!checked {
     border-color: @FOCUSBORDER@;
     outline: none;
 }

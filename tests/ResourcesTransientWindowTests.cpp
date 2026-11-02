@@ -36,9 +36,11 @@
 #include <QSpinBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QSlider>
 #include <QStyleOptionSlider>
+#include <QStylePainter>
 #include <QDateEdit>
 #include <QTimeEdit>
 #include <QTabWidget>
@@ -47,6 +49,7 @@
 #include <QStyledItemDelegate>
 #include <QStyleOptionViewItem>
 #include <QTest>
+#include <tuple>
 #include <QTreeWidget>
 #include <QTableWidget>
 #include <QVBoxLayout>
@@ -137,6 +140,38 @@ static QString comboJoinError(const QImage& image, qreal joinY)
     }
     return {};
 }
+
+/** @brief Renders pointer hover from a flag so stylesheet hover rules are checked without a native cursor. */
+class HoverPushButton final : public QPushButton
+{
+public:
+    using QPushButton::QPushButton;
+    bool hovered = false;
+protected:
+    void paintEvent(QPaintEvent*) override
+    {
+        QStyleOptionButton option;
+        initStyleOption(&option);
+        option.state.setFlag(QStyle::State_MouseOver, hovered);
+        QStylePainter painter(this);
+        painter.drawControl(QStyle::CE_PushButton, option);
+    }
+};
+
+class HoverToolButton final : public QToolButton
+{
+public:
+    bool hovered = false;
+protected:
+    void paintEvent(QPaintEvent*) override
+    {
+        QStyleOptionToolButton option;
+        initStyleOption(&option);
+        option.state.setFlag(QStyle::State_MouseOver, hovered);
+        QStylePainter painter(this);
+        painter.drawComplexControl(QStyle::CC_ToolButton, option);
+    }
+};
 
 class InspectableSlider final : public QSlider
 {
@@ -363,36 +398,129 @@ private slots:
         QCOMPARE(menu.size(), idleSize);
         menu.close();
     }
-    void statusMenuBubbleLabelFollowsOpenState()
+    void clickableStatusBubblesShareStateRule_data()
     {
+        QTest::addColumn<QString>("variant");
+        QTest::newRow("menu") << QStringLiteral("menu");
+        QTest::newRow("action") << QStringLiteral("action");
+        QTest::newRow("alert") << QStringLiteral("alert");
+        QTest::newRow("alert-error") << QStringLiteral("alert-error");
+        QTest::newRow("composite") << QStringLiteral("composite");
+    }
+    void clickableStatusBubblesShareStateRule()
+    {
+        QFETCH(QString, variant);
         Resources::installResources(*qApp);
         const auto palette = Resources::themePalette();
         const auto restore = qScopeGuard([&] { Resources::setThemePalette(palette); });
-        const QColor accent("#c0392b");
-        QVERIFY(Resources::setThemePalette({{"selectionAccent", accent}}));
-        QToolButton bubble;
-        bubble.setProperty("controlRole", "statusBubble");
-        bubble.setProperty("statusBubbleVariant", "menu");
-        bubble.setToolButtonStyle(Qt::ToolButtonTextOnly);
-        bubble.setText(QStringLiteral("Mono 8"));
-        bubble.resize(96, 24);
-        bubble.show();
-        QApplication::processEvents();
-        const auto accentInk = [&] {
-            const QImage image = bubble.grab().toImage();
-            int count = 0;
-            for (int y = 4; y < image.height() - 4; ++y)
-                for (int x = 4; x < image.width() - 4; ++x) {
-                    const QColor pixel = image.pixelColor(x, y);
-                    count += pixel.red() > 150 && pixel.green() < 120 && pixel.blue() < 120;
+        // Distinct hue families keep hover and active ink separable from neutral text.
+        QVERIFY(Resources::setThemePalette({{"hoverBorder", QColor("#20c040")}, {"focusBorder", QColor("#c02040")},
+                                            {"selectionAccent", QColor("#c02040")}}));
+        QWidget root;
+        auto* rootLayout = new QHBoxLayout(&root);
+        QWidget* bubble = nullptr;
+        QAbstractButton* label = nullptr;
+        if (variant == QLatin1String("composite")) {
+            bubble = new QWidget;
+            bubble->setObjectName(QStringLiteral("MinimizedSessionIndicator"));
+            auto* layout = new QHBoxLayout(bubble);
+            label = new QPushButton(QStringLiteral("Session 01"));
+            label->setObjectName(QStringLiteral("MinimizedSessionRestore"));
+            layout->addWidget(label);
+        } else if (variant == QLatin1String("menu")) {
+            auto* button = new HoverToolButton;
+            button->setToolButtonStyle(Qt::ToolButtonTextOnly);
+            button->setText(QStringLiteral("Mono 8"));
+            bubble = label = button;
+        } else {
+            label = new HoverPushButton(QStringLiteral("System Logs"));
+            label->setCheckable(true);
+            if (variant == QLatin1String("alert-error")) label->setProperty("logState", QStringLiteral("error"));
+            bubble = label;
+        }
+        bubble->setProperty("controlRole", "statusBubble");
+        if (variant != QLatin1String("composite"))
+            bubble->setProperty("statusBubbleVariant", variant.section('-', 0, 0));
+        bubble->setFixedSize(120, 24);
+        label->setFocusPolicy(Qt::NoFocus);
+        rootLayout->setContentsMargins(12, 12, 12, 12);
+        rootLayout->addWidget(bubble);
+        root.show();
+        root.activateWindow();
+        QVERIFY(QTest::qWaitForWindowActive(&root));
+        QTest::mouseMove(&root, QPoint(1, 1));
+        const auto sample = [&] {
+            QApplication::processEvents();
+            const QImage frame = bubble->grab().toImage();
+            const qreal ratio = frame.devicePixelRatio();
+            const QColor border = frame.pixelColor(qRound(bubble->width() / 2 * ratio), 0);
+            const QImage text = label->grab().toImage();
+            // Count only near-exact ink; subpixel text fringes stay outside this distance.
+            const auto closeTo = [](const QColor& pixel, const QColor& target) {
+                return qAbs(pixel.red() - target.red()) + qAbs(pixel.green() - target.green())
+                    + qAbs(pixel.blue() - target.blue()) < 36;
+            };
+            // The label interior excludes the bubble border, which carries the same roles.
+            const QRect interior = text.rect().adjusted(qRound(3 * ratio), qRound(3 * ratio),
+                                                         -qRound(3 * ratio), -qRound(3 * ratio));
+            int green = 0;
+            int red = 0;
+            for (int y = interior.top(); y <= interior.bottom(); ++y)
+                for (int x = interior.left(); x <= interior.right(); ++x) {
+                    const QColor pixel = text.pixelColor(x, y);
+                    green += closeTo(pixel, QColor("#20c040"));
+                    red += closeTo(pixel, QColor("#c02040"));
                 }
-            return count;
+            return std::tuple<QColor, int, int>(border, green, red);
         };
-        QCOMPARE(accentInk(), 0);
-        bubble.setDown(true);
-        QApplication::processEvents();
-        QVERIFY2(accentInk() > 0, "An open status menu bubble kept its rest label color.");
-        bubble.setDown(false);
+        auto [restBorder, restGreen, restRed] = sample();
+        QVERIFY(restBorder != QColor("#20c040") && restBorder != QColor("#c02040"));
+        QCOMPARE(restGreen, 0);
+        QCOMPARE(restRed, 0);
+
+        if (variant == QLatin1String("composite")) {
+            QTest::mouseMove(label, label->rect().center());
+            // Native pointer moves arrive asynchronously.
+            QTRY_COMPARE(std::get<0>(sample()), QColor("#20c040"));
+        } else if (auto* button = dynamic_cast<HoverPushButton*>(label)) {
+            button->hovered = true;
+        } else {
+            static_cast<HoverToolButton*>(label)->hovered = true;
+        }
+        auto [hoverBorder, hoverGreen, hoverRed] = sample();
+        QCOMPARE(hoverBorder, QColor("#20c040"));
+        QVERIFY2(hoverGreen > 0, "A hovered clickable bubble kept its rest label color.");
+
+        if (variant == QLatin1String("composite")) {
+            QTest::mousePress(label, Qt::LeftButton, Qt::NoModifier, label->rect().center());
+            QCOMPARE(bubble->property("interactionPressed").toBool(), true);
+        } else {
+            label->setDown(true);
+        }
+        auto [pressedBorder, pressedGreen, pressedRed] = sample();
+        QCOMPARE(pressedBorder, QColor("#c02040"));
+        QVERIFY2(pressedRed > 0, "A pressed clickable bubble kept its label color.");
+        QCOMPARE(pressedGreen, 0);
+
+        if (variant == QLatin1String("composite")) {
+            QTest::mouseRelease(label, Qt::LeftButton, Qt::NoModifier, label->rect().center());
+            QCOMPARE(bubble->property("interactionPressed").toBool(), false);
+            QTest::mouseMove(&root, QPoint(1, 1));
+            QTRY_COMPARE(bubble->property("interactionHovered").toBool(), false);
+            auto [leftBorder, leftGreen, leftRed] = sample();
+            QCOMPARE(leftBorder, restBorder);
+            QCOMPARE(leftGreen + leftRed, 0);
+        } else {
+            label->setDown(false);
+            if (label->isCheckable()) {
+                // An open panel keeps the active state while hovered.
+                label->setChecked(true);
+                auto [checkedBorder, checkedGreen, checkedRed] = sample();
+                QCOMPARE(checkedBorder, QColor("#c02040"));
+                QVERIFY(checkedRed > 0);
+                QCOMPARE(checkedGreen, 0);
+            }
+        }
     }
     void menuShellCorners_data()
     {

@@ -1128,11 +1128,23 @@ protected:
             || (obj == pressedInput_ && (event->type() == QEvent::Hide || event->type() == QEvent::EnabledChange))) {
             setPressedInput(nullptr);
         }
+        if (auto* widget = qobject_cast<QWidget*>(obj); widget && isCompositeStatusBubble(widget)) {
+            if (event->type() == QEvent::Enter && widget->isEnabled()) setHoveredBubble(widget);
+            else if (obj == hoveredBubble_ && (event->type() == QEvent::Leave || event->type() == QEvent::Hide
+                                               || event->type() == QEvent::EnabledChange))
+                setHoveredBubble(nullptr);
+        }
+        if (event->type() == QEvent::ApplicationDeactivate) setHoveredBubble(nullptr);
         if (event->type() == QEvent::MouseButtonPress
             && static_cast<QMouseEvent*>(event)->button() == Qt::LeftButton) {
             auto* widget = qobject_cast<QWidget*>(obj);
             QWidget* input = nullptr;
             for (auto* current = widget; current; current = current->parentWidget()) {
+                // A press anywhere inside a composite bubble, including its close glyph, holds the bubble.
+                if (isCompositeStatusBubble(current)) {
+                    input = current;
+                    break;
+                }
                 if (qobject_cast<QComboBox*>(current) || qobject_cast<QAbstractSpinBox*>(current)) {
                     input = current;
                     break;
@@ -1353,22 +1365,48 @@ protected:
 
 private:
     QPointer<QWidget> pressedInput_;
+    QPointer<QWidget> hoveredBubble_;
 
-    /** @brief Exposes a held pointer press for input frames without changing focus or input handling. */
+    /** @brief A non-button status bubble whose child buttons share one interaction state. */
+    static bool isCompositeStatusBubble(const QWidget* widget)
+    {
+        return !qobject_cast<const QAbstractButton*>(widget)
+            && widget->property("controlRole").toString() == QLatin1String("statusBubble");
+    }
+
+    /** @brief Sets a transient interaction property and repolishes the widget, plus a composite bubble's children. */
+    static void polishInteraction(QWidget* widget, const char* name, bool value)
+    {
+        if (!widget) return;
+        widget->setProperty(name, value);
+        QList<QWidget*> targets{widget};
+        // Descendant selectors are evaluated only when each child is polished.
+        if (isCompositeStatusBubble(widget)) targets += widget->findChildren<QWidget*>();
+        for (QWidget* target : targets) {
+            target->style()->unpolish(target);
+            target->style()->polish(target);
+            target->update();
+        }
+    }
+
+    /** @brief Exposes a held pointer press for input frames and composite bubbles without changing focus or input handling. */
     void setPressedInput(QWidget* input)
     {
         if (pressedInput_ == input) return;
-        const auto polish = [](QWidget* widget, bool pressed) {
-            if (!widget) return;
-            widget->setProperty("interactionPressed", pressed);
-            widget->style()->unpolish(widget);
-            widget->style()->polish(widget);
-            widget->update();
-        };
         const QPointer<QWidget> previous = pressedInput_;
         pressedInput_ = input;
-        polish(previous, false);
-        polish(pressedInput_, true);
+        polishInteraction(previous, "interactionPressed", false);
+        polishInteraction(pressedInput_, "interactionPressed", true);
+    }
+
+    /** @brief Exposes pointer hover over any part of a composite bubble, including its child buttons. */
+    void setHoveredBubble(QWidget* bubble)
+    {
+        if (hoveredBubble_ == bubble) return;
+        const QPointer<QWidget> previous = hoveredBubble_;
+        hoveredBubble_ = bubble;
+        polishInteraction(previous, "interactionHovered", false);
+        polishInteraction(hoveredBubble_, "interactionHovered", true);
     }
 
     /** @brief Shares menu leading columns and check marks without changing toolbar icons. */
