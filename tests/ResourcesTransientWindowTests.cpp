@@ -203,6 +203,18 @@ class ResourcesTransientWindowTests : public QObject
 #ifdef Q_OS_WIN
     QPointer<QWidget> activationAnchor_;
 #endif
+    bool anchorActive_ = true;
+
+    /** @brief Describes a native pointer step that did not take effect, for skip or failure messages. */
+    static QString pointerState(const QWidget* target, bool anchorActive)
+    {
+        const QWidget* hit = QApplication::widgetAt(QCursor::pos());
+        return QStringLiteral("cursor (%1,%2) over %3; Qt enter delivered to %4: %5; activation anchor %6")
+            .arg(QCursor::pos().x()).arg(QCursor::pos().y())
+            .arg(hit ? hit->objectName() : QStringLiteral("no application widget"), target->objectName(),
+                 target->underMouse() ? QStringLiteral("yes") : QStringLiteral("no"),
+                 anchorActive ? QStringLiteral("active") : QStringLiteral("not active"));
+    }
 private slots:
     void initTestCase()
     {
@@ -221,8 +233,9 @@ private slots:
         activationAnchor_->activateWindow();
         // A runner without the foreground (service session, locked desktop) still runs the class;
         // only native-pointer checks are then exposed to activation loss.
-        if (!QTest::qWaitForWindowActive(activationAnchor_))
-            qWarning("Test activation anchor did not become active; native pointer tests may be unreliable.");
+        anchorActive_ = QTest::qWaitForWindowActive(activationAnchor_);
+        if (!anchorActive_)
+            qWarning("Test activation anchor did not become active; native pointer steps may be skipped.");
 #endif
     }
     void cleanupTestCase()
@@ -540,7 +553,15 @@ private slots:
         if (close) {
             QTest::mouseMove(close, close->rect().center());
             // Native pointer moves arrive asynchronously.
-            QTRY_COMPARE(bubble->property("interactionHovered").toBool(), true);
+            // Qt sets underMouse() when it delivers the enter. Without it the environment withheld
+            // native input (activation loss, locked desktop), which is skipped; with it, a missing
+            // hover is a regression in the runtime.
+            if (!QTest::qWaitFor([&] { return bubble->property("interactionHovered").toBool(); })) {
+                const QString state = pointerState(bubble, anchorActive_);
+                if (!bubble->underMouse())
+                    QSKIP(qPrintable(QStringLiteral("Native pointer input did not reach the test window: ") + state));
+                QFAIL(qPrintable(QStringLiteral("Qt delivered the enter but the bubble took no hover: ") + state));
+            }
         } else if (auto* button = dynamic_cast<HoverPushButton*>(label)) {
             button->hovered = true;
         } else {
