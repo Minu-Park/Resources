@@ -542,7 +542,7 @@ void ResourcesTheme::install(QApplication& app)
         if (QFontDatabase::addApplicationFont(file) == -1) qWarning() << "Failed to load font:" << file;
     }
     QFont font(presentationTokens().value(QStringLiteral("FONT_UI")).toString());
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
     font.setPointSizeF(12.0);
 #else
     font.setPointSizeF(10.0);
@@ -594,7 +594,7 @@ void ResourcesTheme::install(QApplication& app)
     // Install before applying QSS so native geometry, states and metrics agree during polish.
     runtime_ = installThemeRuntime(app, this);
     applyInstalledStyleSheet();
-#if !defined(Q_OS_MAC)
+#if !defined(Q_OS_MACOS)
     app.setWindowIcon(QIcon(QStringLiteral(":/Resources/AppIcons/AppIcon.png")));
 #endif
 }

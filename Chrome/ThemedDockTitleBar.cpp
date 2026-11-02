@@ -131,7 +131,7 @@ void ThemedDockTitleBar::mouseReleaseEvent(QMouseEvent* event)
 bool ThemedDockTitleBar::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _dockWidget) {
-#if !defined(Q_OS_MAC) && !defined(Q_OS_LINUX)
+#if !defined(Q_OS_MACOS) && !defined(Q_OS_LINUX)
         if (event->type() == QEvent::Resize || event->type() == QEvent::Show) {
             updateFloatingMask();
         }

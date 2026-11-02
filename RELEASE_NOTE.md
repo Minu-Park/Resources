@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use `Q_OS_MACOS` for macOS theme and dock-chrome branches to avoid deprecated-macro warnings with Qt 6.12.
+
 - Give resting editable HMI cards surface fill, rounded corners, a translucent secondary-title chip and transparent resize targets without an outer outline border; locked shells remain chrome-free.
 
 - Keep update-notification decision buttons inside their action row by matching their minimum and maximum content heights.
