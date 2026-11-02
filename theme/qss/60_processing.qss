@@ -90,7 +90,7 @@ QFrame#ProcessingEditorSurface {
 QWidget#ProcessingEditorContainer,
 QWidget#ProcessingParameterPage,
 QStackedWidget#ProcessingViewPages {
-    background: @SURFACE@;
+    background: transparent;
     border: none;
 }
 
