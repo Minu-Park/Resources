@@ -420,6 +420,7 @@ private slots:
         auto* rootLayout = new QHBoxLayout(&root);
         QWidget* bubble = nullptr;
         QAbstractButton* label = nullptr;
+        QPushButton* close = nullptr;
         if (variant == QLatin1String("composite")) {
             bubble = new QWidget;
             bubble->setObjectName(QStringLiteral("MinimizedSessionIndicator"));
@@ -427,6 +428,11 @@ private slots:
             label = new QPushButton(QStringLiteral("Session 01"));
             label->setObjectName(QStringLiteral("MinimizedSessionRestore"));
             layout->addWidget(label);
+            // The close glyph is part of the bubble: hover and press there drive the whole bubble.
+            close = new QPushButton;
+            close->setObjectName(QStringLiteral("MinimizedSessionClose"));
+            close->setFocusPolicy(Qt::NoFocus);
+            layout->addWidget(close);
         } else if (variant == QLatin1String("menu")) {
             auto* button = new HoverToolButton;
             button->setToolButtonStyle(Qt::ToolButtonTextOnly);
@@ -441,7 +447,7 @@ private slots:
         bubble->setProperty("controlRole", "statusBubble");
         if (variant != QLatin1String("composite"))
             bubble->setProperty("statusBubbleVariant", variant.section('-', 0, 0));
-        bubble->setFixedSize(120, 24);
+        bubble->setFixedSize(140, 24);
         label->setFocusPolicy(Qt::NoFocus);
         rootLayout->setContentsMargins(12, 12, 12, 12);
         rootLayout->addWidget(bubble);
@@ -478,8 +484,8 @@ private slots:
         QCOMPARE(restGreen, 0);
         QCOMPARE(restRed, 0);
 
-        if (variant == QLatin1String("composite")) {
-            QTest::mouseMove(label, label->rect().center());
+        if (close) {
+            QTest::mouseMove(close, close->rect().center());
             // Native pointer moves arrive asynchronously.
             QTRY_COMPARE(std::get<0>(sample()), QColor("#20c040"));
         } else if (auto* button = dynamic_cast<HoverPushButton*>(label)) {
@@ -491,8 +497,8 @@ private slots:
         QCOMPARE(hoverBorder, QColor("#20c040"));
         QVERIFY2(hoverGreen > 0, "A hovered clickable bubble kept its rest label color.");
 
-        if (variant == QLatin1String("composite")) {
-            QTest::mousePress(label, Qt::LeftButton, Qt::NoModifier, label->rect().center());
+        if (close) {
+            QTest::mousePress(close, Qt::LeftButton, Qt::NoModifier, close->rect().center());
             QCOMPARE(bubble->property("interactionPressed").toBool(), true);
         } else {
             label->setDown(true);
@@ -502,9 +508,15 @@ private slots:
         QVERIFY2(pressedRed > 0, "A pressed clickable bubble kept its label color.");
         QCOMPARE(pressedGreen, 0);
 
-        if (variant == QLatin1String("composite")) {
-            QTest::mouseRelease(label, Qt::LeftButton, Qt::NoModifier, label->rect().center());
+        if (close) {
+            QTest::mouseRelease(close, Qt::LeftButton, Qt::NoModifier, close->rect().center());
             QCOMPARE(bubble->property("interactionPressed").toBool(), false);
+            // Disabling clears hover; re-enabling under the resting pointer restores it.
+            bubble->setEnabled(false);
+            QCOMPARE(bubble->property("interactionHovered").toBool(), false);
+            bubble->setEnabled(true);
+            QCOMPARE(bubble->property("interactionHovered").toBool(), true);
+            QCOMPARE(std::get<0>(sample()), QColor("#20c040"));
             QTest::mouseMove(&root, QPoint(1, 1));
             QTRY_COMPARE(bubble->property("interactionHovered").toBool(), false);
             auto [leftBorder, leftGreen, leftRed] = sample();

@@ -1129,9 +1129,13 @@ protected:
             setPressedInput(nullptr);
         }
         if (auto* widget = qobject_cast<QWidget*>(obj); widget && isCompositeStatusBubble(widget)) {
+            // Re-enabling under a resting pointer restores hover without waiting for another Enter.
+            const bool hovered = widget->isEnabled() && widget->isVisible() && widget->underMouse();
             if (event->type() == QEvent::Enter && widget->isEnabled()) setHoveredBubble(widget);
-            else if (obj == hoveredBubble_ && (event->type() == QEvent::Leave || event->type() == QEvent::Hide
-                                               || event->type() == QEvent::EnabledChange))
+            else if (event->type() == QEvent::EnabledChange) {
+                if (hovered) setHoveredBubble(widget);
+                else if (obj == hoveredBubble_) setHoveredBubble(nullptr);
+            } else if (obj == hoveredBubble_ && (event->type() == QEvent::Leave || event->type() == QEvent::Hide))
                 setHoveredBubble(nullptr);
         }
         if (event->type() == QEvent::ApplicationDeactivate) setHoveredBubble(nullptr);
@@ -1367,10 +1371,11 @@ private:
     QPointer<QWidget> pressedInput_;
     QPointer<QWidget> hoveredBubble_;
 
-    /** @brief A non-button status bubble whose child buttons share one interaction state. */
+    /** @brief A plain QWidget status bubble whose child buttons share one interaction state.
+     *  Matches the exact-class `.QWidget[controlRole="statusBubble"]` stylesheet selector. */
     static bool isCompositeStatusBubble(const QWidget* widget)
     {
-        return !qobject_cast<const QAbstractButton*>(widget)
+        return widget->metaObject() == &QWidget::staticMetaObject
             && widget->property("controlRole").toString() == QLatin1String("statusBubble");
     }
 
