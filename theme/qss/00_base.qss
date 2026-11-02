@@ -1392,10 +1392,15 @@ QRadioButton[radioPreview="outline"]::indicator:checked:disabled {
     image: url(:/Resources/icon/radio-outline-on-disabled.svg);
 }
 
-/* Menu-style identities share fill-free hover/selection ink with QMenu. */
+/* MenuInk identities: fill-free hover uses neutral semibold; selection uses accented
+ * semibold. QMenu::item:selected keeps accented hover separately above. */
 QLabel[itemRole="title"] {
     color: @TEXT@;
     font-weight: @WEIGHT_NORMAL@;
+}
+QWidget[itemInkState="hover"] QLabel[itemRole="title"] {
+    color: @TEXT@;
+    font-weight: @WEIGHT_EMPHASIS@;
 }
 QWidget[itemInkState="active"] QLabel[itemRole="title"] {
     color: @SELECTIONACCENT@;

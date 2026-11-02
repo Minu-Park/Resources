@@ -152,25 +152,36 @@ class ResourcesItemViewTests : public QObject
             const QRect row = tree.visualItemRect(item);
             const QPoint blank(row.right() - 8, row.center().y());
             QCOMPARE(image.pixelColor(blank * image.devicePixelRatio()), colors.value("surface"));
+        }
+        const auto accentCount = [&](QTreeWidgetItem* item) -> int {
             int blue = 0;
+            const QRect row = tree.visualItemRect(item);
             const QRect pixels(QPoint(row.topLeft() * image.devicePixelRatio()),
                                QSize(row.size() * image.devicePixelRatio()));
             for (int y = pixels.top(); y < pixels.bottom(); ++y)
                 for (int x = pixels.left() + qRound(40 * image.devicePixelRatio()); x < pixels.right(); ++x)
                     if (image.pixelColor(x, y) == colors.value("selectionAccent")) ++blue;
-            QVERIFY2(blue > 10, qPrintable(item->text(0)));
-        }
+            return blue;
+        };
+        // Selection keeps accented ink; hover is neutral semibold with no accent pixels.
+        QVERIFY2(accentCount(selected) > 10, "Selected identity");
+        QCOMPARE(accentCount(hovered), 0);
         movePointer(tree.viewport(), QPoint(tree.viewport()->width() - 8, tree.viewport()->height() - 8));
         QVERIFY(!tree.viewport()->grab().isNull());
         const QImage originalIcon = icon->pixmap().toImage();
         QVERIFY(!originalIcon.isNull());
-        // Keep selection elsewhere: index-widget hover must activate the identity on its own.
+        // Keep selection elsewhere: index-widget hover emphasizes neutrally without accent ink.
         movePointer(title, title->rect().center());
-        QTRY_COMPARE(card->property("itemInkState").toString(), QString("active"));
+        QTRY_COMPARE(card->property("itemInkState").toString(), QString("hover"));
         QVERIFY(!tree.viewport()->grab().isNull());
         QCOMPARE(tree.currentItem(), selected);
         QVERIFY(!cardRow->isSelected());
-        QCOMPARE(card->property("itemInkState").toString(), QString("active"));
+        QCOMPARE(card->property("itemInkState").toString(), QString("hover"));
+        QCOMPARE(title->palette().color(QPalette::WindowText), colors.value("text"));
+        QVERIFY(title->font().weight() >= QFont::DemiBold);
+        QCOMPARE(icon->pixmap().toImage(), originalIcon);
+        tree.setCurrentItem(cardRow);
+        QTRY_COMPARE(card->property("itemInkState").toString(), QString("active"));
         QCOMPARE(title->palette().color(QPalette::WindowText), colors.value("selectionAccent"));
         QVERIFY(title->font().weight() >= QFont::DemiBold);
         const QImage activeIcon = icon->pixmap().toImage();
@@ -180,12 +191,80 @@ class ResourcesItemViewTests : public QObject
             for (int x = 0; x < activeIcon.width(); ++x)
                 accentInk |= activeIcon.pixelColor(x, y) == colors.value("selectionAccent");
         QVERIFY(accentInk);
+        tree.setCurrentItem(selected);
         movePointer(tree.viewport(), QPoint(tree.viewport()->width() - 8, tree.viewport()->height() - 8));
         QVERIFY(!tree.viewport()->grab().isNull());
         QCOMPARE(card->property("itemInkState").toString(), QString("normal"));
         QCOMPARE(title->palette().color(QPalette::WindowText), colors.value("text"));
         QCOMPARE(title->font().weight(), QFont::Normal);
         QCOMPARE(icon->pixmap().toImage(), originalIcon);
+    }
+    void menuInkPlainDelegateEmphasizesNeutralHover()
+    {
+        // App QSS owns CE_ItemViewItem; clear it so MenuInk's drawControl reaches this style.
+        // ItemViewTheme still defaults emphasisWeight to DemiBold without QSS property injection.
+        // Destroy the capture widget before restoring QSS: restoring while a QProxyStyle is still
+        // attached leaves QApplication's style sheet chain poisoned for the next setStyleSheet
+        // (palettePatchesAreAtomicAndRefreshExistingWidgets SIGSEGVs when run immediately after).
+        const QString sheet = qApp->styleSheet();
+        qApp->setStyleSheet({});
+        const auto restoreSheet = qScopeGuard([&] { qApp->setStyleSheet(sheet); });
+        {
+            ThemedTreeWidget tree;
+            tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Row);
+            Resources::setItemSelectionAppearance(&tree, Resources::ItemSelectionAppearance::MenuInk);
+            tree.setHeaderHidden(true);
+            tree.setRootIsDecorated(false);
+            struct CaptureStyle : QProxyStyle {
+                using QProxyStyle::QProxyStyle;
+                mutable QHash<QString, int> weights;
+                mutable QHash<QString, QColor> texts;
+                void drawControl(ControlElement element, const QStyleOption *option,
+                                 QPainter *painter, const QWidget *widget) const override
+                {
+                    if (element == CE_ItemViewItem)
+                        if (const auto *item = qstyleoption_cast<const QStyleOptionViewItem *>(option)) {
+                            QString key = item->text;
+                            if (key.isEmpty() && item->index.isValid())
+                                key = item->index.data(Qt::DisplayRole).toString();
+                            if (!key.isEmpty()) {
+                                weights.insert(key, item->font.weight());
+                                texts.insert(key, item->palette.color(QPalette::Text));
+                            }
+                        }
+                    QProxyStyle::drawControl(element, option, painter, widget);
+                }
+            };
+            // Default QProxyStyle uses the app style without taking ownership of it.
+            auto *style = new CaptureStyle;
+            style->setParent(&tree);
+            tree.setStyle(style);
+            auto *rest = new QTreeWidgetItem(&tree, {"Rest identity"});
+            auto *hovered = new QTreeWidgetItem(&tree, {"Hovered identity"});
+            auto *selected = new QTreeWidgetItem(&tree, {"Selected identity"});
+            Q_UNUSED(rest);
+            tree.resize(360, 180);
+            tree.show();
+            tree.activateWindow();
+            QVERIFY(QTest::qWaitForWindowExposed(&tree));
+            QVERIFY(QTest::qWaitForWindowActive(&tree));
+            const auto colors = Resources::themePalette();
+            tree.setCurrentItem(selected);
+            movePointer(tree.viewport(), tree.visualItemRect(hovered).center());
+            QVERIFY(tree.viewport()->underMouse());
+            style->weights.clear();
+            style->texts.clear();
+            QVERIFY(!tree.viewport()->grab().isNull());
+            QVERIFY2(style->weights.contains("Hovered identity"),
+                     qPrintable(QString("keys=%1").arg(QStringList(style->weights.keys()).join(','))));
+            QVERIFY(style->weights.value("Hovered identity") >= QFont::DemiBold);
+            QCOMPARE(style->texts.value("Hovered identity"), colors.value("text"));
+            QVERIFY(style->weights.contains("Rest identity"));
+            QCOMPARE(style->weights.value("Rest identity"), int(QFont::Normal));
+            QCOMPARE(style->texts.value("Rest identity"), colors.value("text"));
+            QVERIFY(style->weights.contains("Selected identity"));
+            QVERIFY(style->weights.value("Selected identity") >= QFont::DemiBold);
+        } // tree + CaptureStyle destroyed before restoreSheet runs
     }
     void menuInkPreservesCheckIndicatorAndClickTarget()
     {

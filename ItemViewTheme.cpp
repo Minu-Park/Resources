@@ -42,10 +42,13 @@ class ResourcesItemSelectionSurface final : public QWidget
 
 namespace
 {
+/** @brief MenuInk identity ink; QMenu keeps its own accented hover path. */
+enum class MenuInkState { Normal, Hover, Active };
+
 /** @brief Uses the same neutral-glyph recoloring as QMenu, retaining multicolor artwork. */
-QIcon menuInkIcon(const QIcon& source, const QSize& size, qreal dpr, QStyle* style, bool active)
+QIcon menuInkIcon(const QIcon& source, const QSize& size, qreal dpr, QStyle* style, bool accented)
 {
-    if (!active || source.isNull()) return source;
+    if (!accented || source.isNull()) return source;
     const QPixmap original = source.pixmap(size, dpr, QIcon::Normal);
     const QPixmap ink = style->generatedIconPixmap(QIcon::Active, original, nullptr);
     QIcon result(ink);
@@ -55,10 +58,13 @@ QIcon menuInkIcon(const QIcon& source, const QSize& size, qreal dpr, QStyle* sty
 }
 
 /** @brief Projects shared row ink onto explicitly marked title/icon labels in index widgets. */
-void syncMenuItemWidget(QWidget* widget, bool active, const QColor& accent)
+void syncMenuItemWidget(QWidget* widget, MenuInkState ink, const QColor& accent)
 {
     if (!widget) return;
-    const QString state = active ? QStringLiteral("active") : QStringLiteral("normal");
+    const QString state = ink == MenuInkState::Active ? QStringLiteral("active")
+                        : ink == MenuInkState::Hover ? QStringLiteral("hover")
+                                                     : QStringLiteral("normal");
+    const bool accented = ink == MenuInkState::Active;
     const bool changed = widget->property("itemInkState") != state;
     if (changed) widget->setProperty("itemInkState", state);
     for (auto* label : widget->findChildren<QLabel*>()) {
@@ -70,10 +76,10 @@ void syncMenuItemWidget(QWidget* widget, bool active, const QColor& accent)
             const QIcon source = qvariant_cast<QIcon>(label->property("itemIcon"));
             const QSize size = label->property("itemIconSize").toSize();
             const QString key = QStringLiteral("%1:%2:%3:%4:%5x%6")
-                .arg(source.cacheKey()).arg(accent.rgba()).arg(active).arg(label->devicePixelRatioF())
+                .arg(source.cacheKey()).arg(accent.rgba()).arg(int(ink)).arg(label->devicePixelRatioF())
                 .arg(size.width()).arg(size.height());
             if (label->property("_resourcesMenuIcon") != key) {
-                label->setPixmap(menuInkIcon(source, size, label->devicePixelRatioF(), label->style(), active)
+                label->setPixmap(menuInkIcon(source, size, label->devicePixelRatioF(), label->style(), accented)
                                      .pixmap(size, label->devicePixelRatioF()));
                 label->setProperty("_resourcesMenuIcon", key);
             }
@@ -127,26 +133,33 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
         if (view_->property("menuItemInk").toBool()) {
             QStyleOptionViewItem contents(option);
             initStyleOption(&contents, index);
-            const bool active = (selected || hovered) && (option.state & QStyle::State_Enabled);
+            const bool enabled = option.state & QStyle::State_Enabled;
+            // Selection keeps accented ink; hover is neutral semibold. QMenu stays accented on hover.
+            const MenuInkState ink = !enabled ? MenuInkState::Normal
+                                   : selected ? MenuInkState::Active
+                                   : hovered ? MenuInkState::Hover
+                                             : MenuInkState::Normal;
             contents.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver | QStyle::State_HasFocus);
             contents.features &= ~QStyleOptionViewItem::Alternate;
             contents.backgroundBrush = Qt::NoBrush;
             // Only the identity column uses menu ink; values retain diagnostic and editor colors.
-            if (index.column() == 0 && active) {
-                contents.palette.setColor(QPalette::Text, surface_->accentColor);
-                contents.palette.setColor(QPalette::HighlightedText, surface_->accentColor);
+            if (index.column() == 0 && ink != MenuInkState::Normal) {
                 contents.font.setWeight(QFont::Weight(surface_->emphasisWeight));
                 contents.fontMetrics = QFontMetrics(contents.font);
-                contents.icon = menuInkIcon(contents.icon, contents.decorationSize,
-                                             view_->devicePixelRatioF(), view_->style(), true);
+                if (ink == MenuInkState::Active) {
+                    contents.palette.setColor(QPalette::Text, surface_->accentColor);
+                    contents.palette.setColor(QPalette::HighlightedText, surface_->accentColor);
+                    contents.icon = menuInkIcon(contents.icon, contents.decorationSize,
+                                                 view_->devicePixelRatioF(), view_->style(), true);
+                }
             }
             QWidget* identity = view_->indexWidget(index);
             if (identity) {
                 observeIdentityWidget(identity);
                 for (auto* child : identity->findChildren<QWidget*>()) observeIdentityWidget(child);
             }
-            syncMenuItemWidget(identity, active, surface_->accentColor);
-            // Identity painting follows QMenu; value delegates and editor contracts remain consumer-owned.
+            syncMenuItemWidget(identity, ink, surface_->accentColor);
+            // Identity painting is MenuInk-owned; value delegates and editors stay consumer-owned.
             if (index.column() == 0)
                 view_->style()->drawControl(QStyle::CE_ItemViewItem, &contents, painter, view_);
             else
