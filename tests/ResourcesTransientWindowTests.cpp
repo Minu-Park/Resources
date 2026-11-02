@@ -454,7 +454,23 @@ private slots:
         root.show();
         root.activateWindow();
         QVERIFY(QTest::qWaitForWindowActive(&root));
-        QTest::mouseMove(&root, QPoint(1, 1));
+        // Reproduce Qt's enter/leave dispatch for the hovered path. Native pointer delivery is
+        // not reliable after earlier native modal dialogs in the same test process.
+        const auto hoverPath = [](QWidget* target, bool entered) {
+            QList<QWidget*> path;
+            for (QWidget* widget = target; widget; widget = widget->parentWidget()) path.prepend(widget);
+            for (QWidget* widget : path) {
+                widget->setAttribute(Qt::WA_UnderMouse, entered);
+                if (entered) {
+                    const QPointF local = widget->mapFromGlobal(target->mapToGlobal(QPointF(target->rect().center())));
+                    QEnterEvent enter(local, local, widget->mapToGlobal(local));
+                    QApplication::sendEvent(widget, &enter);
+                } else {
+                    QEvent leave(QEvent::Leave);
+                    QApplication::sendEvent(widget, &leave);
+                }
+            }
+        };
         const auto sample = [&] {
             QApplication::processEvents();
             const QImage frame = bubble->grab().toImage();
@@ -485,9 +501,8 @@ private slots:
         QCOMPARE(restRed, 0);
 
         if (close) {
-            QTest::mouseMove(close, close->rect().center());
-            // Native pointer moves arrive asynchronously.
-            QTRY_COMPARE(std::get<0>(sample()), QColor("#20c040"));
+            hoverPath(close, true);
+            QCOMPARE(bubble->property("interactionHovered").toBool(), true);
         } else if (auto* button = dynamic_cast<HoverPushButton*>(label)) {
             button->hovered = true;
         } else {
@@ -511,18 +526,15 @@ private slots:
         if (close) {
             QTest::mouseRelease(close, Qt::LeftButton, Qt::NoModifier, close->rect().center());
             QCOMPARE(bubble->property("interactionPressed").toBool(), false);
-            // Disabling clears hover; re-enabling under the resting pointer restores it. Whether
-            // Qt keeps reporting the pointer across disable is platform behavior, so the restore
-            // is checked only while Qt still reports it.
+            // Disabling clears hover; re-enabling under the resting pointer restores it.
             bubble->setEnabled(false);
             QCOMPARE(bubble->property("interactionHovered").toBool(), false);
             bubble->setEnabled(true);
-            if (bubble->underMouse()) {
-                QTRY_COMPARE(bubble->property("interactionHovered").toBool(), true);
-                QTRY_COMPARE(std::get<0>(sample()), QColor("#20c040"));
-            }
-            QTest::mouseMove(&root, QPoint(1, 1));
-            QTRY_COMPARE(bubble->property("interactionHovered").toBool(), false);
+            QVERIFY(bubble->underMouse());
+            QCOMPARE(bubble->property("interactionHovered").toBool(), true);
+            QCOMPARE(std::get<0>(sample()), QColor("#20c040"));
+            hoverPath(close, false);
+            QCOMPARE(bubble->property("interactionHovered").toBool(), false);
             auto [leftBorder, leftGreen, leftRed] = sample();
             QCOMPARE(leftBorder, restBorder);
             QCOMPARE(leftGreen + leftRed, 0);
