@@ -14,6 +14,7 @@
 #include <QWindow>
 #include <QShowEvent>
 #include <QEventLoop>
+#include <QPointer>
 
 
 
@@ -205,11 +206,20 @@ int ThemedDialog::exec()
 {
     // A sheet needs a shown parent window; otherwise keep the standalone application-modal run.
     if (!parentWidget() || !parentWidget()->window()->isVisible()) return QDialog::exec();
+    // Mirror QDialog::exec(): defer close-time deletion until the result is read, and stop
+    // waiting if the dialog is destroyed while the loop runs.
+    const bool deleteOnClose = testAttribute(Qt::WA_DeleteOnClose);
+    setAttribute(Qt::WA_DeleteOnClose, false);
+    const QPointer<ThemedDialog> guard(this);
     QEventLoop completion;
     connect(this, &QDialog::finished, &completion, &QEventLoop::quit);
+    connect(this, &QObject::destroyed, &completion, &QEventLoop::quit);
     open();
     if (isVisible()) completion.exec(QEventLoop::DialogExec);
-    return result();
+    if (!guard) return QDialog::Rejected;
+    const int code = result();
+    if (deleteOnClose) delete this;
+    return code;
 }
 
 void ThemedDialog::showEvent(QShowEvent* event)

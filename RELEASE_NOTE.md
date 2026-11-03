@@ -4,7 +4,7 @@
 
 - Start `DeviceFeatureTree` headers with a 6:4 Feature/Value split (was 5:5) so feature names keep more room; Value still stretches.
 
-- Present every parented `ThemedDialog`, including `exec()` callers and the `ThemedMessageBox` helpers, window-modally like `open()`: macOS shows the same sheet presentation (dimmed parent, sheet corners and shadow) as About-style dialogs instead of an application-modal window. Dialogs without a shown parent window keep `QDialog::exec()` behavior. `ThemedFileDialog` uses the same path.
+- Present every parented `ThemedDialog`, including `exec()` callers and the `ThemedMessageBox` helpers, window-modally like `open()`: macOS shows the same sheet presentation (dimmed parent, sheet corners and shadow) as About-style dialogs instead of an application-modal window. Dialogs without a shown parent window keep `QDialog::exec()` behavior. Like `QDialog::exec()`, close-time deletion waits until the result is read, and destroying the dialog ends the wait. `ThemedFileDialog` uses the same path.
 
 - Give editable HMI tiles square corners so the frame matches rectangular viewer content, and keep the full-tile `HmiMoveSurface` transparent.
 

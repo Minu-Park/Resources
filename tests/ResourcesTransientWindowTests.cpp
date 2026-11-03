@@ -366,6 +366,34 @@ private slots:
         if (kind == 3) QCOMPARE(result, int(QDialog::Accepted));
     }
 
+    void windowModalExecKeepsQDialogLifetimeRules()
+    {
+        QWidget host;
+        host.show();
+        QTimer watchdog;
+        watchdog.setSingleShot(true);
+        bool watchdogFired = false;
+        connect(&watchdog, &QTimer::timeout, &host, [&] {
+            watchdogFired = true;
+            for (auto* widget : QApplication::topLevelWidgets())
+                if (auto* dialog = qobject_cast<QDialog*>(widget); dialog && dialog->isVisible()) dialog->reject();
+        });
+        watchdog.start(5000);
+        // Close-time deletion waits until exec() has read the result, as with QDialog::exec().
+        QPointer<ThemedMessageBox> closing = new ThemedMessageBox(ThemedMessageBox::Information, "Close", "Deleted", &host, true);
+        closing->setAttribute(Qt::WA_DeleteOnClose);
+        QTimer::singleShot(0, &host, [&] { if (closing) closing->accept(); });
+        QCOMPARE(closing->exec(), int(QDialog::Accepted));
+        QVERIFY(!closing);
+        // Destroying the dialog while it waits ends the loop instead of hanging.
+        QPointer<ThemedMessageBox> destroyed = new ThemedMessageBox(ThemedMessageBox::Information, "Gone", "Destroyed", &host);
+        QTimer::singleShot(0, &host, [&] { delete destroyed.data(); });
+        QCOMPARE(destroyed->exec(), int(QDialog::Rejected));
+        QVERIFY(!destroyed);
+        watchdog.stop();
+        QVERIFY(!watchdogFired);
+    }
+
     void filePickerKeepsSelectionAndSaveFilter_data()
     {
         QTest::addColumn<bool>("save");
