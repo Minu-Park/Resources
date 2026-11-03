@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Start `DeviceFeatureTree` headers with a 6:4 Feature/Value split (was 5:5) so feature names keep more room; Value still stretches.
+
+- Present every parented `ThemedDialog`, including `exec()` callers and the `ThemedMessageBox` helpers, window-modally like `open()`: macOS shows the same sheet presentation (dimmed parent, sheet corners and shadow) as About-style dialogs instead of an application-modal window. Dialogs without a shown parent window keep `QDialog::exec()` behavior. `ThemedFileDialog` uses the same path.
+
+- Give editable HMI tiles square corners so the frame matches rectangular viewer content, and keep the full-tile `HmiMoveSurface` transparent.
+
+- Start every tab strip at its leading edge on all platforms. macOS no longer centers tabs that do not fill their bar, so a single Script Editor page tab sits flush with the frame.
+
 - Join editor page tabs, the existing file controls, code and status into one surface-colored frame. Keep the editor toolbar and code background on the white factory surface, with a single outer border and a theme-colored separator directly below the tabs.
 
 - Apply one state rule to every clickable status bubble: light-blue hover border and label, dark-blue active border with `selectionAccent` label. Action and alert bubbles no longer keep a neutral label while hovered or active. Plain-widget `statusBubble` containers become composite bubbles with runtime `interactionHovered`/`interactionPressed` state shared by their text buttons.

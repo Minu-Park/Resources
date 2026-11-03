@@ -815,6 +815,14 @@ class ResourcesIconStateStyle final : public QProxyStyle
 public:
     using QProxyStyle::QProxyStyle;
 
+    /** @brief Starts tab strips at their leading edge instead of the macOS centered default. */
+    int styleHint(StyleHint hint, const QStyleOption* option = nullptr, const QWidget* widget = nullptr,
+                  QStyleHintReturn* returnData = nullptr) const override
+    {
+        if (hint == SH_TabBar_Alignment) return Qt::AlignLeft;
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+
     QPixmap generatedIconPixmap(QIcon::Mode mode, const QPixmap& pixmap, const QStyleOption* option) const override
     {
         if (mode != QIcon::Active) return QProxyStyle::generatedIconPixmap(mode, pixmap, option);
@@ -1781,9 +1789,10 @@ private:
                 return;
             }
 
+            // Feature names get the larger share; Value keeps the rest for its editors.
             tree->header()->resizeSection(
                 0,
-                qMax(tree->header()->minimumSectionSize(), availableWidth / 2));
+                qMax(tree->header()->minimumSectionSize(), availableWidth * 3 / 5));
             tree->setProperty("_deviceFeatureTreeWidthInitialized", true);
         });
     }

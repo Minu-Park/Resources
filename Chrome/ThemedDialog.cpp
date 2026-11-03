@@ -13,6 +13,7 @@
 #include <QVBoxLayout>
 #include <QWindow>
 #include <QShowEvent>
+#include <QEventLoop>
 
 
 
@@ -198,6 +199,17 @@ void ThemedDialog::setTitleText(const QString& title)
 {
     setWindowTitle(title);
     _titleBar->setTitleText(title);
+}
+
+int ThemedDialog::exec()
+{
+    // A sheet needs a shown parent window; otherwise keep the standalone application-modal run.
+    if (!parentWidget() || !parentWidget()->window()->isVisible()) return QDialog::exec();
+    QEventLoop completion;
+    connect(this, &QDialog::finished, &completion, &QEventLoop::quit);
+    open();
+    if (isVisible()) completion.exec(QEventLoop::DialogExec);
+    return result();
 }
 
 void ThemedDialog::showEvent(QShowEvent* event)

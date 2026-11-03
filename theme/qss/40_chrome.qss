@@ -147,7 +147,7 @@ QWidget#HmiWorkspace {
 QWidget#HmiViewWrapper[hmiEditable="true"] {
     background-color: @SURFACE@;
     border: none;
-    border-radius: 8px;
+    border-radius: 0px;
 }
 
 QWidget#HmiViewWrapper[hmiEditable="false"] {
@@ -168,6 +168,7 @@ QLabel#HmiMoveHandle {
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
+QWidget#HmiMoveSurface,
 QWidget#HmiResizeHandle {
     background: transparent;
     border: none;
