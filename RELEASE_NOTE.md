@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Draw main-window dock separators as a single 1px `border` line inside their 2px drag area. The second pixel takes the dock surface, so the separator next to right and bottom docks matches other 1px borders instead of reading as a doubled dark band. Hover still fills the whole separator with `pressed`.
+
 - Add chat-surface roles for consumer chat panels: `QFrame[chatRole="userMessage"]` is a borderless 12px bubble filled with 4% of the `text` role, and `QFrame[chatRole="toolCall"]` is a surface card with a `border` outline that uses `hoverBorder` while `chatState="pending"`. Labels inside either surface stay transparent so the frame owns fill and border.
 
 - Add `QTabBar QToolButton[controlRole="tabClose"]`, a borderless 16px close glyph for closable tabs that would otherwise inherit the padded tab-bar tool-button box, and give `QPlainTextEdit[contentRole="document"]` the UI font like `QTextBrowser[contentRole="document"]`.
