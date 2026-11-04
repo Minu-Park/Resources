@@ -222,6 +222,29 @@ QFrame#DockContainerWidget {
     border: none;
 }
 
+/* AI Chat message surfaces: the frame owns fill and border; nested labels stay transparent. */
+QFrame[chatRole="userMessage"] {
+    background: rgba(@TEXT_RGB@, 10);
+    border: none;
+    border-radius: 12px;
+}
+
+QFrame[chatRole="toolCall"] {
+    background: @SURFACE@;
+    border: 1px solid @BORDER@;
+    border-radius: 12px;
+}
+
+QFrame[chatRole="toolCall"][chatState="pending"] {
+    border-color: @HOVERBORDER@;
+}
+
+QFrame[chatRole="userMessage"] QLabel,
+QFrame[chatRole="toolCall"] QLabel {
+    background: transparent;
+    border: none;
+}
+
 QDockWidget[floatingState="true"] {
     background: transparent;
 

@@ -86,14 +86,18 @@ void ThemedMainWindow::updateWindowMask() {
     clearMask();
 }
 
-void ThemedMainWindow::paintEvent(QPaintEvent* event) {
-    QMainWindow::paintEvent(event);
-    QPainter painter(this);
-    Resources::paintMainWindowBorder(
-        this,
-        painter,
-        _windowChromeMaximized || isMaximized() || isFullScreen(),
-        !isFullScreen());
+bool ThemedMainWindow::event(QEvent* event) {
+    // Paint the shell before QMainWindow::event paints dock separators, so the
+    // themed separator color stays visible between docks and the workspace.
+    if (event->type() == QEvent::Paint) {
+        QPainter painter(this);
+        Resources::paintMainWindowBorder(
+            this,
+            painter,
+            _windowChromeMaximized || isMaximized() || isFullScreen(),
+            !isFullScreen());
+    }
+    return QMainWindow::event(event);
 }
 
 void ThemedMainWindow::resizeEvent(QResizeEvent* event) {

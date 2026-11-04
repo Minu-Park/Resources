@@ -4,6 +4,14 @@
 
 - Give standard radio buttons light-blue hover and dark-blue selected/pressed ink while retaining the supplied circular artwork and native selection behavior. Disabled selection stays distinguishable. The shared default needs no consumer styling property.
 
+- Add chat-surface roles for consumer chat panels: `QFrame[chatRole="userMessage"]` is a borderless 12px bubble filled with 4% of the `text` role, and `QFrame[chatRole="toolCall"]` is a surface card with a `border` outline that uses `hoverBorder` while `chatState="pending"`. Labels inside either surface stay transparent so the frame owns fill and border.
+
+- Add `QTabBar QToolButton[controlRole="tabClose"]`, a borderless 16px close glyph for closable tabs that would otherwise inherit the padded tab-bar tool-button box, and give `QPlainTextEdit[contentRole="document"]` the UI font like `QTextBrowser[contentRole="document"]`.
+
+- Let a `QLabel` with an `inlineGlyph` resource path (and optional `inlineGlyphSize`, default 16) draw that neutral glyph in its own text color, so status icons match the text role beside them across palette changes. A state-tinted button may set `glyphRestRole` to rest in a palette role, such as `secondaryText`, instead of its artwork color.
+
+- Paint the `ThemedMainWindow` shell before `QMainWindow` paints dock separators, so the themed separator stays visible between the workspace and right or bottom docks.
+
 - Compile the supplied macOS app artwork with Apple’s native icon compiler. Package the matching ICNS and asset catalog together so Finder, Dock and native updater windows use the system tile geometry and outer shadow, including small icons, without a nested dark frame. Composite the macOS artwork onto opaque white before compilation so the original transparent rounded edge cannot expose dark contour pixels. Native acceptance checks all four sizes at 1× and Retina 2×, including contour brightness. Replace the earlier manual-inset/full-canvas ICNS experiments; original PNG and Windows ICO artwork is unchanged.
 
 - Start `DeviceFeatureTree` headers with a 6:4 Feature/Value split (was 5:5) so feature names keep more room; Value still stretches.
