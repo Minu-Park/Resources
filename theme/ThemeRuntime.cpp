@@ -978,7 +978,9 @@ private:
         }
         if (active || checkedState) return palette.value(QStringLiteral("focusBorder"));
         if (engaged) return palette.value(QStringLiteral("hoverBorder"));
-        return {};
+        // An inline action may rest in the palette role of the text it follows.
+        const QString restRole = button->property("glyphRestRole").toString();
+        return restRole.isEmpty() ? QColor() : palette.value(restRole);
     }
 
     QIcon source_;
@@ -1340,6 +1342,9 @@ protected:
                 label && label->objectName() == QLatin1String("PluginMarketplaceUpdateIcon")) {
                 applyPluginUpdateIcon(label);
             }
+            else if (label && !label->property("inlineGlyph").toString().isEmpty()) {
+                applyInlineGlyph(label);
+            }
         }
 
         if (event->type() == QEvent::Hide) {
@@ -1666,6 +1671,20 @@ private:
         popup->setContentsMargins(0, 0, 0, 0);
         if (popup->geometry() != geometry) popup->setGeometry(geometry);
         if (visible && !popup->isVisible()) popup->show();
+    }
+
+    /** @brief Draws a neutral glyph label in its own text color, so it matches the text role beside it. */
+    static void applyInlineGlyph(QLabel* label)
+    {
+        const int extent = label->property("inlineGlyphSize").toInt() > 0 ? label->property("inlineGlyphSize").toInt() : 16;
+        QPixmap icon = QIcon(label->property("inlineGlyph").toString())
+            .pixmap(QSize(extent, extent), label->devicePixelRatioF());
+        if (icon.isNull()) return;
+        QPainter painter(&icon);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(icon.rect(), label->palette().color(QPalette::WindowText));
+        painter.end();
+        label->setPixmap(icon);
     }
 
     /** @brief Renders the existing update glyph in the indicator's theme color. */
