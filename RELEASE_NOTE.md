@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Publish the supplied ethernet glyph at 24px and 48px under `icon/`.
+
 - Give standard radio buttons light-blue hover and dark-blue selected/pressed ink while retaining the supplied circular artwork and native selection behavior. Disabled selection stays distinguishable. The shared default needs no consumer styling property.
 
 - Add chat-surface roles for consumer chat panels: `QFrame[chatRole="userMessage"]` is a borderless 12px bubble filled with 4% of the `text` role, and `QFrame[chatRole="toolCall"]` is a surface card with a `border` outline that uses `hoverBorder` while `chatState="pending"`. Labels inside either surface stay transparent so the frame owns fill and border.
