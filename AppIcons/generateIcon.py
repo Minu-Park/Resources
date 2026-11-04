@@ -14,6 +14,7 @@ def main():
     parser.add_argument("--macos-only", action="store_true",
                         help="Rebuild native macOS assets from the existing AppIcon.png")
     args = parser.parse_args()
+    from PIL import Image
     directory = Path(__file__).resolve().parent
     source = directory / "AppIcon.png"
     if args.macos_only:
@@ -22,7 +23,6 @@ def main():
     else:
         if args.image is None:
             parser.error("an image argument or --macos-only is required")
-        from PIL import Image
         with Image.open(args.image) as original:
             image = original.copy()
         image.save(source, format="PNG")
@@ -35,7 +35,13 @@ def main():
 
     # Keep the supplied artwork; Apple owns the native tile, size and shadow.
     document = directory / "AppIcon.icon"
-    shutil.copyfile(source, document / "Assets" / "Artwork.png")
+    with Image.open(source) as original:
+        artwork = original.convert("RGBA")
+    # A transparent pre-rounded tile exposes the native dark base at its contour.
+    # Keep opaque source pixels unchanged and let the system clip only once.
+    canvas = Image.new("RGBA", artwork.size, "white")
+    canvas.alpha_composite(artwork)
+    canvas.save(document / "Assets" / "Artwork.png")
     with tempfile.TemporaryDirectory(prefix="resources-app-icon-") as temporary:
         output = Path(temporary)
         subprocess.run([

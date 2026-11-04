@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Compile the supplied macOS app artwork with Apple’s native icon compiler. Package the matching ICNS and asset catalog together so Finder, Dock and native updater windows use the system tile geometry and outer shadow, including small icons, without a nested dark frame. Replace the earlier manual-inset/full-canvas ICNS experiments; PNG and Windows ICO artwork is unchanged.
+- Compile the supplied macOS app artwork with Apple’s native icon compiler. Package the matching ICNS and asset catalog together so Finder, Dock and native updater windows use the system tile geometry and outer shadow, including small icons, without a nested dark frame. Composite the macOS artwork onto opaque white before compilation so the original transparent rounded edge cannot expose dark contour pixels. Native acceptance checks all four sizes at 1× and Retina 2×, including contour brightness. Replace the earlier manual-inset/full-canvas ICNS experiments; original PNG and Windows ICO artwork is unchanged.
 
 - Start `DeviceFeatureTree` headers with a 6:4 Feature/Value split (was 5:5) so feature names keep more room; Value still stretches.
 

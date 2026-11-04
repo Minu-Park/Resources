@@ -5,10 +5,11 @@ func fail(_ message: String) -> Never {
     exit(1)
 }
 
-func render(_ image: NSImage, size: Int) -> NSBitmapImageRep {
-    let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: size,
-        pixelsHigh: size, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
+func render(_ image: NSImage, size: Int, scale: Int) -> NSBitmapImageRep {
+    let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: size * scale,
+        pixelsHigh: size * scale, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
         isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+    bitmap.size = NSSize(width: size, height: size)
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
     image.draw(in: NSRect(x: 0, y: 0, width: size, height: size),
@@ -49,29 +50,36 @@ if let capture = capture {
 let candidate = NSWorkspace.shared.icon(forFile: app.path)
 let reference = NSWorkspace.shared.icon(forFile: "/System/Applications/System Settings.app")
 for size in [16, 32, 64, 128] {
-    let actual = render(candidate, size: size)
-    let expected = render(reference, size: size)
-    for threshold in [1, 32, 128, 230] {
-        let actualBounds = bounds(actual, alpha: threshold)
-        let expectedBounds = bounds(expected, alpha: threshold)
-        guard actualBounds == expectedBounds else {
-            fail("\(size)px alpha \(threshold): \(actualBounds) differs from system \(expectedBounds)")
+    for scale in [1, 2] {
+        let actual = render(candidate, size: size, scale: scale)
+        let expected = render(reference, size: size, scale: scale)
+        let label = "\(size)pt @\(scale)x"
+        for threshold in [1, 32, 128, 230] {
+            let actualBounds = bounds(actual, alpha: threshold)
+            let expectedBounds = bounds(expected, alpha: threshold)
+            guard actualBounds == expectedBounds else {
+                fail("\(label) alpha \(threshold): \(actualBounds) differs from system \(expectedBounds)")
+            }
         }
-    }
-    // The supplied white tile must not acquire a second dark plate at small sizes.
-    let body = bounds(actual, alpha: 230)
-    let middleX = (body[0] + body[2]) / 2, middleY = (body[1] + body[3]) / 2
-    for (x, y) in [(body[0] + 1, middleY), (body[2] - 2, middleY), (middleX, body[3] - 2)] {
-        let color = actual.colorAt(x: x, y: y)!.usingColorSpace(.deviceRGB)!
-        if max(color.redComponent, color.greenComponent, color.blueComponent) < 0.4 {
-            fail("\(size)px: unexpected dark plate around the supplied white artwork")
+        // Check the whole opaque contour, not just three points on a dark plate.
+        for y in 1..<(actual.pixelsHigh - 1) {
+            for x in 1..<(actual.pixelsWide - 1) {
+                let color = actual.colorAt(x: x, y: y)!.usingColorSpace(.deviceRGB)!
+                let neighbors = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+                let isContour = color.alphaComponent >= 230.0 / 255.0 && neighbors.contains {
+                    actual.colorAt(x: $0.0, y: $0.1)!.alphaComponent < 230.0 / 255.0
+                }
+                if isContour && max(color.redComponent, color.greenComponent, color.blueComponent) < 0.7 {
+                    fail("\(label): dark discontinuity in white tile contour at (\(x), \(y))")
+                }
+            }
         }
-    }
-    if let capture = capture {
-        for (name, bitmap) in [("consumer", actual), ("system-settings", expected)] {
-            try bitmap.representation(using: .png, properties: [:])!.write(
-                to: capture.appendingPathComponent("\(name)-\(size).png"))
+        if let capture = capture {
+            for (name, bitmap) in [("consumer", actual), ("system-settings", expected)] {
+                try bitmap.representation(using: .png, properties: [:])!.write(
+                    to: capture.appendingPathComponent("\(name)-\(size)-\(scale)x.png"))
+            }
         }
+        print("\(label): system body/shadow bounds match; white contour has no dark discontinuities")
     }
-    print("\(size)px: system body/shadow bounds match at four alpha thresholds; no nested dark plate")
 }
