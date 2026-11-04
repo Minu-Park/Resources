@@ -820,7 +820,21 @@ QRadioButton::indicator:hover {
     image: url(:/Resources/icon/round-48.png);
 }
 
-QRadioButton::indicator:checked { image: url(:/Resources/icon/unchecked-radio-button-48.png);
+QRadioButton::indicator:checked { image: url(:/Resources/icon/radio-selected-active.png);
+}
+
+/* Hover changes ink without changing checked state; a held press takes precedence. */
+QRadioButton::indicator:unchecked:enabled:hover {
+    image: url(:/Resources/icon/radio-empty-hover.png);
+}
+QRadioButton::indicator:checked:enabled:hover {
+    image: url(:/Resources/icon/radio-selected-hover.png);
+}
+QRadioButton::indicator:unchecked:enabled:pressed {
+    image: url(:/Resources/icon/radio-empty-active.png);
+}
+QRadioButton::indicator:checked:enabled:pressed {
+    image: url(:/Resources/icon/radio-selected-active.png);
 }
 
 QRadioButton::indicator:disabled { image: url(:/Resources/icon/radio-empty-disabled.svg);
