@@ -44,7 +44,11 @@ Use virtual paths such as `:/Resources/icon/...`; never depend on a source-tree 
 
 ## App icons
 
-`AppIcons/generateIcon.py <IMAGEPATH>` requires Pillow and generates the PNG, Windows ICO and macOS ICNS assets. The ICNS uses the supplied artwork canvas without an additional inset; retain any intended shape or transparency in the source image itself. On macOS, the generator uses `iconutil` when available. Consumers package these assets; this module does not install application bundles.
+`AppIcons/generateIcon.py <IMAGEPATH>` updates PNG and Windows ICO with Pillow. On macOS it also builds the native app icon with Xcode's `actool`; `python3 AppIcons/generateIcon.py --macos-only` regenerates only the macOS assets from the existing PNG without changing PNG/ICO bytes. Other platforms leave native macOS outputs untouched; regenerate them on macOS before publishing an artwork change. Generation failures stop the command instead of substituting a different ICNS encoding.
+
+`AppIcon.icon` preserves the supplied artwork on a white native background without extra foreground glass or shadow effects. Apple owns the tile mask, per-size geometry and outer shadow. Consumers must package **both** `AppIcon.icns` and `Assets.car` into `Contents/Resources` and set `CFBundleIconName` to `AppIcon` in their bundle Info.plist. The ICNS and catalog are one compiled asset set; do not add manual padding or install one without the other. This module owns the assets and does not install consumer app bundles.
+
+On a logged-in Mac, run `xcrun swift AppIcons/verifyIcon.swift /path/to/Consumer.app` to compare the consumer icon's native body and shadow bounds with System Settings at 16, 32, 64 and 128px. This checks native rendering rather than only the source canvas. Check the real Dock, Finder and updater window as well; a Qt artwork preview cannot establish those results.
 
 ## Searchable tree widgets
 

@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Preserve the supplied artwork bounds in the macOS app icon instead of adding a 100px inset. Native updater dialogs no longer show a small logo inside a second dark icon frame.
+- Compile the supplied macOS app artwork with Apple’s native icon compiler. Package the matching ICNS and asset catalog together so Finder, Dock and native updater windows use the system tile geometry and outer shadow, including small icons, without a nested dark frame. Replace the earlier manual-inset/full-canvas ICNS experiments; PNG and Windows ICO artwork is unchanged.
 
 - Start `DeviceFeatureTree` headers with a 6:4 Feature/Value split (was 5:5) so feature names keep more room; Value still stretches.
 
