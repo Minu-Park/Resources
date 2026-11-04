@@ -42,6 +42,10 @@ int main(int argc, char* argv[])
 
 Use virtual paths such as `:/Resources/icon/...`; never depend on a source-tree path at runtime.
 
+## App icons
+
+`AppIcons/generateIcon.py <IMAGEPATH>` requires Pillow and generates the PNG, Windows ICO and macOS ICNS assets. The ICNS uses the supplied artwork canvas without an additional inset; retain any intended shape or transparency in the source image itself. On macOS, the generator uses `iconutil` when available. Consumers package these assets; this module does not install application bundles.
+
 ## Searchable tree widgets
 
 Link `Resources::Widgets` and include `Widgets/SearchableTreeWidget.h` to use

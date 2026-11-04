@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preserve the supplied artwork bounds in the macOS app icon instead of adding a 100px inset. Native updater dialogs no longer show a small logo inside a second dark icon frame.
+
 - Start `DeviceFeatureTree` headers with a 6:4 Feature/Value split (was 5:5) so feature names keep more room; Value still stretches.
 
 - Present every parented `ThemedDialog`, including `exec()` callers and the `ThemedMessageBox` helpers, window-modally like `open()`: macOS shows the same sheet presentation (dimmed parent, sheet corners and shadow) as About-style dialogs instead of an application-modal window. Dialogs without a shown parent window keep `QDialog::exec()` behavior. Like `QDialog::exec()`, close-time deletion waits until the result is read, and destroying the dialog ends the wait. `ThemedFileDialog` uses the same path.

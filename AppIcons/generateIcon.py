@@ -31,12 +31,10 @@ def main():
     img.save(ico_path, format="ICO", sizes=ico_sizes)
     print(f"ICO saved to {ico_path}")
     
-    # Generate ICNS (macOS: Dynamic padding to create conforming squircle margins from full-bleed PNG)
+    # Generate ICNS from the supplied canvas without adding a second icon inset.
     print("Generating AppIcon.icns...")
-    # Create macOS-conforming 1024x1024 canvas with 10% transparent margins (824x824 active area)
-    mac_canvas = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
-    resized_mac = img.resize((824, 824), Image.Resampling.LANCZOS)
-    mac_canvas.paste(resized_mac, (100, 100))
+    # Preserve the artwork bounds; macOS supplies its native icon presentation.
+    mac_canvas = img.convert("RGBA").resize((1024, 1024), Image.Resampling.LANCZOS)
     
     use_iconutil = False
     if sys.platform == "darwin" and shutil.which("iconutil") is not None:
