@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Make all themed tree-view columns draggable with native Interactive headers,
+  including the last column. Keep user widths through content refresh/repolish;
+  device feature trees seed a 6:4 split with both columns editable.
+
 - Draw main-window dock separators as a single 1px `border` line inside their 2px drag area. The second pixel takes the dock surface, so the separator next to right and bottom docks matches other 1px borders instead of reading as a doubled dark band. Hover still fills the whole separator with `pressed`.
 
 - Publish the supplied ethernet glyph at 24px and 48px under `icon/`.

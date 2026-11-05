@@ -1333,6 +1333,18 @@ protected:
                         applyInitialDeviceFeatureTreeWidth(tree);
                     }
                 }
+                if (auto* tree = qobject_cast<QTreeView*>(widget);
+                    tree && (event->type() == QEvent::Show || tree->isVisible())) {
+                    // Preserve resolved initial geometry before releasing automatic sizing.
+                    auto* header = tree->header();
+                    QList<int> widths;
+                    for (int column = 0; column < header->count(); ++column)
+                        widths.append(header->sectionSize(column));
+                    header->setStretchLastSection(false);
+                    header->setSectionResizeMode(QHeaderView::Interactive);
+                    for (int column = 0; column < widths.size(); ++column)
+                        header->resizeSection(column, widths[column]);
+                }
                 applyLayoutTheme(widget);
             }
         }
@@ -1782,11 +1794,10 @@ private:
         tree->setItemDelegate(new DeviceFeatureTreeDelegate(tree));
 
         QHeaderView* header = tree->header();
-        // Explicit Stretch mode lets Value shrink without retaining its previous width.
+        // Initial sizes are seeded below; both columns remain user-resizable.
         header->setStretchLastSection(false);
         header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        header->setSectionResizeMode(0, QHeaderView::Interactive);
-        header->setSectionResizeMode(1, QHeaderView::Stretch);
+        header->setSectionResizeMode(QHeaderView::Interactive);
         header->setMinimumSectionSize(60);
     }
 
@@ -1812,6 +1823,8 @@ private:
             tree->header()->resizeSection(
                 0,
                 qMax(tree->header()->minimumSectionSize(), availableWidth * 3 / 5));
+            tree->header()->resizeSection(1,
+                qMax(tree->header()->minimumSectionSize(), availableWidth - tree->header()->sectionSize(0)));
             tree->setProperty("_deviceFeatureTreeWidthInitialized", true);
         });
     }

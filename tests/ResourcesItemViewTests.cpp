@@ -118,6 +118,43 @@ class ResourcesItemViewTests : public QObject
             QCOMPARE(sample(hovered, column), colors.value("surface"));
         }
     }
+    void treeColumnsDragAndRetainWidths_data()
+    {
+        QTest::addColumn<bool>("themed");
+        QTest::newRow("plain-tree") << false;
+        QTest::newRow("themed-tree") << true;
+    }
+    void treeColumnsDragAndRetainWidths()
+    {
+        QFETCH(bool, themed);
+        std::unique_ptr<QTreeWidget> tree(themed ? new ThemedTreeWidget : new QTreeWidget);
+        tree->setHeaderLabels({"Name", "Address", "Status"});
+        tree->header()->setSectionResizeMode(0, QHeaderView::Fixed);
+        tree->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+        tree->header()->setSectionResizeMode(2, QHeaderView::Stretch);
+        tree->header()->setStretchLastSection(true);
+        new QTreeWidgetItem(tree.get(), {"Camera", "192.0.2.10", "Ready"});
+        tree->resize(600, 180); tree->show();
+        QVERIFY(QTest::qWaitForWindowExposed(tree.get()));
+        auto* header = tree->header();
+        QVERIFY(!header->stretchLastSection());
+        for (int column = 0; column < 3; ++column) {
+            QCOMPARE(header->sectionResizeMode(column), QHeaderView::Interactive);
+            header->resizeSection(column, 140);
+        }
+        // Exercise native pointer resizing, including the last section boundary.
+        for (int column = 0; column < 3; ++column) {
+            const QPoint edge(header->sectionViewportPosition(column) + header->sectionSize(column) - 1, header->height() / 2);
+            QTest::mousePress(header->viewport(), Qt::LeftButton, {}, edge);
+            QTest::mouseMove(header->viewport(), edge + QPoint(25, 0));
+            QTest::mouseRelease(header->viewport(), Qt::LeftButton, {}, edge + QPoint(25, 0));
+            QCOMPARE(header->sectionSize(column), 165);
+        }
+        tree->clear(); new QTreeWidgetItem(tree.get(), {"Replacement", "198.51.100.10", "Busy"});
+        QEvent polish(QEvent::Polish); QApplication::sendEvent(tree.get(), &polish);
+        tree->hide(); tree->show(); QCoreApplication::processEvents();
+        for (int column = 0; column < 3; ++column) QCOMPARE(header->sectionSize(column), 165);
+    }
     void deviceFeatureTreeGivesFeatureColumnTheLargerShare()
     {
         QTreeWidget tree;
@@ -129,8 +166,8 @@ class ResourcesItemViewTests : public QObject
         QVERIFY(QTest::qWaitForWindowExposed(&tree));
         const int available = tree.viewport()->width();
         QTRY_COMPARE(tree.header()->sectionSize(0), available * 3 / 5);
-        // Value still stretches into the remaining width for its editors.
-        QCOMPARE(tree.header()->sectionResizeMode(1), QHeaderView::Stretch);
+        QCOMPARE(tree.header()->sectionResizeMode(1), QHeaderView::Interactive);
+        QCOMPARE(tree.header()->sectionSize(1), available - tree.header()->sectionSize(0));
     }
     void menuInkColorsIdentityWithoutRowFills()
     {
