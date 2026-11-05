@@ -118,6 +118,20 @@ class ResourcesItemViewTests : public QObject
             QCOMPARE(sample(hovered, column), colors.value("surface"));
         }
     }
+    void deviceFeatureTreeGivesFeatureColumnTheLargerShare()
+    {
+        QTreeWidget tree;
+        tree.setProperty("treeRole", "DeviceFeatureTree");
+        tree.setHeaderLabels({"Feature", "Value"});
+        new QTreeWidgetItem(&tree, {"AcquisitionFrameRateEnable", "On"});
+        tree.resize(360, 150);
+        tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        const int available = tree.viewport()->width();
+        QTRY_COMPARE(tree.header()->sectionSize(0), available * 3 / 5);
+        // Value still stretches into the remaining width for its editors.
+        QCOMPARE(tree.header()->sectionResizeMode(1), QHeaderView::Stretch);
+    }
     void menuInkColorsIdentityWithoutRowFills()
     {
         ThemedTreeWidget tree;

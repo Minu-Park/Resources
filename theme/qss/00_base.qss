@@ -34,20 +34,27 @@ QDialog {
     color: @TEXT@;
 }
 
+/* Dock separators keep a 2px drag area but draw a single 1px border line like other
+   borders; the second pixel takes the dock surface so the line does not read doubled. */
 QMainWindow::separator {
     width: 2px;
     height: 2px;
-    background: @BORDER@;
     margin: 0;
+    border: none;
+}
+
+QMainWindow::separator:vertical {
+    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 @BORDER@, stop: 0.5 @BORDER@, stop: 0.5001 @SURFACE@, stop: 1 @SURFACE@);
+}
+
+QMainWindow::separator:horizontal {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 @BORDER@, stop: 0.5 @BORDER@, stop: 0.5001 @SURFACE@, stop: 1 @SURFACE@);
 }
 
 QMainWindow::separator:hover {
     background: @PRESSED@;
-}MainWindow::separator:horizontal,
-ThemedMainWindow::separator:horizontal {
-    height: 2px;
-    background-color: @BORDER@;
-    border: none;
 }
 
 QDockWidget {
@@ -180,6 +187,15 @@ QTabBar QToolButton {
 
     border: none;
     outline: none;
+}
+
+/* Closable tabs place a borderless 16px close glyph inside the tab. */
+QTabBar QToolButton[controlRole="tabClose"] {
+    background: transparent;
+    width: 16px;
+    height: 16px;
+    padding: 0px;
+    margin: 0px;
 }
 
 QTabBar QToolButton#ScrollLeftButton {
@@ -437,6 +453,7 @@ QTextBrowser {
     font-family: "@FONT_MONO@";
 }
 
+QPlainTextEdit[contentRole="document"],
 QTextBrowser[contentRole="document"] {
 
     font-family: "@FONT_UI@";

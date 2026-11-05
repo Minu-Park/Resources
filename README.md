@@ -7,7 +7,7 @@ Resources is a standalone Qt 6 resource, theme, and reusable window-chrome libra
 - Compile icons, images, and ordered `theme/qss/*.qss` fragments into a Qt resource collection.
 - Install the resource collection and stylesheet through `Resources::installResources()`.
 - Persist the complete theme, including font roles, with `savePaletteFile()` and `loadPaletteFile()`. Consumers choose the path and loading time. JSON contains one `colors` object with every supported `#RRGGBB` value. Loading a missing, malformed, incomplete or unknown-role file restores the complete built-in palette.
-- Provide reusable main-window, MDI, dock, dialog, file-dialog, message-box, splash, loading, and progress chrome. `ThemedFileDialog` presents its outer shell through `QDialog::open()` with native window modality (a sheet on macOS); its synchronous selection helpers wait for completion and preserve selected paths, save filters and cancellation results.
+- Provide reusable main-window, MDI, dock, dialog, file-dialog, message-box, splash, loading, and progress chrome. Every parented `ThemedDialog`, including `ThemedMessageBox` and `ThemedFileDialog`, presents through `QDialog::open()` with native window modality (a sheet on macOS), and its `exec()` waits for completion without switching to application modality, so synchronous results such as selected paths, save filters and Yes/No answers are preserved. Dialogs without a shown parent window keep `QDialog::exec()`.
 - Provide a Qt-only searchable tree base with stable-key favorites, editor-preserving filtering, shortcuts, and scrollbar-independent overlay geometry.
 - Expose an opt-in cached MDI shadow implementation with a focused offscreen test target.
 
@@ -41,6 +41,14 @@ int main(int argc, char* argv[])
 ```
 
 Use virtual paths such as `:/Resources/icon/...`; never depend on a source-tree path at runtime.
+
+## App icons
+
+`AppIcons/generateIcon.py <IMAGEPATH>` updates PNG and Windows ICO with Pillow. On macOS it also builds the native app icon with Pillow and Xcode's `actool`; `python3 AppIcons/generateIcon.py --macos-only` regenerates only the macOS assets from the existing PNG without changing PNG/ICO bytes. Other platforms leave native macOS outputs untouched; regenerate them on macOS before publishing an artwork change. Generation failures stop the command instead of substituting a different ICNS encoding.
+
+`AppIcon.icon` preserves the supplied artwork without extra foreground glass or shadow effects. The generator composites only the macOS artwork onto opaque white before native compilation: fully opaque source pixels are unchanged, while pre-rounded transparent corners cannot expose the system dark base as a jagged inner contour. The original PNG and Windows ICO are not changed by macOS-only generation. Apple owns the tile mask, per-size geometry and outer shadow. Consumers must package **both** `AppIcon.icns` and `Assets.car` into `Contents/Resources` and set `CFBundleIconName` to `AppIcon` in their bundle Info.plist. The ICNS and catalog are one compiled asset set; do not add manual padding or install one without the other. This module owns the assets and does not install consumer app bundles.
+
+On a logged-in Mac, run `xcrun swift AppIcons/verifyIcon.swift /path/to/Consumer.app` to compare the consumer icon's native body and shadow bounds with System Settings at 16, 32, 64 and 128 points at both 1× and Retina 2×. It also checks the whole white tile contour for dark discontinuities. This checks native rendering rather than only the source canvas. Check the real Dock, Finder and updater window as well; a Qt artwork preview cannot establish those results.
 
 ## Searchable tree widgets
 

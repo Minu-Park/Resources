@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- Draw main-window dock separators as a single 1px `border` line inside their 2px drag area. The second pixel takes the dock surface, so the separator next to right and bottom docks matches other 1px borders instead of reading as a doubled dark band. Hover still fills the whole separator with `pressed`.
+
+- Add chat-surface roles for consumer chat panels: `QFrame[chatRole="userMessage"]` is a borderless 12px bubble filled with 4% of the `text` role, and `QFrame[chatRole="toolCall"]` is a surface card with a `border` outline that uses `hoverBorder` while `chatState="pending"`. Labels inside either surface stay transparent so the frame owns fill and border.
+
+- Add `QTabBar QToolButton[controlRole="tabClose"]`, a borderless 16px close glyph for closable tabs that would otherwise inherit the padded tab-bar tool-button box, and give `QPlainTextEdit[contentRole="document"]` the UI font like `QTextBrowser[contentRole="document"]`.
+
+- Let a `QLabel` with an `inlineGlyph` resource path (and optional `inlineGlyphSize`, default 16) draw that neutral glyph in its own text color, so status icons match the text role beside them across palette changes. A state-tinted button may set `glyphRestRole` to rest in a palette role, such as `secondaryText`, instead of its artwork color.
+
+- Paint the `ThemedMainWindow` shell before `QMainWindow` paints dock separators, so the themed separator stays visible between the workspace and right or bottom docks.
+
+- Compile the supplied macOS app artwork with Apple’s native icon compiler. Package the matching ICNS and asset catalog together so Finder, Dock and native updater windows use the system tile geometry and outer shadow, including small icons, without a nested dark frame. Composite the macOS artwork onto opaque white before compilation so the original transparent rounded edge cannot expose dark contour pixels. Native acceptance checks all four sizes at 1× and Retina 2×, including contour brightness. Replace the earlier manual-inset/full-canvas ICNS experiments; original PNG and Windows ICO artwork is unchanged.
+
+- Start `DeviceFeatureTree` headers with a 6:4 Feature/Value split (was 5:5) so feature names keep more room; Value still stretches.
+
+- Present every parented `ThemedDialog`, including `exec()` callers and the `ThemedMessageBox` helpers, window-modally like `open()`: macOS shows the same sheet presentation (dimmed parent, sheet corners and shadow) as About-style dialogs instead of an application-modal window. Dialogs without a shown parent window keep `QDialog::exec()` behavior. Like `QDialog::exec()`, close-time deletion waits until the result is read, and destroying the dialog ends the wait. `ThemedFileDialog` uses the same path.
+
+- Give editable HMI tiles square corners so the frame matches rectangular viewer content, and keep the full-tile `HmiMoveSurface` transparent.
+
+- Start every tab strip at its leading edge on all platforms. macOS no longer centers tabs that do not fill their bar, so a single Script Editor page tab sits flush with the frame.
+
+- Join editor page tabs, the existing file controls, code and status into one surface-colored frame. Keep the editor toolbar and code background on the white factory surface, with a single outer border and a theme-colored separator directly below the tabs.
+
 - Apply one state rule to every clickable status bubble: light-blue hover border and label, dark-blue active border with `selectionAccent` label. Action and alert bubbles no longer keep a neutral label while hovered or active. Plain-widget `statusBubble` containers become composite bubbles with runtime `interactionHovered`/`interactionPressed` state shared by their text buttons.
 
 - Keep window activation inside the transient-window test process on Windows with a visible anchor window, so later tests still receive native pointer input after file-picker tests hand activation away. The composite bubble test uses the real pointer again, and the menu hover-emphasis test isolates its menu from native pointer motion and crossing while it drives hover with `setActiveAction()`.

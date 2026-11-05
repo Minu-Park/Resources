@@ -147,7 +147,7 @@ QWidget#HmiWorkspace {
 QWidget#HmiViewWrapper[hmiEditable="true"] {
     background-color: @SURFACE@;
     border: none;
-    border-radius: 8px;
+    border-radius: 0px;
 }
 
 QWidget#HmiViewWrapper[hmiEditable="false"] {
@@ -168,6 +168,7 @@ QLabel#HmiMoveHandle {
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
 
+QWidget#HmiMoveSurface,
 QWidget#HmiResizeHandle {
     background: transparent;
     border: none;
@@ -218,6 +219,29 @@ QLabel#ThemedDockTitleBarLabel {
 
 QFrame#DockContainerWidget {
     background-color: @SURFACE@;
+    border: none;
+}
+
+/* AI Chat message surfaces: the frame owns fill and border; nested labels stay transparent. */
+QFrame[chatRole="userMessage"] {
+    background: rgba(@TEXT_RGB@, 10);
+    border: none;
+    border-radius: 12px;
+}
+
+QFrame[chatRole="toolCall"] {
+    background: @SURFACE@;
+    border: 1px solid @BORDER@;
+    border-radius: 12px;
+}
+
+QFrame[chatRole="toolCall"][chatState="pending"] {
+    border-color: @HOVERBORDER@;
+}
+
+QFrame[chatRole="userMessage"] QLabel,
+QFrame[chatRole="toolCall"] QLabel {
+    background: transparent;
     border: none;
 }
 

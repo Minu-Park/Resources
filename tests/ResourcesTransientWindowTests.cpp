@@ -310,6 +310,90 @@ private slots:
         QCOMPARE(filter, QStringLiteral("unchanged"));
     }
 
+    void messageBoxesShareWindowModalPresentation_data()
+    {
+        QTest::addColumn<int>("kind");
+        QTest::newRow("critical") << 0;
+        QTest::newRow("information") << 1;
+        QTest::newRow("question") << 2;
+        QTest::newRow("exec") << 3;
+    }
+
+    void messageBoxesShareWindowModalPresentation()
+    {
+        QFETCH(int, kind);
+        QWidget host;
+        host.show();
+        bool observed = false;
+        Qt::WindowModality modality = Qt::NonModal;
+        Qt::WindowType type = Qt::Widget;
+        QTimer watchdog;
+        watchdog.setSingleShot(true);
+        connect(&watchdog, &QTimer::timeout, &host, [] {
+            for (auto* widget : QApplication::topLevelWidgets())
+                if (auto* dialog = qobject_cast<QDialog*>(widget); dialog && dialog->isVisible()) dialog->reject();
+        });
+        watchdog.start(5000);
+        QTimer::singleShot(0, &host, [&] {
+            auto* dialog = qobject_cast<ThemedMessageBox*>(QApplication::activeModalWidget());
+            if (!dialog) return;
+            observed = true;
+            modality = dialog->windowModality();
+            type = dialog->windowType();
+            dialog->accept();
+        });
+        int result = -1;
+        switch (kind) {
+        case 0: ThemedMessageBox::critical(&host, "Error", "Failed"); break;
+        case 1: ThemedMessageBox::information(&host, "Info", "Done"); break;
+        case 2: result = ThemedMessageBox::question(&host, "Question", "Continue?") ? 1 : 0; break;
+        case 3: {
+            ThemedMessageBox box(ThemedMessageBox::Information, "Exec", "Synchronous", &host, true);
+            result = box.exec();
+            break;
+        }
+        }
+        watchdog.stop();
+        // Message boxes use the same parent-window sheet as open()-presented dialogs, not app-modal exec().
+        QVERIFY(observed);
+        QCOMPARE(modality, Qt::WindowModal);
+#ifdef Q_OS_MACOS
+        QCOMPARE(type, Qt::Sheet);
+#else
+        Q_UNUSED(type);
+#endif
+        if (kind == 2) QCOMPARE(result, 1);
+        if (kind == 3) QCOMPARE(result, int(QDialog::Accepted));
+    }
+
+    void windowModalExecKeepsQDialogLifetimeRules()
+    {
+        QWidget host;
+        host.show();
+        QTimer watchdog;
+        watchdog.setSingleShot(true);
+        bool watchdogFired = false;
+        connect(&watchdog, &QTimer::timeout, &host, [&] {
+            watchdogFired = true;
+            for (auto* widget : QApplication::topLevelWidgets())
+                if (auto* dialog = qobject_cast<QDialog*>(widget); dialog && dialog->isVisible()) dialog->reject();
+        });
+        watchdog.start(5000);
+        // Close-time deletion waits until exec() has read the result, as with QDialog::exec().
+        QPointer<ThemedMessageBox> closing = new ThemedMessageBox(ThemedMessageBox::Information, "Close", "Deleted", &host, true);
+        closing->setAttribute(Qt::WA_DeleteOnClose);
+        QTimer::singleShot(0, &host, [&] { if (closing) closing->accept(); });
+        QCOMPARE(closing->exec(), int(QDialog::Accepted));
+        QVERIFY(!closing);
+        // Destroying the dialog while it waits ends the loop instead of hanging.
+        QPointer<ThemedMessageBox> destroyed = new ThemedMessageBox(ThemedMessageBox::Information, "Gone", "Destroyed", &host);
+        QTimer::singleShot(0, &host, [&] { delete destroyed.data(); });
+        QCOMPARE(destroyed->exec(), int(QDialog::Rejected));
+        QVERIFY(!destroyed);
+        watchdog.stop();
+        QVERIFY(!watchdogFired);
+    }
+
     void filePickerKeepsSelectionAndSaveFilter_data()
     {
         QTest::addColumn<bool>("save");

@@ -12,6 +12,12 @@ public:
     QWidget* contentWidget() const;
     QVBoxLayout* contentLayout() const;
     void setTitleText(const QString& title);
+    /**
+     * @brief Runs the dialog synchronously with the same window-modal presentation as open().
+     * QDialog::exec() would switch to application modality and lose the native sheet; a dialog
+     * without a shown parent window keeps QDialog::exec() behavior.
+     */
+    int exec() override;
 
 protected:
     void showEvent(QShowEvent* event) override;

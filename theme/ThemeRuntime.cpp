@@ -815,6 +815,14 @@ class ResourcesIconStateStyle final : public QProxyStyle
 public:
     using QProxyStyle::QProxyStyle;
 
+    /** @brief Starts tab strips at their leading edge instead of the macOS centered default. */
+    int styleHint(StyleHint hint, const QStyleOption* option = nullptr, const QWidget* widget = nullptr,
+                  QStyleHintReturn* returnData = nullptr) const override
+    {
+        if (hint == SH_TabBar_Alignment) return Qt::AlignLeft;
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+
     QPixmap generatedIconPixmap(QIcon::Mode mode, const QPixmap& pixmap, const QStyleOption* option) const override
     {
         if (mode != QIcon::Active) return QProxyStyle::generatedIconPixmap(mode, pixmap, option);
@@ -970,7 +978,9 @@ private:
         }
         if (active || checkedState) return palette.value(QStringLiteral("focusBorder"));
         if (engaged) return palette.value(QStringLiteral("hoverBorder"));
-        return {};
+        // An inline action may rest in the palette role of the text it follows.
+        const QString restRole = button->property("glyphRestRole").toString();
+        return restRole.isEmpty() ? QColor() : palette.value(restRole);
     }
 
     QIcon source_;
@@ -1332,6 +1342,9 @@ protected:
                 label && label->objectName() == QLatin1String("PluginMarketplaceUpdateIcon")) {
                 applyPluginUpdateIcon(label);
             }
+            else if (label && !label->property("inlineGlyph").toString().isEmpty()) {
+                applyInlineGlyph(label);
+            }
         }
 
         if (event->type() == QEvent::Hide) {
@@ -1660,6 +1673,20 @@ private:
         if (visible && !popup->isVisible()) popup->show();
     }
 
+    /** @brief Draws a neutral glyph label in its own text color, so it matches the text role beside it. */
+    static void applyInlineGlyph(QLabel* label)
+    {
+        const int extent = label->property("inlineGlyphSize").toInt() > 0 ? label->property("inlineGlyphSize").toInt() : 16;
+        QPixmap icon = QIcon(label->property("inlineGlyph").toString())
+            .pixmap(QSize(extent, extent), label->devicePixelRatioF());
+        if (icon.isNull()) return;
+        QPainter painter(&icon);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(icon.rect(), label->palette().color(QPalette::WindowText));
+        painter.end();
+        label->setPixmap(icon);
+    }
+
     /** @brief Renders the existing update glyph in the indicator's theme color. */
     static void applyPluginUpdateIcon(QLabel* label)
     {
@@ -1781,9 +1808,10 @@ private:
                 return;
             }
 
+            // Feature names get the larger share; Value keeps the rest for its editors.
             tree->header()->resizeSection(
                 0,
-                qMax(tree->header()->minimumSectionSize(), availableWidth / 2));
+                qMax(tree->header()->minimumSectionSize(), availableWidth * 3 / 5));
             tree->setProperty("_deviceFeatureTreeWidthInitialized", true);
         });
     }

@@ -255,6 +255,18 @@ private slots:
         QVERIFY2(error.contains("Unparsed theme"), qPrintable(error));
         QCOMPARE(composed, installed);
     }
+    void tabStripsStartAtLeadingEdge()
+    {
+        QWidget host;
+        QTabBar tabs(&host);
+        tabs.setExpanding(false);
+        tabs.addTab("Only tab");
+        tabs.setGeometry(0, 0, 400, 32);
+        host.resize(400, 40); host.show();
+        QApplication::processEvents();
+        QCOMPARE(tabs.style()->styleHint(QStyle::SH_TabBar_Alignment, nullptr, &tabs), int(Qt::AlignLeft));
+        QCOMPARE(tabs.tabRect(0).left(), 0);
+    }
     void deviceTabScrollButtonsRetainBorderlessSlots()
     {
         CompactConsumerWidget device;
