@@ -142,8 +142,8 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
             contents.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver | QStyle::State_HasFocus);
             contents.features &= ~QStyleOptionViewItem::Alternate;
             contents.backgroundBrush = Qt::NoBrush;
-            // Only the identity column uses menu ink; values retain diagnostic and editor colors.
-            if (index.column() == 0 && ink != MenuInkState::Normal) {
+            // Row selection shares emphasis across cells; source value delegates keep their contracts.
+            if ((rowMode || index.column() == 0) && ink != MenuInkState::Normal) {
                 contents.font.setWeight(QFont::Weight(surface_->emphasisWeight));
                 contents.fontMetrics = QFontMetrics(contents.font);
                 if (ink == MenuInkState::Active) {

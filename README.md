@@ -115,6 +115,11 @@ with its containing tree or theme metrics. Configure
 
 ## Theme Contract
 
+MenuInk follows native selection scope: SelectRows emphasizes every cell in the
+selected/hovered row with blue semibold selection or neutral semibold hover.
+SelectItems retains first-column identity emphasis. Value delegates and editors
+remain consumer-owned, including explicit diagnostic content colors.
+
 With Resources installed, every `QTreeView`/`QTreeWidget` header uses native
 Interactive resizing for all columns, including the last. The theme applies this
 when shown (or repolished while visible), preserving resolved initial widths and replacing fixed, content-sized and stretched resize modes.

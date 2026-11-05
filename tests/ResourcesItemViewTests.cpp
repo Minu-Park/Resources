@@ -380,6 +380,41 @@ class ResourcesItemViewTests : public QObject
         QCOMPARE(item->checkState(0), Qt::Unchecked);
         QCOMPARE(tree.viewport()->grab().toImage().copy(pixels), unchecked);
     }
+    void menuInkRowEmphasizesAllValueCells()
+    {
+        ThemedTreeWidget tree;
+        tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Row);
+        tree.setHeaderLabels({"Device", "IP", "MAC", "Status"});
+        struct CaptureDelegate : QStyledItemDelegate {
+            using QStyledItemDelegate::QStyledItemDelegate;
+            mutable QHash<QString, QStyleOptionViewItem> options;
+            void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override {
+                options.insert(index.data().toString(), option);
+                QStyledItemDelegate::paint(painter, option, index);
+            }
+        };
+        auto* source = new CaptureDelegate(&tree); tree.setItemDelegate(source);
+        Resources::setItemSelectionAppearance(&tree, Resources::ItemSelectionAppearance::MenuInk);
+        auto* active = new QTreeWidgetItem(&tree, {"Selected", "Active IP", "Active MAC", "Active status"});
+        auto* hovered = new QTreeWidgetItem(&tree, {"Hovered", "Hover IP", "Hover MAC", "Hover status"});
+        tree.resize(650, 200); tree.show(); QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        tree.setCurrentItem(active);
+        movePointer(tree.viewport(), tree.visualRect(tree.indexFromItem(hovered, 2)).center());
+        QVERIFY(!tree.viewport()->grab().isNull());
+        const auto colors = Resources::themePalette();
+        for (int column = 1; column < 4; ++column) {
+            const auto selected = source->options.value(active->text(column));
+            const auto hover = source->options.value(hovered->text(column));
+            QVERIFY(selected.font.weight() > QFont::Normal);
+            QVERIFY(hover.font.weight() > QFont::Normal);
+            QCOMPARE(selected.palette.color(QPalette::Text), colors.value("selectionAccent"));
+            QCOMPARE(hover.palette.color(QPalette::Text), colors.value("text"));
+        }
+        tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Cell);
+        QVERIFY(!tree.viewport()->grab().isNull());
+        for (int column = 1; column < 4; ++column)
+            QCOMPARE(source->options.value(active->text(column)).font.weight(), QFont::Normal);
+    }
     void menuInkPreservesValueDelegateAndEditorContract()
     {
         QTreeWidget tree;

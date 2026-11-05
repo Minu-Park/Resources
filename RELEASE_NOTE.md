@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Apply MenuInk emphasis to every cell for native row selection/hover, retaining
+  source value delegates/editors. Cell-selection identity behavior is unchanged.
+
 - Fit tree columns proportionally when their viewport narrows or grows, retaining
   native manual resizing and minimum sizes. Elide headers/values inside columns
   instead of leaving the original wide header offscreen after a window resize.
