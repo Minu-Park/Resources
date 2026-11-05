@@ -1183,6 +1183,18 @@ protected:
             }
         }
 #endif
+        if (event->type() == QEvent::Resize) {
+            if (auto* viewport = qobject_cast<QWidget*>(obj)) {
+                if (auto* tree = qobject_cast<QTreeView*>(viewport->parentWidget());
+                    tree && tree->viewport() == viewport && tree->isVisible()
+                    && !tree->property("_treeHeaderFitPending").toBool()) {
+                    tree->setProperty("_treeHeaderFitPending", true);
+                    QTimer::singleShot(0, tree, [tree] {
+                        tree->setProperty("_treeHeaderFitPending", false); fitTreeColumns(tree);
+                    });
+                }
+            }
+        }
         if (event->type() == QEvent::Show || event->type() == QEvent::Resize
             || event->type() == QEvent::Move || event->type() == QEvent::StyleChange) {
             if (auto* viewport = qobject_cast<QWidget*>(obj); isDeviceFeatureTreeViewport(viewport)) {
@@ -1344,6 +1356,10 @@ protected:
                     header->setSectionResizeMode(QHeaderView::Interactive);
                     for (int column = 0; column < widths.size(); ++column)
                         header->resizeSection(column, widths[column]);
+                    header->setTextElideMode(Qt::ElideRight);
+                    tree->setTextElideMode(Qt::ElideRight);
+                    tree->setProperty("_treeHeaderInteractive", true);
+                    fitTreeColumns(tree);
                 }
                 applyLayoutTheme(widget);
             }
@@ -1771,6 +1787,41 @@ private:
                 editor->mapToGlobal(QPoint(0, 0)));
             const int editorCenterY = editorOrigin.y() + (editor->height() / 2);
             button->move(button->x(), editorCenterY - (button->height() / 2));
+        }
+    }
+
+    static void fitTreeColumns(QTreeView* tree)
+    {
+        const int available = tree->viewport()->width();
+        if (!tree->property("_treeHeaderInteractive").toBool()
+            || available <= 0 || tree->property("_treeHeaderFitting").toBool()
+            || tree->property("_treeHeaderViewportWidth").toInt() == available) return;
+        tree->setProperty("_treeHeaderFitting", true);
+        const auto finish = qScopeGuard([tree] { tree->setProperty("_treeHeaderFitting", false); });
+        auto* header = tree->header();
+        QList<int> columns;
+        qint64 total = 0;
+        for (int column = 0; column < header->count(); ++column) {
+            if (header->isSectionHidden(column)) continue;
+            columns.append(column); total += qMax(1, header->sectionSize(column));
+        }
+        if (columns.isEmpty()) return;
+        tree->setProperty("_treeHeaderViewportWidth", available);
+        const int minimum = qMax(1, header->minimumSectionSize());
+        // Only an impossibly narrow viewport needs scrolling; otherwise keep all columns in view.
+        int remaining = qMax(available, minimum * int(columns.size()));
+        for (int i = 0; i < columns.size();) {
+            const int width = qMax(1, header->sectionSize(columns[i]));
+            if (qint64(width) * remaining < qint64(minimum) * total) {
+                header->resizeSection(columns[i], minimum);
+                remaining -= minimum; total -= width; columns.removeAt(i); i = 0;
+            } else ++i;
+        }
+        qint64 cumulative = 0; int assigned = 0;
+        for (const int column : columns) {
+            cumulative += qMax(1, header->sectionSize(column));
+            const int edge = qRound(double(remaining) * double(cumulative) / double(total));
+            header->resizeSection(column, edge - assigned); assigned = edge;
         }
     }
 

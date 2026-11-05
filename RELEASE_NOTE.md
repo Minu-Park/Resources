@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fit tree columns proportionally when their viewport narrows or grows, retaining
+  native manual resizing and minimum sizes. Elide headers/values inside columns
+  instead of leaving the original wide header offscreen after a window resize.
+
 - Make all themed tree-view columns draggable with native Interactive headers,
   including the last column. Keep user widths through content refresh/repolish;
   device feature trees seed a 6:4 split with both columns editable.

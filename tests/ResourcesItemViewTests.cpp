@@ -155,6 +155,38 @@ class ResourcesItemViewTests : public QObject
         tree->hide(); tree->show(); QCoreApplication::processEvents();
         for (int column = 0; column < 3; ++column) QCOMPARE(header->sectionSize(column), 165);
     }
+    void treeColumnsFollowViewportResize_data()
+    {
+        QTest::addColumn<bool>("rtl");
+        QTest::newRow("ltr") << false; QTest::newRow("rtl") << true;
+    }
+    void treeColumnsFollowViewportResize()
+    {
+        QFETCH(bool, rtl);
+        QTreeWidget tree; tree.setHeaderLabels({"A long device title", "Address", "Hidden", "Status"});
+        tree.setLayoutDirection(rtl ? Qt::RightToLeft : Qt::LeftToRight);
+        tree.header()->setMinimumSectionSize(30); tree.setColumnHidden(2, true);
+        tree.resize(650, 180); tree.show(); QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        auto* header = tree.header();
+        header->resizeSection(0, 300); header->resizeSection(1, 200); header->resizeSection(3, 100);
+        tree.resize(420, 180);
+        QTRY_COMPARE(header->sectionSize(0) + header->sectionSize(1) + header->sectionSize(3), tree.viewport()->width());
+        QVERIFY(qAbs(header->sectionSize(0) - 3 * header->sectionSize(3)) <= 2);
+        QVERIFY(qAbs(header->sectionSize(1) - 2 * header->sectionSize(3)) <= 2);
+        QVERIFY(!tree.horizontalScrollBar()->isVisible()); QVERIFY(tree.isColumnHidden(2));
+        QCOMPARE(header->textElideMode(), Qt::ElideRight);
+        const int small = header->sectionSize(0);
+        tree.resize(800, 180);
+        QTRY_COMPARE(header->sectionSize(0) + header->sectionSize(1) + header->sectionSize(3), tree.viewport()->width());
+        QVERIFY(header->sectionSize(0) > small);
+        // Near minimum widths, redistribution clamps small columns and still fits.
+        tree.resize(130, 180);
+        QTRY_COMPARE(header->sectionSize(0) + header->sectionSize(1) + header->sectionSize(3), tree.viewport()->width());
+        for (int column : {0, 1, 3}) {
+            QVERIFY(header->sectionSize(column) >= 30);
+            QCOMPARE(header->sectionResizeMode(column), QHeaderView::Interactive);
+        }
+    }
     void deviceFeatureTreeGivesFeatureColumnTheLargerShare()
     {
         QTreeWidget tree;

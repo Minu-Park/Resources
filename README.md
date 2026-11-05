@@ -119,7 +119,11 @@ With Resources installed, every `QTreeView`/`QTreeWidget` header uses native
 Interactive resizing for all columns, including the last. The theme applies this
 when shown (or repolished while visible), preserving resolved initial widths and replacing fixed, content-sized and stretched resize modes.
 Consumers may seed initial widths; row updates, repolish and reopening retain
-user-adjusted widths. Device feature trees start at a 6:4 split without locking
+user-adjusted widths. When the viewport width changes, visible columns scale
+proportionally from their current user-adjusted widths, respecting the native
+minimum section size. Titles and values elide within their resized columns;
+horizontal scrolling is needed only below the combined minimum sizes (or after
+an intentional manual overflow). Hidden columns stay hidden. Device feature trees start at a 6:4 split without locking
 the Value column. This policy is process-local and does not persist widths.
 
 Checkable command buttons with paired icons can set `iconStateRole="action"`: Off/On artwork names the next command for each checked state, and hover/press changes only ink; keyboard focus adds the shared outline. Other paired-icon toggles retain current-state artwork and opposite-state previews. Resources owns `resourcesKeyboardFocus` for tool and push buttons. Keyboard navigation draws a thin focus border; pointer hover alone tints glyphs and previews toggle artwork. Mouse-click focus retains normal artwork without the keyboard ring. Pressed/checked artwork keeps its active ink. Input editors retain their ordinary caret/focus presentation. Native tab order and focus transfers remain intact, including disabled actions and popup restoration.
