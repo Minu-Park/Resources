@@ -145,6 +145,8 @@
         <file>icon/error-24.png</file>
         <file>icon/error-48.png</file>
         <file>icon/error-96.png</file>
+        <file>icon/ethernet-24.png</file>
+        <file>icon/ethernet-48.png</file>
         <file>icon/image-view-24.png</file>
         <file>icon/image-view-48.png</file>
         <file>icon/network-card-24.png</file>
@@ -185,6 +187,10 @@
         <file>icon/wrench-48.png</file>
         <file>icon/radio-empty-disabled.svg</file>
         <file>icon/radio-selected-disabled.svg</file>
+        <file>icon/radio-empty-hover.png</file>
+        <file>icon/radio-empty-active.png</file>
+        <file>icon/radio-selected-hover.png</file>
+        <file>icon/radio-selected-active.png</file>
         <file>icon/switch-outline-off-hover.svg</file>
         <file>icon/switch-outline-on-hover.svg</file>
         <file>icon/switch-outline-mixed-hover.svg</file>
