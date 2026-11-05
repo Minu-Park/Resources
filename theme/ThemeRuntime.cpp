@@ -218,6 +218,9 @@ public:
                 cellOption.text,
                 Qt::ElideRight,
                 textRect.width());
+            // drawItemText consumes the painter font, not the style option's metrics.
+            painter->save();
+            painter->setFont(cellOption.font);
             style->drawItemText(
                 painter,
                 textRect,
@@ -226,6 +229,7 @@ public:
                 cellOption.state & QStyle::State_Enabled,
                 text,
                 QPalette::Text);
+            painter->restore();
         }
     }
 

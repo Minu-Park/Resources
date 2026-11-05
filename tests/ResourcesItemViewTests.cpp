@@ -415,6 +415,38 @@ class ResourcesItemViewTests : public QObject
         for (int column = 1; column < 4; ++column)
             QCOMPARE(source->options.value(active->text(column)).font.weight(), QFont::Normal);
     }
+    void menuInkProductionValuePainterUsesEmphasizedFont()
+    {
+        const QString sheet = qApp->styleSheet(); qApp->setStyleSheet({});
+        const auto restoreSheet = qScopeGuard([&] { qApp->setStyleSheet(sheet); });
+        {
+            ThemedTreeWidget tree; tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Row);
+            tree.setHeaderLabels({"Device", "IP", "MAC", "Status"});
+            struct TextStyle : QProxyStyle {
+                mutable QHash<QString, int> weights;
+                void drawItemText(QPainter* painter, const QRect& rect, int flags, const QPalette& palette,
+                    bool enabled, const QString& text, QPalette::ColorRole role) const override {
+                    weights.insert(text, painter->font().weight());
+                    QProxyStyle::drawItemText(painter, rect, flags, palette, enabled, text, role);
+                }
+            };
+            auto* style = new TextStyle; style->setParent(&tree); tree.setStyle(style);
+            Resources::setItemSelectionAppearance(&tree, Resources::ItemSelectionAppearance::MenuInk);
+            auto* active = new QTreeWidgetItem(&tree, {"Selected", "Active IP", "Active MAC", "Active status"});
+            auto* hovered = new QTreeWidgetItem(&tree, {"Hovered", "Hover IP", "Hover MAC", "Hover status"});
+            auto* normal = new QTreeWidgetItem(&tree, {"Rest", "Rest IP", "Rest MAC", "Rest status"});
+            tree.resize(720, 180); tree.show(); QVERIFY(QTest::qWaitForWindowExposed(&tree));
+            tree.setCurrentItem(active);
+            movePointer(tree.viewport(), tree.visualRect(tree.indexFromItem(hovered, 1)).center());
+            QVERIFY(!tree.viewport()->grab().isNull());
+            for (int column = 1; column < 4; ++column) {
+                QVERIFY(style->weights.contains(active->text(column)));
+                QVERIFY(style->weights.value(active->text(column)) > QFont::Normal);
+                QVERIFY(style->weights.value(hovered->text(column)) > QFont::Normal);
+                QCOMPARE(style->weights.value(normal->text(column)), QFont::Normal);
+            }
+        }
+    }
     void menuInkPreservesValueDelegateAndEditorContract()
     {
         QTreeWidget tree;

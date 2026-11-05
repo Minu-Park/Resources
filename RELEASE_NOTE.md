@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Set the actual painter font when drawing row-mode tree text, so value cells
+  render the emphasized weight already present in the style option and metrics.
+
 - Apply MenuInk emphasis to every cell for native row selection/hover, retaining
   source value delegates/editors. Cell-selection identity behavior is unchanged.
 
