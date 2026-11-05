@@ -29,6 +29,8 @@
 #include <QGridLayout>
 #include <QFormLayout>
 #include <QLabel>
+#include <QRadioButton>
+#include <QStyleOptionButton>
 #include <QtTest>
 
 // Unrelated consumer identities must opt into density using the Qt-only contract.
@@ -91,6 +93,52 @@ private slots:
         QCOMPARE(Resources::fontColor(), QColor("#345678"));
         QCOMPARE(Resources::themePalette(), theme.themePalette());
         QVERIFY(!qApp->styleSheet().contains('@'));
+    }
+    void defaultRadioInkTracksInteractionWithoutChangingSelection()
+    {
+        class Radio : public QRadioButton {
+        public:
+            QImage indicator(QStyle::State state) {
+                QStyleOptionButton option;
+                initStyleOption(&option);
+                option.state = state;
+                QImage image(size(), QImage::Format_ARGB32_Premultiplied);
+                image.fill(Qt::transparent);
+                QPainter painter(&image);
+                style()->drawControl(QStyle::CE_RadioButton, &option, &painter, this);
+                painter.end();
+                return image.copy(style()->subElementRect(QStyle::SE_RadioButtonIndicator, &option, this));
+            }
+        } radio;
+        radio.setAutoExclusive(false);
+        radio.ensurePolished();
+        radio.resize(160, 24);
+        const auto hasInk = [](const QImage& image, const QColor& ink) {
+            int pixels = 0;
+            for (int y = 0; y < image.height(); ++y)
+                for (int x = 0; x < image.width(); ++x) {
+                    const QColor pixel = image.pixelColor(x, y);
+                    if (pixel.alpha() > 200 && qAbs(pixel.red() - ink.red()) < 8
+                        && qAbs(pixel.green() - ink.green()) < 8
+                        && qAbs(pixel.blue() - ink.blue()) < 8) ++pixels;
+                }
+            return pixels > 5;
+        };
+        for (bool checked : {false, true}) {
+            radio.setChecked(checked);
+            const auto state = QStyle::State_Enabled | (checked ? QStyle::State_On : QStyle::State_Off);
+            QVERIFY(hasInk(radio.indicator(state), QColor(checked ? "#15487f" : "#3c3c3b")));
+            QVERIFY(hasInk(radio.indicator(state | QStyle::State_MouseOver), QColor("#8eafd1")));
+            QVERIFY(hasInk(radio.indicator(state | QStyle::State_MouseOver | QStyle::State_Sunken), QColor("#15487f")));
+            QCOMPARE(radio.isChecked(), checked);
+            const auto disabled = radio.indicator(checked ? QStyle::State_On : QStyle::State_Off);
+            QVERIFY(disabled != radio.indicator(state));
+        }
+        radio.show();
+        QTest::mouseClick(&radio, Qt::LeftButton, Qt::NoModifier, QPoint(10, 10));
+        QVERIFY(!radio.isChecked());
+        QTest::keyClick(&radio, Qt::Key_Space);
+        QVERIFY(radio.isChecked());
     }
     void fieldsResolveOneGeometryAcrossParents()
     {
