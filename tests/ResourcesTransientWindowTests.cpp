@@ -1272,7 +1272,7 @@ private slots:
     {
         Resources::installResources(*qApp);
         QTableWidget table(3, 2);
-        table.setObjectName(QStringLiteral("GraphicsSettingsPresentationStatsTable"));
+        table.setProperty("tableRole", "diagnostics");
         table.setHorizontalHeaderLabels({QStringLiteral("Counter"), QStringLiteral("Value")});
         table.verticalHeader()->hide();
         table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);

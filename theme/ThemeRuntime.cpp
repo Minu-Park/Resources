@@ -405,10 +405,15 @@ private:
     QTableWidget* _table;
 };
 
-/** @brief Keeps the read-only diagnostics grid inside its shared table shell. */
+/**
+ * @brief Keeps a read-only diagnostics grid inside its shared table shell.
+ *
+ * Consumers opt in with the semantic `tableRole=diagnostics` property before
+ * the table is first polished.
+ */
 static void applyDiagnosticsTableStyle(QTableWidget* table)
 {
-    if (table->objectName() != QLatin1String("GraphicsSettingsPresentationStatsTable")
+    if (table->property("tableRole").toString() != QLatin1String("diagnostics")
         || table->property("_diagnosticsDelegateInstalled").toBool())
         return;
     table->setShowGrid(false);

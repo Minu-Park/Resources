@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Select the diagnostics table delegate by the semantic `tableRole="diagnostics"`
+  property instead of one consumer object name, so every read-only diagnostics
+  table a consumer marks shares the internal-divider presentation.
+
 - Set the actual painter font when drawing row-mode tree text, so value cells
   render the emphasized weight already present in the style option and metrics.
 

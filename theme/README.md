@@ -81,6 +81,12 @@ text buttons follow the bubble state. `logState` and `performancePath` retain th
 diagnostic meaning at rest. A shared pattern does not erase icon gutters, close hit
 targets, native popup corrections or content-owned rendering.
 
+`tableRole="diagnostics"` on a read-only `QTableWidget` installs the shared
+diagnostics cell delegate: Qt grid lines are disabled and only internal row/column
+dividers are painted in the themed grid color, inside the shared bubble header and
+rounded table shell. Set it before the table is first polished; it applies to any
+column count and is not re-evaluated after installation.
+
 Before adding a role, record its meaning, supported widget/layout kinds, states,
 metric inputs and owning implementation here. Validate live role changes,
 explicit/nested density scopes, reparenting and metric reload where applicable,
