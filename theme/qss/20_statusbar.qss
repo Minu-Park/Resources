@@ -85,6 +85,25 @@ QToolButton[controlRole="statusBubble"][statusBubbleVariant="menu"] {
     color: @TEXT@;
     font-weight: @WEIGHT_WIDGET_BOLD@;
 }
+QStatusBar QLabel[statusRole="deviceFailed"],
+QStatusBar QLabel[statusRole="deviceFps"] {
+    background: @SURFACE@;
+    border: 1px solid @CONTROLBORDER@;
+    border-radius: 9px;
+    padding: 0 7px;
+    height: 24px;
+    min-height: @CONTROL_HEIGHT@px;
+    max-height: @CONTROL_HEIGHT@px;
+    margin: 0 2px 0 0;
+    color: @TEXT@;
+}
+QStatusBar QLabel[statusRole="deviceFps"] {
+    font-family: "@FONT_MONO@";
+}
+QStatusBar QLabel[statusRole="deviceFailed"][failedState="warning"] {
+    border-color: @WARNING@;
+    color: @WARNINGTEXT@;
+}
 QStatusBar QLabel[statusRole="message"] {
     background: transparent;
     border: none;
