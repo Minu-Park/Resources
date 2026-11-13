@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.4.0 (2026-11-13)
+
 - Select the diagnostics table delegate by the semantic `tableRole="diagnostics"`
   property instead of one consumer object name, so every read-only diagnostics
   table a consumer marks shares the internal-divider presentation.
@@ -337,7 +339,6 @@
 - Renamed the static image/3D source control QSS class selectors to `StaticImageControlWidget` and `Static3DDataControlWidget`.
 - Renamed the code editor gutter selector to `CodeEditorLineNumberArea` so the editor widget keeps its own object name.
 - Updated row-mode tree painting to use the current Qt per-index delegate lookup API.
-
 
 - Added the rounded host update-discovery notification shell and its dismiss-button styling.
 - Made update-notification text labels transparent so the rounded surface has no rectangular white patches.
