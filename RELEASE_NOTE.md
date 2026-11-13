@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Style a `GraphicsSaveStatusProgress` compact bar with the shared progress fill, so a consumer's non-modal save card keeps theme colors.
+
 ## v1.4.0 (2026-11-13)
 
 - Select the diagnostics table delegate by the semantic `tableRole="diagnostics"`
