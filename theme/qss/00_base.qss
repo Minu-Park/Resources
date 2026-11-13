@@ -1263,6 +1263,12 @@ QFrame#GraphicsSaveStatusProgress {
     max-height: 8px;
     border: none;
     border-radius: 4px;
+    background: @PROGRESSTRACK@;
+}
+
+QFrame#GraphicsSaveStatusProgressFill {
+    border: none;
+    border-radius: 4px;
     background: @PROGRESSFILL@;
 }
 
