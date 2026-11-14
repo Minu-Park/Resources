@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Style a `GraphicsSaveStatusProgress` compact bar with the shared progress track and fill, so a consumer's non-modal save card keeps theme colors and can animate its busy fill.
+## v1.5.0 (2026-11-14)
+
+- Show the busy bar in the non-modal save-status card with the shared progress track and fill, so it keeps the theme colors and its progress animates while data is saved.
 
 ## v1.4.0 (2026-11-13)
 
