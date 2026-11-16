@@ -20,6 +20,8 @@
 #include <QLineEdit>
 #include <QRegularExpression>
 #include <QSpinBox>
+#include <QStatusBar>
+#include <QStyle>
 #include <QTabBar>
 #include <QTemporaryDir>
 #include <QToolBar>
@@ -332,6 +334,48 @@ private slots:
             QVERIFY(button->property("resourcesDensity").toString() != "compact");
             QCOMPARE(button->size(), QSize(20, 20));
         }
+    }
+    void deviceCounterRoleResolvesMonospaceBubbleAndWarning()
+    {
+        QStatusBar bar;
+        bar.setSizeGripEnabled(false);
+        auto* state = new QLabel("Live", &bar);
+        state->setAlignment(Qt::AlignCenter);
+        bar.addWidget(state);
+        auto* counter = new QLabel("3 failed", &bar);
+        counter->setProperty("statusRole", "deviceCounter");
+        counter->setAlignment(Qt::AlignCenter);
+        bar.addPermanentWidget(counter);
+        bar.setFixedHeight(32);
+        bar.show();
+        QApplication::processEvents();
+
+        QCOMPARE(counter->font().family(), QStringLiteral("JetBrains Mono"));
+        QVERIFY(state->font().family() != QStringLiteral("JetBrains Mono"));
+        QCOMPARE(counter->contentsRect().height(), 24);
+        const QImage normal = counter->grab().toImage();
+        QCOMPARE(normal.pixelColor(normal.width() / 2, 0), Resources::themePalette().value("controlBorder"));
+
+        counter->setProperty("failedState", "warning");
+        counter->style()->unpolish(counter);
+        counter->style()->polish(counter);
+        QApplication::processEvents();
+        const QImage warning = counter->grab().toImage();
+        QCOMPARE(warning.pixelColor(warning.width() / 2, 0), Resources::themePalette().value("warning"));
+        QCOMPARE(counter->palette().color(QPalette::WindowText), Resources::themePalette().value("warningText"));
+    }
+    void deviceStateTokenResolvesCompactBoldInk()
+    {
+        QWidget header;
+        auto* token = new QLabel("Connected", &header);
+        token->setProperty("stateRole", "deviceState");
+        auto* plain = new QLabel("Connected", &header);
+        header.show();
+        QApplication::processEvents();
+        QVERIFY(token->font().bold());
+        QVERIFY(!plain->font().bold());
+        QCOMPARE(token->palette().color(QPalette::WindowText), Resources::themePalette().value("text"));
+        QVERIFY(token->font().family() != QStringLiteral("JetBrains Mono"));
     }
     void engineToolbarAndPlotActionsTrackReloadedMetrics()
     {

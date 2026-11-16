@@ -4,6 +4,12 @@ QWidget[controlRole="devicePanel"] {
     background: @SURFACE@;
 }
 
+/* Compact panel-header state token; values are Idle, Connected or Live. */
+QLabel[stateRole="deviceState"] {
+    color: @TEXT@;
+    font-weight: @WEIGHT_WIDGET_BOLD@;
+}
+
 QTabWidget#FramegrabberControlTabs::pane,
 QTabWidget[tabRole="DeviceControls"]::pane {
     padding: 0;
