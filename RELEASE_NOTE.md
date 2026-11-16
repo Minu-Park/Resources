@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add `statusRole="deviceCounter"` for the shared monospace device counter bubble, with a `failedState="warning"` variant for a nonzero failed counter. Add `stateRole="deviceState"` for the compact `Idle`/`Connected`/`Live` panel-header token. The existing `deviceFps`, `deviceFailed` and per-plugin status selectors stay until the later plugin-removal cleanup.
+- Add `statusRole="deviceCounter"` for the shared monospace device counter bubble in the panel counter row or a statusbar, with a `failedState="warning"` variant for a nonzero failed counter. Add `stateRole="deviceState"` for the compact `Idle`/`Connected`/`Live` panel-header token. The existing `deviceFps`, `deviceFailed` and per-plugin status selectors stay until the later plugin-removal cleanup.
 
 ## v1.5.0 (2026-11-14)
 

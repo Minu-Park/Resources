@@ -81,12 +81,14 @@ text buttons follow the bubble state. `logState` and `performancePath` retain th
 diagnostic meaning at rest. A shared pattern does not erase icon gutters, close hit
 targets, native popup corrections or content-owned rendering.
 
-`statusRole="deviceCounter"` on a `QStatusBar` label selects the shared numeric
-telemetry bubble: surface capsule, `controlBorder` outline, primary text and
-JetBrains Mono digits. Use it for live counters such as fps, delivered frames and
-drops. `failedState="warning"` switches the outline and text to the warning roles
-for a nonzero failed counter. New panels use `deviceCounter` for every counter.
-The existing `statusRole="deviceFps"` and `statusRole="deviceFailed"` roles remain
+`statusRole="deviceCounter"` on a `QLabel` selects the shared numeric telemetry
+bubble in the device-panel counter row or a statusbar: surface capsule,
+`controlBorder` outline, primary text and JetBrains Mono digits. The role owns the
+capsule geometry, so the panel row does not depend on the statusbar height or
+border rules. Use it for live counters such as fps, delivered frames and drops.
+`failedState="warning"` switches the outline and text to the warning roles for a
+nonzero failed counter. New panels use `deviceCounter` for every counter. The
+existing `statusRole="deviceFps"` and `statusRole="deviceFailed"` roles remain
 unchanged for the plugin status bars until their removal.
 
 `stateRole="deviceState"` on a panel-header `QLabel` selects the compact state

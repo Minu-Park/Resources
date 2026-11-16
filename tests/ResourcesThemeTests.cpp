@@ -364,6 +364,31 @@ private slots:
         QCOMPARE(warning.pixelColor(warning.width() / 2, 0), Resources::themePalette().value("warning"));
         QCOMPARE(counter->palette().color(QPalette::WindowText), Resources::themePalette().value("warningText"));
     }
+    void deviceCounterRoleResolvesInDevicePanelRow()
+    {
+        QWidget panel;
+        panel.setProperty("controlRole", "devicePanel");
+        auto* layout = new QVBoxLayout(&panel);
+        auto* counter = new QLabel("3 failed", &panel);
+        counter->setProperty("statusRole", "deviceCounter");
+        counter->setAlignment(Qt::AlignCenter);
+        layout->addWidget(counter);
+        panel.show();
+        QApplication::processEvents();
+
+        QCOMPARE(counter->font().family(), QStringLiteral("JetBrains Mono"));
+        QCOMPARE(counter->contentsRect().height(), 24);
+        const QImage normal = counter->grab().toImage();
+        QCOMPARE(normal.pixelColor(normal.width() / 2, 0), Resources::themePalette().value("controlBorder"));
+
+        counter->setProperty("failedState", "warning");
+        counter->style()->unpolish(counter);
+        counter->style()->polish(counter);
+        QApplication::processEvents();
+        const QImage warning = counter->grab().toImage();
+        QCOMPARE(warning.pixelColor(warning.width() / 2, 0), Resources::themePalette().value("warning"));
+        QCOMPARE(counter->palette().color(QPalette::WindowText), Resources::themePalette().value("warningText"));
+    }
     void deviceStateTokenResolvesCompactBoldInk()
     {
         QWidget header;
