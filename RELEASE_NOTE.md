@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Remove the vendor brand icons `heliotis-48`, `lmi-48` and `network-card-48`. Each device package now ships its own `icon.png` and the SDK no longer installs brand assets; shared host icons such as `camera-48`, `genicam-48` and `puzzle-48` stay.
+- Remove the vendor brand icons `heliotis-24`, `lmi-24`, `network-card-24`, `heliotis-48`, `lmi-48` and `network-card-48`. Each device package now ships its own `icon.png` and the SDK no longer installs brand assets; shared host icons such as `camera-48`, `genicam-48` and `puzzle-48` stay.
 
 - Add `DeviceScopeCard` in `Resources::Widgets` and the `tabRole="DeviceScopeCard"` theme role: one card frame around the tab strip, a full-width separator and the page stack, with `DeviceFeatureTree` pages dropping their own frame inside the card.
 
