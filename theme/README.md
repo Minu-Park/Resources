@@ -87,9 +87,9 @@ bubble in the device-panel counter row or a statusbar: surface capsule,
 capsule geometry, so the panel row does not depend on the statusbar height or
 border rules. Use it for live counters such as fps, delivered frames and drops.
 `failedState="warning"` switches the outline and text to the warning roles for a
-nonzero failed counter. New panels use `deviceCounter` for every counter. The
-existing `statusRole="deviceFps"` and `statusRole="deviceFailed"` roles remain
-unchanged for the plugin status bars until their removal.
+nonzero failed counter. New panels use `deviceCounter` for every counter; the
+former `statusRole="deviceFps"` and `statusRole="deviceFailed"` roles and the
+per-plugin status-label selectors were removed with the plugin widget libraries.
 
 `stateRole="deviceState"` on a panel-header `QLabel` selects the compact state
 token (`Idle`, `Connected` or `Live`): primary text and widget-bold weight without

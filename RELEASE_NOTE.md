@@ -4,7 +4,9 @@
 
 - Add `DeviceScopeCard` in `Resources::Widgets` and the `tabRole="DeviceScopeCard"` theme role: one card frame around the tab strip, a full-width separator and the page stack, with `DeviceFeatureTree` pages dropping their own frame inside the card.
 
-- Add `statusRole="deviceCounter"` for the shared monospace device counter bubble in the panel counter row or a statusbar, with a `failedState="warning"` variant for a nonzero failed counter. Add `stateRole="deviceState"` for the compact `Idle`/`Connected`/`Live` panel-header token. The existing `deviceFps`, `deviceFailed` and per-plugin status selectors stay until the later plugin-removal cleanup.
+- Add `statusRole="deviceCounter"` for the shared monospace device counter bubble in the panel counter row or a statusbar, with a `failedState="warning"` variant for a nonzero failed counter. Add `stateRole="deviceState"` for the compact `Idle`/`Connected`/`Live` panel-header token.
+
+- Remove the now-unused `statusRole="deviceFps"` and `statusRole="deviceFailed"` bubble rules and the Camera, Framegrabber, Gocator and Heliotis C4 status-label object-name selectors now that the plugin widget libraries are gone. The Host device panel uses `deviceCounter` and `stateRole="deviceState"`; the shared statusbar `messageState` rule stays because the host still sets it.
 
 ## v1.5.0 (2026-11-14)
 

@@ -28,7 +28,6 @@ QLabel[statusRole="deviceCounter"][failedState="warning"] {
     color: @WARNINGTEXT@;
 }
 
-QTabWidget#FramegrabberControlTabs::pane,
 QTabWidget[tabRole="DeviceControls"]::pane {
     padding: 0;
     background: transparent;
@@ -38,7 +37,6 @@ QTabWidget[tabRole="DeviceControls"]::pane {
     top: 0;
 }
 
-QTabWidget#FramegrabberControlTabs > QTabBar,
 QTabWidget[tabRole="DeviceControls"] > QTabBar {
     background: transparent;
     border-top: none;
@@ -101,12 +99,7 @@ QTreeWidget[treeRole="DeviceFeatureTree"]::item:selected {
     color: @TEXT@;
 }
 
-QFramegrabberWidget QLabel#FramegrabberStatusLabel:hover,
-QCameraWidget QLabel#CameraStatusLabel:hover,
-QGocatorWidget QLabel#GocatorStatusLabel:hover,
-QHeliotisC4Widget QLabel#HeliotisC4StatusLabel:hover {
-    background: @SURFACE@;
-}/* Search uses the feature header surface with a compact,
+/* Search uses the feature header surface with a compact,
 softly lifted frame. */
 SearchableTreeSurface {
     qproperty-searchInset: 10;
