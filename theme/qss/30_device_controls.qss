@@ -58,6 +58,36 @@ QWidget[controlRole="devicePanel"] QTabBar QToolButton#ScrollLeftButton {
     margin: 0;
 }
 
+/* In-card scope tabs: one frame owns the strip, separator, header and rows. */
+QFrame[tabRole="DeviceScopeCard"] {
+    background: @SURFACE@;
+    border: @TREE_FRAME_BORDER_WIDTH@px solid @BORDER@;
+    border-radius: @TREE_FRAME_RADIUS@px;
+}
+
+QFrame[tabRole="DeviceScopeCard"] > QTabBar {
+    background: transparent;
+}
+
+QFrame[tabRole="DeviceScopeCard"] > QFrame#DeviceScopeCardSeparator {
+    background: @BORDER@;
+    border: none;
+    min-height: 1px;
+    max-height: 1px;
+}
+
+QFrame[tabRole="DeviceScopeCard"] > QStackedWidget {
+    background: transparent;
+    border: none;
+}
+
+/* The card owns the frame; its feature pages keep the header, rows and search surface. */
+QFrame[tabRole="DeviceScopeCard"] QTreeWidget[treeRole="DeviceFeatureTree"] {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+}
+
 QTreeWidget[treeRole="DeviceFeatureTree"] {
     background: @SURFACE@;
     alternate-background-color: @SURFACE@;

@@ -113,6 +113,17 @@ is centered in the tree frame with permanent scrollbar clearance. It resizes onl
 with its containing tree or theme metrics. Configure
 `RESOURCES_BUILD_WIDGET_TESTS=ON` to run the Qt-only behavior/geometry tests.
 
+## In-card tab composition
+
+Link `Resources::Widgets` and include `Widgets/DeviceScopeCard.h` to place a tab
+strip, one full-width separator and a page stack inside one card frame. It uses
+only standard Qt widgets: `tabBar()` returns the `QTabBar`, `pages()` the
+`QStackedWidget`, and `addTab`/`removeTab` mirror the matching `QTabWidget`
+operations without extra tab behavior. The theme owns the
+`tabRole="DeviceScopeCard"` presentation. Device feature pages inside the card
+keep their header, rows and floating search surface; the card owns the frame
+border and the separator.
+
 ## Theme Contract
 
 MenuInk follows native selection scope: SelectRows emphasizes every cell in the

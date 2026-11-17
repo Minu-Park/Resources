@@ -96,6 +96,13 @@ token (`Idle`, `Connected` or `Live`): primary text and widget-bold weight witho
 a bubble or border. The token is presentation-only; the state value and its
 transitions remain consumer-owned.
 
+`tabRole="DeviceScopeCard"` on `Resources::DeviceScopeCard` selects the in-card
+scope composition: one `QFrame` card, with the tree-frame border and radius, around
+a `QTabBar`, a full-width 1px `border` separator and a transparent page stack.
+`DeviceFeatureTree` pages inside the card drop their own frame border and radius
+and keep their header, rows and search surface. The role owns presentation only;
+the composition adds no painting and no tab behavior beyond page switching.
+
 `tableRole="diagnostics"` on a read-only `QTableWidget` installs the shared
 diagnostics cell delegate: Qt grid lines are disabled and only internal row/column
 dividers are painted in the themed grid color, inside the shared bubble header and
