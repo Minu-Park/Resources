@@ -173,7 +173,8 @@ class ResourcesItemViewTests : public QObject
         QTRY_COMPARE(header->sectionSize(0) + header->sectionSize(1) + header->sectionSize(3), tree.viewport()->width());
         QVERIFY(qAbs(header->sectionSize(0) - 3 * header->sectionSize(3)) <= 2);
         QVERIFY(qAbs(header->sectionSize(1) - 2 * header->sectionSize(3)) <= 2);
-        QVERIFY(!tree.horizontalScrollBar()->isVisible()); QVERIFY(tree.isColumnHidden(2));
+        QTRY_VERIFY(!tree.horizontalScrollBar()->isVisible());
+        QVERIFY(tree.isColumnHidden(2));
         QCOMPARE(header->textElideMode(), Qt::ElideRight);
         const int small = header->sectionSize(0);
         tree.resize(800, 180);
