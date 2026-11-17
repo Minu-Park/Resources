@@ -3,6 +3,7 @@
 #include "Chrome/ThemedMainTitleBar.h"
 #include "Chrome/ThemedDockTitleBar.h"
 #include "Chrome/ThemedDialog.h"
+#include "Widgets/DeviceScopeCard.h"
 #include <QMainWindow>
 #include <QDockWidget>
 #include <QMdiSubWindow>
@@ -20,6 +21,7 @@
 #include <QLineEdit>
 #include <QRegularExpression>
 #include <QSpinBox>
+#include <QStackedWidget>
 #include <QStatusBar>
 #include <QStyle>
 #include <QTabBar>
@@ -401,6 +403,48 @@ private slots:
         QVERIFY(!plain->font().bold());
         QCOMPARE(token->palette().color(QPalette::WindowText), Resources::themePalette().value("text"));
         QVERIFY(token->font().family() != QStringLiteral("JetBrains Mono"));
+    }
+    void deviceScopeCardOwnsTheInCardFrame()
+    {
+        QWidget host;
+        auto* layout = new QVBoxLayout(&host);
+        auto* card = new DeviceScopeCard(&host);
+        auto* devicePage = new QTreeWidget(card);
+        card->addTab(devicePage, "Remote Device");
+        auto* featurePage = new QTreeWidget(card);
+        featurePage->setProperty("treeRole", "DeviceFeatureTree");
+        featurePage->setHeaderLabels({"Feature", "Value"});
+        card->addTab(featurePage, "Stream");
+        layout->addWidget(card);
+        host.resize(460, 360);
+        host.show();
+        QApplication::processEvents();
+
+        QCOMPARE(card->property("tabRole").toString(), QStringLiteral("DeviceScopeCard"));
+        auto* separator = card->findChild<QFrame*>(QStringLiteral("DeviceScopeCardSeparator"));
+        QVERIFY(separator);
+        QCOMPARE(separator->height(), 1);
+        QCOMPARE(separator->width(), card->contentsRect().width());
+        QVERIFY(card->tabBar()->geometry().top() >= card->contentsRect().top());
+        QCOMPARE(card->pages()->geometry().top(), separator->geometry().bottom() + 1);
+
+        card->setCurrentIndex(1);
+        QCOMPARE(card->pages()->currentIndex(), 1);
+        QCOMPARE(card->pages()->currentWidget(), featurePage);
+
+        const QColor border = Resources::themePalette().value("border");
+        const QImage image = card->grab().toImage();
+        QCOMPARE(image.pixelColor(image.width() / 2, 0), border);
+        QCOMPARE(image.pixelColor(0, image.height() / 2), border);
+        QCOMPARE(image.pixelColor(image.width() / 2, separator->geometry().center().y()), border);
+        const QPoint featureEdge = featurePage->mapTo(
+            card, QPoint(0, featurePage->height() / 2));
+        QCOMPARE(image.pixelColor(featureEdge), Resources::themePalette().value("surface"));
+
+        card->removeTab(0);
+        QCOMPARE(card->count(), 1);
+        QCOMPARE(card->pages()->count(), 1);
+        QCOMPARE(card->pages()->currentWidget(), featurePage);
     }
     void engineToolbarAndPlotActionsTrackReloadedMetrics()
     {

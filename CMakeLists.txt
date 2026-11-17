@@ -25,6 +25,8 @@ endif()
 
 # This target uses only Qt; it does not link assets, install themes, or own device behavior.
 qt_add_library(ResourcesWidgets STATIC
+    Widgets/DeviceScopeCard.h
+    Widgets/DeviceScopeCard.cpp
     Widgets/SearchableTreeWidget.h
     Widgets/SearchableTreeWidget.cpp
     Widgets/SearchableTreeController.h
@@ -39,7 +41,8 @@ set_target_properties(ResourcesWidgets PROPERTIES EXPORT_NAME Widgets
     VERSION ${PROJECT_VERSION} POSITION_INDEPENDENT_CODE ON)
 install(TARGETS ResourcesWidgets EXPORT ResourcesWidgetsTargets
     ARCHIVE DESTINATION lib COMPONENT PluginSDK EXCLUDE_FROM_ALL)
-install(FILES Widgets/SearchableTreeWidget.h Widgets/SearchableTreeController.h
+install(FILES Widgets/DeviceScopeCard.h Widgets/SearchableTreeWidget.h
+    Widgets/SearchableTreeController.h
     DESTINATION include/Resources/Widgets COMPONENT PluginSDK EXCLUDE_FROM_ALL)
 install(EXPORT ResourcesWidgetsTargets NAMESPACE Resources::
     DESTINATION lib/cmake/ResourcesWidgets COMPONENT PluginSDK EXCLUDE_FROM_ALL)
