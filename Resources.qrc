@@ -5,9 +5,7 @@
         <file>icon/genicam-24.png</file>
         <file>icon/genicam-48.png</file>
         <file>icon/heliotis-24.png</file>
-        <file>icon/heliotis-48.png</file>
         <file>icon/lmi-24.png</file>
-        <file>icon/lmi-48.png</file>
         <file>icon/connect-24.png</file>
         <file>icon/connect-48.png</file>
         <file>icon/disconnected-24.png</file>
@@ -150,7 +148,6 @@
         <file>icon/image-view-24.png</file>
         <file>icon/image-view-48.png</file>
         <file>icon/network-card-24.png</file>
-        <file>icon/network-card-48.png</file>
         <file>icon/refresh-24.png</file>
         <file>icon/refresh-48.png</file>
         <file>icon/stop-24.png</file>
