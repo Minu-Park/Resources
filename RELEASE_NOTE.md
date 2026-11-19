@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep macOS button tooltips beside the cursor, with screen-edge placement and Qt's native tooltip lifecycle.
+
 - Keep themed menus anchored after moving their owner between monitors. The menu direction and shadow gutter use the screen containing Qt's global popup position.
 
 - Remove the vendor brand icons `heliotis-24`, `lmi-24`, `network-card-24`, `heliotis-48`, `lmi-48` and `network-card-48`. Each device package now ships its own `icon.png` and the SDK no longer installs brand assets; shared host icons such as `camera-48`, `genicam-48` and `puzzle-48` stay.

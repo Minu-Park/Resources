@@ -7,6 +7,7 @@
 #include <QApplication>
 #include <QGuiApplication>
 #include <QFocusEvent>
+#include <QHelpEvent>
 #include <QPointer>
 #include <QFile>
 #include <QDir>
@@ -1045,6 +1046,11 @@ class ResourceStyleFilter : public QObject
 public:
     explicit ResourceStyleFilter(QObject* parent = nullptr) : QObject(parent)
     {
+#ifdef Q_OS_MACOS
+        tooltipCorrectionTimer_.setSingleShot(true);
+        connect(&tooltipCorrectionTimer_, &QTimer::timeout, this,
+                [this] { correctTooltipPlacement(); });
+#endif
         connect(qApp, &QApplication::focusChanged, this, [](QWidget* before, QWidget* after) {
             syncButtonKeyboardFocus(qobject_cast<QAbstractButton*>(before));
             syncButtonKeyboardFocus(qobject_cast<QAbstractButton*>(after));
@@ -1064,6 +1070,31 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+#ifdef Q_OS_MACOS
+        // Observe the real tooltip request but never consume it: Qt still creates, shows,
+        // times and hides its own QTipLabel. Only the final placement is corrected below.
+        if (event->type() == QEvent::ToolTip) {
+            tooltipLabel_.clear();
+            tooltipButton_ = qobject_cast<QAbstractButton*>(obj);
+            if (tooltipButton_ && !tooltipButton_->toolTip().isEmpty()) {
+                const auto* help = static_cast<const QHelpEvent*>(event);
+                tooltipAnchor_ = help->globalPos();
+                tooltipCorrectionTimer_.start(0);
+            } else {
+                tooltipCorrectionTimer_.stop();
+            }
+        } else if (tooltipCorrectionTimer_.isActive() && tooltipButton_
+                   && (event->type() == QEvent::Move || event->type() == QEvent::Resize
+                       || event->type() == QEvent::Show)
+                   && obj->inherits("QTipLabel")) {
+            // Qt reuses one QTipLabel across requests and leaves its old parent in place, so
+            // match its current text during this event-loop turn instead of its parent.
+            auto* tip = qobject_cast<QLabel*>(obj);
+            tooltipLabel_ = tip && tip->text() == tooltipButton_->toolTip() ? tip : nullptr;
+        } else if (event->type() == QEvent::Hide && obj == tooltipLabel_.data()) {
+            tooltipLabel_.clear();
+        }
+#endif
         // Modality survives automatic focus transfers and popup restoration. Pointer movement
         // alone must not erase a keyboard user's focus indicator.
         if (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::TouchBegin
@@ -1421,6 +1452,13 @@ protected:
 private:
     QPointer<QWidget> pressedInput_;
     QPointer<QWidget> hoveredBubble_;
+#ifdef Q_OS_MACOS
+    // The one-shot timer bounds the request even when Qt keeps an already-visible label in place.
+    QPointer<QAbstractButton> tooltipButton_;
+    QPointer<QLabel> tooltipLabel_;
+    QPoint tooltipAnchor_;
+    QTimer tooltipCorrectionTimer_;
+#endif
 
     /** @brief A plain QWidget status bubble whose child buttons share one interaction state.
      *  Matches the exact-class `.QWidget[controlRole="statusBubble"]` stylesheet selector. */
@@ -1464,6 +1502,34 @@ private:
         polishInteraction(previous, "interactionHovered", false);
         polishInteraction(hoveredBubble_, "interactionHovered", true);
     }
+
+#ifdef Q_OS_MACOS
+    /** @brief Corrects the native tooltip's placement after Qt has positioned it. */
+    void correctTooltipPlacement()
+    {
+        QLabel* label = tooltipLabel_.data();
+        const auto button = tooltipButton_;
+        const QPoint anchor = tooltipAnchor_;
+        tooltipLabel_.clear();
+        tooltipButton_.clear();
+        if (!button || !button->isVisible() || !label || !label->isVisible()
+            || label->text() != button->toolTip()) return;
+        const QScreen* screen = QGuiApplication::screenAt(anchor);
+        if (!screen) return;
+        const QRect bounds = screen->availableGeometry();
+        const QSize size = label->size();
+        if (size.isEmpty() || size.width() > bounds.width() || size.height() > bounds.height()) return;
+        // Match the gap measured with Qt's side placement on macOS.
+        constexpr int gap = 14;
+        int x = anchor.x() + gap;
+        if (x + size.width() - 1 > bounds.right()) {
+            x = anchor.x() - gap - size.width();
+            if (x < bounds.left()) return; // Neither side fits: keep Qt's bounded result.
+        }
+        const int y = qBound(bounds.top(), anchor.y(), bounds.bottom() - size.height() + 1);
+        label->move(qBound(bounds.left(), x, bounds.right() - size.width() + 1), y);
+    }
+#endif
 
     /** @brief Shares menu leading columns and check marks without changing toolbar icons. */
     static void prepareMenuCheckIndicators(QMenu* menu)

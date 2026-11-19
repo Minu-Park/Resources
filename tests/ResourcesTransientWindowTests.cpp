@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QTemporaryDir>
 #include <QTimer>
+#include <QToolTip>
 #include "Resources.h"
 
 #include <QApplication>
@@ -17,6 +18,7 @@
 #include <QComboBox>
 #include <QDir>
 #include <QGraphicsDropShadowEffect>
+#include <QHelpEvent>
 #include <QHeaderView>
 #include <QDockWidget>
 #include <QMenu>
@@ -213,6 +215,49 @@ protected:
         return false;
     }
 };
+
+#ifdef Q_OS_MACOS
+/** @brief Records the native QTipLabel Qt creates, reuses and positions for a request. */
+class TipLabelRecorder final : public QObject
+{
+public:
+    QPointer<QWidget> label;
+    QString text;
+    QRect showGeometry;
+
+protected:
+    bool eventFilter(QObject* object, QEvent* event) override
+    {
+        if (!object->inherits("QTipLabel")) return false;
+        auto* widget = qobject_cast<QWidget*>(object);
+        if (!widget) return false;
+        label = widget;
+        if (auto* tip = qobject_cast<QLabel*>(object)) text = tip->text();
+        if (event->type() == QEvent::Show && showGeometry.isEmpty())
+            showGeometry = widget->geometry();
+        return false;
+    }
+};
+
+/** @brief Delivers a real tooltip request and leaves Qt in charge of showing the label. */
+static QPoint sendTooltipHelp(QWidget& target, const QPoint& localPos)
+{
+    const QPoint global = target.mapToGlobal(localPos);
+    QHelpEvent help(QEvent::ToolTip, localPos, global);
+    QApplication::sendEvent(&target, &help);
+    return global;
+}
+
+/** @brief Expected corrected top-left using the anchor screen's logical available geometry. */
+static QPoint expectedTipTopLeft(const QPoint& anchor, const QSize& size, const QRect& bounds)
+{
+    constexpr int gap = 14;
+    int x = anchor.x() + gap;
+    if (x + size.width() - 1 > bounds.right()) x = anchor.x() - gap - size.width();
+    const int y = qBound(bounds.top(), anchor.y(), bounds.bottom() - size.height() + 1);
+    return QPoint(qBound(bounds.left(), x, bounds.right() - size.width() + 1), y);
+}
+#endif
 
 class InspectableSlider final : public QSlider
 {
@@ -2360,6 +2405,229 @@ private slots:
         qApp->applicationStateChanged(Qt::ApplicationActive);
         QVERIFY(!loading.isVisible());
     }
+
+#ifdef Q_OS_MACOS
+    void tooltipPlacesBesideCursor_data()
+    {
+        QTest::addColumn<QString>("text");
+        QTest::newRow("one-line") << QStringLiteral("Connect device");
+        QTest::newRow("two-line") << QStringLiteral("Connect device\nwith the selected camera");
+    }
+
+    void tooltipPlacesBesideCursor()
+    {
+        QFETCH(QString, text);
+        Resources::installResources(*qApp);
+        QToolTip::hideText();
+        QTest::qWait(50);
+        QScreen* screen = QGuiApplication::primaryScreen();
+        QVERIFY(screen);
+        const QRect bounds = screen->availableGeometry();
+        QWidget host;
+        host.setGeometry(bounds.left() + 120, bounds.top() + 120, 360, 160);
+        host.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&host));
+        QToolButton button(&host);
+        button.setToolTip(text);
+        button.setGeometry(20, 20, 120, 32);
+        button.show();
+        TipLabelRecorder recorder;
+        qApp->installEventFilter(&recorder);
+        QScopeGuard guard([&] { qApp->removeEventFilter(&recorder); });
+        const QPoint anchor = sendTooltipHelp(button, button.rect().center());
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible(), 3000);
+        const QSize size = recorder.label->size();
+        const QPoint expected = expectedTipTopLeft(anchor, size, bounds);
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible()
+                                 && recorder.label->pos() == expected, 3000);
+        QCOMPARE(recorder.text, text);
+        QVERIFY(bounds.contains(recorder.label->geometry()));
+    }
+
+    void tooltipSwitchingUsesLatestNativeLabel()
+    {
+        Resources::installResources(*qApp);
+        QToolTip::hideText();
+        QTest::qWait(50);
+        QScreen* screen = QGuiApplication::primaryScreen();
+        QVERIFY(screen);
+        const QRect bounds = screen->availableGeometry();
+        QWidget host;
+        host.setGeometry(bounds.left() + 120, bounds.top() + 120, 420, 160);
+        host.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&host));
+        QToolButton first(&host);
+        first.setToolTip(QStringLiteral("Open"));
+        first.setGeometry(20, 20, 100, 32);
+        first.show();
+        QToolButton second(&host);
+        second.setToolTip(QStringLiteral("Settings"));
+        second.setGeometry(150, 20, 100, 32);
+        second.show();
+        TipLabelRecorder recorder;
+        qApp->installEventFilter(&recorder);
+        QScopeGuard guard([&] { qApp->removeEventFilter(&recorder); });
+        const QPoint firstAnchor = sendTooltipHelp(first, first.rect().center());
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible(), 3000);
+        const QSize firstSize = recorder.label->size();
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible()
+                                 && recorder.label->pos() == expectedTipTopLeft(firstAnchor, firstSize, bounds), 3000);
+        QWidget* nativeLabel = recorder.label.data();
+        const QPoint secondAnchor = sendTooltipHelp(second, second.rect().center());
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.text == QStringLiteral("Settings"), 3000);
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible()
+                                 && recorder.label->pos()
+                                     == expectedTipTopLeft(secondAnchor, recorder.label->size(), bounds), 3000);
+        QCOMPARE(recorder.label.data(), nativeLabel);
+    }
+
+    void tooltipRepeatUsesLatestRequest()
+    {
+        Resources::installResources(*qApp);
+        QToolTip::hideText();
+        QTest::qWait(50);
+        QScreen* screen = QGuiApplication::primaryScreen();
+        QVERIFY(screen);
+        const QRect bounds = screen->availableGeometry();
+        QWidget host;
+        host.setGeometry(bounds.left() + 120, bounds.top() + 120, 360, 160);
+        host.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&host));
+        QToolButton button(&host);
+        button.setToolTip(QStringLiteral("Refresh"));
+        button.setGeometry(20, 20, 120, 32);
+        button.show();
+        TipLabelRecorder recorder;
+        qApp->installEventFilter(&recorder);
+        QScopeGuard guard([&] { qApp->removeEventFilter(&recorder); });
+        const QPoint firstAnchor = sendTooltipHelp(button, button.rect().center());
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible(), 3000);
+        const QSize size = recorder.label->size();
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible()
+                                 && recorder.label->pos() == expectedTipTopLeft(firstAnchor, size, bounds), 3000);
+        // Qt does not re-place an already-visible tip with identical text. A dynamic tooltip
+        // gives the second request a real label event, which is the repeat case we correct.
+        button.setToolTip(QStringLiteral("Refresh now"));
+        const QPoint laterAnchor = sendTooltipHelp(button, button.rect().center() + QPoint(12, 0));
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible()
+                                 && recorder.text == QStringLiteral("Refresh now")
+                                 && recorder.label->pos()
+                                     == expectedTipTopLeft(laterAnchor, recorder.label->size(), bounds), 3000);
+    }
+
+    void tooltipFlipsAndClampsAtLowerRight()
+    {
+        Resources::installResources(*qApp);
+        QToolTip::hideText();
+        QTest::qWait(50);
+        QScreen* screen = QGuiApplication::primaryScreen();
+        QVERIFY(screen);
+        const QRect bounds = screen->availableGeometry();
+        QWidget host(nullptr, Qt::FramelessWindowHint);
+        host.setGeometry(bounds.right() - 159, bounds.bottom() - 89, 160, 90);
+        host.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&host));
+        QToolButton button(&host);
+        button.setToolTip(QStringLiteral("Connect device at the lower right corner"));
+        button.setGeometry(40, 56, 120, 34);
+        button.show();
+        TipLabelRecorder recorder;
+        qApp->installEventFilter(&recorder);
+        QScopeGuard guard([&] { qApp->removeEventFilter(&recorder); });
+        const QPoint anchor = sendTooltipHelp(button, button.rect().bottomRight() - QPoint(4, 4));
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible(), 3000);
+        const QSize size = recorder.label->size();
+        QVERIFY(anchor.x() + 14 + size.width() - 1 > bounds.right());
+        QVERIFY(anchor.y() + size.height() - 1 > bounds.bottom());
+        QTRY_COMPARE(recorder.label->geometry().right(), anchor.x() - 15);
+        QCOMPARE(recorder.label->geometry().bottom(), bounds.bottom());
+        QVERIFY(bounds.contains(recorder.label->geometry()));
+    }
+
+    void tooltipIgnoresProgrammaticShowText()
+    {
+        Resources::installResources(*qApp);
+        QToolTip::hideText();
+        QTest::qWait(50);
+        QScreen* screen = QGuiApplication::primaryScreen();
+        QVERIFY(screen);
+        const QRect bounds = screen->availableGeometry();
+        QWidget host;
+        host.setGeometry(bounds.left() + 120, bounds.top() + 120, 360, 160);
+        host.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&host));
+        TipLabelRecorder recorder;
+        qApp->installEventFilter(&recorder);
+        QScopeGuard guard([&] { qApp->removeEventFilter(&recorder); });
+        const QPoint anchor = host.mapToGlobal(host.rect().center());
+        QToolTip::showText(anchor, QStringLiteral("Programmatic"), nullptr);
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible(), 3000);
+        const QRect placed = recorder.showGeometry;
+        QVERIFY(!placed.isEmpty());
+        QTest::qWait(150);
+        QVERIFY(recorder.label);
+        QCOMPARE(recorder.label->geometry(), placed);
+
+        QToolButton button(&host);
+        button.setGeometry(20, 20, 120, 32);
+        button.setToolTip(QStringLiteral("Shared tooltip"));
+        button.show();
+        const QPoint hover = sendTooltipHelp(button, button.rect().center());
+        QTRY_VERIFY(recorder.label && recorder.label->pos() == hover + QPoint(14, 0));
+        // A repeat with identical text produces no placement events in Qt. A later direct
+        // showText with the same text must still use its own programmatic position.
+        sendTooltipHelp(button, button.rect().center());
+        QTest::qWait(50);
+        QToolTip::showText(anchor, button.toolTip(), &host);
+        QVERIFY(recorder.label);
+        const QRect directGeometry = recorder.label->geometry();
+        QVERIFY(directGeometry.topLeft() != hover + QPoint(14, 0));
+        QTest::qWait(50);
+        QVERIFY(recorder.label);
+        QCOMPARE(recorder.label->geometry(), directGeometry);
+    }
+
+    void tooltipUsesAnchorScreenAcrossMonitors()
+    {
+        const QList<QScreen*> screens = QGuiApplication::screens();
+        if (screens.size() < 2) QSKIP("Dual-monitor tooltip placement needs two screens");
+        Resources::installResources(*qApp);
+        QWidget host;
+        host.resize(360, 120);
+        host.show();
+        QToolButton button(&host);
+        button.setToolTip(QStringLiteral("Camera connection"));
+        button.setGeometry(20, 20, 140, 32);
+        button.show();
+        TipLabelRecorder recorder;
+        qApp->installEventFilter(&recorder);
+        QScopeGuard guard([&] { qApp->removeEventFilter(&recorder); });
+        QStringList seen;
+        for (int i = 0; i < screens.size(); ++i) {
+            QScreen* screen = screens.at(i);
+            QToolTip::hideText();
+            QTest::qWait(50);
+            const QRect bounds = screen->availableGeometry();
+            host.setGeometry(bounds.center().x() - 180, bounds.center().y() - 60, 360, 120);
+            host.raise();
+            host.activateWindow();
+            QVERIFY(QTest::qWaitForWindowExposed(&host));
+            // A distinct text makes Qt issue a fresh native label event for each screen;
+            // an identical already-visible tip is deliberately left where Qt placed it.
+            button.setToolTip(QStringLiteral("Camera connection %1").arg(i));
+            const QPoint anchor = sendTooltipHelp(button, button.rect().center());
+            QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible(), 3000);
+            const QSize size = recorder.label->size();
+            const QPoint expected = expectedTipTopLeft(anchor, size, bounds);
+            QTest::qWait(60); // Let Qt's placement and the queued correction settle.
+            QTRY_VERIFY_WITH_TIMEOUT(recorder.label && recorder.label->isVisible()
+                                     && recorder.label->pos() == expected, 3000);
+            QVERIFY(bounds.contains(recorder.label->geometry()));
+            seen << screen->name();
+        }
+        qInfo() << "tooltip screens" << seen;
+    }
+#endif
 };
 
 QTEST_MAIN(ResourcesTransientWindowTests)

@@ -143,6 +143,7 @@ keeping any consumer minimum, so hover neither clips nor resizes a row. Checked 
 no fill; check and radio glyphs, or the invoking control, show the current value.
 The shared menu template keeps 4px vertical padding for the existing row height.
 At `QEvent::Show`, Resources selects a screen from Qt's global menu geometry. It checks the top-left point, then the center, then falls back to `QWidget::screen()`. Open-direction checks and shadow-gutter clamping share the selected screen. Qt provides both the menu geometry and screen bounds in logical coordinates.
+On macOS, Resources observes `QEvent::ToolTip` on buttons and matches the native label's Move, Resize or Show event and text within that event-loop turn. Qt owns the label, including reuse and dismissals. The queued correction places the tooltip 14 logical px to the right of the hover position at cursor height, flips left if needed and clamps within the anchor screen's available geometry. Qt's position is kept when neither side fits. The request expires even when Qt reuses the label without a geometry event, so later calls to `QToolTip::showText()` keep Qt's placement. Windows and Linux use Qt's placement.
 
 - Put generic widget defaults in the lowest-numbered files.
 - Put semantic role and state selectors after their defaults.
