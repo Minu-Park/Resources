@@ -224,7 +224,7 @@ ThemePalette ResourcesTheme::defaultThemePalette()
         {QStringLiteral("warning"), QColor(QStringLiteral("#fb8c00"))},
         {QStringLiteral("warningText"), QColor(QStringLiteral("#b45309"))},
         {QStringLiteral("error"), QColor(QStringLiteral("#dc2626"))},
-        {QStringLiteral("errorText"), QColor(QStringLiteral("#b44747"))},
+        {QStringLiteral("errorText"), QColor(QStringLiteral("#80581d"))},
         {QStringLiteral("success"), QColor(QStringLiteral("#10b981"))},
         {QStringLiteral("nativePath"), QColor(QStringLiteral("#1565c0"))},
         {QStringLiteral("sampledPath"), QColor(QStringLiteral("#edb078"))}

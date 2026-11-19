@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use a muted ochre for shared error text in the default theme.
+
 - Keep macOS button tooltips beside the cursor, with screen-edge placement and Qt's native tooltip lifecycle.
 
 - Keep themed menus anchored after moving their owner between monitors. The menu direction and shadow gutter use the screen containing Qt's global popup position.
