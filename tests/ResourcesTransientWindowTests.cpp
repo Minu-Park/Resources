@@ -11,6 +11,7 @@
 #include "Resources.h"
 
 #include <QApplication>
+#include <QGuiApplication>
 #include <QActionGroup>
 #include <QAbstractItemView>
 #include <QComboBox>
@@ -21,6 +22,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMouseEvent>
+#include <QShowEvent>
 #include <QListView>
 #include <QLineEdit>
 #include <QPainter>
@@ -29,6 +31,7 @@
 #include <QToolButton>
 #include <QRegularExpression>
 #include <QProcess>
+#include <QRegion>
 #include <QScreen>
 #include <QHash>
 #include <QSet>
@@ -187,6 +190,27 @@ protected:
         default:
             return false;
         }
+    }
+};
+
+/** @brief Captures Qt's already-positioned geometry and reported screen at QEvent::Show. */
+class MenuShowRecorder final : public QObject
+{
+public:
+    QRect geometry;
+    QScreen* screen = nullptr;
+    bool sawShow = false;
+
+protected:
+    bool eventFilter(QObject* object, QEvent* event) override
+    {
+        if (event->type() != QEvent::Show) return false;
+        auto* menu = qobject_cast<QMenu*>(object);
+        if (!menu) return false;
+        geometry = menu->geometry();
+        screen = menu->screen();
+        sawShow = true;
+        return false;
     }
 };
 
@@ -978,6 +1002,161 @@ private slots:
             }
         }
         QCursor::setPos(oldCursor);
+    }
+
+    void menuShellFollowsGeometryScreenAfterOwnerMove()
+    {
+        Resources::installResources(*qApp);
+        const QList<QScreen*> screens = QGuiApplication::screens();
+        if (screens.size() < 2)
+            QSKIP("Requires two screens to reproduce the stale-screen clamp after a monitor move.");
+        QScreen* primary = QGuiApplication::primaryScreen();
+        QScreen* secondary = nullptr;
+        for (QScreen* screen : screens) {
+            if (screen != primary) {
+                secondary = screen;
+                break;
+            }
+        }
+        QVERIFY(secondary != nullptr);
+
+        // Mirror ThemedMainWindow: frameless, translucent, masked owner with a non-native bar.
+        QWidget owner(nullptr, Qt::Window | Qt::FramelessWindowHint);
+        owner.setAttribute(Qt::WA_TranslucentBackground, true);
+        owner.resize(760, 520);
+        owner.setMask(QRegion(0, 0, 760, 520));
+        auto* bar = new QMenuBar(&owner);
+        bar->setNativeMenuBar(false);
+        bar->setGeometry(0, 0, 760, 28);
+        QMenu* view = bar->addMenu(QStringLiteral("&View"));
+        view->addAction(QStringLiteral("Device Controls"));
+        view->addAction(QStringLiteral("Script Editor"));
+        QMenu* analysis = view->addMenu(QStringLiteral("Analysis"));
+        analysis->addAction(QStringLiteral("Measure"));
+        MenuShowRecorder recorder;
+        qApp->installEventFilter(&recorder);
+
+        const int gutter = 12;
+        auto checkOpen = [&](const char* label, QScreen* expected) {
+            const QPoint anchor = bar->mapToGlobal(bar->actionGeometry(view->menuAction()).center());
+            QCOMPARE(QGuiApplication::screenAt(anchor), expected);
+            recorder.geometry = QRect();
+            recorder.screen = nullptr;
+            recorder.sawShow = false;
+            view->popup(anchor);
+            QTRY_VERIFY(view->isVisible());
+            QCoreApplication::processEvents();
+            const QRect shell = view->geometry().adjusted(gutter, gutter, -gutter, -gutter);
+            const QRect bounds = expected->availableGeometry();
+            const int tolerance = view->style()->pixelMetric(QStyle::PM_MenuDesktopFrameWidth, nullptr, view) + 2;
+            qInfo().noquote() << QString::fromLatin1(label)
+                              << "showGeo" << recorder.geometry
+                              << "showScreen" << (recorder.screen ? recorder.screen->name() : QStringLiteral("<null>"))
+                              << "anchor" << anchor << "final" << view->geometry()
+                              << "shell" << shell << "bounds" << bounds;
+            QVERIFY(recorder.sawShow);
+            QVERIFY2(bounds.contains(shell), qPrintable(QStringLiteral("%1 shell escaped %2: %3")
+                .arg(QString::fromLatin1(label)).arg(expected->name()).arg(shell.x())));
+            QVERIFY2(qMin(qAbs(shell.left() - anchor.x()), qAbs(shell.right() + 1 - anchor.x())) <= tolerance,
+                     qPrintable(QStringLiteral("%1 horizontal shell/anchor gap on %2")
+                         .arg(QString::fromLatin1(label)).arg(expected->name())));
+            QVERIFY2(qMin(qAbs(shell.top() - anchor.y()), qAbs(shell.bottom() + 1 - anchor.y())) <= tolerance,
+                     qPrintable(QStringLiteral("%1 vertical shell/anchor gap on %2")
+                         .arg(QString::fromLatin1(label)).arg(expected->name())));
+            QCOMPARE(QGuiApplication::screenAt(view->geometry().topLeft()), expected);
+            view->close();
+            QTRY_VERIFY(!view->isVisible());
+        };
+
+        owner.move(primary->availableGeometry().left() + 100, primary->availableGeometry().top() + 100);
+        owner.show(); owner.raise(); owner.activateWindow();
+        QVERIFY(QTest::qWaitForWindowExposed(&owner));
+        QTest::qWait(150);
+        checkOpen("first-primary", primary);
+
+        owner.move(secondary->availableGeometry().left() + 100, secondary->availableGeometry().top() + 100);
+        QTest::qWait(220);
+        checkOpen("to-secondary", secondary);
+
+        // The reproduced failure: geometry is already back on primary at QEvent::Show while
+        // QWidget::screen() still names secondary, which used to clamp the shell onto secondary.
+        owner.move(primary->availableGeometry().left() + 140, primary->availableGeometry().top() + 140);
+        QTest::qWait(220);
+        checkOpen("back-to-primary", primary);
+
+        owner.move(secondary->availableGeometry().left() + 160, secondary->availableGeometry().top() + 160);
+        QTest::qWait(220);
+        checkOpen("back-to-secondary", secondary);
+
+        // A submenu after the same move keeps Qt's vertical alignment and the geometry screen.
+        owner.move(primary->availableGeometry().left() + 180, primary->availableGeometry().top() + 180);
+        QTest::qWait(220);
+        const QPoint submenuAnchor = bar->mapToGlobal(bar->actionGeometry(view->menuAction()).center());
+        QCOMPARE(QGuiApplication::screenAt(submenuAnchor), primary);
+        view->popup(submenuAnchor);
+        QTRY_VERIFY(view->isVisible());
+        view->setActiveAction(analysis->menuAction());
+        QTest::keyClick(view, Qt::Key_Right);
+        QTRY_VERIFY(analysis->isVisible());
+        const QRect submenuShell = analysis->geometry().adjusted(gutter, gutter, -gutter, -gutter);
+        qInfo().noquote() << "submenu" << "showScreen"
+                          << (recorder.screen ? recorder.screen->name() : QStringLiteral("<null>"))
+                          << "final" << analysis->geometry() << "shell" << submenuShell
+                          << "bounds" << primary->availableGeometry();
+        QVERIFY2(primary->availableGeometry().contains(submenuShell),
+                 qPrintable(QStringLiteral("Submenu shell escaped primary: %1").arg(submenuShell.x())));
+        QCOMPARE(QGuiApplication::screenAt(analysis->geometry().topLeft()), primary);
+        analysis->close();
+        view->close();
+        qApp->removeEventFilter(&recorder);
+    }
+
+    void menuShellClampsToGeometryScreenWhenWidgetScreenIsStale()
+    {
+        Resources::installResources(*qApp);
+        const QList<QScreen*> screens = QGuiApplication::screens();
+        if (screens.size() < 2)
+            QSKIP("Requires two screens to force a stale QWidget::screen().");
+        QScreen* primary = QGuiApplication::primaryScreen();
+        QScreen* secondary = nullptr;
+        for (QScreen* screen : screens) {
+            if (screen != primary) {
+                secondary = screen;
+                break;
+            }
+        }
+        QVERIFY(secondary != nullptr);
+
+        QMenu menu;
+        menu.addAction(QStringLiteral("Device Controls"));
+        const QPoint anchor = secondary->availableGeometry().topLeft() + QPoint(120, 120);
+        menu.popup(anchor);
+        QTRY_VERIFY(menu.isVisible());
+        menu.hide();
+        QVERIFY(menu.windowHandle() != nullptr);
+        menu.move(anchor);
+        // Force the exact post-move state from issue #558 without relying on native timing:
+        // Qt's geometry is on secondary while QWidget::screen() still names primary.
+        menu.windowHandle()->setScreen(primary);
+        QCoreApplication::processEvents();
+        QCOMPARE(menu.screen(), primary);
+        QCOMPARE(QGuiApplication::screenAt(menu.geometry().topLeft()), secondary);
+
+        const QRect before = menu.geometry();
+        QShowEvent show;
+        QCoreApplication::sendEvent(&menu, &show);
+        const QRect shell = menu.geometry().adjusted(12, 12, -12, -12);
+        qInfo().noquote() << "stale-screen" << "before" << before << "after" << menu.geometry()
+                          << "shell" << shell << "secondaryBounds" << secondary->availableGeometry()
+                          << "primaryBounds" << primary->availableGeometry();
+        QVERIFY2(secondary->availableGeometry().contains(shell),
+                 qPrintable(QStringLiteral("Shell clamped to the stale screen: %1").arg(shell.x())));
+        QVERIFY2(qMin(qAbs(shell.left() - anchor.x()), qAbs(shell.right() + 1 - anchor.x())) <= 3,
+                 qPrintable(QStringLiteral("Horizontal shell/anchor gap: %1..%2 / %3")
+                     .arg(shell.left()).arg(shell.right()).arg(anchor.x())));
+        QVERIFY2(qMin(qAbs(shell.top() - anchor.y()), qAbs(shell.bottom() + 1 - anchor.y())) <= 3,
+                 qPrintable(QStringLiteral("Vertical shell/anchor gap: %1..%2 / %3")
+                     .arg(shell.top()).arg(shell.bottom()).arg(anchor.y())));
     }
 
     void titleBarMenuTextHitArea_data()

@@ -142,6 +142,7 @@ popup the runtime reserves the emphasized label width through the menu's minimum
 keeping any consumer minimum, so hover neither clips nor resizes a row. Checked rows paint
 no fill; check and radio glyphs, or the invoking control, show the current value.
 The shared menu template keeps 4px vertical padding for the existing row height.
+At `QEvent::Show`, Resources selects a screen from Qt's global menu geometry. It checks the top-left point, then the center, then falls back to `QWidget::screen()`. Open-direction checks and shadow-gutter clamping share the selected screen. Qt provides both the menu geometry and screen bounds in logical coordinates.
 
 - Put generic widget defaults in the lowest-numbered files.
 - Put semantic role and state selectors after their defaults.

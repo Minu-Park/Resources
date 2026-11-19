@@ -5,6 +5,7 @@
 #include "Chrome/ProgressShine.h"
 
 #include <QApplication>
+#include <QGuiApplication>
 #include <QFocusEvent>
 #include <QPointer>
 #include <QFile>
@@ -1517,11 +1518,19 @@ private:
         }
         const int gutter = presentationMetric("MENU_SHADOW_GUTTER");
         const QRect geometry = menu->geometry();
+        // Qt places the popup before QEvent::Show, but QWidget::screen() can still report the
+        // owner's former screen right after the window crosses a monitor boundary. Select the
+        // screen from Qt's already-positioned logical-global geometry so the direction test and
+        // the clamp use one consistent screen. Both Qt geometry and QScreen bounds are logical
+        // coordinates, so no devicePixelRatio conversion belongs here.
+        const QScreen* screen = QGuiApplication::screenAt(geometry.topLeft());
+        if (!screen) screen = QGuiApplication::screenAt(geometry.center());
+        if (!screen) screen = menu->screen();
         bool opensLeft = menu->isRightToLeft();
         bool opensUp = false;
         if (parentMenu) {
             opensLeft = geometry.center().x() < parentMenu->geometry().center().x();
-        } else if (const QScreen* screen = menu->screen()) {
+        } else if (screen) {
             const QRect bounds = screen->availableGeometry();
             const int frame = menu->style()->pixelMetric(QStyle::PM_MenuDesktopFrameWidth, nullptr, menu);
             const QPoint cursor = QCursor::pos();
@@ -1545,7 +1554,7 @@ private:
         // Qt already aligns a submenu's first action vertically with its parent action.
         QPoint position = menu->pos() + QPoint(opensLeft ? gutter : -gutter,
                                                parentMenu ? 0 : (opensUp ? gutter : -gutter));
-        if (const QScreen* screen = menu->screen()) {
+        if (screen) {
             const QRect bounds = screen->availableGeometry();
             // Keep the visible shell on-screen; transparent shadow gutters may cross an edge.
             position.setX(qBound(bounds.left() - gutter, position.x(),
