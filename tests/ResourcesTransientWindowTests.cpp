@@ -1035,9 +1035,30 @@ private slots:
         analysis->addAction(QStringLiteral("Measure"));
         MenuShowRecorder recorder;
         qApp->installEventFilter(&recorder);
+        const auto removeRecorder = qScopeGuard([&] { qApp->removeEventFilter(&recorder); });
 
         const int gutter = 12;
-        auto checkOpen = [&](const char* label, QScreen* expected) {
+        struct Placement {
+            const char* label;
+            QScreen* screen;
+            int inset;
+            int settleMs;
+        };
+        const Placement placements[] = {
+            {"first-primary", primary, 100, 150},
+            {"to-secondary", secondary, 100, 220},
+            {"back-to-primary", primary, 140, 220},
+            {"back-to-secondary", secondary, 160, 220},
+        };
+        owner.move(primary->availableGeometry().topLeft() + QPoint(100, 100));
+        owner.show();
+        owner.raise();
+        owner.activateWindow();
+        QVERIFY(QTest::qWaitForWindowExposed(&owner));
+
+        for (const auto& [label, expected, inset, settleMs] : placements) {
+            owner.move(expected->availableGeometry().topLeft() + QPoint(inset, inset));
+            QTest::qWait(settleMs);
             const QPoint anchor = bar->mapToGlobal(bar->actionGeometry(view->menuAction()).center());
             QCOMPARE(QGuiApplication::screenAt(anchor), expected);
             recorder.geometry = QRect();
@@ -1066,27 +1087,7 @@ private slots:
             QCOMPARE(QGuiApplication::screenAt(view->geometry().topLeft()), expected);
             view->close();
             QTRY_VERIFY(!view->isVisible());
-        };
-
-        owner.move(primary->availableGeometry().left() + 100, primary->availableGeometry().top() + 100);
-        owner.show(); owner.raise(); owner.activateWindow();
-        QVERIFY(QTest::qWaitForWindowExposed(&owner));
-        QTest::qWait(150);
-        checkOpen("first-primary", primary);
-
-        owner.move(secondary->availableGeometry().left() + 100, secondary->availableGeometry().top() + 100);
-        QTest::qWait(220);
-        checkOpen("to-secondary", secondary);
-
-        // The reproduced failure: geometry is already back on primary at QEvent::Show while
-        // QWidget::screen() still names secondary, which used to clamp the shell onto secondary.
-        owner.move(primary->availableGeometry().left() + 140, primary->availableGeometry().top() + 140);
-        QTest::qWait(220);
-        checkOpen("back-to-primary", primary);
-
-        owner.move(secondary->availableGeometry().left() + 160, secondary->availableGeometry().top() + 160);
-        QTest::qWait(220);
-        checkOpen("back-to-secondary", secondary);
+        }
 
         // A submenu after the same move keeps Qt's vertical alignment and the geometry screen.
         owner.move(primary->availableGeometry().left() + 180, primary->availableGeometry().top() + 180);
@@ -1108,7 +1109,6 @@ private slots:
         QCOMPARE(QGuiApplication::screenAt(analysis->geometry().topLeft()), primary);
         analysis->close();
         view->close();
-        qApp->removeEventFilter(&recorder);
     }
 
     void menuShellClampsToGeometryScreenWhenWidgetScreenIsStale()
