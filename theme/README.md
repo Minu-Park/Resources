@@ -57,14 +57,29 @@ takes precedence when present. Otherwise `layoutRole` selects one shared pattern
 | `flush`, `actions`, `row`, `stack`, `sections` | Zero-inset action/row/stack composition with the corresponding spacing. |
 | `caption-stack`, `text-stack` | Dense text composition; spacing comes from layout metrics. |
 | `content`, `page`, `compact-panel`, `section`, `inset` | Shared inset panel and page compositions. |
-| `card`, `header`, `tab-strip` | Compact chrome compositions with retained factory insets. |
+| `card`, `header`, `console-header`, `tab-strip` | Compact chrome compositions with retained factory insets. |
 | `bottom-panel`, `tabbed-panel`, `search` | Asymmetric content and search compositions. |
-| `form`, `wide-form`, `label-form`, `field-grid` | Form/grid spacing and label-column behavior. |
+| `form`, `wide-form`, `label-form`, `field-grid`, `compact-form` | Form/grid spacing and label-column behavior. |
 
-Common spacing reads presentation tokens. Compact spacing/insets, caption/text
-spacing, card vertical inset and search inset read `LAYOUT_*` metrics from the same
-atomic source snapshot as QSS. Live role changes and source reload update existing
-layouts. Unknown roles retain Qt/consumer layout behavior.
+Common spacing reads presentation tokens `SPACE_TIGHT`, `SPACE_ROW`, `SPACE_CONTENT`
+and `SPACE_SECTION`. The other sources are per role. `content`, `page` and `inset`
+inset by `SPACE_CONTENT`; `compact-panel` and `section` inset by `SPACE_ROW`; `card`
+insets horizontally by `LAYOUT_COMPACT_INSET` and vertically by `LAYOUT_CARD_INSET_Y`;
+`header` insets horizontally by `SPACE_CONTENT` and vertically by `SPACE_TIGHT`;
+`tab-strip` insets left by `SPACE_CONTENT`, right by `LAYOUT_COMPACT_INSET` and
+top/bottom by `LAYOUT_CARD_INSET_Y`; `console-header` insets left/right by `SPACE_ROW`
+and top/bottom by zero; `bottom-panel` insets by `SPACE_CONTENT` with a zero top,
+`tabbed-panel` by `SPACE_CONTENT` with a `SPACE_ROW` top, and `search` horizontally
+by `LAYOUT_SEARCH_INSET_X`. `actions`, `compact-panel`, `card`, `header`, `search`
+and `compact-form` space by `LAYOUT_COMPACT_SPACING`; `stack`, `tab-strip` and
+`console-header` space by `SPACE_TIGHT`; `caption-stack` and `text-stack` space by
+`LAYOUT_CAPTION_SPACING` and `LAYOUT_TEXT_SPACING`; `flush` and `inset` space by zero.
+On `QFormLayout`, `compact-form` sets horizontal spacing to `SPACE_ROW` and vertical
+spacing to `LAYOUT_COMPACT_SPACING` without the `label-form` fixed label width or word
+wrap; on other layouts its spacing is `LAYOUT_COMPACT_SPACING`. These `LAYOUT_*`
+metrics come from the same atomic source snapshot as QSS. Live role changes and
+source reload update existing layouts. Unknown roles retain Qt/consumer layout
+behavior.
 
 `controlRole="compactAction"` shares the compact-action template and metrics.
 `controlRole="devicePanel"` selects the shared device surface and borderless

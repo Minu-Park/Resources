@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add the `compact-form` and `console-header` layout roles. `compact-form` uses `SPACE_ROW` for `QFormLayout` horizontal spacing and `LAYOUT_COMPACT_SPACING` for vertical spacing and other layouts, with zero inset and no `label-form` label side effects. `console-header` insets `SPACE_ROW` left/right with zero top/bottom and spaces by `SPACE_TIGHT`.
+
+- Correct the layout-role metric documentation: `compact-panel` insets by `SPACE_ROW`, `header` insets vertically by `SPACE_TIGHT`, `tab-strip` insets vertically by `LAYOUT_CARD_INSET_Y`, and `card` insets horizontally by `LAYOUT_COMPACT_INSET`.
+
 - Use a muted ochre for shared error text in the default theme.
 
 - Keep macOS button tooltips beside the cursor, with screen-edge placement and Qt's native tooltip lifecycle.

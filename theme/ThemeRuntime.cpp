@@ -2035,8 +2035,10 @@ private:
                 {"tab-strip", {content, cardY, compactInset, cardY}, tight},
                 {"inset", {content, content, content, content}, 0},
                 {"header", {content, tight, content, tight}, compact},
+                {"console-header", {row, 0, row, 0}, tight},
                 {"section", {row, row, row, row}, row},
                 {"field-grid", {}, row}, {"label-form", {}, row},
+                {"compact-form", {}, compact},
             };
             for (const auto& pattern : patterns) {
                 if (role != QLatin1String(pattern.role)) continue;
@@ -2053,6 +2055,11 @@ private:
                 if (auto* form = qobject_cast<QFormLayout*>(layout)) {
                     form->setHorizontalSpacing(2 * content);
                     form->setVerticalSpacing(content);
+                }
+            } else if (role == QLatin1String("compact-form")) {
+                if (auto* form = qobject_cast<QFormLayout*>(layout)) {
+                    form->setHorizontalSpacing(row);
+                    form->setVerticalSpacing(compact);
                 }
             } else if (role == QLatin1String("label-form")) {
                 if (auto* form = qobject_cast<QFormLayout*>(layout)) {
