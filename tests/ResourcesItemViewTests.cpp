@@ -364,6 +364,42 @@ class ResourcesItemViewTests : public QObject
         QCOMPARE(card->property("itemInkState").toString(), QString("active"));
         QCOMPARE(identityWeight(), enabledWeight);
     }
+    // A consumer marks a row whose identity is connected; Resources owns the ink and weight.
+    void emphasizedItemRolePaintsThemeAccentWithoutLocalFont()
+    {
+        ThemedTreeWidget tree;
+        tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Row);
+        Resources::setItemSelectionAppearance(&tree, Resources::ItemSelectionAppearance::MenuInk);
+        tree.setHeaderHidden(true);
+        tree.setRootIsDecorated(false);
+        auto* emphasized = new QTreeWidgetItem(&tree, {"Basler acA1300-60gm"});
+        auto* plain = new QTreeWidgetItem(&tree, {"Euresys Playlink"});
+        emphasized->setData(0, Resources::EmphasizedItemInkRole, true);
+        tree.resize(360, 140);
+        tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+
+        // The consumer supplies only the fact: no local font or foreground on the item.
+        QCOMPARE(emphasized->font(0).weight(), QFont::Normal);
+        QVERIFY(!emphasized->data(0, Qt::ForegroundRole).isValid());
+
+        const auto colors = Resources::themePalette();
+        const auto accentCount = [&](QTreeWidgetItem* item) -> int {
+            const QImage image = tree.viewport()->grab().toImage();
+            const qreal dpr = image.devicePixelRatio();
+            const QRect row = tree.visualItemRect(item);
+            int blue = 0;
+            for (int y = qRound(row.top() * dpr); y < qRound(row.bottom() * dpr); ++y)
+                for (int x = qRound(row.left() * dpr) + qRound(20 * dpr); x < qRound(row.right() * dpr); ++x)
+                    if (image.pixelColor(x, y) == colors.value("selectionAccent")) ++blue;
+            return blue;
+        };
+        QVERIFY2(accentCount(emphasized) > 10, "emphasized identity must paint theme accent ink");
+        QCOMPARE(accentCount(plain), 0);
+        tree.setEnabled(false);
+        tree.viewport()->repaint();
+        QVERIFY2(accentCount(emphasized) > 10, "emphasized identity keeps ink while disabled");
+    }
     void menuInkPlainDelegateEmphasizesNeutralHover()
     {
         // App QSS owns CE_ItemViewItem; clear it so MenuInk's drawControl reaches this style.

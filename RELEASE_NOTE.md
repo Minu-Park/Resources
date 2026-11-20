@@ -4,6 +4,8 @@
 
 - Keep the `DeviceScopeCard` lower border clear when its search strip has no active search surface by suppressing the redundant separator.
 
+- Add `EmphasizedItemInkRole` so a consumer can mark a connected or otherwise current identity row and let the installed theme supply the accent ink and emphasis weight, instead of a widget-level font or color.
+
 - Keep MenuInk selection ink on a disabled item view: a selected row keeps its accent semibold identity while hover emphasis stays limited to enabled views.
 
 - Add the `compact-form` and `console-header` layout roles. `compact-form` uses `SPACE_ROW` for `QFormLayout` horizontal spacing and `LAYOUT_COMPACT_SPACING` for vertical spacing and other layouts, with zero inset and no `label-form` label side effects. `console-header` insets `SPACE_ROW` left/right with zero top/bottom and spaces by `SPACE_TIGHT`.
