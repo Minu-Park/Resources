@@ -399,6 +399,15 @@ class ResourcesItemViewTests : public QObject
         tree.setEnabled(false);
         tree.viewport()->repaint();
         QVERIFY2(accentCount(emphasized) > 10, "emphasized identity keeps ink while disabled");
+
+        // Emphasized identity outranks hover. Reverting the precedence would paint the neutral
+        // hover ink here and drop these accent pixels to zero.
+        tree.setEnabled(true);
+        const int atRest = accentCount(emphasized);
+        movePointer(tree.viewport(), tree.visualItemRect(emphasized).center());
+        tree.viewport()->repaint();
+        QCOMPARE(accentCount(emphasized), atRest);
+        QVERIFY2(accentCount(emphasized) > 10, "emphasized identity keeps accent ink under hover");
     }
     void menuInkPlainDelegateEmphasizesNeutralHover()
     {
