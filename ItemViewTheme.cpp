@@ -136,7 +136,11 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
             const bool enabled = option.state & QStyle::State_Enabled;
             // Selection keeps accented ink; hover is neutral semibold. QMenu stays accented on hover.
             // Preserve selected ink while the view is disabled during a pending request.
+            // A consumer-marked identity (connected or otherwise current) outranks hover so it
+            // never loses its accent under the pointer.
+            const bool emphasizedItem = index.data(Resources::EmphasizedItemInkRole).toBool();
             const MenuInkState ink = selected ? MenuInkState::Active
+                                   : emphasizedItem ? MenuInkState::Active
                                    : !enabled ? MenuInkState::Normal
                                    : hovered ? MenuInkState::Hover
                                              : MenuInkState::Normal;
@@ -144,7 +148,6 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
             contents.features &= ~QStyleOptionViewItem::Alternate;
             contents.backgroundBrush = Qt::NoBrush;
             // Row selection shares emphasis across cells; source value delegates keep their contracts.
-            const bool emphasizedItem = index.data(Resources::EmphasizedItemInkRole).toBool();
             if ((rowMode || index.column() == 0) && ink != MenuInkState::Normal) {
                 contents.font.setWeight(QFont::Weight(surface_->emphasisWeight));
                 contents.fontMetrics = QFontMetrics(contents.font);
@@ -154,13 +157,6 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
                     contents.icon = menuInkIcon(contents.icon, contents.decorationSize,
                                                  view_->devicePixelRatioF(), view_->style(), true);
                 }
-            } else if (emphasizedItem && (rowMode || index.column() == 0)) {
-                // A consumer marks a row whose identity is connected or otherwise current. The
-                // theme owns the ink and weight, so the owning view supplies only the fact.
-                contents.font.setWeight(QFont::Weight(surface_->emphasisWeight));
-                contents.fontMetrics = QFontMetrics(contents.font);
-                contents.palette.setColor(QPalette::Text, surface_->accentColor);
-                contents.palette.setColor(QPalette::HighlightedText, surface_->accentColor);
             }
             QWidget* identity = view_->indexWidget(index);
             if (identity) {
@@ -280,14 +276,6 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
     {
         QSize hint = source_ ? source_->sizeHint(option, index) : QStyledItemDelegate::sizeHint(option, index);
         if (view_->property("menuItemInk").toBool() && index.column() == 0) {
-            QStyleOptionViewItem contents(option);
-            initStyleOption(&contents, index);
-            QFont emphasis(contents.font);
-            emphasis.setWeight(QFont::Weight(surface_->emphasisWeight));
-            hint.rwidth() += qMax(0, QFontMetrics(emphasis).horizontalAdvance(contents.text)
-                                      - QFontMetrics(contents.font).horizontalAdvance(contents.text));
-        } else if (index.data(Resources::EmphasizedItemInkRole).toBool() && index.column() == 0) {
-            // Consumer-marked identity takes the same reserved width the theme paints.
             QStyleOptionViewItem contents(option);
             initStyleOption(&contents, index);
             QFont emphasis(contents.font);
