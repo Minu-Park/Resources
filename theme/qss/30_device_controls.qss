@@ -67,6 +67,10 @@ QFrame[tabRole="DeviceScopeCard"] > QTabBar {
     background: transparent;
 }
 
+QFrame[tabRole="DeviceScopeCard"] > QTabBar::tab {
+    padding: 6px 8px;
+}
+
 QFrame[tabRole="DeviceScopeCard"] > QFrame#DeviceScopeCardSeparator {
     background: @BORDER@;
     border: none;
@@ -119,6 +123,30 @@ QFrame#DeviceFeatureSearchBubble {
     color: @TEXT@;
 }
 
+/* Docked in the card strip: the card owns the surface, border and rounded bottom. */
+QFrame#DeviceFeatureSearchBubble[searchPlacement="strip"] {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    min-height: 28px;
+    max-height: 28px;
+}
+
+QFrame#DeviceScopeCardSearchStrip {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+}
+
+QFrame#DeviceScopeCardSearchSeparator {
+    background: @BORDER@;
+    border: none;
+    min-height: 1px;
+    max-height: 1px;
+}
+
 QLineEdit#DeviceFeatureSearchInput,
 QLineEdit#DeviceFeatureSearchInput:hover,
 QLineEdit#DeviceFeatureSearchInput:focus {
@@ -130,6 +158,12 @@ QLineEdit#DeviceFeatureSearchInput:focus {
     max-height: 22px;
     selection-background-color: @SELECTION@;
     selection-color: @TEXT@;
+}
+
+QFrame[searchPlacement="strip"] > QLineEdit#DeviceFeatureSearchInput {
+    padding-bottom: 4px;
+    min-height: 22px;
+    max-height: 22px;
 }
 
 QLabel#DeviceFeatureSearchCount {

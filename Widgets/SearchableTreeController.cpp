@@ -83,8 +83,9 @@ void paintStar(QPainter* painter, const QRectF& rect, bool filled, const QColor&
 /** Scalable star icon with no dependency on installed symbol fonts or theme assets. */
 class StarIconEngine final : public QIconEngine {
 public:
-  explicit StarIconEngine(SearchableTreeController* tree) : tree_(tree) {}
-  QIconEngine* clone() const override { return new StarIconEngine(tree_); }
+  StarIconEngine(SearchableTreeController* tree, bool docked)
+      : tree_(tree), docked_(docked) {}
+  QIconEngine* clone() const override { return new StarIconEngine(tree_, docked_); }
   QPixmap pixmap(const QSize& size, QIcon::Mode mode, QIcon::State state) override {
     QPixmap result(size);
     result.fill(Qt::transparent);
@@ -96,10 +97,14 @@ public:
     const bool filled = state == QIcon::On;
     auto color = filled ? tree_->favoriteColor() : tree_->tree()->palette().color(QPalette::Text);
     if (mode == QIcon::Disabled) color = QApplication::palette().color(QPalette::Disabled, QPalette::Text);
-    paintStar(painter, rect.adjusted(2, 2, -2, -2), filled, color);
+    QRectF glyph = rect.adjusted(2, 2, -2, -2);
+    // Lift the docked glyph by 2 logical pixels on the 16-pixel icon canvas.
+    if (docked_) glyph.translate(0, -rect.height() * (2.0 / 16.0));
+    paintStar(painter, glyph, filled, color);
   }
 private:
   SearchableTreeController* tree_;
+  bool docked_;
 };
 
 QString tupleKey(const QStringList& parts) {
@@ -281,7 +286,7 @@ SearchableTreeController::SearchableTreeController(QTreeWidget* tree, const Opti
   result_count_->setAccessibleName(tr("Matching items"));
   favorites_only_ = new QToolButton(search_bubble_);
   favorites_only_->setObjectName(QStringLiteral("DeviceFeatureFavoritesOnly"));
-  favorites_only_->setIcon(QIcon(new StarIconEngine(this)));
+  updateFavoriteIcon();
   favorites_only_->setCheckable(true);
   favorites_only_->setToolTip(tr("Show favorites only"));
   favorites_only_->setAccessibleName(tr("Show favorites only"));
@@ -303,15 +308,35 @@ SearchableTreeController::SearchableTreeController(QTreeWidget* tree, const Opti
   connect(favorites_only_, &QToolButton::toggled, this, [this] {
     filterChanged();
   });
-  auto* find = new QShortcut(QKeySequence::Find, tree_);
-  find->setContext(Qt::WidgetWithChildrenShortcut);
-  connect(find, &QShortcut::activated, search_, [this] { search_->setFocus(); search_->selectAll(); });
+  find_shortcut_ = new QShortcut(QKeySequence::Find, tree_);
+  find_shortcut_->setContext(Qt::WidgetWithChildrenShortcut);
+  connect(find_shortcut_, &QShortcut::activated, search_, [this] {
+    search_->setFocus();
+    search_->selectAll();
+  });
+  // The surface mirrors both keys only while docked, when it leaves the tree's scope.
+  // While overlaid it is already a child of the tree, so both copies would be active
+  // and Qt would report an ambiguous shortcut whenever the input or star has focus.
+  docked_find_shortcut_ = new QShortcut(QKeySequence::Find, search_bubble_);
+  docked_find_shortcut_->setContext(Qt::WidgetWithChildrenShortcut);
+  connect(docked_find_shortcut_, &QShortcut::activated, search_, [this] {
+    search_->setFocus();
+    search_->selectAll();
+  });
   auto* escape = new QShortcut(QKeySequence(Qt::Key_Escape), search_);
   escape->setContext(Qt::WidgetShortcut);
   connect(escape, &QShortcut::activated, search_, &QLineEdit::clear);
-  auto* favorite = new QShortcut(QKeySequence(QStringLiteral("Ctrl+D")), tree_);
-  favorite->setContext(Qt::WidgetWithChildrenShortcut);
-  connect(favorite, &QShortcut::activated, this, [this] { toggleFavorite(tree_->currentItem()); });
+  favorite_shortcut_ = new QShortcut(QKeySequence(QStringLiteral("Ctrl+D")), tree_);
+  favorite_shortcut_->setContext(Qt::WidgetWithChildrenShortcut);
+  connect(favorite_shortcut_, &QShortcut::activated, this, [this] {
+    toggleFavorite(tree_->currentItem());
+  });
+  docked_favorite_shortcut_ = new QShortcut(QKeySequence(QStringLiteral("Ctrl+D")), search_bubble_);
+  docked_favorite_shortcut_->setContext(Qt::WidgetWithChildrenShortcut);
+  connect(docked_favorite_shortcut_, &QShortcut::activated, this, [this] {
+    toggleFavorite(tree_->currentItem());
+  });
+  setDockedShortcutsEnabled(false);
 
   filter_timer_ = new QTimer(this);
   filter_timer_->setSingleShot(true);
@@ -521,8 +546,35 @@ void SearchableTreeController::setSearchMaximumWidth(int value) {
 
 void SearchableTreeController::setFavoriteColor(const QColor& color) {
   favorite_color_ = color;
-  if (favorites_only_) favorites_only_->setIcon(QIcon(new StarIconEngine(this)));
+  updateFavoriteIcon();
   tree_->viewport()->update();
+}
+
+void SearchableTreeController::updateFavoriteIcon() {
+  if (favorites_only_)
+    favorites_only_->setIcon(QIcon(new StarIconEngine(this, placement_ == SearchPlacement::Strip)));
+}
+
+void SearchableTreeController::setDockedShortcutsEnabled(bool enabled) {
+  if (docked_find_shortcut_) docked_find_shortcut_->setEnabled(enabled);
+  if (docked_favorite_shortcut_) docked_favorite_shortcut_->setEnabled(enabled);
+}
+
+void SearchableTreeController::setSearchPlacement(SearchPlacement placement) {
+  if (placement_ == placement) return;
+  placement_ = placement;
+  if (!search_bubble_) return;
+  // The tree shortcuts own both scopes while overlaid. Only enable the surface
+  // copies once the surface is (or is about to be) reparented into a foreign strip.
+  setDockedShortcutsEnabled(placement_ == SearchPlacement::Strip);
+  updateFavoriteIcon();
+  search_bubble_->setProperty("searchPlacement",
+      placement_ == SearchPlacement::Strip ? QStringLiteral("strip") : QStringLiteral("overlay"));
+  search_bubble_->style()->unpolish(search_bubble_);
+  search_bubble_->style()->polish(search_bubble_);
+  updateSearchShadow();
+  positionSearch();
+  updateGeometry();
 }
 
 void SearchableTreeController::setSearchShadowBlur(qreal value) {
@@ -542,7 +594,8 @@ void SearchableTreeController::setSearchShadowColor(const QColor& color) {
 
 void SearchableTreeController::updateSearchShadow() {
   if (!search_bubble_) return;
-  const bool enabled = search_shadow_blur_ > 0 && search_shadow_color_.alpha() > 0;
+  const bool enabled = placement_ != SearchPlacement::Strip
+      && search_shadow_blur_ > 0 && search_shadow_color_.alpha() > 0;
   if (!search_shadow_ && !enabled) return;
   if (!search_shadow_) {
     search_shadow_ = new QGraphicsDropShadowEffect(search_bubble_);
@@ -555,7 +608,8 @@ void SearchableTreeController::updateSearchShadow() {
 }
 
 void SearchableTreeController::positionSearch() {
-  if (!tree_ || !search_bubble_ || positioning_search_) return;
+  if (!tree_ || !search_bubble_ || positioning_search_
+      || placement_ == SearchPlacement::Strip) return;
   positioning_search_ = true;
   search_bubble_->ensurePolished();
   // Anchor to the tree frame, reserving both scrollbar gutters even while hidden.
@@ -589,7 +643,9 @@ void SearchableTreeController::updateGeometry() {
   };
   for (int i = 0; i < tree_->topLevelItemCount(); ++i) visit(visit, tree_->topLevelItem(i));
   const int viewportBottom = tree_->viewport()->mapTo(tree_, QPoint(0, tree_->viewport()->height())).y();
-  const int reserve = qMax(0, viewportBottom - search_bubble_->y() + search_inset_);
+  // A docked surface lives in the host strip below the tree, so it reserves no rows.
+  const int reserve = placement_ == SearchPlacement::Strip ? 0
+      : qMax(0, viewportBottom - search_bubble_->y() + search_inset_);
   tree_->verticalScrollBar()->setRange(0, qMax(0, contentHeight - tree_->viewport()->height() + reserve));
   tree_->verticalScrollBar()->setPageStep(qMax(1, tree_->viewport()->height() - reserve));
   tree_->verticalScrollBar()->setValue(previousScroll);

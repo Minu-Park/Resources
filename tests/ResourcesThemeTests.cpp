@@ -4,6 +4,7 @@
 #include "Chrome/ThemedDockTitleBar.h"
 #include "Chrome/ThemedDialog.h"
 #include "Widgets/DeviceScopeCard.h"
+#include "Widgets/SearchableTreeWidget.h"
 #include <QMainWindow>
 #include <QDockWidget>
 #include <QMdiSubWindow>
@@ -16,12 +17,14 @@
 #include <QDir>
 #include <QDoubleSpinBox>
 #include <QFile>
+#include <QGuiApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLineEdit>
 #include <QRegularExpression>
 #include <QSpinBox>
 #include <QStackedWidget>
+#include <QSplitter>
 #include <QStatusBar>
 #include <QStyle>
 #include <QTabBar>
@@ -30,6 +33,7 @@
 #include <QToolButton>
 #include <QTreeWidget>
 #include <QVBoxLayout>
+#include <QWindow>
 #include <QGridLayout>
 #include <QFormLayout>
 #include <QLabel>
@@ -461,6 +465,100 @@ private slots:
         QCOMPARE(card->count(), 1);
         QCOMPARE(card->pages()->count(), 1);
         QCOMPARE(card->pages()->currentWidget(), featurePage);
+    }
+    void deviceTargetsAndFeaturesShareTreeGeometry()
+    {
+        QTreeWidget targets;
+        QTreeWidget features;
+        targets.setProperty("treeRole", "DeviceTargetTree");
+        features.setProperty("treeRole", "DeviceFeatureTree");
+        const auto populate = [](QTreeWidget& tree) {
+            auto* parent = new QTreeWidgetItem(&tree, {QStringLiteral("Parent")});
+            new QTreeWidgetItem(parent, {QStringLiteral("Child")});
+            tree.expandAll();
+            tree.resize(360, 180);
+            tree.show();
+            return parent;
+        };
+        auto* target = populate(targets);
+        auto* feature = populate(features);
+        QApplication::processEvents();
+        QCOMPARE(targets.indentation(), 18);
+        QCOMPARE(targets.indentation(), features.indentation());
+        const auto rowGeometry = [](QTreeWidget& tree, QTreeWidgetItem* item) {
+            const auto row = tree.visualItemRect(item);
+            return QRect(row.topLeft(), QSize(1, row.height()));
+        };
+        QCOMPARE(rowGeometry(targets, target), rowGeometry(features, feature));
+        QCOMPARE(rowGeometry(targets, target->child(0)), rowGeometry(features, feature->child(0)));
+        const auto branch = [](QTreeWidget& tree, QTreeWidgetItem* parent) {
+            const auto image = tree.viewport()->grab().toImage();
+            const qreal scale = image.devicePixelRatio();
+            const auto row = tree.visualItemRect(parent);
+            return image.copy(0, qRound(row.y() * scale), qRound(row.left() * scale),
+                              qRound(row.height() * scale));
+        };
+        const auto targetArrow = branch(targets, target);
+        QVERIFY(!targetArrow.isNull());
+        bool hasVisibleArrow = false;
+        for (int y = 0; y < targetArrow.height(); ++y)
+            for (int x = 0; x < targetArrow.width(); ++x)
+                hasVisibleArrow |= qGray(targetArrow.pixel(x, y)) < 150;
+        QVERIFY(hasVisibleArrow);
+        QCOMPARE(targetArrow, branch(features, feature));
+    }
+    void dockedFavoritesStarCentersWithinItsStrip()
+    {
+        DeviceScopeCard card;
+        auto* tree = new SearchableTreeWidget(&card);
+        card.addTab(tree, QStringLiteral("Device"));
+        card.setSearchStripShown(true);
+        card.resize(360, 260);
+        card.show();
+        card.activateWindow();
+        QApplication::processEvents();
+
+        auto* strip = card.searchStrip();
+        QVERIFY(strip);
+        auto* star = strip->findChild<QToolButton*>(QStringLiteral("DeviceFeatureFavoritesOnly"));
+        auto* separator = strip->findChild<QFrame*>(QStringLiteral("DeviceScopeCardSearchSeparator"));
+        QVERIFY(star && separator);
+        const auto inkCenter = [strip, star] {
+            const auto image = strip->grab().toImage();
+            const auto dpr = image.devicePixelRatio();
+            const QRect area(star->mapTo(strip, QPoint()), star->size());
+            const auto interior = area.adjusted(2, 2, -2, -2);
+            int top = image.height(), bottom = -1;
+            for (int y = qRound(interior.top() * dpr); y < qRound((interior.bottom() + 1) * dpr); ++y) {
+                for (int x = qRound(interior.left() * dpr); x < qRound((interior.right() + 1) * dpr); ++x) {
+                    const auto pixel = image.pixel(x, y);
+                    if (qAlpha(pixel) < 128 || qGray(pixel) >= 180) continue;
+                    top = qMin(top, y);
+                    bottom = qMax(bottom, y);
+                }
+            }
+            return bottom >= top ? (top + bottom + 1) / (2 * dpr) : -1.0;
+        };
+        const double stripCenter = (strip->height() + separator->height()) / 2.0;
+        // Native styles can position the icon canvas one pixel apart before rasterization.
+        constexpr double rasterTolerance = 2.0;
+        QCOMPARE(star->size(), QSize(20, 20));
+        const double restingInk = inkCenter();
+        QVERIFY2(qAbs(restingInk - stripCenter) <= rasterTolerance,
+                 qPrintable(QStringLiteral("star center %1, strip center %2").arg(restingInk).arg(stripCenter)));
+
+        tree->setFavoriteColor(QColor(QStringLiteral("#245080")));
+        const double recoloredInk = inkCenter();
+        QCOMPARE(recoloredInk, restingInk);
+
+        star->clearFocus();
+        star->setFocus(Qt::ShortcutFocusReason);
+        QApplication::processEvents();
+        QCOMPARE(star->property("resourcesKeyboardFocus"), QVariant(true));
+        QCOMPARE(star->size(), QSize(20, 20));
+        const double focusedInk = inkCenter();
+        QVERIFY2(qAbs(focusedInk - stripCenter) <= rasterTolerance,
+                 qPrintable(QStringLiteral("star center %1, strip center %2").arg(focusedInk).arg(stripCenter)));
     }
     void engineToolbarAndPlotActionsTrackReloadedMetrics()
     {
@@ -921,6 +1019,63 @@ private slots:
         single->setChecked(true);
         QCOMPARE(alphaOf(shown(single)), offAlpha);
         QCOMPARE(inkOf(shown(single)), activeInk);
+    }
+
+    void resizeGripRoleIsOptInAndDirectionNeutral()
+    {
+        const QString sheet = qApp->styleSheet();
+        QVERIFY(sheet.contains(QStringLiteral("controlRole=\"resizeGrip\"]::handle:vertical")));
+        QVERIFY(sheet.contains(QStringLiteral("controlRole=\"resizeGrip\"]::handle:horizontal")));
+
+        QWidget host;
+        auto* layout = new QVBoxLayout(&host);
+        auto* vertical = new QSplitter(Qt::Vertical, &host);
+        vertical->addWidget(new QWidget(vertical));
+        vertical->addWidget(new QWidget(vertical));
+        layout->addWidget(vertical);
+        host.resize(360, 300);
+        host.show();
+        QApplication::processEvents();
+        QVERIFY(vertical->handle(1));
+        const bool nativeMetrics = QGuiApplication::platformName() != QLatin1String("offscreen");
+        const int nativeHeight = vertical->handle(1)->height();
+        if (nativeMetrics) QVERIFY(nativeHeight != 9);
+        vertical->setProperty("controlRole", QStringLiteral("resizeGrip"));
+        vertical->style()->unpolish(vertical);
+        vertical->style()->polish(vertical);
+        auto* verticalHandle = vertical->handle(1);
+        verticalHandle->style()->unpolish(verticalHandle);
+        verticalHandle->style()->polish(verticalHandle);
+        vertical->update();
+        QApplication::processEvents();
+        if (nativeMetrics) QCOMPARE(verticalHandle->height(), 9);
+
+        auto* horizontal = new QSplitter(Qt::Horizontal, &host);
+        horizontal->setProperty("controlRole", QStringLiteral("resizeGrip"));
+        horizontal->addWidget(new QWidget(horizontal));
+        horizontal->addWidget(new QWidget(horizontal));
+        horizontal->resize(300, 80);
+        layout->addWidget(horizontal);
+        horizontal->show();
+        QApplication::processEvents();
+        QVERIFY(horizontal->handle(1));
+        if (nativeMetrics) QCOMPARE(horizontal->handle(1)->width(), 9);
+
+        auto* window = host.windowHandle();
+        QVERIFY(window);
+        const QPoint away(1, 1);
+        for (auto* splitter : {vertical, horizontal}) {
+            auto* handle = splitter->handle(1);
+            QTest::mouseMove(window, away);
+            QTRY_VERIFY(!handle->underMouse());
+            const auto rest = handle->grab().toImage();
+            const auto hit = handle->mapTo(&host, handle->rect().center());
+            QTest::mouseMove(window, hit);
+            QTRY_VERIFY(handle->underMouse());
+            QTRY_VERIFY(handle->grab().toImage() != rest);
+            QTest::mouseMove(window, away);
+            QTRY_COMPARE(handle->grab().toImage(), rest);
+        }
     }
 };
 

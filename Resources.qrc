@@ -171,6 +171,10 @@
         <file>icon/round-24.png</file>
         <file>icon/round-48.png</file>
         <file>icon/search-clear.svg</file>
+        <file>icon/resize-grip-horizontal.svg</file>
+        <file>icon/resize-grip-horizontal@2x.svg</file>
+        <file>icon/resize-grip-vertical.svg</file>
+        <file>icon/resize-grip-vertical@2x.svg</file>
         <file>icon/text-cursor-24.png</file>
         <file>icon/text-cursor-48.png</file>
         <file>icon/unchecked-radio-button-24.png</file>

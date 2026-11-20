@@ -25,6 +25,8 @@ public:
   /** Metadata roles kept separate from consumer data in Qt::UserRole. */
   enum Role { FavoriteKeyRole = Qt::UserRole + 256, StateKeyRole, SearchTextRole,
               FavoritableRole, FavoriteRole, RegisteredRole };
+  /** Whether the real search surface floats over the tree or docks in a host strip. */
+  using SearchPlacement = SearchableTreeController::SearchPlacement;
   /** Creates a browser; an empty filename keeps favorites in this widget only. */
   explicit SearchableTreeWidget(QWidget* parent = nullptr, const QString& settingsFile = {},
                                const QString& favoritesKey = QStringLiteral("Favorites/Items"));
@@ -39,6 +41,12 @@ public:
   bool isFavorite(const QTreeWidgetItem* item) const;
   /** Reapplies local filters after a full or incremental item update. */
   void refreshFilter();
+  /** Returns this browser's one real search surface. */
+  QWidget* searchSurface() const;
+  /** Docks the real search surface in a host-owned strip instead of overlaying rows. */
+  void setSearchPlacement(SearchPlacement placement);
+  /** Returns the current search surface placement. */
+  SearchPlacement searchPlacement() const;
   /** Returns the theme-controlled overlay inset. */
   int searchInset() const { return controller_->searchInset(); }
   /** Applies the theme-controlled overlay inset. */

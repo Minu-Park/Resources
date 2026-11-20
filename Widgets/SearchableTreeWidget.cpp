@@ -25,6 +25,9 @@ void SearchableTreeWidget::setSearchPlaceholderText(const QString& text) { contr
 void SearchableTreeWidget::toggleFavorite(QTreeWidgetItem* item) { controller_->toggleFavorite(item); }
 bool SearchableTreeWidget::isFavorite(const QTreeWidgetItem* item) const { return controller_->isFavorite(item); }
 void SearchableTreeWidget::refreshFilter() { controller_->refreshFilter(); }
+QWidget* SearchableTreeWidget::searchSurface() const { return controller_->searchSurface(); }
+void SearchableTreeWidget::setSearchPlacement(SearchPlacement placement) { controller_->setSearchPlacement(placement); }
+SearchableTreeWidget::SearchPlacement SearchableTreeWidget::searchPlacement() const { return controller_->searchPlacement(); }
 void SearchableTreeWidget::setSearchInset(int value) { if (controller_) controller_->setSearchInset(value); }
 void SearchableTreeWidget::setSearchMaximumWidth(int value) { if (controller_) controller_->setSearchMaximumWidth(value); }
 void SearchableTreeWidget::setFavoriteColor(const QColor& value) { if (controller_) controller_->setFavoriteColor(value); }

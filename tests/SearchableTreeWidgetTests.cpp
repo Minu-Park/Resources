@@ -1,5 +1,6 @@
 #include "Widgets/SearchableTreeWidget.h"
 #include "Widgets/SearchableTreeController.h"
+#include "Widgets/DeviceScopeCard.h"
 #include <QStyledItemDelegate>
 #include <QSignalSpy>
 
@@ -8,8 +9,10 @@
 #include <QFrame>
 #include <QHeaderView>
 #include <QLineEdit>
+#include <QPointer>
 #include <QScrollBar>
 #include <QSettings>
+#include <QStackedWidget>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QToolButton>
@@ -262,6 +265,334 @@ private slots:
     input->clear();
     QTRY_VERIFY(tree.verticalScrollBar()->isVisible());
     QTRY_COMPARE(bubble->geometry(), stable);
+  }
+
+  void dockedStripUsesOneRealSurfacePerActivePage() {
+    DeviceScopeCard card;
+    auto* first = new SearchableTreeWidget(&card, QString(), QStringLiteral("A/Items"));
+    configure(*first);
+    auto* firstRoot = new QTreeWidgetItem(first);
+    auto* alpha = item(*first, firstRoot, QStringLiteral("Alpha"), QStringLiteral("a"));
+    auto* gain = item(*first, firstRoot, QStringLiteral("Gain"), QStringLiteral("g"));
+    auto* second = new SearchableTreeWidget(&card, QString(), QStringLiteral("B/Items"));
+    configure(*second);
+    item(*second, new QTreeWidgetItem(second), QStringLiteral("Beta"), QStringLiteral("b"));
+    card.addTab(first, QStringLiteral("First"));
+    card.addTab(second, QStringLiteral("Second"));
+    card.setSearchStripShown(true);
+    card.resize(360, 420);
+    card.show();
+    QApplication::processEvents();
+
+    auto* strip = card.searchStrip();
+    QVERIFY(strip);
+    auto* firstController = SearchableTreeController::attached(first);
+    auto* secondController = SearchableTreeController::attached(second);
+    QVERIFY(firstController);
+    QVERIFY(secondController);
+    QCOMPARE(firstController->searchPlacement(), SearchableTreeController::SearchPlacement::Strip);
+    QCOMPARE(firstController->searchSurface()->parentWidget(), strip);
+    QCOMPARE(strip->findChildren<QLineEdit*>(QStringLiteral("DeviceFeatureSearchInput")).size(), 1);
+    QCOMPARE(strip->findChildren<QToolButton*>(QStringLiteral("DeviceFeatureFavoritesOnly")).size(), 1);
+    QVERIFY(!first->findChild<QFrame*>(QStringLiteral("DeviceFeatureSearchBubble")));
+    QCOMPARE(strip->property("objectName").toString(), QStringLiteral("DeviceScopeCardSearchStrip"));
+
+    auto* rule = strip->findChild<QFrame*>(QStringLiteral("DeviceScopeCardSearchSeparator"));
+    QVERIFY(rule);
+    QCOMPARE(rule->height(), 1);
+    QVERIFY(rule->geometry().top() >= 0);
+    QVERIFY(strip->geometry().top() >= card.pages()->geometry().top());
+    QVERIFY(strip->geometry().top() >= card.pages()->geometry().bottom());
+    QCOMPARE(strip->geometry().bottom(), card.contentsRect().bottom());
+
+    firstController->searchInput()->setText(QStringLiteral("Gain"));
+    firstController->refreshFilter();
+    QTRY_VERIFY(alpha->isHidden());
+    QVERIFY(!gain->isHidden());
+    firstController->toggleFavorite(gain);
+    firstController->favoritesOnlyButton()->setChecked(true);
+    firstController->refreshFilter();
+    QVERIFY(firstController->isFavorite(gain));
+    QVERIFY(alpha->isHidden());
+    firstController->searchInput()->clear();
+    firstController->refreshFilter();
+    QTRY_VERIFY(alpha->isHidden());
+    QVERIFY(!gain->isHidden());
+    firstController->searchInput()->setText(QStringLiteral("Gain"));
+
+    card.setCurrentIndex(1);
+    QApplication::processEvents();
+    QCOMPARE(secondController->searchSurface()->parentWidget(), strip);
+    QCOMPARE(firstController->searchSurface()->parentWidget(), static_cast<QWidget*>(first));
+    QVERIFY(firstController->searchSurface()->isHidden());
+    QCOMPARE(secondController->searchInput()->text(), QString());
+
+    card.setCurrentIndex(0);
+    QApplication::processEvents();
+    QCOMPARE(firstController->searchInput()->text(), QStringLiteral("Gain"));
+    QVERIFY(firstController->favoritesOnlyButton()->isChecked());
+    QCOMPARE(strip->findChildren<QLineEdit*>(QStringLiteral("DeviceFeatureSearchInput")).size(), 1);
+  }
+
+  void dockedStripNarrowAndFractionalWidths_data() {
+    QTest::addColumn<int>("width");
+    QTest::newRow("narrow") << 360;
+    QTest::newRow("narrow-fractional") << 361;
+    QTest::newRow("wide") << 728;
+  }
+
+  void dockedStripNarrowAndFractionalWidths() {
+    QFETCH(int, width);
+    DeviceScopeCard card;
+    auto* tree = new SearchableTreeWidget(&card, QString(), QStringLiteral("C/Items"));
+    configure(*tree);
+    auto* root = new QTreeWidgetItem(tree);
+    for (int i = 0; i < 60; ++i)
+      item(*tree, root, QString("Feature %1").arg(i), QString("key/%1").arg(i));
+    root->setExpanded(true);
+    card.addTab(tree, QStringLiteral("Only"));
+    card.setSearchStripShown(true);
+    card.setFixedSize(width, 420);
+    card.show();
+    QApplication::processEvents();
+
+    auto* strip = card.searchStrip();
+    auto* controller = SearchableTreeController::attached(tree);
+    QVERIFY(strip);
+    QVERIFY(controller);
+    QCOMPARE(strip->width(), card.contentsRect().width());
+    QVERIFY(strip->height() >= 24);
+    QVERIFY(strip->geometry().top() >= card.pages()->geometry().bottom());
+    auto* input = controller->searchInput();
+    QVERIFY(input->width() > 0);
+    QVERIFY(strip->rect().contains(input->mapTo(strip, QPoint(0, 0))));
+    QTRY_VERIFY(tree->verticalScrollBar()->maximum() > 0);
+    const int lastRowBottom = tree->visualItemRect(root->child(59)).bottom();
+    QVERIFY(lastRowBottom > 0);
+    QVERIFY(strip->geometry().top() >= card.pages()->geometry().top());
+  }
+
+  void searchShortcutsUseOneScopePerPlacement()
+  {
+    DeviceScopeCard card;
+    auto* tree = new SearchableTreeWidget(&card, QString(), QStringLiteral("S/Items"));
+    configure(*tree);
+    auto* leaf = item(*tree, new QTreeWidgetItem(tree),
+                      QStringLiteral("Leaf"), QStringLiteral("leaf-key"));
+    tree->setCurrentItem(leaf);
+    card.addTab(tree, QStringLiteral("Scope"));
+    card.resize(360, 420);
+    card.show();
+    QApplication::processEvents();
+
+    auto* controller = SearchableTreeController::attached(tree);
+    QVERIFY(controller);
+    QCOMPARE(controller->searchPlacement(), SearchableTreeController::SearchPlacement::Overlay);
+    auto* input = controller->searchInput();
+    auto* star = controller->favoritesOnlyButton();
+
+    // Overlaid surface is already a child of the tree. The tree scope alone owns
+    // both keys; duplicate surface shortcuts make Qt drop the key as ambiguous.
+    input->setFocus();
+    QVERIFY(input->hasFocus());
+    QTest::keyClick(input, Qt::Key_D, Qt::ControlModifier);
+    QVERIFY(controller->isFavorite(leaf));
+    QTest::keyClick(input, Qt::Key_D, Qt::ControlModifier);
+    QVERIFY(!controller->isFavorite(leaf));
+    star->setFocus();
+    QVERIFY(star->hasFocus());
+    QTest::keyClick(star, Qt::Key_D, Qt::ControlModifier);
+    QVERIFY(controller->isFavorite(leaf));
+
+    input->setText(QStringLiteral("leaf"));
+    tree->setFocus();
+    QTest::keyClick(tree, Qt::Key_F, Qt::ControlModifier);
+    QVERIFY(input->hasFocus());
+    QCOMPARE(input->selectedText(), QStringLiteral("leaf"));
+    QTest::keyClick(input, Qt::Key_Escape);
+    QCOMPARE(input->text(), QString());
+
+    // Docked surface leaves the tree: its own scope takes over for input focus
+    // while the tree scope keeps working when the tree itself has focus.
+    card.setSearchStripShown(true);
+    QApplication::processEvents();
+    QCOMPARE(controller->searchPlacement(), SearchableTreeController::SearchPlacement::Strip);
+    QVERIFY(controller->isFavorite(leaf));
+
+    tree->setFocus();
+    QTest::keyClick(tree, Qt::Key_D, Qt::ControlModifier);
+    QVERIFY(!controller->isFavorite(leaf));
+    input->setFocus();
+    QTest::keyClick(input, Qt::Key_D, Qt::ControlModifier);
+    QVERIFY(controller->isFavorite(leaf));
+
+    input->setText(QStringLiteral("leaf"));
+    tree->setFocus();
+    QTest::keyClick(tree, Qt::Key_F, Qt::ControlModifier);
+    QVERIFY(input->hasFocus());
+    QCOMPARE(input->selectedText(), QStringLiteral("leaf"));
+    QTest::keyClick(input, Qt::Key_Escape);
+    QCOMPARE(input->text(), QString());
+  }
+
+  void dockedStripTeardownAndPlaceholderVisibility()
+  {
+    DeviceScopeCard card;
+    auto* first = new SearchableTreeWidget(&card, QString(), QStringLiteral("T/Items"));
+    configure(*first);
+    item(*first, new QTreeWidgetItem(first), QStringLiteral("Alpha"), QStringLiteral("a"));
+    card.addTab(first, QStringLiteral("First"));
+    auto* placeholder = new QWidget(&card);
+    placeholder->setObjectName(QStringLiteral("NoSearchPage"));
+    card.addTab(placeholder, QStringLiteral("No search"));
+    card.setSearchStripShown(true);
+    card.resize(360, 420);
+    card.show();
+    QApplication::processEvents();
+
+    auto* strip = card.searchStrip();
+    auto* controller = SearchableTreeController::attached(first);
+    QVERIFY(strip && controller);
+    auto* surface = controller->searchSurface();
+    QCOMPARE(surface->parentWidget(), strip);
+
+    card.setCurrentIndex(1);
+    QApplication::processEvents();
+    QVERIFY(strip->isVisible());
+    QCOMPARE(strip->findChildren<QLineEdit*>(QStringLiteral("DeviceFeatureSearchInput")).size(), 0);
+    QCOMPARE(surface->parentWidget(), static_cast<QWidget*>(first));
+    QVERIFY(surface->isHidden());
+    QCOMPARE(controller->searchPlacement(), SearchableTreeController::SearchPlacement::Overlay);
+
+    card.setCurrentIndex(0);
+    QApplication::processEvents();
+    QCOMPARE(surface->parentWidget(), strip);
+    QCOMPARE(controller->searchPlacement(), SearchableTreeController::SearchPlacement::Strip);
+
+    QPointer<QWidget> guardedSurface = surface;
+    delete first;
+    QApplication::processEvents();
+    QVERIFY(guardedSurface.isNull());
+    QVERIFY(strip->isVisible());
+    QCOMPARE(strip->findChildren<QLineEdit*>(QStringLiteral("DeviceFeatureSearchInput")).size(), 0);
+
+    auto* replacement = new SearchableTreeWidget(&card, QString(), QStringLiteral("T/Items"));
+    configure(*replacement);
+    item(*replacement, new QTreeWidgetItem(replacement), QStringLiteral("Beta"), QStringLiteral("b"));
+    card.addTab(replacement, QStringLiteral("Replacement"));
+    card.setCurrentIndex(card.count() - 1);
+    QApplication::processEvents();
+    auto* replacementController = SearchableTreeController::attached(replacement);
+    QVERIFY(replacementController);
+    auto* replacementSurface = replacementController->searchSurface();
+    QCOMPARE(replacementSurface->parentWidget(), strip);
+    QCOMPARE(strip->findChildren<QLineEdit*>(QStringLiteral("DeviceFeatureSearchInput")).size(), 1);
+
+    QPointer<QWidget> guardedReplacement = replacementSurface;
+    card.removeTab(card.currentIndex());
+    QApplication::processEvents();
+    QVERIFY(guardedReplacement);
+    QCOMPARE(guardedReplacement->parentWidget(), static_cast<QWidget*>(replacement));
+    QVERIFY(guardedReplacement->isHidden());
+    QVERIFY(strip->isVisible());
+    QCOMPARE(strip->findChildren<QLineEdit*>(QStringLiteral("DeviceFeatureSearchInput")).size(), 0);
+  }
+
+  void removalAndExternalDeletionKeepTabsPagesAndDockAligned()
+  {
+    DeviceScopeCard card;
+    auto* first = new SearchableTreeWidget(&card, QString(), QStringLiteral("A/Items"));
+    configure(*first);
+    item(*first, new QTreeWidgetItem(first), QStringLiteral("Alpha"), QStringLiteral("a"));
+    auto* middle = new SearchableTreeWidget(&card, QString(), QStringLiteral("B/Items"));
+    configure(*middle);
+    item(*middle, new QTreeWidgetItem(middle), QStringLiteral("Beta"), QStringLiteral("b"));
+    auto* last = new SearchableTreeWidget(&card, QString(), QStringLiteral("C/Items"));
+    configure(*last);
+    item(*last, new QTreeWidgetItem(last), QStringLiteral("Gamma"), QStringLiteral("c"));
+    card.addTab(first, QStringLiteral("First"));
+    card.addTab(middle, QStringLiteral("Middle"));
+    card.addTab(last, QStringLiteral("Last"));
+    card.setSearchStripShown(true);
+    card.setCurrentIndex(1);
+    card.resize(360, 420);
+    card.show();
+    QApplication::processEvents();
+
+    auto* strip = card.searchStrip();
+    auto* middleController = SearchableTreeController::attached(middle);
+    auto* lastController = SearchableTreeController::attached(last);
+    QVERIFY(strip && middleController && lastController);
+    QCOMPARE(middleController->searchSurface()->parentWidget(), strip);
+    QCOMPARE(middleController->searchPlacement(), SearchableTreeController::SearchPlacement::Strip);
+
+    QSignalSpy changes(&card, &DeviceScopeCard::currentChanged);
+    card.removeTab(0);
+    QCOMPARE(card.count(), 2);
+    QCOMPARE(card.pages()->count(), 2);
+    QCOMPARE(card.tabBar()->count(), 2);
+    QCOMPARE(card.currentIndex(), 0);
+    QCOMPARE(card.widget(0), middle);
+    QCOMPARE(middleController->searchSurface()->parentWidget(), strip);
+    QCOMPARE(middleController->searchPlacement(), SearchableTreeController::SearchPlacement::Strip);
+    QCOMPARE(changes.count(), 0);
+
+    QPointer<QWidget> guardedMiddle = middle;
+    delete middle;
+    QApplication::processEvents();
+    QVERIFY(guardedMiddle.isNull());
+    QCOMPARE(card.count(), 1);
+    QCOMPARE(card.pages()->count(), 1);
+    QCOMPARE(card.tabBar()->count(), 1);
+    QCOMPARE(card.currentIndex(), 0);
+    QCOMPARE(card.widget(0), last);
+    QCOMPARE(lastController->searchSurface()->parentWidget(), strip);
+    QCOMPARE(lastController->searchPlacement(), SearchableTreeController::SearchPlacement::Strip);
+    QCOMPARE(strip->findChildren<QLineEdit*>(QStringLiteral("DeviceFeatureSearchInput")).size(), 1);
+    QCOMPARE(changes.count(), 1);
+    QCOMPARE(changes.takeFirst().at(0).toInt(), 0);
+  }
+
+  void externalInactivePageDeletionKeepsSelectedPage()
+  {
+    DeviceScopeCard card;
+    auto* first = new SearchableTreeWidget(&card, QString(), QStringLiteral("A/Items"));
+    configure(*first);
+    item(*first, new QTreeWidgetItem(first), QStringLiteral("Alpha"), QStringLiteral("a"));
+    auto* middle = new SearchableTreeWidget(&card, QString(), QStringLiteral("B/Items"));
+    configure(*middle);
+    item(*middle, new QTreeWidgetItem(middle), QStringLiteral("Beta"), QStringLiteral("b"));
+    auto* last = new SearchableTreeWidget(&card, QString(), QStringLiteral("C/Items"));
+    configure(*last);
+    item(*last, new QTreeWidgetItem(last), QStringLiteral("Gamma"), QStringLiteral("c"));
+    card.addTab(first, QStringLiteral("First"));
+    card.addTab(middle, QStringLiteral("Middle"));
+    card.addTab(last, QStringLiteral("Last"));
+    card.setSearchStripShown(true);
+    card.setCurrentIndex(1);
+    card.resize(360, 420);
+    card.show();
+    QApplication::processEvents();
+
+    auto* strip = card.searchStrip();
+    auto* middleController = SearchableTreeController::attached(middle);
+    QVERIFY(strip && middleController);
+    QCOMPARE(middleController->searchSurface()->parentWidget(), strip);
+
+    QSignalSpy changes(&card, &DeviceScopeCard::currentChanged);
+    QPointer<QWidget> guardedFirst = first;
+    delete first;
+    QApplication::processEvents();
+    QVERIFY(guardedFirst.isNull());
+    QCOMPARE(card.count(), 2);
+    QCOMPARE(card.pages()->count(), 2);
+    QCOMPARE(card.tabBar()->count(), 2);
+    QCOMPARE(card.currentIndex(), 0);
+    QCOMPARE(card.widget(card.currentIndex()), middle);
+    QCOMPARE(middleController->searchSurface()->parentWidget(), strip);
+    QCOMPARE(middleController->searchPlacement(), SearchableTreeController::SearchPlacement::Strip);
+    QCOMPARE(strip->findChildren<QLineEdit*>(QStringLiteral("DeviceFeatureSearchInput")).size(), 1);
+    QCOMPARE(changes.count(), 0);
   }
 };
 

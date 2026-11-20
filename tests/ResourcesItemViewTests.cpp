@@ -507,6 +507,39 @@ class ResourcesItemViewTests : public QObject
         QCOMPARE(editor.palette().color(QPalette::Text), Resources::defaultThemePalette().value("text"));
         QVERIFY(!qApp->styleSheet().contains(QRegularExpression("@[A-Z_]+@")));
     }
+    void itemCanSuppressHoverAndSelectionFill()
+    {
+        QTreeWidget tree;
+        tree.setHeaderHidden(true);
+        tree.setRootIsDecorated(false);
+        tree.setSelectionBehavior(QAbstractItemView::SelectRows);
+        Resources::setItemSelectionAppearance(&tree, Resources::ItemSelectionAppearance::JoinedOnly);
+        auto* quiet = new QTreeWidgetItem(&tree, {QStringLiteral("Connected")});
+        auto* normal = new QTreeWidgetItem(&tree, {QStringLiteral("Discovered")});
+        quiet->setData(0, Resources::SuppressItemInteractionFillRole, true);
+        tree.resize(360, 150);
+        tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+
+        const auto sample = [&](QTreeWidgetItem* item) {
+            const auto image = tree.viewport()->grab().toImage();
+            const QPoint point = tree.visualItemRect(item).center();
+            return image.pixelColor(qRound(point.x() * image.devicePixelRatio()),
+                                    qRound(point.y() * image.devicePixelRatio()));
+        };
+        const QColor base = tree.palette().base().color();
+        movePointer(tree.viewport(), tree.visualItemRect(quiet).center());
+        QCOMPARE(sample(quiet), base);
+        tree.setCurrentItem(quiet);
+        QVERIFY(quiet->isSelected());
+        QCOMPARE(sample(quiet), base);
+
+        movePointer(tree.viewport(), tree.visualItemRect(normal).center());
+        QCOMPARE(sample(normal), Resources::themePalette().value(QStringLiteral("itemHover")));
+        tree.setCurrentItem(normal);
+        QCOMPARE(sample(normal), tree.palette().highlight().color());
+    }
+
     void joinedOnlyKeepsAdjacentCellsContinuous()
     {
         QTableWidget table(2, 3);

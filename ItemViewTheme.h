@@ -1,7 +1,12 @@
 #pragma once
+#include <Qt>
+
 class QAbstractItemView;
 namespace Resources
 {
+/** @brief Set on an index to omit shared hover and selection fills while retaining ink and interaction. */
+inline constexpr int SuppressItemInteractionFillRole = Qt::UserRole + 512;
+
 /** @brief Controls emphasis independently of row/cell selection behavior.
  * MenuInk uses no fill: neutral semibold hover and accented semibold selection.
  * Row selection shares emphasis across all cells; cell selection emphasizes only

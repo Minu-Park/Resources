@@ -166,14 +166,16 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
                 source_->paint(painter, contents, index);
             return;
         }
-        if (selected || hovered)
+        const bool showFill = !index.data(Resources::SuppressItemInteractionFillRole).toBool();
+        if (showFill && (selected || hovered))
         {
             const QRect rect = view_->visualRect(index);
             const bool rowHover = hovered && view_->selectionBehavior() == QAbstractItemView::SelectRows;
             const auto adjacent = [&](const QPoint &point, bool horizontal)
             {
                 const QModelIndex next = view_->indexAt(point);
-                if (!next.isValid() || next == index)
+                if (!next.isValid() || next == index
+                    || next.data(Resources::SuppressItemInteractionFillRole).toBool())
                     return false;
                 if (selected ? !view_->selectionModel()->isSelected(next)
                              : !rowHover || next.parent() != index.parent() || next.row() != index.row())
@@ -233,7 +235,7 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
         }
         auto contents = option;
         const bool current = index == view_->currentIndex() && view_->hasFocus();
-        if (selected && current && !view_->property("joinedSelectionOnly").toBool())
+        if (showFill && selected && current && !view_->property("joinedSelectionOnly").toBool())
         {
             const QRectF rect(view_->visualRect(index));
             const qreal radius = qMin(surface_->radius, qMin(rect.width(), rect.height()) / 2.0);

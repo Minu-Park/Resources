@@ -80,10 +80,10 @@ static int presentationMetric(const char* name)
 }
 
 // ---------------------------------------------------------------------------
-class DeviceFeatureTreeDelegate : public QStyledItemDelegate
+class DeviceTreeGeometryDelegate : public QStyledItemDelegate
 {
 public:
-    explicit DeviceFeatureTreeDelegate(QTreeWidget* tree)
+    explicit DeviceTreeGeometryDelegate(QTreeWidget* tree)
         : QStyledItemDelegate(tree),
           _tree(tree)
     {
@@ -1381,7 +1381,7 @@ protected:
             }
             else if (auto* widget = qobject_cast<QWidget*>(obj)) {
                 if (auto* tree = qobject_cast<QTreeWidget*>(widget)) {
-                    applyDeviceFeatureTree(tree);
+                    applyDeviceTree(tree);
                     if (event->type() == QEvent::Show) {
                         applyInitialDeviceFeatureTreeWidth(tree);
                     }
@@ -1909,24 +1909,27 @@ private:
         }
     }
 
-    static void applyDeviceFeatureTree(QTreeWidget* tree)
+    static void applyDeviceTree(QTreeWidget* tree)
     {
-        if (!tree
-            || tree->property("treeRole").toString() != QLatin1String("DeviceFeatureTree")
-            || tree->property("_deviceFeatureTreeConfigured").toBool()) {
+        if (!tree || tree->property("_deviceTreeConfigured").toBool()) return;
+        const QString role = tree->property("treeRole").toString();
+        const bool featureTree = role == QLatin1String("DeviceFeatureTree");
+        if (!featureTree && role != QLatin1String("DeviceTargetTree")) {
             return;
         }
 
-        tree->setProperty("_deviceFeatureTreeConfigured", true);
-        tree->setRootIsDecorated(true);
+        tree->setProperty("_deviceTreeConfigured", true);
         tree->setAnimated(false);
         tree->setAlternatingRowColors(false);
-        tree->setUniformRowHeights(false);
         tree->setIndentation(18);
+        tree->setItemDelegate(new DeviceTreeGeometryDelegate(tree));
+        if (!featureTree) return;
+
+        tree->setRootIsDecorated(true);
+        tree->setUniformRowHeights(false);
         // Feature rows retain row selection while their identity uses fill-free menu ink.
         tree->setSelectionBehavior(QAbstractItemView::SelectRows);
         Resources::setItemSelectionAppearance(tree, Resources::ItemSelectionAppearance::MenuInk);
-        tree->setItemDelegate(new DeviceFeatureTreeDelegate(tree));
 
         QHeaderView* header = tree->header();
         // Initial sizes are seeded below; both columns remain user-resizable.

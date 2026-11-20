@@ -1451,3 +1451,32 @@ QWidget[itemInkState="active"] QLabel[itemRole="title"] {
     color: @SELECTIONACCENT@;
     font-weight: @WEIGHT_EMPHASIS@;
 }
+
+/* Opt-in resize grip. Keep the hover rules for both the splitter subcontrol
+ * and the handle widget so Qt tracks and paints pointer interaction. */
+QSplitter[controlRole="resizeGrip"]::handle:vertical {
+    height: 9px;
+    background: transparent;
+    border: none;
+    margin: 0;
+}
+QSplitter[controlRole="resizeGrip"]::handle:horizontal {
+    width: 9px;
+    background: transparent;
+    border: none;
+    margin: 0;
+}
+QSplitter[controlRole="resizeGrip"][orientation="Vertical"] QSplitterHandle:hover,
+QSplitter[controlRole="resizeGrip"]::handle:vertical:hover,
+QSplitter[controlRole="resizeGrip"]::handle:vertical:pressed {
+    background-image: url(:/Resources/icon/resize-grip-horizontal.svg);
+    background-position: center;
+    background-repeat: no-repeat;
+}
+QSplitter[controlRole="resizeGrip"][orientation="Horizontal"] QSplitterHandle:hover,
+QSplitter[controlRole="resizeGrip"]::handle:horizontal:hover,
+QSplitter[controlRole="resizeGrip"]::handle:horizontal:pressed {
+    background-image: url(:/Resources/icon/resize-grip-vertical.svg);
+    background-position: center;
+    background-repeat: no-repeat;
+}

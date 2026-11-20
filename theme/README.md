@@ -84,6 +84,22 @@ behavior.
 `controlRole="compactAction"` shares the compact-action template and metrics.
 `controlRole="devicePanel"` selects the shared device surface and borderless
 20px tab-scroll slots; the separate `actionDensity` scope selects its action sizes.
+
+`controlRole="resizeGrip"` on a `QSplitter` opts its native `QSplitterHandle`
+into the shared resize-grip template in `00_base.qss`. Meaning: a reusable,
+direction-neutral drag-resize handle; supported kinds are `QSplitter` with a
+vertical (`::handle:vertical`, 9 logical pixels high) or horizontal
+(`::handle:horizontal`, 9 logical pixels wide) orientation. States: at rest the
+handle is transparent with no border or grip; pointer hover or an active drag
+shows a centered, neutral gray rounded dash (18 by 2 logical pixels, rotated
+for a horizontal splitter). Its 2× asset preserves the rounded ends on
+high-DPI displays. Qt supplies the orientation-specific resize cursor.
+The role adds no
+widget, wrapper, event filter or custom painting; QSplitter keeps its native
+dragging and accessible behavior. Unmarked splitters and plain
+handles are untouched, and no existing splitter is converted by this role.
+Device–Scopes in the Host `DevicePanel` is the first consumer; its one-third
+initial ratio and size retention are consumer layout policy, not theme policy.
 `controlRole="statusBubble"` marks every clickable status bubble, and all of them
 share one state rule: pointer hover draws border and label in `hoverBorder`; pressed,
 checked or open draws the border in `focusBorder` and the label in `selectionAccent`;
@@ -117,6 +133,18 @@ a `QTabBar`, a full-width 1px `border` separator and a transparent page stack.
 `DeviceFeatureTree` pages inside the card drop their own frame border and radius
 and keep their header, rows and search surface. The role owns presentation only;
 the composition adds no painting and no tab behavior beyond page switching.
+When a consumer calls `setSearchStripShown(true)`, the card adds a bottom strip
+with a one-DIP `border` hairline and a transparent surface that shows the card's
+rounded bottom; the active tree's real search surface uses
+`searchPlacement="strip"` to drop its own border, radius and shadow and sit in
+the strip with the shared `search` layout inset. Inactive trees keep their
+controller state while their surface stays with its own page.
+
+When the tab strip is hidden, its separator collapses with it and the page stack starts at the top of the same card frame.
+
+Scope tabs use six pixels of vertical padding, and the docked search strip uses a 28-pixel search surface with a 26-pixel field. A four-pixel bottom inset centers the field text, and a docked star glyph is raised by two pixels within its 20-pixel hit target. Item views using the joined fill support `SuppressItemInteractionFillRole` to keep an index's ink and omit its hover and selection fills.
+
+The `DeviceTargetTree` and `DeviceFeatureTree` roles share the same row geometry, 18-pixel branch indentation, and expand/collapse artwork. Their column layouts and selection semantics are defined separately.
 
 `tableRole="diagnostics"` on a read-only `QTableWidget` installs the shared
 diagnostics cell delegate: Qt grid lines are disabled and only internal row/column

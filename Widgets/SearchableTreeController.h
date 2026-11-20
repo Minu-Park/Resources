@@ -12,8 +12,10 @@ class QFrame;
 class QGraphicsDropShadowEffect;
 class QLabel;
 class QLineEdit;
+class QShortcut;
 class QToolButton;
 class QTimer;
+class QWidget;
 
 /** Tree-owned Qt controller for local search, stable-key favorites and editor-preserving filters. */
 class SearchableTreeController : public QObject {
@@ -28,6 +30,8 @@ public:
   /** Metadata roles kept separate from consumer data in Qt::UserRole. */
   enum Role { FavoriteKeyRole = Qt::UserRole + 256, StateKeyRole, SearchTextRole,
               FavoritableRole, FavoriteRole, RegisteredRole };
+  /** Whether the real search surface floats over the tree or docks in a host strip. */
+  enum class SearchPlacement { Overlay, Strip };
   /** Consumer-selected storage and metadata adapters; no device reads are performed. */
   struct Options {
     QString settingsFile;
@@ -45,6 +49,16 @@ public:
   QTreeWidget* tree() const { return tree_; }
   /** Updates frame-anchored placement and scroll clearance after native tree layout. */
   void updateGeometry();
+  /** Returns the real search surface, whether it floats or is hosted by a strip. */
+  QWidget* searchSurface() const { return search_bubble_; }
+  /** Returns this controller's one real search input. */
+  QLineEdit* searchInput() const { return search_; }
+  /** Returns this controller's one favorites-only star. */
+  QToolButton* favoritesOnlyButton() const { return favorites_only_; }
+  /** Docks the real search surface in a host-owned strip instead of overlaying rows. */
+  void setSearchPlacement(SearchPlacement placement);
+  /** Returns the current search surface placement. */
+  SearchPlacement searchPlacement() const { return placement_; }
   /** Supplies the default opaque-key/path identity for subclass adapters. */
   QString defaultItemStateKey(const QTreeWidgetItem* item) const;
 
@@ -102,6 +116,8 @@ private:
   bool filterBranch(QTreeWidgetItem* item, const QString& ancestors);
   void positionSearch();
   void updateSearchShadow();
+  void updateFavoriteIcon();
+  void setDockedShortcutsEnabled(bool enabled);
 
   QPointer<QTreeWidget> tree_;
   Options options_;
@@ -115,6 +131,10 @@ private:
   QLineEdit* search_ = nullptr;
   QToolButton* favorites_only_ = nullptr;
   QLabel* result_count_ = nullptr;
+  QShortcut* find_shortcut_ = nullptr;
+  QShortcut* favorite_shortcut_ = nullptr;
+  QShortcut* docked_find_shortcut_ = nullptr;
+  QShortcut* docked_favorite_shortcut_ = nullptr;
   QTimer* filter_timer_ = nullptr;
   QString settings_file_;
   QString favorites_key_;
@@ -132,6 +152,7 @@ private:
   qreal search_shadow_blur_ = 0;
   int search_shadow_offset_ = 0;
   QColor search_shadow_color_ = Qt::transparent;
+  SearchPlacement placement_ = SearchPlacement::Overlay;
   bool filtering_ = false;
   bool refreshing_filter_ = false;
   bool updating_geometry_ = false;

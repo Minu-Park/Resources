@@ -122,7 +122,14 @@ only standard Qt widgets: `tabBar()` returns the `QTabBar`, `pages()` the
 operations without extra tab behavior. The theme owns the
 `tabRole="DeviceScopeCard"` presentation. Device feature pages inside the card
 keep their header, rows and floating search surface; the card owns the frame
-border and the separator.
+border and the separator. A host that wants an inline search strip calls
+`setSearchStripShown(true)`: the card then hosts the active page's real
+`SearchableTreeController` surface in a bottom strip under a one-DIP `border`
+hairline, returning it to its own tree when the page is switched away. There is
+one input and one favorites star per page, no second forwarding input, and the
+strip uses the card's rounded bottom. Standalone trees keep the floating overlay.
+
+A consumer can call `setTabStripVisible(false)` to collapse both the tab bar and its separator while keeping the current page and search strip in the card layout.
 
 ## Theme Contract
 

@@ -8,6 +8,20 @@
 
 - Use a muted ochre for shared error text in the default theme.
 
+- Add the opt-in `controlRole="resizeGrip"` splitter handle theme in `00_base.qss`. A nine-logical-pixel transparent handle shows a centered, neutral gray rounded dash on hover or drag. Both orientations keep Qt's resize cursor, and unmarked splitters keep their existing style.
+
+- Share device tree row spacing, indentation and branch artwork between device targets and features.
+
+- Align placeholder and input text vertically in the docked device search field while retaining its outer height. Center the favorites star while preserving its button size.
+
+- Allow individual item indexes to omit hover and selection fills. Reduce the device scope tab height by four pixels and increase the docked search strip height by four pixels.
+
+- Allow consumers to collapse the `DeviceScopeCard` tab strip and separator together while keeping the page stack and search strip in the card.
+
+- Add a card-owned bottom search strip to `DeviceScopeCard`. A host can dock the active page's real search input and favorites star under a one-DIP border hairline with the card's rounded bottom; standalone trees keep the floating search overlay. Search text, favorites, per-page state and keyboard shortcuts are unchanged. The strip keeps its placeholder when the active page has no search surface, tears down an orphaned surface safely if a docked page is destroyed externally, and enables the surface shortcut copies only while docked so Ctrl+F and Ctrl+D stay unambiguous in both placements.
+
+- Keep `DeviceScopeCard` tab and page stacks aligned through one Resources-owned removal path. `QStackedWidget::widgetRemoved` now drops the matching tab for explicit `removeTab` and for external deletion of active or inactive pages, realigns the stack and search dock before emitting `currentChanged`, and the destroyed watcher only releases an orphaned surface instead of removing a tab from a cached index.
+
 - Keep macOS button tooltips beside the cursor, with screen-edge placement and Qt's native tooltip lifecycle.
 
 - Keep themed menus anchored after moving their owner between monitors. The menu direction and shadow gutter use the screen containing Qt's global popup position.
