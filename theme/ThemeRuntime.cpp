@@ -1046,11 +1046,6 @@ class ResourceStyleFilter : public QObject
 public:
     explicit ResourceStyleFilter(QObject* parent = nullptr) : QObject(parent)
     {
-#ifdef Q_OS_MACOS
-        tooltipCorrectionTimer_.setSingleShot(true);
-        connect(&tooltipCorrectionTimer_, &QTimer::timeout, this,
-                [this] { correctTooltipPlacement(); });
-#endif
         connect(qApp, &QApplication::focusChanged, this, [](QWidget* before, QWidget* after) {
             syncButtonKeyboardFocus(qobject_cast<QAbstractButton*>(before));
             syncButtonKeyboardFocus(qobject_cast<QAbstractButton*>(after));
@@ -1072,25 +1067,37 @@ protected:
     {
 #ifdef Q_OS_MACOS
         // Observe the real tooltip request but never consume it: Qt still creates, shows,
-        // times and hides its own QTipLabel. Only the final placement is corrected below.
+        // times and hides its own QTipLabel. Placement is corrected synchronously on the
+        // label's Show or Move event, before the native window can display Qt's position.
         if (event->type() == QEvent::ToolTip) {
-            tooltipLabel_.clear();
+            const auto previousButton = tooltipButton_;
             tooltipButton_ = qobject_cast<QAbstractButton*>(obj);
+            tooltipRequestActive_ = false;
             if (tooltipButton_ && !tooltipButton_->toolTip().isEmpty()) {
                 const auto* help = static_cast<const QHelpEvent*>(event);
                 tooltipAnchor_ = help->globalPos();
-                tooltipCorrectionTimer_.start(0);
+                // Qt does not move a visible tip when the same button requests the same text.
+                // Leave that request inactive so a later direct showText keeps Qt's placement.
+                const bool unchanged = tooltipLabel_ && tooltipLabel_->isVisible()
+                    && previousButton == tooltipButton_
+                    && tooltipLabel_->text() == tooltipButton_->toolTip();
+                tooltipRequestActive_ = !unchanged;
             } else {
-                tooltipCorrectionTimer_.stop();
+                tooltipButton_.clear();
             }
-        } else if (tooltipCorrectionTimer_.isActive() && tooltipButton_
-                   && (event->type() == QEvent::Move || event->type() == QEvent::Resize
-                       || event->type() == QEvent::Show)
-                   && obj->inherits("QTipLabel")) {
+        } else if (tooltipRequestActive_ && !placingTooltip_
+                   && (event->type() == QEvent::Move || event->type() == QEvent::Show)
+                   && obj->inherits("QTipLabel")
+                   && qobject_cast<QWidget*>(obj)->isVisible()) {
             // Qt reuses one QTipLabel across requests and leaves its old parent in place, so
             // match its current text during this event-loop turn instead of its parent.
+            // Qt's pending Move before QShowEvent has no visible window yet; it must not
+            // consume the request, or the later Show event would be left uncorrected.
             auto* tip = qobject_cast<QLabel*>(obj);
-            tooltipLabel_ = tip && tip->text() == tooltipButton_->toolTip() ? tip : nullptr;
+            if (tip && tip->text() == tooltipButton_->toolTip()) {
+                tooltipLabel_ = tip;
+                placeTooltip();
+            }
         } else if (event->type() == QEvent::Hide && obj == tooltipLabel_.data()) {
             tooltipLabel_.clear();
         }
@@ -1453,11 +1460,11 @@ private:
     QPointer<QWidget> pressedInput_;
     QPointer<QWidget> hoveredBubble_;
 #ifdef Q_OS_MACOS
-    // The one-shot timer bounds the request even when Qt keeps an already-visible label in place.
     QPointer<QAbstractButton> tooltipButton_;
     QPointer<QLabel> tooltipLabel_;
     QPoint tooltipAnchor_;
-    QTimer tooltipCorrectionTimer_;
+    bool tooltipRequestActive_ = false;
+    bool placingTooltip_ = false;
 #endif
 
     /** @brief A plain QWidget status bubble whose child buttons share one interaction state.
@@ -1504,14 +1511,13 @@ private:
     }
 
 #ifdef Q_OS_MACOS
-    /** @brief Corrects the native tooltip's placement after Qt has positioned it. */
-    void correctTooltipPlacement()
+    /** @brief Moves the native tooltip beside the cursor before Qt shows or reuses it on screen. */
+    void placeTooltip()
     {
         QLabel* label = tooltipLabel_.data();
         const auto button = tooltipButton_;
         const QPoint anchor = tooltipAnchor_;
-        tooltipLabel_.clear();
-        tooltipButton_.clear();
+        tooltipRequestActive_ = false;
         if (!button || !button->isVisible() || !label || !label->isVisible()
             || label->text() != button->toolTip()) return;
         const QScreen* screen = QGuiApplication::screenAt(anchor);
@@ -1527,7 +1533,12 @@ private:
             if (x < bounds.left()) return; // Neither side fits: keep Qt's bounded result.
         }
         const int y = qBound(bounds.top(), anchor.y(), bounds.bottom() - size.height() + 1);
-        label->move(qBound(bounds.left(), x, bounds.right() - size.width() + 1), y);
+        const QPoint target(qBound(bounds.left(), x, bounds.right() - size.width() + 1), y);
+        if (label->pos() == target) return;
+        // QWidget::move() sends a synchronous QMoveEvent to this filter; ignore our own move.
+        placingTooltip_ = true;
+        label->move(target);
+        placingTooltip_ = false;
     }
 #endif
 
