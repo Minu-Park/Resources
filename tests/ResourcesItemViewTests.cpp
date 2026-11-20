@@ -283,6 +283,87 @@ class ResourcesItemViewTests : public QObject
         QCOMPARE(title->font().weight(), QFont::Normal);
         QCOMPARE(icon->pixmap().toImage(), originalIcon);
     }
+    // A busy device panel disables its tree while a request runs. The selected target is still
+    // the selected target, so it must keep accented bold ink instead of falling back to neutral.
+    void menuInkSelectedIdentitySurvivesDisabledView()
+    {
+        ThemedTreeWidget tree;
+        tree.setInteractionMode(ThemedTreeWidget::InteractionMode::Row);
+        Resources::setItemSelectionAppearance(&tree, Resources::ItemSelectionAppearance::MenuInk);
+        tree.setHeaderHidden(true);
+        tree.setRootIsDecorated(false);
+        auto* selected = new QTreeWidgetItem(&tree, {"Basler acA1300-60gm"});
+        auto* other = new QTreeWidgetItem(&tree, {"Euresys Playlink"});
+        auto* cardRow = new QTreeWidgetItem(&tree);
+        cardRow->setSizeHint(0, QSize(240, 30));
+        auto* card = new QWidget;
+        auto* layout = new QHBoxLayout(card);
+        auto* title = new QLabel("Card identity", card);
+        title->setProperty("itemRole", "title");
+        layout->addWidget(title);
+        tree.setItemWidget(cardRow, 0, card);
+        tree.resize(360, 170);
+        tree.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+
+        const auto colors = Resources::themePalette();
+        const auto accentPixels = [&](QTreeWidgetItem* item) -> int {
+            const QImage image = tree.viewport()->grab().toImage();
+            const qreal dpr = image.devicePixelRatio();
+            const QRect row = tree.visualItemRect(item);
+            int blue = 0;
+            for (int y = qRound(row.top() * dpr); y < qRound(row.bottom() * dpr); ++y)
+                for (int x = qRound(row.left() * dpr) + qRound(40 * dpr); x < qRound(row.right() * dpr); ++x)
+                    if (image.pixelColor(x, y) == colors.value("selectionAccent")) ++blue;
+            return blue;
+        };
+        const auto identityWeight = [&] {
+            return title->font().weight();
+        };
+
+        // Enabled + selected: the selected row paints accented ink.
+        tree.setCurrentItem(selected);
+        tree.viewport()->repaint();
+        const int enabledAccent = accentPixels(selected);
+        QVERIFY2(enabledAccent > 10, "enabled selected row must paint accent ink");
+
+        // Disabled while selected: identical accent ink, and selection cannot move.
+        tree.setEnabled(false);
+        tree.viewport()->repaint();
+        QCOMPARE(accentPixels(selected), enabledAccent);
+        QCOMPARE(tree.currentItem(), selected);
+        const QModelIndex otherIndex = tree.indexFromItem(other, 0);
+        QTest::mouseClick(tree.viewport(), Qt::LeftButton, {}, tree.visualRect(otherIndex).center());
+        QCOMPARE(tree.currentItem(), selected);
+
+        // Re-enabled: identity is unchanged across the busy round trip.
+        tree.setEnabled(true);
+        tree.viewport()->repaint();
+        QCOMPARE(accentPixels(selected), enabledAccent);
+        QCOMPARE(tree.currentItem(), selected);
+
+        // The index-widget identity keeps accented bold ink while the view is disabled.
+        tree.setCurrentItem(cardRow);
+        tree.viewport()->repaint();
+        QTRY_COMPARE(card->property("itemInkState").toString(), QString("active"));
+        QCOMPARE(title->palette().color(QPalette::WindowText), colors.value("selectionAccent"));
+        QVERIFY2(identityWeight() >= QFont::DemiBold, "active identity must stay emphasized");
+        const int enabledWeight = identityWeight();
+        tree.setEnabled(false);
+        tree.viewport()->repaint();
+        QCOMPARE(card->property("itemInkState").toString(), QString("active"));
+        QCOMPARE(title->palette().color(QPalette::WindowText), colors.value("selectionAccent"));
+        QCOMPARE(identityWeight(), enabledWeight);
+        // Hover stays enabled-only: a disabled view cannot turn the active identity into hover.
+        movePointer(tree.viewport(), tree.visualRect(otherIndex).center());
+        tree.viewport()->repaint();
+        QCOMPARE(card->property("itemInkState").toString(), QString("active"));
+        QCOMPARE(title->palette().color(QPalette::WindowText), colors.value("selectionAccent"));
+        tree.setEnabled(true);
+        tree.viewport()->repaint();
+        QCOMPARE(card->property("itemInkState").toString(), QString("active"));
+        QCOMPARE(identityWeight(), enabledWeight);
+    }
     void menuInkPlainDelegateEmphasizesNeutralHover()
     {
         // App QSS owns CE_ItemViewItem; clear it so MenuInk's drawControl reaches this style.

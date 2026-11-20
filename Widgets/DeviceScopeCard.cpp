@@ -180,6 +180,7 @@ void DeviceScopeCard::dockActiveSearch()
     QWidget* surface = searchSurfaceFor(currentIndex());
     if (owner && surface && owner == _dockedOwner && surface == _dockedSurface) return;
     undockActiveSearch();
+    _stripSeparator->setVisible(owner && surface);
     if (!owner || !surface) return;
     if (auto* tree = qobject_cast<QTreeWidget*>(owner)) {
         if (auto* controller = SearchableTreeController::attached(tree))
@@ -216,11 +217,14 @@ void DeviceScopeCard::setSearchStripShown(bool shown)
         auto* outer = new QVBoxLayout(_strip);
         outer->setContentsMargins(0, 0, 0, 0);
         outer->setSpacing(0);
-        auto* rule = new QFrame(_strip);
-        rule->setObjectName(QString::fromLatin1(stripRuleName));
-        rule->setFrameShape(QFrame::HLine);
-        rule->setFixedHeight(1);
-        outer->addWidget(rule);
+        _stripSeparator = new QFrame(_strip);
+        _stripSeparator->setObjectName(QString::fromLatin1(stripRuleName));
+        _stripSeparator->setFrameShape(QFrame::HLine);
+        _stripSeparator->setFixedHeight(1);
+        auto policy = _stripSeparator->sizePolicy();
+        policy.setRetainSizeWhenHidden(true);
+        _stripSeparator->setSizePolicy(policy);
+        outer->addWidget(_stripSeparator);
         _stripRow = new QHBoxLayout;
         _stripRow->setObjectName(QString::fromLatin1(stripLayoutName));
         _stripRow->setProperty("layoutRole", QStringLiteral("search"));

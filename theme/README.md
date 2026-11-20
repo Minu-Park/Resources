@@ -141,6 +141,7 @@ the strip with the shared `search` layout inset. Inactive trees keep their
 controller state while their surface stays with its own page.
 
 When the tab strip is hidden, its separator collapses with it and the page stack starts at the top of the same card frame.
+The bottom search strip draws its separator only while it contains the active page's search controls. The placeholder keeps its layout space when the active page has no search surface.
 
 Scope tabs use six pixels of vertical padding, and the docked search strip uses a 28-pixel search surface with a 26-pixel field. A four-pixel bottom inset centers the field text, and a docked star glyph is raised by two pixels within its 20-pixel hit target. Item views using the joined fill support `SuppressItemInteractionFillRole` to keep an index's ink and omit its hover and selection fills.
 

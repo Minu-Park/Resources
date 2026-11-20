@@ -62,6 +62,7 @@ private:
     QFrame* _tabSeparator = nullptr;
     QStackedWidget* _pages = nullptr;
     QFrame* _strip = nullptr;
+    QFrame* _stripSeparator = nullptr;
     QHBoxLayout* _stripRow = nullptr;
     QPointer<QWidget> _dockedSurface;
     QPointer<QWidget> _dockedOwner;

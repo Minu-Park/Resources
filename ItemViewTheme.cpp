@@ -135,8 +135,9 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
             initStyleOption(&contents, index);
             const bool enabled = option.state & QStyle::State_Enabled;
             // Selection keeps accented ink; hover is neutral semibold. QMenu stays accented on hover.
-            const MenuInkState ink = !enabled ? MenuInkState::Normal
-                                   : selected ? MenuInkState::Active
+            // Preserve selected ink while the view is disabled during a pending request.
+            const MenuInkState ink = selected ? MenuInkState::Active
+                                   : !enabled ? MenuInkState::Normal
                                    : hovered ? MenuInkState::Hover
                                              : MenuInkState::Normal;
             contents.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver | QStyle::State_HasFocus);

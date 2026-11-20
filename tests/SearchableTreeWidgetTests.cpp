@@ -453,12 +453,15 @@ private slots:
     auto* strip = card.searchStrip();
     auto* controller = SearchableTreeController::attached(first);
     QVERIFY(strip && controller);
+    auto* rule = strip->findChild<QFrame*>(QStringLiteral("DeviceScopeCardSearchSeparator"));
+    QVERIFY(rule && rule->isVisible());
     auto* surface = controller->searchSurface();
     QCOMPARE(surface->parentWidget(), strip);
 
     card.setCurrentIndex(1);
     QApplication::processEvents();
     QVERIFY(strip->isVisible());
+    QVERIFY(rule->isHidden());
     QCOMPARE(strip->findChildren<QLineEdit*>(QStringLiteral("DeviceFeatureSearchInput")).size(), 0);
     QCOMPARE(surface->parentWidget(), static_cast<QWidget*>(first));
     QVERIFY(surface->isHidden());
@@ -466,6 +469,7 @@ private slots:
 
     card.setCurrentIndex(0);
     QApplication::processEvents();
+    QVERIFY(rule->isVisible());
     QCOMPARE(surface->parentWidget(), strip);
     QCOMPARE(controller->searchPlacement(), SearchableTreeController::SearchPlacement::Strip);
 
@@ -474,6 +478,7 @@ private slots:
     QApplication::processEvents();
     QVERIFY(guardedSurface.isNull());
     QVERIFY(strip->isVisible());
+    QVERIFY(rule->isHidden());
     QCOMPARE(strip->findChildren<QLineEdit*>(QStringLiteral("DeviceFeatureSearchInput")).size(), 0);
 
     auto* replacement = new SearchableTreeWidget(&card, QString(), QStringLiteral("T/Items"));

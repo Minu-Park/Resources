@@ -137,6 +137,7 @@ MenuInk follows native selection scope: SelectRows emphasizes every cell in the
 selected/hovered row with blue semibold selection or neutral semibold hover.
 SelectItems retains first-column identity emphasis. Value delegates and editors
 remain consumer-owned, including explicit diagnostic content colors.
+Disabled views retain the selected row's blue semibold ink while a request is busy. Hover emphasis requires an enabled view.
 
 With Resources installed, every `QTreeView`/`QTreeWidget` header uses native
 Interactive resizing for all columns, including the last. The theme applies this

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Keep the `DeviceScopeCard` lower border clear when its search strip has no active search surface by suppressing the redundant separator.
+
+- Keep MenuInk selection ink on a disabled item view: a selected row keeps its accent semibold identity while hover emphasis stays limited to enabled views.
+
 - Add the `compact-form` and `console-header` layout roles. `compact-form` uses `SPACE_ROW` for `QFormLayout` horizontal spacing and `LAYOUT_COMPACT_SPACING` for vertical spacing and other layouts, with zero inset and no `label-form` label side effects. `console-header` insets `SPACE_ROW` left/right with zero top/bottom and spaces by `SPACE_TIGHT`.
 
 - Correct the layout-role metric documentation: `compact-panel` insets by `SPACE_ROW`, `header` insets vertically by `SPACE_TIGHT`, `tab-strip` insets vertically by `LAYOUT_CARD_INSET_Y`, and `card` insets horizontally by `LAYOUT_COMPACT_INSET`.
