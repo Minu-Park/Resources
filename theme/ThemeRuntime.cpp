@@ -619,6 +619,27 @@ static void paintGraphicsSettingsTabScrollerButton(QToolButton* button)
     }
 }
 
+#ifdef Q_OS_MACOS
+namespace {
+/** @brief Ends a tooltip request that Qt handled without a label Show or Move event. */
+class TooltipRequestExpiryEvent final : public QEvent
+{
+public:
+    explicit TooltipRequestExpiryEvent(quint64 generation)
+        : QEvent(eventType()), generation_(generation) {}
+    static QEvent::Type eventType()
+    {
+        static const int type = QEvent::registerEventType();
+        return static_cast<QEvent::Type>(type);
+    }
+    quint64 generation() const { return generation_; }
+
+private:
+    quint64 generation_;
+};
+}
+#endif
+
 // ---------------------------------------------------------------------------
 // ResourceStyleFilter: handles runtime style geometry that QSS cannot express
 // reliably. Installed once via installResources().
@@ -1063,6 +1084,19 @@ public:
     }
 
 protected:
+    bool event(QEvent* event) override
+    {
+#ifdef Q_OS_MACOS
+        if (event->type() == TooltipRequestExpiryEvent::eventType()) {
+            if (static_cast<const TooltipRequestExpiryEvent*>(event)->generation()
+                == tooltipGeneration_)
+                tooltipRequestActive_ = false;
+            return true;
+        }
+#endif
+        return QObject::event(event);
+    }
+
     bool eventFilter(QObject* obj, QEvent* event) override
     {
 #ifdef Q_OS_MACOS
@@ -1082,6 +1116,11 @@ protected:
                     && previousButton == tooltipButton_
                     && tooltipLabel_->text() == tooltipButton_->toolTip();
                 tooltipRequestActive_ = !unchanged;
+                if (tooltipRequestActive_) {
+                    ++tooltipGeneration_;
+                    QCoreApplication::postEvent(
+                        this, new TooltipRequestExpiryEvent(tooltipGeneration_));
+                }
             } else {
                 tooltipButton_.clear();
             }
@@ -1464,6 +1503,7 @@ private:
     QPointer<QLabel> tooltipLabel_;
     QPoint tooltipAnchor_;
     bool tooltipRequestActive_ = false;
+    quint64 tooltipGeneration_ = 0;
     bool placingTooltip_ = false;
 #endif
 
