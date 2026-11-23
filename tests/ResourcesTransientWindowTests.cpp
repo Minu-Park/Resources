@@ -656,38 +656,12 @@ private slots:
             QTest::qWait(20);
             expect(current() == secondPath, QStringLiteral("absolute path opened %1").arg(current()));
 
-            // Typing a folder prefix offers matching folders; choosing one opens it.
-            typeText(edit, QDir::toNativeSeparators(root.path() + QStringLiteral("/fi")));
-            QCompleter* completer = edit->completer();
-            if (!completer) {
-                failures << QStringLiteral("path field has no completer");
-                return;
-            }
-            QAbstractItemView* suggestions = completer->popup();
-            expect(suggestions->objectName() == QStringLiteral("AutoCompletePopup"), QStringLiteral("suggestion popup is not themed"));
-            // QFileSystemModel loads folders asynchronously; completion restarts when it has them.
-            const bool offered = QTest::qWaitFor([&] {
-                if (!suggestions->isVisible()) completer->complete();
-                return suggestions->isVisible() && completer->completionCount() > 0;
-            }, 5000);
-            expect(offered, QStringLiteral("no folder suggestion for %1").arg(edit->text()));
-            if (offered) {
-                expect(QFileInfo(completer->currentCompletion()).fileName() == QStringLiteral("first"),
-                    QStringLiteral("first suggestion is %1").arg(completer->currentCompletion()));
-                capture(picker->window(), QStringLiteral("4-suggestions"));
-                suggestions->setCurrentIndex(completer->completionModel()->index(0, 0));
-                QTest::keyClick(suggestions, Qt::Key_Return);
-                QTest::qWait(50);
-                expect(current() == firstPath, QStringLiteral("suggestion opened %1").arg(current()));
-                expect(!suggestions->isVisible(), QStringLiteral("suggestion popup stayed open"));
-            }
-
             // A missing folder is refused in a themed box; the folder and the typed text stay.
             const QString before = current();
             QTimer::singleShot(100, picker, [&] {
                 if (auto* box = qobject_cast<QDialog*>(QApplication::activeModalWidget()); box && !box->findChild<QFileDialog*>()) {
                     refusalShown = true;
-                    capture(box, QStringLiteral("5-refused"));
+                    capture(box, QStringLiteral("4-refused"));
                     box->reject();
                 }
             });
@@ -700,13 +674,38 @@ private slots:
             // The first Escape restores the current folder's path.
             QTest::keyClick(edit, Qt::Key_Escape);
             expect(shown() == before, QStringLiteral("Escape left %1").arg(edit->text()));
+
+            // Typing a folder prefix offers matching folders; choosing one opens it.
+            typeText(edit, QDir::toNativeSeparators(root.path() + QStringLiteral("/fi")));
+            QCompleter* completer = edit->completer();
+            QAbstractItemView* suggestions = completer ? completer->popup() : nullptr;
+            expect(suggestions != nullptr, QStringLiteral("path field has no completer"));
+            if (!suggestions) return;
+            expect(suggestions->objectName() == QStringLiteral("AutoCompletePopup"), QStringLiteral("suggestion popup is not themed"));
+            // QFileSystemModel loads folders asynchronously; completion restarts when it has them.
+            const bool offered = QTest::qWaitFor([&] {
+                if (!suggestions->isVisible()) completer->complete();
+                return suggestions->isVisible() && completer->completionCount() > 0;
+            }, 5000);
+            expect(offered, QStringLiteral("no folder suggestion for %1").arg(edit->text()));
+            if (offered) {
+                expect(QFileInfo(completer->currentCompletion()).fileName() == QStringLiteral("first"),
+                    QStringLiteral("first suggestion is %1").arg(completer->currentCompletion()));
+                capture(picker->window(), QStringLiteral("5-suggesting"));
+                capture(suggestions, QStringLiteral("6-suggestions-popup"));
+                suggestions->setCurrentIndex(completer->completionModel()->index(0, 0));
+                QTest::keyClick(suggestions, Qt::Key_Return);
+                QTest::qWait(50);
+                expect(current() == firstPath, QStringLiteral("suggestion opened %1").arg(current()));
+                expect(!suggestions->isVisible(), QStringLiteral("suggestion popup stayed open"));
+            }
         }, [&] {
             if (mode == 0) ThemedFileDialog::getOpenFileNames(&host, QStringLiteral("Open"), root.path());
             else if (mode == 1) ThemedFileDialog::getSaveFileName(&host, QStringLiteral("Save"), root.filePath(QStringLiteral("out.dat")));
             else ThemedFileDialog::getExistingDirectories(&host, QStringLiteral("Folders"), root.path());
         });
         QVERIFY(inspected);
-        QVERIFY(refusalShown);
+        if (!refusalShown) failures << QStringLiteral("missing folder was not refused");
         QVERIFY2(failures.isEmpty(), qPrintable(failures.join(QLatin1Char('\n'))));
     }
 

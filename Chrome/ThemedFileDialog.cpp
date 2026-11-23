@@ -139,9 +139,11 @@ ThemedFileDialog::ThemedFileDialog(
         _lookInComboBox->setCompleter(nullptr);
         if (QLineEdit* pathEdit = _lookInComboBox->lineEdit()) {
             pathEdit->installEventFilter(this);
-            // QComboBox would match the typed text against its rows on Return and
-            // navigate before the typed path is read; this dialog opens the path itself.
+            // On Return and when editing finishes, QComboBox selects a row whose name matches
+            // the typed text, and QFileDialog then opens that row. A typed "first" would open
+            // an ancestor named "first" instead of the child folder; this dialog opens paths itself.
             disconnect(pathEdit, &QLineEdit::returnPressed, _lookInComboBox, nullptr);
+            disconnect(pathEdit, &QLineEdit::editingFinished, _lookInComboBox, nullptr);
             connect(pathEdit, &QLineEdit::returnPressed, this, &ThemedFileDialog::openTypedLookInPath);
             connect(pathEdit, &QLineEdit::textEdited, this, [this](const QString& text) {
                 _typedLookInPath = text;
