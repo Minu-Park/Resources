@@ -348,9 +348,13 @@ bool ThemedFileDialog::eventFilter(QObject* watched, QEvent* event)
                 return true;
             }
         } else if (event->type() == QEvent::FocusOut) {
-            // Leaving the field abandons an unopened path. The refusal box and popups
-            // only take focus for a moment, so the typed text stays for correction.
-            if (!_refusingLookInPath && static_cast<QFocusEvent*>(event)->reason() != Qt::PopupFocusReason) {
+            // Moving to another control abandons an unopened path. Window activation changes,
+            // including the refusal box and popups, can arrive after the box closes; they keep
+            // the typed text for correction.
+            const Qt::FocusReason reason = static_cast<QFocusEvent*>(event)->reason();
+            const bool userLeft = reason == Qt::TabFocusReason || reason == Qt::BacktabFocusReason
+                || reason == Qt::MouseFocusReason || reason == Qt::ShortcutFocusReason;
+            if (userLeft && !_refusingLookInPath) {
                 syncLookInPath();
             }
         }
