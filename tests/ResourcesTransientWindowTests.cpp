@@ -586,6 +586,92 @@ private slots:
         QCOMPARE(QFileInfo(explicitDirectory).canonicalFilePath(), QFileInfo(root.path()).canonicalFilePath());
     }
 
+    void filePickerLookInOpensTypedFolder_data()
+    {
+        QTest::addColumn<int>("mode");
+        QTest::newRow("open") << 0;
+        QTest::newRow("save") << 1;
+        QTest::newRow("directories") << 2;
+    }
+
+    void filePickerLookInOpensTypedFolder()
+    {
+        QFETCH(int, mode);
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("first/second"))));
+        const QString rootPath = QFileInfo(root.path()).canonicalFilePath();
+        const auto canonical = [](const QDir& directory) { return QFileInfo(directory.absolutePath()).canonicalFilePath(); };
+        QWidget host;
+        host.show();
+        bool editable = false;
+        QString shownAtStart;
+        QString relativeResult;
+        QString shownAfterRelative;
+        QString absoluteResult;
+        QString refusedResult;
+        QString refusedText;
+        bool refusalShown = false;
+        // Review captures for design approval: PLAYGROUND_FILE_DIALOG_SCREENSHOTS=<folder>.
+        const QString captures = qEnvironmentVariable("PLAYGROUND_FILE_DIALOG_SCREENSHOTS");
+        const auto capture = [&](QWidget* widget, const QString& state) {
+            if (captures.isEmpty()) return;
+            QDir().mkpath(captures);
+            QTest::qWait(50);
+            widget->grab().save(QDir(captures).filePath(QStringLiteral("look-in-%1-%2.png")
+                .arg(QString::fromLatin1(QTest::currentDataTag()), state)));
+        };
+        const auto type = [&](QLineEdit* edit, const QString& text, const QString& state = {}) {
+            edit->setFocus();
+            edit->selectAll();
+            QTest::keyClicks(edit, text);
+            if (!state.isEmpty()) capture(edit->window(), state);
+            QTest::keyClick(edit, Qt::Key_Return);
+        };
+        const bool inspected = inspectFilePicker(&host, [&](QFileDialog* picker) {
+            auto* combo = picker->findChild<QComboBox*>(QStringLiteral("lookInCombo"));
+            if (!combo || !combo->lineEdit()) return;
+            editable = combo->isEditable();
+            QLineEdit* edit = combo->lineEdit();
+            shownAtStart = QDir::fromNativeSeparators(edit->text());
+            capture(picker->window(), QStringLiteral("1-current"));
+
+            type(edit, QStringLiteral("first"), QStringLiteral("2-typing"));
+            relativeResult = canonical(picker->directory());
+            QTest::qWait(20);
+            shownAfterRelative = QDir::fromNativeSeparators(edit->text());
+            capture(picker->window(), QStringLiteral("3-opened"));
+
+            type(edit, QDir::toNativeSeparators(root.filePath(QStringLiteral("first/second"))));
+            absoluteResult = canonical(picker->directory());
+
+            // A missing folder is refused in a themed box; the folder and the typed text stay.
+            QTimer::singleShot(100, picker, [&] {
+                if (auto* box = qobject_cast<QDialog*>(QApplication::activeModalWidget()); box && !box->findChild<QFileDialog*>()) {
+                    refusalShown = true;
+                    capture(box, QStringLiteral("4-refused"));
+                    box->reject();
+                }
+            });
+            type(edit, QStringLiteral("missing-folder"));
+            refusedResult = canonical(picker->directory());
+            refusedText = edit->text();
+        }, [&] {
+            if (mode == 0) ThemedFileDialog::getOpenFileNames(&host, QStringLiteral("Open"), root.path());
+            else if (mode == 1) ThemedFileDialog::getSaveFileName(&host, QStringLiteral("Save"), root.filePath(QStringLiteral("out.dat")));
+            else ThemedFileDialog::getExistingDirectories(&host, QStringLiteral("Folders"), root.path());
+        });
+        QVERIFY(inspected);
+        QVERIFY(editable);
+        QCOMPARE(QFileInfo(shownAtStart).canonicalFilePath(), rootPath);
+        QCOMPARE(relativeResult, QFileInfo(root.filePath(QStringLiteral("first"))).canonicalFilePath());
+        QCOMPARE(QFileInfo(shownAfterRelative).canonicalFilePath(), relativeResult);
+        QCOMPARE(absoluteResult, QFileInfo(root.filePath(QStringLiteral("first/second"))).canonicalFilePath());
+        QVERIFY(refusalShown);
+        QCOMPARE(refusedResult, absoluteResult);
+        QCOMPARE(refusedText, QStringLiteral("missing-folder"));
+    }
+
     void filePickerLookInPopupStaysJoinedOnReopen()
     {
         Resources::installResources(*qApp);

@@ -52,6 +52,13 @@ private:
      * @note The outer dialog remains open when the user chooses No.
      */
     void handleAccepted();
+    /** @brief Shows the current directory as the editable "Look in" path. */
+    void syncLookInPath();
+    /**
+     * @brief Opens the folder typed into "Look in".
+     * @note A path that is not an existing folder is refused in a themed message box.
+     */
+    void openTypedLookInPath();
 
     enum class Mode {
         OpenOne,
@@ -72,6 +79,7 @@ private:
     QDialogButtonBox* _buttonBox = nullptr;
     QLineEdit* _fileNameEdit = nullptr;
     QComboBox* _fileTypeComboBox = nullptr;
+    QComboBox* _lookInComboBox = nullptr;
     QPushButton* _acceptButton = nullptr;
     QPushButton* _cancelButton = nullptr;
     bool _actionButtonAlignmentQueued = false;
