@@ -148,11 +148,12 @@ ThemedFileDialog::ThemedFileDialog(
             connect(pathEdit, &QLineEdit::textEdited, this, [this](const QString& text) {
                 _typedLookInPath = text;
             });
-            // Qt rewrites the field with the current row's short folder name whenever the
-            // file-system model refreshes that row, including while the user is typing.
+            // QComboBox rewrites the field with the current row's text whenever the file-system
+            // model refreshes that row, including while the user is typing. Restore at once so no
+            // event-loop turn shows, or reads, the rewritten text.
             connect(pathEdit, &QLineEdit::textChanged, this, [this, pathEdit] {
                 if (!pathEdit->isModified()) {
-                    QTimer::singleShot(0, this, &ThemedFileDialog::restoreLookInPath);
+                    restoreLookInPath();
                 }
             });
 
@@ -172,6 +173,8 @@ ThemedFileDialog::ThemedFileDialog(
             completer->popup()->installEventFilter(this);
             pathEdit->setCompleter(completer);
             // Choosing a suggestion opens it.
+            // QLineEdit writes the chosen path before this slot runs, and the restore briefly
+            // keeps the typed prefix; opening the recorded choice then shows its full path.
             connect(completer, qOverload<const QString&>(&QCompleter::activated), this, [this](const QString& path) {
                 _typedLookInPath = path;
                 QTimer::singleShot(0, this, &ThemedFileDialog::openTypedLookInPath);
@@ -420,7 +423,7 @@ void ThemedFileDialog::openTypedLookInPath()
         completer->popup()->hide();
     }
 
-    // The field can briefly show Qt's folder name before restoreLookInPath() runs.
+    // Prefer the recorded path: a chosen suggestion is recorded before the field shows it.
     const QString typed = (_typedLookInPath.isNull() ? pathEdit->text() : _typedLookInPath).trimmed();
     QString path = QDir::fromNativeSeparators(typed);
     if (path == QLatin1String("~") || path.startsWith(QLatin1String("~/"))) {
@@ -495,9 +498,10 @@ void ThemedFileDialog::completeLookInPath()
         }
     }
 
+    // Record the completion first: the text change restores whatever is recorded.
+    _typedLookInPath = completion;
     pathEdit->setText(completion);
     pathEdit->setModified(true);
-    _typedLookInPath = completion;
     // Offer the next level, or close the popup when the folder has no subfolders.
     completer->setCompletionPrefix(completion);
     completer->complete();
