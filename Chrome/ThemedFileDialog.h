@@ -54,6 +54,8 @@ private:
     void handleAccepted();
     /** @brief Shows the current directory as the editable "Look in" path. */
     void syncLookInPath();
+    /** @brief Puts the user's unopened path back after Qt rewrites the field. */
+    void restoreLookInPath();
     /**
      * @brief Opens the folder typed into "Look in".
      * @note A path that is not an existing folder is refused in a themed message box.
@@ -80,6 +82,9 @@ private:
     QLineEdit* _fileNameEdit = nullptr;
     QComboBox* _fileTypeComboBox = nullptr;
     QComboBox* _lookInComboBox = nullptr;
+    /** @brief Text the user typed or chose and has not opened yet; null while the field shows the current folder. */
+    QString _typedLookInPath;
+    bool _refusingLookInPath = false;
     QPushButton* _acceptButton = nullptr;
     QPushButton* _cancelButton = nullptr;
     bool _actionButtonAlignmentQueued = false;

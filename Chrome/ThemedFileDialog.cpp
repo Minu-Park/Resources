@@ -1,6 +1,7 @@
 #include "Chrome/ThemedFileDialog.h"
 #include "Chrome/ThemedMessageBox.h"
 
+#include <QCompleter>
 #include <QCoreApplication>
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -9,6 +10,7 @@
 #include <QEventLoop>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QFileSystemModel>
 #include <QFrame>
 #include <QHeaderView>
 #include <QIcon>
@@ -133,16 +135,44 @@ ThemedFileDialog::ThemedFileDialog(
     _lookInComboBox = _fileDialog->findChild<QComboBox*>(QStringLiteral("lookInCombo"));
     if (_lookInComboBox) {
         _lookInComboBox->setEditable(true);
-        // Inline completion from the combo's folder names would rewrite typed paths.
+        // The combo's default completer offers its folder names and selects combo rows.
         _lookInComboBox->setCompleter(nullptr);
         if (QLineEdit* pathEdit = _lookInComboBox->lineEdit()) {
             pathEdit->installEventFilter(this);
-            // Qt writes the selected folder's short name whenever it changes the current
-            // row. Show the full path instead, but leave the user's typing alone.
+            // QComboBox would match the typed text against its rows on Return and
+            // navigate before the typed path is read; this dialog opens the path itself.
+            disconnect(pathEdit, &QLineEdit::returnPressed, _lookInComboBox, nullptr);
+            connect(pathEdit, &QLineEdit::returnPressed, this, &ThemedFileDialog::openTypedLookInPath);
+            connect(pathEdit, &QLineEdit::textEdited, this, [this](const QString& text) {
+                _typedLookInPath = text;
+            });
+            // Qt rewrites the field with the current row's short folder name whenever the
+            // file-system model refreshes that row, including while the user is typing.
             connect(pathEdit, &QLineEdit::textChanged, this, [this, pathEdit] {
                 if (!pathEdit->isModified()) {
-                    QTimer::singleShot(0, this, &ThemedFileDialog::syncLookInPath);
+                    QTimer::singleShot(0, this, &ThemedFileDialog::restoreLookInPath);
                 }
+            });
+
+            auto* folders = new QFileSystemModel(pathEdit);
+            folders->setFilter(QDir::AllDirs | QDir::Drives | QDir::NoDotAndDotDot);
+            folders->setRootPath(QString());
+            auto* completer = new QCompleter(folders, pathEdit);
+            completer->setCompletionMode(QCompleter::PopupCompletion);
+#if defined(Q_OS_LINUX)
+            completer->setCaseSensitivity(Qt::CaseSensitive);
+#else
+            completer->setCaseSensitivity(Qt::CaseInsensitive);
+#endif
+            completer->popup()->setObjectName(QStringLiteral("AutoCompletePopup"));
+            pathEdit->setCompleter(completer);
+            // A highlighted suggestion becomes the typed path; choosing one opens it.
+            connect(completer, qOverload<const QString&>(&QCompleter::highlighted), this, [this](const QString& path) {
+                _typedLookInPath = path;
+            });
+            connect(completer, qOverload<const QString&>(&QCompleter::activated), this, [this](const QString& path) {
+                _typedLookInPath = path;
+                QTimer::singleShot(0, this, &ThemedFileDialog::openTypedLookInPath);
             });
         }
         connect(_fileDialog, &QFileDialog::directoryEntered, this, &ThemedFileDialog::syncLookInPath);
@@ -292,22 +322,20 @@ bool ThemedFileDialog::eventFilter(QObject* watched, QEvent* event)
     if (_lookInComboBox && watched == _lookInComboBox->lineEdit()) {
         if (event->type() == QEvent::KeyPress) {
             const int key = static_cast<QKeyEvent*>(event)->key();
-            // Handle Return before QComboBox does: its NoInsert policy would match
-            // folder names and navigate before the typed path is read.
+            // Consume Return so it does not also reach the dialog's default button.
             if (key == Qt::Key_Return || key == Qt::Key_Enter) {
                 openTypedLookInPath();
                 return true;
             }
             // The first Escape restores the current path; the next one cancels the dialog.
-            if (key == Qt::Key_Escape && _lookInComboBox->lineEdit()->isModified()) {
+            if (key == Qt::Key_Escape && !_typedLookInPath.isNull()) {
                 syncLookInPath();
                 return true;
             }
         } else if (event->type() == QEvent::FocusOut) {
-            // Leaving the field abandons an unopened path. A refusal box or the combo's own
-            // popup only takes focus for a moment, so the typed text stays for correction.
-            const Qt::FocusReason reason = static_cast<QFocusEvent*>(event)->reason();
-            if (reason != Qt::ActiveWindowFocusReason && reason != Qt::PopupFocusReason) {
+            // Leaving the field abandons an unopened path. The refusal box and popups
+            // only take focus for a moment, so the typed text stays for correction.
+            if (!_refusingLookInPath && static_cast<QFocusEvent*>(event)->reason() != Qt::PopupFocusReason) {
                 syncLookInPath();
             }
         }
@@ -331,6 +359,7 @@ void ThemedFileDialog::syncLookInPath()
         return;
     }
 
+    _typedLookInPath = QString();
     // Windows' "My Computer" root has no file-system path; keep Qt's own label there.
     const QString current = _fileDialog->directory().path();
     const QString path = QDir::isRelativePath(current) ? pathEdit->text() : QDir::toNativeSeparators(current);
@@ -340,6 +369,22 @@ void ThemedFileDialog::syncLookInPath()
     pathEdit->setModified(false);
 }
 
+void ThemedFileDialog::restoreLookInPath()
+{
+    QLineEdit* pathEdit = _lookInComboBox ? _lookInComboBox->lineEdit() : nullptr;
+    if (!pathEdit) {
+        return;
+    }
+    if (_typedLookInPath.isNull()) {
+        syncLookInPath();
+        return;
+    }
+    if (pathEdit->text() != _typedLookInPath) {
+        pathEdit->setText(_typedLookInPath);
+        pathEdit->setModified(true);
+    }
+}
+
 void ThemedFileDialog::openTypedLookInPath()
 {
     QLineEdit* pathEdit = _lookInComboBox ? _lookInComboBox->lineEdit() : nullptr;
@@ -347,7 +392,8 @@ void ThemedFileDialog::openTypedLookInPath()
         return;
     }
 
-    const QString typed = pathEdit->text().trimmed();
+    // The field can briefly show Qt's folder name before restoreLookInPath() runs.
+    const QString typed = (_typedLookInPath.isNull() ? pathEdit->text() : _typedLookInPath).trimmed();
     QString path = QDir::fromNativeSeparators(typed);
     if (path == QLatin1String("~") || path.startsWith(QLatin1String("~/"))) {
         path.replace(0, 1, QDir::homePath());
@@ -360,8 +406,12 @@ void ThemedFileDialog::openTypedLookInPath()
     // A relative path is resolved from the folder currently shown.
     const QFileInfo target(QDir::cleanPath(_fileDialog->directory().absoluteFilePath(path)));
     if (!target.isDir()) {
+        _typedLookInPath = typed;
+        _refusingLookInPath = true;
         ThemedMessageBox::warning(this, tr("Folder Not Found"),
             tr("%1\nThis is not an existing folder. Check the path and try again.").arg(typed));
+        _refusingLookInPath = false;
+        restoreLookInPath();
         pathEdit->setFocus();
         pathEdit->selectAll();
         return;
