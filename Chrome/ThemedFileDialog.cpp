@@ -120,7 +120,9 @@ ThemedFileDialog::ThemedFileDialog(
             _fileDialog->setDirectory(fileInfo.absolutePath());
             _fileDialog->selectFile(fileInfo.fileName());
         }
-    } else {
+    } else if (!directory.isEmpty()) {
+        // QFileDialog starts in Qt's last visited directory. An empty
+        // setDirectory() call would clear it and open the working directory.
         _fileDialog->setDirectory(directory);
     }
 

@@ -1490,6 +1490,16 @@ protected:
             }
         }
 
+        // QFileDialog's directory combo calls QComboBox::showPopup() again after rebuilding
+        // its model. That call places the visible popup without a new Show event (#563).
+        if (event->type() == QEvent::Move || event->type() == QEvent::Resize) {
+            if (auto* popup = qobject_cast<QWidget*>(obj);
+                popup && popup->isVisible() && (popup->windowFlags() & Qt::Popup)
+                && popup->property("_popupStyled").toBool()) {
+                if (auto* combo = qobject_cast<QComboBox*>(popup->parent())) anchorComboPopup(combo, popup);
+            }
+        }
+
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
             if (auto* view = qobject_cast<QAbstractItemView*>(obj)) Resources::applyItemViewTheme(view);
         }
@@ -2203,6 +2213,16 @@ private:
         }
 
         return geo;
+    }
+
+    /** @brief Rejoins an open combo popup that Qt placed again; the corrected geometry ends the cycle. */
+    static void anchorComboPopup(QComboBox* combo, QWidget* popup)
+    {
+        const QRect geo = repositionComboPopup(combo, popup, popup->geometry());
+        if (geo == popup->geometry()) return;
+        const bool above = geo.top() < combo->mapToGlobal(QPoint()).y();
+        setComboPopupDirection(combo, above ? QStringLiteral("above") : QStringLiteral("below"));
+        popup->setGeometry(geo);
     }
 
     static void paintPopupRoundedRect(QWidget* widget, bool allRounded)
