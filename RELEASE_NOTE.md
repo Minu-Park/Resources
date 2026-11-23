@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Keep a reopened combo popup joined to its control. `QFileDialog`'s `Look in` combo calls `QComboBox::showPopup()` again after rebuilding its directory list, which placed the visible popup without a new Show event; Resources now rejoins an open popup on its move or resize (#563).
+
+- Open a `ThemedFileDialog` without a caller directory in Qt's last visited directory instead of the working directory. A caller-supplied directory or save path still takes precedence.
+
+- Make the `ThemedFileDialog` `Look in` combo an editable path field in every mode. It shows the current folder's full path, Return opens a typed absolute, relative or `~` folder, typing an absolute path offers matching folders, the typed text survives Qt's refresh of the current row, and a path that is not an existing folder is refused in a themed warning box that keeps the typed text.
+
 - Open a menu at its full size the first time it pops up on a screen other than the one its native window was created on. The shell placement now hands the laid-out geometry to the native window before moving it, so macOS no longer resizes the menu back to the initial 100x30 window and shows a thin bar with a clipped first item.
 
 - Keep the `DeviceScopeCard` lower border clear when its search strip has no active search surface by suppressing the redundant separator.
