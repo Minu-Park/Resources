@@ -336,8 +336,8 @@ bool ThemedFileDialog::eventFilter(QObject* watched, QEvent* event)
         if (event->type() == QEvent::KeyPress) {
             const int key = static_cast<QKeyEvent*>(event)->key();
             // While a path is being typed, Tab completes it instead of leaving the field.
-            if (key == Qt::Key_Tab && !_typedLookInPath.isNull()) {
-                completeLookInPath();
+            // With no matching folder it moves focus, which abandons the path as any other Tab does.
+            if (key == Qt::Key_Tab && !_typedLookInPath.isNull() && completeLookInPath()) {
                 return true;
             }
             // Consume Return so it does not also reach the dialog's default button.
@@ -452,21 +452,41 @@ void ThemedFileDialog::openTypedLookInPath()
     syncLookInPath();
 }
 
-void ThemedFileDialog::completeLookInPath()
+bool ThemedFileDialog::completeLookInPath()
 {
     QLineEdit* pathEdit = _lookInComboBox ? _lookInComboBox->lineEdit() : nullptr;
     QCompleter* completer = pathEdit ? pathEdit->completer() : nullptr;
     if (!completer) {
-        return;
+        return false;
     }
+
+    // The folder model matches absolute paths only. Complete a relative or "~" path from the
+    // absolute folder it names, as Return would open it, and keep the form the user typed.
+    const QString typed = pathEdit->text();
+    QString prefix = typed;
+    QString expanded = QDir::fromNativeSeparators(typed);
+    if (expanded == QLatin1String("~") || expanded.startsWith(QLatin1String("~/"))) {
+        expanded.replace(0, 1, QDir::homePath());
+    }
+    if (expanded != QDir::fromNativeSeparators(typed) || QDir::isRelativePath(expanded)) {
+        const bool folder = expanded.endsWith(QLatin1Char('/'));
+        prefix = QDir::cleanPath(_fileDialog->directory().absoluteFilePath(expanded));
+        if (folder && !prefix.endsWith(QLatin1Char('/'))) {
+            prefix += QLatin1Char('/');
+        }
+        prefix = QDir::toNativeSeparators(prefix);
+    }
+    const auto inTypedForm = [&](const QString& completion) {
+        return prefix == typed ? completion : typed + completion.mid(prefix.size());
+    };
 
     QAbstractItemView* popup = completer->popup();
     const bool chosen = popup->isVisible() && popup->currentIndex().isValid();
     const int chosenRow = chosen ? popup->currentIndex().row() : 0;
-    completer->setCompletionPrefix(pathEdit->text());
+    completer->setCompletionPrefix(prefix);
     const int count = completer->completionCount();
     if (count == 0) {
-        return;
+        return false;
     }
 
     QString completion;
@@ -490,17 +510,17 @@ void ThemedFileDialog::completeLookInPath()
             }
             completion.truncate(shared);
         }
-        if (completion.size() <= pathEdit->text().size()) {
+        if (completion.size() <= prefix.size()) {
             // Nothing more is shared: select the first suggestion for the next Tab.
             completer->complete();
             popup->setCurrentIndex(completer->completionModel()->index(0, 0));
-            return;
+            return true;
         }
     }
 
     // Record the completion first: the text change restores whatever is recorded.
-    _typedLookInPath = completion;
-    pathEdit->setText(completion);
+    _typedLookInPath = inTypedForm(completion);
+    pathEdit->setText(_typedLookInPath);
     pathEdit->setModified(true);
     // Offer the next level, or close the popup when the folder has no subfolders.
     completer->setCompletionPrefix(completion);
@@ -508,6 +528,7 @@ void ThemedFileDialog::completeLookInPath()
     if (completer->completionCount() == 0) {
         popup->hide();
     }
+    return true;
 }
 
 void ThemedFileDialog::applyBottomCornerMask()

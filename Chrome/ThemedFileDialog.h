@@ -65,8 +65,10 @@ private:
      * @brief Completes the typed "Look in" path on Tab without opening it.
      * @note One match, or the suggestion selected in the popup, completes to that folder and a
      * trailing separator. Several matches complete to their shared prefix, then select the first.
+     * A relative or "~" path completes from the folder it names and keeps its typed form.
+     * @return False when no folder matches, so Tab moves focus instead.
      */
-    void completeLookInPath();
+    bool completeLookInPath();
 
     enum class Mode {
         OpenOne,

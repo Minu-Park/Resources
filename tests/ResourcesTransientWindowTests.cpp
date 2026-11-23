@@ -43,6 +43,7 @@
 #include <QScopeGuard>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
+#include <QFocusEvent>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -601,11 +602,13 @@ private slots:
         Resources::installResources(*qApp);
         QTemporaryDir root;
         QVERIFY(root.isValid());
-        QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("first/second"))));
+        // first/second/first gives the innermost folder an ancestor of the same name.
+        QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("first/second/first"))));
         const auto canonical = [](const QString& path) { return QFileInfo(path).canonicalFilePath(); };
         const QString rootPath = canonical(root.path());
         const QString firstPath = canonical(root.filePath(QStringLiteral("first")));
         const QString secondPath = canonical(root.filePath(QStringLiteral("first/second")));
+        const QString nestedPath = canonical(root.filePath(QStringLiteral("first/second/first")));
         QWidget host;
         host.show();
         // Review captures for design approval: PLAYGROUND_FILE_DIALOG_SCREENSHOTS=<folder>.
@@ -655,6 +658,21 @@ private slots:
             QTest::keyClick(edit, Qt::Key_Return);
             QTest::qWait(20);
             expect(current() == secondPath, QStringLiteral("absolute path opened %1").arg(current()));
+
+            // Inside first/second, a typed "first" names the child folder, not the ancestor row
+            // of that name. QComboBox would select that row when editing finishes, which a window
+            // deactivation also signals, and on Return.
+            typeText(edit, QStringLiteral("first"));
+            QFocusEvent deactivated(QEvent::FocusOut, Qt::ActiveWindowFocusReason);
+            QApplication::sendEvent(edit, &deactivated);
+            QTest::qWait(20);
+            expect(current() == secondPath, QStringLiteral("deactivation opened %1").arg(current()));
+            expect(edit->text() == QStringLiteral("first"), QStringLiteral("deactivation replaced the typed text with %1").arg(edit->text()));
+            QTest::keyClick(edit, Qt::Key_Return);
+            QTest::qWait(20);
+            expect(current() == nestedPath, QStringLiteral("same-named child opened %1").arg(current()));
+            picker->setDirectory(secondPath);
+            QTest::qWait(20);
 
             // A missing folder is refused in a themed box; the folder and the typed text stay.
             const QString before = current();
@@ -722,6 +740,25 @@ private slots:
                 expect(current() == firstPath, QStringLiteral("suggestion opened %1").arg(current()));
                 expect(!suggestions->isVisible(), QStringLiteral("suggestion popup stayed open"));
             }
+
+            // Tab completes a relative path from the current folder and keeps it relative.
+            picker->setDirectory(root.path());
+            QTest::qWait(20);
+            typeText(edit, QStringLiteral("fi"));
+            QTest::keyClick(edit, Qt::Key_Tab);
+            QTest::qWait(20);
+            expect(QDir::fromNativeSeparators(edit->text()) == QStringLiteral("first/"),
+                QStringLiteral("relative Tab completed to %1").arg(edit->text()));
+            QTest::keyClick(edit, Qt::Key_Return);
+            QTest::qWait(20);
+            expect(current() == firstPath, QStringLiteral("relative completion opened %1").arg(current()));
+
+            // With no matching folder, Tab leaves the field and abandons the typed path.
+            typeText(edit, QStringLiteral("no-such-folder"));
+            QTest::keyClick(edit, Qt::Key_Tab);
+            QTest::qWait(20);
+            expect(picker->window()->focusWidget() != edit, QStringLiteral("Tab without a match kept focus"));
+            expect(shown() == firstPath, QStringLiteral("Tab without a match left %1").arg(edit->text()));
         }, [&] {
             if (mode == 0) ThemedFileDialog::getOpenFileNames(&host, QStringLiteral("Open"), root.path());
             else if (mode == 1) ThemedFileDialog::getSaveFileName(&host, QStringLiteral("Save"), root.filePath(QStringLiteral("out.dat")));
