@@ -620,10 +620,11 @@ private slots:
             widget->grab().save(QDir(captures).filePath(QStringLiteral("look-in-%1-%2.png")
                 .arg(QString::fromLatin1(QTest::currentDataTag()), state)));
         };
-        const auto typeText = [](QLineEdit* edit, const QString& text) {
-            edit->setFocus();
-            edit->selectAll();
-            QTest::keyClicks(edit, text);
+        // Keys go to the combo, as a user's keys do: it is the focus proxy of its path field.
+        const auto typeText = [](QComboBox* combo, const QString& text) {
+            combo->setFocus();
+            combo->lineEdit()->selectAll();
+            QTest::keyClicks(combo, text);
         };
         QStringList failures;
         const auto expect = [&](bool condition, const QString& failure) { if (!condition) failures << failure; };
@@ -643,34 +644,50 @@ private slots:
 
             // Qt refreshes the current row while folder details load and rewrites the field
             // with that row's short name. A path being typed must survive the refresh.
-            typeText(edit, QStringLiteral("first"));
+            typeText(combo, QStringLiteral("first"));
             capture(picker->window(), QStringLiteral("2-typing"));
             combo->setItemText(combo->currentIndex(), QStringLiteral("refreshed-row"));
             QTest::qWait(20);
             expect(edit->text() == QStringLiteral("first"), QStringLiteral("refresh replaced typing with %1").arg(edit->text()));
-            QTest::keyClick(edit, Qt::Key_Return);
+            QTest::keyClick(combo, Qt::Key_Return);
             QTest::qWait(20);
             expect(current() == firstPath, QStringLiteral("relative path opened %1").arg(current()));
             expect(shown() == firstPath, QStringLiteral("after opening shows %1").arg(edit->text()));
             capture(picker->window(), QStringLiteral("3-opened"));
 
-            typeText(edit, QDir::toNativeSeparators(root.filePath(QStringLiteral("first/second"))));
-            QTest::keyClick(edit, Qt::Key_Return);
+            typeText(combo, QDir::toNativeSeparators(root.filePath(QStringLiteral("first/second"))));
+            QTest::keyClick(combo, Qt::Key_Return);
             QTest::qWait(20);
             expect(current() == secondPath, QStringLiteral("absolute path opened %1").arg(current()));
 
-            // Inside first/second, a typed "first" names the child folder, not the ancestor row
-            // of that name. QComboBox would select that row when editing finishes, which a window
-            // deactivation also signals, and on Return.
-            typeText(edit, QStringLiteral("first"));
+            // Inside first/second, a typed "first" names the child folder. QComboBox would instead
+            // look the text up among its rows, which the dropdown fills with ancestors and recent
+            // places, when editing finishes, which a window deactivation also signals, and on
+            // Return; QFileDialog then opens that row or shows its own warning.
+            combo->showPopup();
+            QTest::qWait(50);
+            combo->hidePopup();
+            QTest::qWait(50);
+            QStringList unexpectedBoxes;
+            QTimer boxWatch;
+            QObject::connect(&boxWatch, &QTimer::timeout, picker, [&] {
+                if (QWidget* box = QApplication::activeModalWidget(); box && box != picker->window()) {
+                    unexpectedBoxes << QString::fromLatin1(box->metaObject()->className());
+                    box->close();
+                }
+            });
+            boxWatch.start(50);
+            typeText(combo, QStringLiteral("first"));
             QFocusEvent deactivated(QEvent::FocusOut, Qt::ActiveWindowFocusReason);
-            QApplication::sendEvent(edit, &deactivated);
-            QTest::qWait(20);
+            QApplication::sendEvent(combo, &deactivated);
+            QTest::qWait(100);
             expect(current() == secondPath, QStringLiteral("deactivation opened %1").arg(current()));
             expect(edit->text() == QStringLiteral("first"), QStringLiteral("deactivation replaced the typed text with %1").arg(edit->text()));
-            QTest::keyClick(edit, Qt::Key_Return);
-            QTest::qWait(20);
+            QTest::keyClick(combo, Qt::Key_Return);
+            QTest::qWait(100);
             expect(current() == nestedPath, QStringLiteral("same-named child opened %1").arg(current()));
+            boxWatch.stop();
+            expect(unexpectedBoxes.isEmpty(), QStringLiteral("typed \"first\" showed %1").arg(unexpectedBoxes.join(QStringLiteral(", "))));
             picker->setDirectory(secondPath);
             QTest::qWait(20);
 
@@ -683,14 +700,14 @@ private slots:
                     box->reject();
                 }
             });
-            typeText(edit, QStringLiteral("missing-folder"));
-            QTest::keyClick(edit, Qt::Key_Return);
+            typeText(combo, QStringLiteral("missing-folder"));
+            QTest::keyClick(combo, Qt::Key_Return);
             QTest::qWait(20);
             expect(current() == before, QStringLiteral("refused path moved to %1").arg(current()));
             expect(edit->text() == QStringLiteral("missing-folder"), QStringLiteral("refusal replaced the typed text with %1").arg(edit->text()));
 
             // The first Escape restores the current folder's path.
-            QTest::keyClick(edit, Qt::Key_Escape);
+            QTest::keyClick(combo, Qt::Key_Escape);
             expect(shown() == before, QStringLiteral("Escape left %1").arg(edit->text()));
 
             // Typing a folder prefix offers matching folders.
@@ -701,7 +718,7 @@ private slots:
             expect(suggestions->objectName() == QStringLiteral("AutoCompletePopup"), QStringLiteral("suggestion popup is not themed"));
             // QFileSystemModel loads folders asynchronously; completion restarts when it has them.
             const auto offer = [&] {
-                typeText(edit, QDir::toNativeSeparators(root.path() + QStringLiteral("/fi")));
+                typeText(combo, QDir::toNativeSeparators(root.path() + QStringLiteral("/fi")));
                 const bool offered = QTest::qWaitFor([&] {
                     if (!suggestions->isVisible()) completer->complete();
                     return suggestions->isVisible() && completer->completionCount() > 0;
@@ -713,7 +730,7 @@ private slots:
 
             // Tab completes the only match to the folder and a separator, without opening it,
             // both from the field and from the suggestion popup that holds the keyboard.
-            for (QWidget* target : {static_cast<QWidget*>(edit), static_cast<QWidget*>(suggestions)}) {
+            for (QWidget* target : {static_cast<QWidget*>(combo), static_cast<QWidget*>(suggestions)}) {
                 if (!offer()) return;
                 const QString beforeTab = current();
                 QTest::keyClick(target, Qt::Key_Tab);
@@ -721,7 +738,7 @@ private slots:
                 expect(QDir::fromNativeSeparators(edit->text()) == completedFirst,
                     QStringLiteral("Tab completed to %1").arg(edit->text()));
                 expect(current() == beforeTab, QStringLiteral("Tab opened %1").arg(current()));
-                QTest::keyClick(edit, Qt::Key_Return);
+                QTest::keyClick(combo, Qt::Key_Return);
                 QTest::qWait(20);
                 expect(current() == firstPath, QStringLiteral("completed path opened %1").arg(current()));
                 picker->setDirectory(before);
@@ -744,18 +761,21 @@ private slots:
             // Tab completes a relative path from the current folder and keeps it relative.
             picker->setDirectory(root.path());
             QTest::qWait(20);
-            typeText(edit, QStringLiteral("fi"));
-            QTest::keyClick(edit, Qt::Key_Tab);
+            typeText(combo, QStringLiteral("fi"));
+            QTest::keyClick(combo, Qt::Key_Tab);
             QTest::qWait(20);
             expect(QDir::fromNativeSeparators(edit->text()) == QStringLiteral("first/"),
                 QStringLiteral("relative Tab completed to %1").arg(edit->text()));
-            QTest::keyClick(edit, Qt::Key_Return);
+            QTest::keyClick(combo, Qt::Key_Return);
             QTest::qWait(20);
             expect(current() == firstPath, QStringLiteral("relative completion opened %1").arg(current()));
 
             // With no matching folder, Tab leaves the field and abandons the typed path.
-            typeText(edit, QStringLiteral("no-such-folder"));
-            QTest::keyClick(edit, Qt::Key_Tab);
+            // Qt delivers focus changes only in the active window.
+            picker->window()->activateWindow();
+            expect(QTest::qWaitForWindowActive(picker->window(), 2000), QStringLiteral("file picker is not the active window"));
+            typeText(combo, QStringLiteral("no-such-folder"));
+            QTest::keyClick(combo, Qt::Key_Tab);
             QTest::qWait(20);
             expect(picker->window()->focusWidget() != edit, QStringLiteral("Tab without a match kept focus"));
             expect(shown() == firstPath, QStringLiteral("Tab without a match left %1").arg(edit->text()));

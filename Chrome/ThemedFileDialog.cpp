@@ -138,6 +138,9 @@ ThemedFileDialog::ThemedFileDialog(
         // The combo's default completer offers its folder names and selects combo rows.
         _lookInComboBox->setCompleter(nullptr);
         if (QLineEdit* pathEdit = _lookInComboBox->lineEdit()) {
+            // The field's focus proxy is the combo, so keys and focus changes arrive at the combo,
+            // which hands them to the field directly, past the field's filters. Filter both.
+            _lookInComboBox->installEventFilter(this);
             pathEdit->installEventFilter(this);
             // On Return and when editing finishes, QComboBox selects a row whose name matches
             // the typed text, and QFileDialog then opens that row. A typed "first" would open
@@ -332,7 +335,8 @@ bool ThemedFileDialog::eventFilter(QObject* watched, QEvent* event)
         return true;
     }
 
-    if (_lookInComboBox && watched == _lookInComboBox->lineEdit()) {
+    if (_lookInComboBox && (watched == _lookInComboBox || watched == _lookInComboBox->lineEdit())
+        && _lookInComboBox->lineEdit()) {
         if (event->type() == QEvent::KeyPress) {
             const int key = static_cast<QKeyEvent*>(event)->key();
             // While a path is being typed, Tab completes it instead of leaving the field.
