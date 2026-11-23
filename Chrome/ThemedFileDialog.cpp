@@ -168,10 +168,7 @@ ThemedFileDialog::ThemedFileDialog(
 #endif
             completer->popup()->setObjectName(QStringLiteral("AutoCompletePopup"));
             pathEdit->setCompleter(completer);
-            // A highlighted suggestion becomes the typed path; choosing one opens it.
-            connect(completer, qOverload<const QString&>(&QCompleter::highlighted), this, [this](const QString& path) {
-                _typedLookInPath = path;
-            });
+            // Choosing a suggestion opens it.
             connect(completer, qOverload<const QString&>(&QCompleter::activated), this, [this](const QString& path) {
                 _typedLookInPath = path;
                 QTimer::singleShot(0, this, &ThemedFileDialog::openTypedLookInPath);
@@ -392,6 +389,15 @@ void ThemedFileDialog::openTypedLookInPath()
     QLineEdit* pathEdit = _lookInComboBox ? _lookInComboBox->lineEdit() : nullptr;
     if (!pathEdit) {
         return;
+    }
+
+    // QCompleter passes Return to the field before it reports the chosen suggestion.
+    // Opening the typed text now would reset the suggestions and turn that choice stale.
+    if (QCompleter* completer = pathEdit->completer(); completer && completer->popup()->isVisible()) {
+        if (completer->popup()->currentIndex().isValid()) {
+            return;
+        }
+        completer->popup()->hide();
     }
 
     // The field can briefly show Qt's folder name before restoreLookInPath() runs.
