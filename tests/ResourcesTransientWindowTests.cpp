@@ -35,6 +35,7 @@
 #include <QProcess>
 #include <QRegion>
 #include <QScreen>
+#include <QWindow>
 #include <QHash>
 #include <QSet>
 #include <QSignalSpy>
@@ -1075,6 +1076,56 @@ private slots:
             }
         }
         QCursor::setPos(oldCursor);
+    }
+
+    void firstMenuOpenOnSecondaryScreenKeepsItsSize()
+    {
+        Resources::installResources(*qApp);
+        QScreen* primary = QGuiApplication::primaryScreen();
+        QScreen* secondary = nullptr;
+        for (QScreen* screen : QGuiApplication::screens()) {
+            if (screen != primary) {
+                secondary = screen;
+                break;
+            }
+        }
+        if (!secondary)
+            QSKIP("Requires two screens: the first popup's native window starts on the primary screen.");
+
+        ThemedMainWindow window;
+        window.setWindowTitle(QStringLiteral("Playground"));
+        window.resize(760, 520);
+        auto* bar = window.themedMenuBar();
+        QMenu* system = bar->addMenu(QStringLiteral("&System"));
+        system->addAction(QStringLiteral("Debug"))->setCheckable(true);
+        system->addSeparator();
+        system->addAction(QStringLiteral("Plugins..."));
+        system->addAction(QStringLiteral("Runtime Paths..."));
+        system->addAction(QStringLiteral("MCP Connection..."));
+        // Like the app, the main window is first shown on the primary screen and then restored
+        // onto the secondary one, so the menu's native window is created for the primary screen.
+        window.move(primary->availableGeometry().topLeft() + QPoint(120, 120));
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QTest::qWait(300);
+        window.move(secondary->availableGeometry().topLeft() + QPoint(120, 120));
+        QTRY_COMPARE(window.screen(), secondary);
+
+        for (const char* open : {"first", "second"}) {
+            const QRect action = bar->actionGeometry(system->menuAction());
+            QTest::mouseClick(bar, Qt::LeftButton, Qt::NoModifier, action.center());
+            QTRY_VERIFY(system->isVisible());
+            QTest::qWait(100);
+            const QSize expected = system->sizeHint();
+            QVERIFY2(system->size() == expected, qPrintable(QStringLiteral("%1 open: menu %2x%3, size hint %4x%5")
+                .arg(QString::fromLatin1(open)).arg(system->width()).arg(system->height())
+                .arg(expected.width()).arg(expected.height())));
+            QVERIFY(system->windowHandle());
+            QCOMPARE(system->windowHandle()->geometry().size(), expected);
+            QCOMPARE(QGuiApplication::screenAt(system->geometry().center()), secondary);
+            system->close();
+            QTRY_VERIFY(!system->isVisible());
+        }
     }
 
     void menuShellFollowsGeometryScreenAfterOwnerMove()

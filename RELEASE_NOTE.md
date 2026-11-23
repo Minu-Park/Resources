@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Open a menu at its full size the first time it pops up on a screen other than the one its native window was created on. The shell placement now hands the laid-out geometry to the native window before moving it, so macOS no longer resizes the menu back to the initial 100x30 window and shows a thin bar with a clipped first item.
+
 - Keep the `DeviceScopeCard` lower border clear when its search strip has no active search surface by suppressing the redundant separator.
 
 - Add `EmphasizedItemInkRole` so a consumer can mark a connected or otherwise current identity row and let the installed theme supply the accent ink and emphasis weight, instead of a widget-level font or color.

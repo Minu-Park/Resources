@@ -23,6 +23,7 @@
 #include <QFont>
 #include <QMenu>
 #include <QMenuBar>
+#include <QWindow>
 #include <QFrame>
 #include <QLayout>
 #include <QGridLayout>
@@ -1679,6 +1680,12 @@ private:
             position.setY(qBound(bounds.top() - gutter, position.y(),
                                 qMax(bounds.top() - gutter, bounds.bottom() - menu->height() + gutter + 1)));
         }
+        // A first popup on another screen can still carry the native window created by
+        // prepareMenuPopup's flag change on the previous screen, at its initial size. Moving it
+        // across screens resizes the menu back to that stale native size (macOS: 100x30), so the
+        // menu shows as a thin bar. Hand the laid-out geometry to the window before moving it.
+        if (QWindow* window = menu->windowHandle(); window && window->geometry() != menu->geometry())
+            window->setGeometry(menu->geometry());
         menu->move(position);
     }
 
