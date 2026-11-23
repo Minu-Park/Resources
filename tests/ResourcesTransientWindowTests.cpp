@@ -295,6 +295,30 @@ public:
     using QSlider::initStyleOption;
 };
 
+/** @brief Runs @p inspect on the open file picker, then cancels it, and reports whether it ran. */
+template <typename Inspect, typename Open>
+static bool inspectFilePicker(QWidget* host, Inspect inspect, Open open)
+{
+    bool inspected = false;
+    QTimer::singleShot(150, host, [&] {
+        auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+        if (!dialog) return;
+        if (auto* picker = dialog->findChild<QFileDialog*>()) {
+            inspect(picker);
+            inspected = true;
+        }
+        dialog->reject();
+    });
+    QTimer watchdog;
+    watchdog.setSingleShot(true);
+    QObject::connect(&watchdog, &QTimer::timeout, host, [] {
+        if (auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget())) dialog->reject();
+    });
+    watchdog.start(15000);
+    open();
+    return inspected;
+}
+
 class ResourcesTransientWindowTests : public QObject
 {
     Q_OBJECT
@@ -537,6 +561,81 @@ private slots:
         QVERIFY(selected);
         QCOMPARE(QDir::cleanPath(chosen), QDir::cleanPath(path));
         if (save) QCOMPARE(filter, QStringLiteral("Data (*.dat)"));
+    }
+
+    void filePickerReopensAtLastVisitedDirectory()
+    {
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        const QString visited = root.filePath(QStringLiteral("visited"));
+        QVERIFY(QDir().mkpath(visited));
+        QWidget host;
+        host.show();
+        const auto openMany = [&](const QString& directory) {
+            return [&host, directory] { ThemedFileDialog::getOpenFileNames(&host, QStringLiteral("Open"), directory); };
+        };
+        QVERIFY(inspectFilePicker(&host, [&](QFileDialog* picker) { picker->setDirectory(visited); }, openMany(root.path())));
+
+        QString reopened;
+        QVERIFY(inspectFilePicker(&host, [&](QFileDialog* picker) { reopened = picker->directory().absolutePath(); }, openMany({})));
+        QCOMPARE(QFileInfo(reopened).canonicalFilePath(), QFileInfo(visited).canonicalFilePath());
+
+        // A caller's explicit directory still takes precedence over the remembered one.
+        QString explicitDirectory;
+        QVERIFY(inspectFilePicker(&host, [&](QFileDialog* picker) { explicitDirectory = picker->directory().absolutePath(); }, openMany(root.path())));
+        QCOMPARE(QFileInfo(explicitDirectory).canonicalFilePath(), QFileInfo(root.path()).canonicalFilePath());
+    }
+
+    void filePickerLookInPopupStaysJoinedOnReopen()
+    {
+        Resources::installResources(*qApp);
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("first/second"))));
+        QWidget host;
+        host.show();
+        QStringList failures;
+        int openings = 0;
+        const QStringList directories{root.path(), root.path(), root.filePath(QStringLiteral("first")),
+                                      root.filePath(QStringLiteral("first/second"))};
+        const bool inspected = inspectFilePicker(&host, [&](QFileDialog* picker) {
+            auto* combo = picker->findChild<QComboBox*>(QStringLiteral("lookInCombo"));
+            if (!combo) {
+                failures << QStringLiteral("lookInCombo is missing");
+                return;
+            }
+            for (int index = 0; index < directories.size(); ++index) {
+                picker->setDirectory(directories.at(index));
+                QTest::qWait(50);
+                combo->showPopup();
+                QWidget* popup = combo->view()->window();
+                if (!QTest::qWaitFor([popup] { return popup->isVisible(); }, 2000)) {
+                    failures << QStringLiteral("opening %1 did not show its popup").arg(index + 1);
+                    return;
+                }
+                QTest::qWait(50);
+                ++openings;
+                const QPoint origin = combo->mapToGlobal(QPoint());
+                const QRect geometry = popup->geometry();
+                const bool above = geometry.top() < origin.y();
+                const int join = above ? geometry.bottom() + 1 : geometry.top();
+                const int expectedJoin = above ? origin.y() + 2 : origin.y() + combo->height() - 2;
+                if (geometry.x() != origin.x() || geometry.width() != combo->width() || join != expectedJoin) {
+                    failures << QStringLiteral("opening %1: popup (%2,%3 %4x%5), combo (%6,%7 %8x%9)")
+                        .arg(index + 1).arg(geometry.x()).arg(geometry.y()).arg(geometry.width()).arg(geometry.height())
+                        .arg(origin.x()).arg(origin.y()).arg(combo->width()).arg(combo->height());
+                }
+                // Close by both paths a user takes: Escape and an outside dismissal.
+                if (index % 2) QTest::keyClick(combo->view(), Qt::Key_Escape);
+                else combo->hidePopup();
+                if (!QTest::qWaitFor([popup] { return !popup->isVisible(); }, 2000))
+                    failures << QStringLiteral("opening %1 did not close").arg(index + 1);
+                QTest::qWait(50);
+            }
+        }, [&] { ThemedFileDialog::getOpenFileNames(&host, QStringLiteral("Add 3D Data"), root.path()); });
+        QVERIFY(inspected);
+        QVERIFY2(failures.isEmpty(), qPrintable(failures.join(QLatin1Char('\n'))));
+        QCOMPARE(openings, directories.size());
     }
 
     void messageIconBalancesShortAndWrappedText()
