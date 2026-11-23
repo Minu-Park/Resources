@@ -61,6 +61,12 @@ private:
      * @note A path that is not an existing folder is refused in a themed message box.
      */
     void openTypedLookInPath();
+    /**
+     * @brief Completes the typed "Look in" path on Tab without opening it.
+     * @note One match, or the suggestion selected in the popup, completes to that folder and a
+     * trailing separator. Several matches complete to their shared prefix, then select the first.
+     */
+    void completeLookInPath();
 
     enum class Mode {
         OpenOne,

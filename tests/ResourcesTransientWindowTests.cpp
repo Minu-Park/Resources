@@ -675,20 +675,43 @@ private slots:
             QTest::keyClick(edit, Qt::Key_Escape);
             expect(shown() == before, QStringLiteral("Escape left %1").arg(edit->text()));
 
-            // Typing a folder prefix offers matching folders; choosing one opens it.
-            typeText(edit, QDir::toNativeSeparators(root.path() + QStringLiteral("/fi")));
+            // Typing a folder prefix offers matching folders.
             QCompleter* completer = edit->completer();
             QAbstractItemView* suggestions = completer ? completer->popup() : nullptr;
             expect(suggestions != nullptr, QStringLiteral("path field has no completer"));
             if (!suggestions) return;
             expect(suggestions->objectName() == QStringLiteral("AutoCompletePopup"), QStringLiteral("suggestion popup is not themed"));
             // QFileSystemModel loads folders asynchronously; completion restarts when it has them.
-            const bool offered = QTest::qWaitFor([&] {
-                if (!suggestions->isVisible()) completer->complete();
-                return suggestions->isVisible() && completer->completionCount() > 0;
-            }, 5000);
-            expect(offered, QStringLiteral("no folder suggestion for %1").arg(edit->text()));
-            if (offered) {
+            const auto offer = [&] {
+                typeText(edit, QDir::toNativeSeparators(root.path() + QStringLiteral("/fi")));
+                const bool offered = QTest::qWaitFor([&] {
+                    if (!suggestions->isVisible()) completer->complete();
+                    return suggestions->isVisible() && completer->completionCount() > 0;
+                }, 5000);
+                expect(offered, QStringLiteral("no folder suggestion for %1").arg(edit->text()));
+                return offered;
+            };
+            const QString completedFirst = QDir::fromNativeSeparators(root.path()) + QStringLiteral("/first/");
+
+            // Tab completes the only match to the folder and a separator, without opening it,
+            // both from the field and from the suggestion popup that holds the keyboard.
+            for (QWidget* target : {static_cast<QWidget*>(edit), static_cast<QWidget*>(suggestions)}) {
+                if (!offer()) return;
+                const QString beforeTab = current();
+                QTest::keyClick(target, Qt::Key_Tab);
+                QTest::qWait(20);
+                expect(QDir::fromNativeSeparators(edit->text()) == completedFirst,
+                    QStringLiteral("Tab completed to %1").arg(edit->text()));
+                expect(current() == beforeTab, QStringLiteral("Tab opened %1").arg(current()));
+                QTest::keyClick(edit, Qt::Key_Return);
+                QTest::qWait(20);
+                expect(current() == firstPath, QStringLiteral("completed path opened %1").arg(current()));
+                picker->setDirectory(before);
+                QTest::qWait(20);
+            }
+
+            // Return on a chosen suggestion opens it.
+            if (offer()) {
                 expect(QFileInfo(completer->currentCompletion()).fileName() == QStringLiteral("first"),
                     QStringLiteral("first suggestion is %1").arg(completer->currentCompletion()));
                 capture(picker->window(), QStringLiteral("5-suggesting"));

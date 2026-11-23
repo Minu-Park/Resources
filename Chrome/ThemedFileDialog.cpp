@@ -167,6 +167,9 @@ ThemedFileDialog::ThemedFileDialog(
             completer->setCaseSensitivity(Qt::CaseInsensitive);
 #endif
             completer->popup()->setObjectName(QStringLiteral("AutoCompletePopup"));
+            // QCompleter treats Tab like Return and opens the selection. This later filter
+            // runs first and turns Tab into completion instead.
+            completer->popup()->installEventFilter(this);
             pathEdit->setCompleter(completer);
             // Choosing a suggestion opens it.
             connect(completer, qOverload<const QString&>(&QCompleter::activated), this, [this](const QString& path) {
@@ -318,9 +321,22 @@ bool ThemedFileDialog::eventFilter(QObject* watched, QEvent* event)
         scheduleActionButtonAlignment();
     }
 
+    if (_lookInComboBox && _lookInComboBox->lineEdit() && _lookInComboBox->lineEdit()->completer()
+        && watched == _lookInComboBox->lineEdit()->completer()->popup()
+        && event->type() == QEvent::KeyPress
+        && static_cast<QKeyEvent*>(event)->key() == Qt::Key_Tab) {
+        completeLookInPath();
+        return true;
+    }
+
     if (_lookInComboBox && watched == _lookInComboBox->lineEdit()) {
         if (event->type() == QEvent::KeyPress) {
             const int key = static_cast<QKeyEvent*>(event)->key();
+            // While a path is being typed, Tab completes it instead of leaving the field.
+            if (key == Qt::Key_Tab && !_typedLookInPath.isNull()) {
+                completeLookInPath();
+                return true;
+            }
             // Consume Return so it does not also reach the dialog's default button.
             if (key == Qt::Key_Return || key == Qt::Key_Enter) {
                 openTypedLookInPath();
@@ -427,6 +443,63 @@ void ThemedFileDialog::openTypedLookInPath()
 
     _fileDialog->setDirectory(target.absoluteFilePath());
     syncLookInPath();
+}
+
+void ThemedFileDialog::completeLookInPath()
+{
+    QLineEdit* pathEdit = _lookInComboBox ? _lookInComboBox->lineEdit() : nullptr;
+    QCompleter* completer = pathEdit ? pathEdit->completer() : nullptr;
+    if (!completer) {
+        return;
+    }
+
+    QAbstractItemView* popup = completer->popup();
+    const bool chosen = popup->isVisible() && popup->currentIndex().isValid();
+    const int chosenRow = chosen ? popup->currentIndex().row() : 0;
+    completer->setCompletionPrefix(pathEdit->text());
+    const int count = completer->completionCount();
+    if (count == 0) {
+        return;
+    }
+
+    QString completion;
+    if (chosen || count == 1) {
+        completer->setCurrentRow(qMin(chosenRow, count - 1));
+        completion = completer->currentCompletion();
+        if (!completion.endsWith(QDir::separator()) && !completion.endsWith(QLatin1Char('/'))) {
+            completion += QDir::separator();
+        }
+    } else {
+        // Extend to the prefix every suggestion shares, as a shell does.
+        completer->setCurrentRow(0);
+        completion = completer->currentCompletion();
+        for (int row = 1; row < count && !completion.isEmpty(); ++row) {
+            completer->setCurrentRow(row);
+            const QString candidate = completer->currentCompletion();
+            int shared = 0;
+            while (shared < completion.size() && shared < candidate.size()
+                   && QString::compare(completion.mid(shared, 1), candidate.mid(shared, 1), completer->caseSensitivity()) == 0) {
+                ++shared;
+            }
+            completion.truncate(shared);
+        }
+        if (completion.size() <= pathEdit->text().size()) {
+            // Nothing more is shared: select the first suggestion for the next Tab.
+            completer->complete();
+            popup->setCurrentIndex(completer->completionModel()->index(0, 0));
+            return;
+        }
+    }
+
+    pathEdit->setText(completion);
+    pathEdit->setModified(true);
+    _typedLookInPath = completion;
+    // Offer the next level, or close the popup when the folder has no subfolders.
+    completer->setCompletionPrefix(completion);
+    completer->complete();
+    if (completer->completionCount() == 0) {
+        popup->hide();
+    }
 }
 
 void ThemedFileDialog::applyBottomCornerMask()
