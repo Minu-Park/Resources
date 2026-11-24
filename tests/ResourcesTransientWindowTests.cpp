@@ -21,6 +21,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <QHelpEvent>
 #include <QHeaderView>
+#include <QTreeView>
 #include <QDockWidget>
 #include <QMenu>
 #include <QMenuBar>
@@ -789,6 +790,64 @@ private slots:
         });
         QVERIFY(inspected);
         if (!refusalShown) failures << QStringLiteral("missing folder was not refused");
+        QVERIFY2(failures.isEmpty(), qPrintable(failures.join(QLatin1Char('\n'))));
+    }
+
+    void filePickerSortIndicatorLeadsNameLabel()
+    {
+        Resources::installResources(*qApp);
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        QWidget host;
+        host.show();
+        QStringList failures;
+        const bool inspected = inspectFilePicker(&host, [&](QFileDialog* picker) {
+            auto* view = picker->findChild<QTreeView*>(QStringLiteral("treeView"));
+            if (!view) {
+                failures << QStringLiteral("file picker has no detail view");
+                return;
+            }
+            QHeaderView* header = view->header();
+            const QRect section(header->sectionViewportPosition(0), 0, header->sectionSize(0), header->height());
+            const auto render = [&](bool sorted) {
+                header->setSortIndicatorShown(sorted);
+                header->setSortIndicator(0, Qt::AscendingOrder);
+                QTest::qWait(20);
+                return header->grab(section).toImage();
+            };
+            const QImage plain = render(false);
+            const QImage sorted = render(true);
+            if (plain.size() != sorted.size()) {
+                failures << QStringLiteral("header renderings differ in size");
+                return;
+            }
+            // The columns where the two renderings differ hold the indicator, and any label shift.
+            const qreal ratio = sorted.devicePixelRatio();
+            int first = -1;
+            int last = -1;
+            for (int x = 0; x < sorted.width(); ++x) {
+                for (int y = 0; y < sorted.height(); ++y) {
+                    if (sorted.pixel(x, y) != plain.pixel(x, y)) {
+                        if (first < 0) first = x;
+                        last = x;
+                        break;
+                    }
+                }
+            }
+            if (first < 0) {
+                failures << QStringLiteral("sorting drew no indicator");
+                return;
+            }
+            const int left = qRound(first / ratio);
+            const int right = qRound(last / ratio);
+            // The indicator leads the Name title from the start of its section, not at the style's
+            // centered or trailing place; the title moves right just past it.
+            if (left > 16 || right > section.width() / 4) {
+                failures << QStringLiteral("indicator drawn across %1-%2 of a %3 px Name section")
+                    .arg(left).arg(right).arg(section.width());
+            }
+        }, [&] { ThemedFileDialog::getOpenFileNames(&host, QStringLiteral("Open"), root.path()); });
+        QVERIFY(inspected);
         QVERIFY2(failures.isEmpty(), qPrintable(failures.join(QLatin1Char('\n'))));
     }
 

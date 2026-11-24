@@ -14,6 +14,7 @@
 #include <QFrame>
 #include <QHeaderView>
 #include <QIcon>
+#include <QImage>
 #include <QKeyEvent>
 #include <QListView>
 #include <QComboBox>
@@ -32,6 +33,7 @@
 #include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QtMath>
 
 class FileDialogHeaderView final : public QHeaderView {
 public:
@@ -48,26 +50,72 @@ protected:
         option.rect = rect;
         option.textAlignment &= ~Qt::AlignVertical_Mask;
         option.textAlignment |= Qt::AlignVCenter;
-        painter->save();
-        style()->drawControl(QStyle::CE_Header, &option, painter, this);
-        painter->restore();
+        if (logicalIndex == 0) {
+            // The first section is the Name column even when the model leaves its title empty.
+            if (option.text.isEmpty()) {
+                option.text = QCoreApplication::translate("QFileSystemModel", "Name");
+            }
+            // QFileSystemModel gives the Name title a transparent icon that lines it up with the
+            // item names; the title starts at the section padding instead.
+            option.icon = QIcon();
+        }
 
-        if (logicalIndex != 0 || !option.text.isEmpty()) {
+        painter->save();
+        if (option.sortIndicator == QStyleOptionHeader::None) {
+            style()->drawControl(QStyle::CE_Header, &option, painter, this);
+            painter->restore();
             return;
         }
 
-        const QString firstSectionText = QCoreApplication::translate("QFileSystemModel", "Name");
-        const int sortIndicatorWidth = option.sortIndicator == QStyleOptionHeader::None
-            ? 0
-            : style()->pixelMetric(QStyle::PM_HeaderMarkSize, &option, this) + 6;
-        const QRect labelRect = rect.adjusted(6, 0, -(6 + sortIndicatorWidth), 0);
-        painter->save();
-        painter->setPen(palette().color(QPalette::Text));
-        painter->setFont(font());
-        painter->drawText(
-            labelRect,
-            Qt::AlignLeft | Qt::AlignVCenter | Qt::TextSingleLine,
-            firstSectionText);
+        // The sort indicator leads its label instead of taking the style's place for it. Render the
+        // style's own indicator and place its visible mark: some styles report the whole section
+        // as the indicator area and draw the mark above its middle. The mark is aligned by its
+        // center of mass, which sits lower than its box for a chevron.
+        const QRect styleMark = style()->subElementRect(QStyle::SE_HeaderArrow, &option, this);
+        const qreal ratio = devicePixelRatioF();
+        QImage ink((QSizeF(styleMark.size()) * ratio).toSize(), QImage::Format_ARGB32_Premultiplied);
+        ink.setDevicePixelRatio(ratio);
+        ink.fill(Qt::transparent);
+        {
+            QPainter inkPainter(&ink);
+            QStyleOptionHeader indicator(option);
+            indicator.rect = QRect(QPoint(), styleMark.size());
+            style()->drawPrimitive(QStyle::PE_IndicatorHeaderArrow, &indicator, &inkPainter, this);
+        }
+        QRect inkPixels;
+        qreal inkMass = 0;
+        qreal inkMoment = 0;
+        for (int y = 0; y < ink.height(); ++y) {
+            const auto* line = reinterpret_cast<const QRgb*>(ink.constScanLine(y));
+            for (int x = 0; x < ink.width(); ++x) {
+                if (const int alpha = qAlpha(line[x]); alpha != 0) {
+                    inkPixels |= QRect(x, y, 1, 1);
+                    inkMass += alpha;
+                    inkMoment += alpha * (y + 0.5);
+                }
+            }
+        }
+        const QRectF mark(inkPixels.x() / ratio, inkPixels.y() / ratio, inkPixels.width() / ratio, inkPixels.height() / ratio);
+
+        QStyleOptionHeader label(option);
+        label.sortIndicator = QStyleOptionHeader::None;
+        label.rect = style()->subElementRect(QStyle::SE_HeaderLabel, &label, this);
+        // The mark starts at the label's left edge and the title moves right past it.
+        constexpr int markGap = 6;
+        const int markLeft = label.rect.left();
+        if (!inkPixels.isEmpty()) {
+            label.rect.setLeft(markLeft + qCeil(mark.width()) + markGap);
+        }
+
+        QStyleOptionHeader section(option);
+        section.sortIndicator = QStyleOptionHeader::None;
+        style()->drawControl(QStyle::CE_HeaderSection, &section, painter, this);
+        style()->drawControl(QStyle::CE_HeaderLabel, &label, painter, this);
+        if (!inkPixels.isEmpty()) {
+            // The mark's center of mass is centered on the title's line.
+            const qreal markCenterY = inkMoment / inkMass / ratio;
+            painter->drawImage(QPointF(markLeft - mark.left(), QRectF(label.rect).center().y() - markCenterY), ink);
+        }
         painter->restore();
     }
 };
