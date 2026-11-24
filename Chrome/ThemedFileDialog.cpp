@@ -198,6 +198,8 @@ ThemedFileDialog::ThemedFileDialog(
             connect(pathEdit, &QLineEdit::returnPressed, this, &ThemedFileDialog::openTypedLookInPath);
             connect(pathEdit, &QLineEdit::textEdited, this, [this](const QString& text) {
                 _typedLookInPath = text;
+                // Editing abandons a Tab that was waiting for a folder listing.
+                _awaitedLookInFolder.clear();
             });
             // QComboBox rewrites the field with the current row's text whenever the file-system
             // model refreshes that row, including while the user is typing. Restore at once so no
@@ -210,6 +212,18 @@ ThemedFileDialog::ThemedFileDialog(
 
             auto* folders = new QFileSystemModel(pathEdit);
             folders->setFilter(QDir::AllDirs | QDir::Drives | QDir::NoDotAndDotDot);
+            // The model lists folders on a worker thread. Record what it has listed so a Tab can
+            // tell a folder still being listed from one without a match.
+            connect(folders, &QFileSystemModel::directoryLoaded, this, [this](const QString& folder) {
+                const QString key = lookInFolderKey(folder);
+                _listedLookInFolders.insert(key);
+                if (key == _awaitedLookInFolder) {
+                    _awaitedLookInFolder.clear();
+                    if (!_typedLookInPath.isNull()) {
+                        completeLookInPath();
+                    }
+                }
+            });
             folders->setRootPath(QString());
             auto* completer = new QCompleter(folders, pathEdit);
             completer->setCompletionMode(QCompleter::PopupCompletion);
@@ -504,6 +518,16 @@ void ThemedFileDialog::openTypedLookInPath()
     syncLookInPath();
 }
 
+QString ThemedFileDialog::lookInFolderKey(const QString& folder)
+{
+    const QString key = QDir::cleanPath(QDir::fromNativeSeparators(folder));
+#if defined(Q_OS_LINUX)
+    return key;
+#else
+    return key.toCaseFolded();
+#endif
+}
+
 bool ThemedFileDialog::completeLookInPath()
 {
     QLineEdit* pathEdit = _lookInComboBox ? _lookInComboBox->lineEdit() : nullptr;
@@ -515,6 +539,18 @@ bool ThemedFileDialog::completeLookInPath()
     // The folder model matches absolute paths only. Complete a relative or "~" path from the
     // absolute folder it names, as Return would open it, and keep the form the user typed.
     const QString typed = pathEdit->text();
+    // A bare "~" names the home folder itself, not every folder that starts with its name.
+    if (typed == QLatin1String("~")) {
+        _typedLookInPath = QStringLiteral("~") + QDir::separator();
+        pathEdit->setText(_typedLookInPath);
+        pathEdit->setModified(true);
+        completer->setCompletionPrefix(QDir::toNativeSeparators(QDir::homePath() + QLatin1Char('/')));
+        completer->complete();
+        if (completer->completionCount() == 0) {
+            completer->popup()->hide();
+        }
+        return true;
+    }
     QString prefix = typed;
     QString expanded = QDir::fromNativeSeparators(typed);
     if (expanded == QLatin1String("~") || expanded.startsWith(QLatin1String("~/"))) {
@@ -538,6 +574,24 @@ bool ThemedFileDialog::completeLookInPath()
     completer->setCompletionPrefix(prefix);
     const int count = completer->completionCount();
     if (count == 0) {
+        // No suggestion yet may mean the folder is still being listed. Wait for its listing once,
+        // keeping the typed path; a second Tab, or an unlisted folder that does not exist, moves on.
+        const QString unixPrefix = QDir::fromNativeSeparators(prefix);
+        const int separator = unixPrefix.lastIndexOf(QLatin1Char('/'));
+        const QString folder = separator < 0 ? QString() : QDir::cleanPath(unixPrefix.left(separator + 1));
+        const QString key = lookInFolderKey(folder);
+        if (!folder.isEmpty() && key != _awaitedLookInFolder && !_listedLookInFolders.contains(key)
+            && QFileInfo(folder).isDir()) {
+            _awaitedLookInFolder = key;
+            if (auto* folders = qobject_cast<QFileSystemModel*>(completer->model())) {
+                const QModelIndex index = folders->index(folder);
+                if (folders->canFetchMore(index)) {
+                    folders->fetchMore(index);
+                }
+            }
+            return true;
+        }
+        _awaitedLookInFolder.clear();
         return false;
     }
 

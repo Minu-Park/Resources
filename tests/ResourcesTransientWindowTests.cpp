@@ -608,6 +608,11 @@ private slots:
         QVERIFY(root.isValid());
         // first/second/first gives the innermost folder an ancestor of the same name.
         QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("first/second/first"))));
+        // "fresh" is listed by no suggestion before its Tab; "home" stands in for the home folder,
+        // and "home2" is a sibling that starts with its name.
+        QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("fresh/alpha"))));
+        QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("home/inner"))));
+        QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("home2"))));
         const auto canonical = [](const QString& path) { return QFileInfo(path).canonicalFilePath(); };
         const QString rootPath = canonical(root.path());
         const QString firstPath = canonical(root.filePath(QStringLiteral("first")));
@@ -783,6 +788,36 @@ private slots:
             QTest::qWait(20);
             expect(picker->window()->focusWidget() != edit, QStringLiteral("Tab without a match kept focus"));
             expect(shown() == firstPath, QStringLiteral("Tab without a match left %1").arg(edit->text()));
+
+            // In a folder not yet listed for suggestions, Tab waits for the listing and completes
+            // instead of treating the empty suggestion list as no match.
+            picker->setDirectory(root.filePath(QStringLiteral("fresh")));
+            QTest::qWait(20);
+            typeText(combo, QStringLiteral("al"));
+            QTest::keyClick(combo, Qt::Key_Tab);
+            const bool waited = QTest::qWaitFor([&] {
+                return QDir::fromNativeSeparators(edit->text()) == QStringLiteral("alpha/");
+            }, 5000);
+            expect(waited, QStringLiteral("Tab in an unlisted folder left %1").arg(edit->text()));
+
+            // A bare "~" completes to the home folder, not to folders that start with its name.
+            // Qt reads HOME for the home folder on Unix; elsewhere this check does not apply.
+            const bool homeWasSet = qEnvironmentVariableIsSet("HOME");
+            const QByteArray savedHome = qgetenv("HOME");
+            qputenv("HOME", QFile::encodeName(root.filePath(QStringLiteral("home"))));
+            if (QDir::homePath() == root.filePath(QStringLiteral("home"))) {
+                typeText(combo, QStringLiteral("~"));
+                QTest::keyClick(combo, Qt::Key_Tab);
+                QTest::qWait(20);
+                expect(edit->text() == QStringLiteral("~") + QDir::separator(),
+                    QStringLiteral("bare ~ completed to %1").arg(edit->text()));
+                QTest::keyClick(combo, Qt::Key_Return);
+                QTest::qWait(20);
+                expect(current() == canonical(root.filePath(QStringLiteral("home"))),
+                    QStringLiteral("completed ~ opened %1").arg(current()));
+            }
+            if (homeWasSet) qputenv("HOME", savedHome);
+            else qunsetenv("HOME");
         }, [&] {
             if (mode == 0) ThemedFileDialog::getOpenFileNames(&host, QStringLiteral("Open"), root.path());
             else if (mode == 1) ThemedFileDialog::getSaveFileName(&host, QStringLiteral("Save"), root.filePath(QStringLiteral("out.dat")));

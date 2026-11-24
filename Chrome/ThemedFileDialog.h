@@ -2,6 +2,7 @@
 
 #include "Chrome/ThemedDialog.h"
 
+#include <QSet>
 #include <QString>
 #include <QStringList>
 
@@ -65,10 +66,14 @@ private:
      * @brief Completes the typed "Look in" path on Tab without opening it.
      * @note One match, or the suggestion selected in the popup, completes to that folder and a
      * trailing separator. Several matches complete to their shared prefix, then select the first.
-     * A relative or "~" path completes from the folder it names and keeps its typed form.
+     * A relative or "~" path completes from the folder it names and keeps its typed form; a bare
+     * "~" completes to the home folder. While the folder model is still listing the folder being
+     * completed, Tab waits for the listing and completes then.
      * @return False when no folder matches, so Tab moves focus instead.
      */
     bool completeLookInPath();
+    /** @brief Compares folder paths as the platform's file system does. */
+    static QString lookInFolderKey(const QString& folder);
 
     enum class Mode {
         OpenOne,
@@ -93,6 +98,9 @@ private:
     /** @brief Text the user typed or chose and has not opened yet; null while the field shows the current folder. */
     QString _typedLookInPath;
     bool _refusingLookInPath = false;
+    // Folders the suggestion model has listed, and one whose listing a Tab is waiting for.
+    QSet<QString> _listedLookInFolders;
+    QString _awaitedLookInFolder;
     QPushButton* _acceptButton = nullptr;
     QPushButton* _cancelButton = nullptr;
     bool _actionButtonAlignmentQueued = false;
