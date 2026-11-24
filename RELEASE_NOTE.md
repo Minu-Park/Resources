@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove the macOS combo-popup closing afterimage by disabling the popup's native window animation.
+
 - Keep a reopened combo popup joined to its control. `QFileDialog`'s `Look in` combo calls `QComboBox::showPopup()` again after rebuilding its directory list, which placed the visible popup without a new Show event; Resources now rejoins an open popup on its move or resize (#563).
 
 - Open a `ThemedFileDialog` without a caller directory in Qt's last visited directory instead of the working directory. A caller-supplied directory or save path still takes precedence.

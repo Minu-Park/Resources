@@ -108,6 +108,14 @@ qt_add_library(PlaygroundResources STATIC
 
 add_library(Resources::Resources ALIAS PlaygroundResources)
 
+if(APPLE)
+    enable_language(OBJCXX)
+    find_library(RESOURCES_APPKIT_FRAMEWORK AppKit REQUIRED)
+    target_sources(PlaygroundResources PRIVATE theme/ComboPopupCocoa.mm)
+    set_target_properties(PlaygroundResources PROPERTIES OBJCXX_STANDARD 17 OBJCXX_STANDARD_REQUIRED ON)
+    target_link_libraries(PlaygroundResources PRIVATE ${RESOURCES_APPKIT_FRAMEWORK})
+endif()
+
 target_compile_features(PlaygroundResources PUBLIC cxx_std_17)
 
 target_link_libraries(PlaygroundResources
@@ -153,6 +161,10 @@ if(RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS)
     qt_add_executable(ResourcesTransientWindowTests tests/ResourcesTransientWindowTests.cpp)
     target_link_libraries(ResourcesTransientWindowTests PRIVATE Resources::Resources Qt6::Test)
     set_target_properties(ResourcesTransientWindowTests PROPERTIES WIN32_EXECUTABLE FALSE)
+    if(APPLE)
+        target_sources(ResourcesTransientWindowTests PRIVATE tests/ComboPopupCocoaChecks.mm)
+        set_target_properties(ResourcesTransientWindowTests PROPERTIES OBJCXX_STANDARD 17 OBJCXX_STANDARD_REQUIRED ON)
+    endif()
     if(WIN32)
         add_test(NAME ResourcesTransientWindowTests COMMAND ${CMAKE_COMMAND} -E env
             "PATH=$<TARGET_FILE_DIR:Qt6::Core>;$ENV{PATH}" "QT_QPA_PLATFORM=offscreen"

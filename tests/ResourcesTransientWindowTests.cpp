@@ -65,6 +65,9 @@
 #ifdef Q_OS_WIN
 #include <qt_windows.h>
 #endif
+#ifdef Q_OS_MACOS
+bool comboPopupCocoaAnimationDisabled(QWidget& popup);
+#endif
 
 static QRect darkTextBounds(const QImage& image, const QRect& area, int threshold = 100)
 {
@@ -2455,6 +2458,11 @@ private slots:
             combo.showPopup();
             auto* popup = combo.view()->window();
             QTRY_VERIFY(popup->isVisible());
+#ifdef Q_OS_MACOS
+            if (QGuiApplication::platformName() == QStringLiteral("cocoa"))
+                QVERIFY2(comboPopupCocoaAnimationDisabled(*popup),
+                    "AppKit must not fade the popup after the combo restores its closed border.");
+#endif
             QTest::qWait(30);
             const QPoint origin = combo.mapToGlobal(QPoint());
             QCOMPARE(popup->x(), origin.x());

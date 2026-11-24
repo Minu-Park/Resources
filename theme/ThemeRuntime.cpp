@@ -1485,6 +1485,10 @@ protected:
                         prepareComboPopup(widget);
                         widget->setGeometry(geo);
                         applyPopupMask(widget, false);
+#ifdef Q_OS_MACOS
+                        // Configure the native window before Qt presents the popup.
+                        Resources::disableComboPopupCocoaAnimation(widget->windowHandle());
+#endif
                     }
                 }
             }

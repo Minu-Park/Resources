@@ -134,6 +134,8 @@ A consumer can call `setTabStripVisible(false)` to collapse both the tab bar and
 
 ## Theme Contract
 
+On macOS, themed combo popups disable AppKit's window animation so the list disappears when the control restores its closed border.
+
 MenuInk follows native selection scope: SelectRows emphasizes every cell in the
 selected/hovered row with blue semibold selection or neutral semibold hover.
 SelectItems retains first-column identity emphasis. Value delegates and editors
@@ -160,5 +162,7 @@ Existing object-name selectors cover specific chrome, native geometry and conten
 See [theme/README.md](theme/README.md) for file ordering and extension rules.
 
 ## Validation
+
+For macOS combo dismissal changes, configure `RESOURCES_BUILD_TRANSIENT_WINDOW_TESTS=ON` and run `ResourcesTransientWindowTests comboPopupLifecycle comboPopupInDeviceDock` with `QT_QPA_PLATFORM=cocoa`. The lifecycle cases check the native window's animation setting and exercise Escape and selection.
 
 For shadow changes, configure `RESOURCES_BUILD_MDI_SHADOW_TESTS=ON` and run `ResourcesMdiShadowTests` with the offscreen Qt platform. Automated tests do not replace visual checks for native window composition, fractional scaling, and platform-specific chrome.
