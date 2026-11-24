@@ -787,8 +787,8 @@ private slots:
                 return suggestions->isVisible() && completer->completionCount() > 0;
             }, 5000), QStringLiteral("first was not listed for suggestions"));
             suggestions->hide();
-            // Qt delivers focus changes only in the active window. A desktop session can refuse to
-            // activate it while another application holds focus; the check needs that activation.
+            // Qt delivers focus changes only in the active window. A native desktop session can
+            // refuse to activate it while another application holds focus; offscreen always activates.
             picker->window()->activateWindow();
             if (QTest::qWaitForWindowActive(picker->window(), 2000)) {
                 typeText(combo, QStringLiteral("no-such-folder"));
@@ -797,6 +797,8 @@ private slots:
                 QWidget* focused = picker->window()->focusWidget();
                 expect(focused != edit && focused != combo, QStringLiteral("Tab without a match kept focus"));
                 expect(shown() == firstPath, QStringLiteral("Tab without a match left %1").arg(edit->text()));
+            } else if (QGuiApplication::platformName() == QLatin1String("offscreen")) {
+                expect(false, QStringLiteral("offscreen file picker was not activated for the Tab focus check"));
             } else {
                 qWarning("The file picker could not be activated; the Tab focus check did not run.");
             }
