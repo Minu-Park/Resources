@@ -4,7 +4,7 @@
 
 - Remove the macOS combo-popup closing afterimage by disabling the popup's native window animation.
 
-- Draw the `ThemedFileDialog` detail header's sort indicator at the start of the sorted column, 6px before its title with its center of mass on the title's line, at the style's own size, instead of at the style's centered place. The Name title no longer reserves Qt's empty icon slot, so it starts at the section padding.
+- On macOS, draw the `ThemedFileDialog` detail header's sort indicator at the start of the sorted column, 6px before its title with its center of mass on the title's line, at the style's own size, instead of at the style's centered place. The Name title no longer reserves Qt's empty icon slot, so it starts at the section padding.
 
 - Keep a reopened combo popup joined to its control. `QFileDialog`'s `Look in` combo calls `QComboBox::showPopup()` again after rebuilding its directory list, which placed the visible popup without a new Show event; Resources now rejoins an open popup on its move or resize (#563).
 

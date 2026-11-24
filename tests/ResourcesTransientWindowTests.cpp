@@ -795,6 +795,7 @@ private slots:
 
     void filePickerSortIndicatorLeadsNameLabel()
     {
+#ifdef Q_OS_MACOS
         Resources::installResources(*qApp);
         QTemporaryDir root;
         QVERIFY(root.isValid());
@@ -849,6 +850,9 @@ private slots:
         }, [&] { ThemedFileDialog::getOpenFileNames(&host, QStringLiteral("Open"), root.path()); });
         QVERIFY(inspected);
         QVERIFY2(failures.isEmpty(), qPrintable(failures.join(QLatin1Char('\n'))));
+#else
+        QSKIP("ThemedFileDialog replaces the detail header only on macOS; other platforms keep the native header");
+#endif
     }
 
     void filePickerLookInPopupStaysJoinedOnReopen()
