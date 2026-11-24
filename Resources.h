@@ -2,6 +2,7 @@
 
 #include <QtGlobal>
 #include <QColor>
+#include <QFont>
 #include <QMap>
 #include <QString>
 #include "Chrome/WindowPlatformAttributes.h"
@@ -117,4 +118,8 @@ void paintMdiAreaBackground(QWidget* viewport, QPainter& painter, const QPixmap&
  * @brief Standardized HTML formatter for system log messages.
  */
 QString formatLogHtml(int messageType, const QString& timestamp, const QString& message);
+/** @brief Returns the installed theme ink for a Qt log severity. */
+QColor logSeverityColor(QtMsgType type);
+/** @brief Returns the weight override for a log severity or source label. */
+QFont logLabelFont();
 }

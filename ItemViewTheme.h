@@ -1,4 +1,5 @@
 #pragma once
+#include <QFont>
 #include <Qt>
 
 class QAbstractItemView;
@@ -16,6 +17,7 @@ inline constexpr int SuppressItemInteractionFillRole = Qt::UserRole + 512;
 inline constexpr int EmphasizedItemInkRole = Qt::UserRole + 513;
 
 /** @brief Controls emphasis independently of row/cell selection behavior.
+ * HoverBold changes only the hovered text weight and omits hover and selection fills.
  * MenuInk uses no fill: neutral semibold hover and accented semibold selection.
  * Row selection shares emphasis across all cells; cell selection emphasizes only
  * first-column identities. QMenu keeps its own accented hover. Value columns
@@ -23,7 +25,9 @@ inline constexpr int EmphasizedItemInkRole = Qt::UserRole + 513;
  * itemRole, and icon labels retain itemIcon (QIcon) and itemIconSize (QSize)
  * properties. Resources derives their interaction state.
  */
-enum class ItemSelectionAppearance { JoinedOnly, CurrentCell, MenuInk };
+enum class ItemSelectionAppearance { JoinedOnly, CurrentCell, MenuInk, HoverBold };
+/** @brief Applies the HoverBold weight without changing the base font's size or family. */
+QFont itemHoverBoldFont(QFont base);
 /** @brief Chooses joined fills or fill-free menu ink; selection and editor behavior stay unchanged. */
 void setItemSelectionAppearance(QAbstractItemView *view, ItemSelectionAppearance appearance);
 /** @brief Installs shared selection painting while retaining the view's delegate and editors. */

@@ -1823,7 +1823,7 @@ private:
     {
         const QString name = widget->objectName();
         if (name != QLatin1String("ProcessingConsoleLog") && name != QLatin1String("ProcessingParamEditor")
-            && name != QLatin1String("SystemLogViewer")) return;
+            && name != QLatin1String("SystemLogDetail")) return;
         QTextDocument* document = nullptr;
         if (auto* plain = qobject_cast<QPlainTextEdit*>(widget)) document = plain->document();
         else if (auto* rich = qobject_cast<QTextEdit*>(widget)) document = rich->document();

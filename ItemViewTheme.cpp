@@ -130,6 +130,22 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
                                       : bool(option.state & QStyle::State_MouseOver);
         const bool hovered = view_->selectionMode() != QAbstractItemView::NoSelection && mouseOver &&
                              (option.state & QStyle::State_Enabled);
+        if (view_->property("itemHoverBold").toBool()) {
+            auto contents = option;
+            contents.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver | QStyle::State_HasFocus);
+            if (!hovered) {
+                source_->paint(painter, contents, index);
+                return;
+            }
+            initStyleOption(&contents, index);
+            contents.font = Resources::itemHoverBoldFont(contents.font);
+            contents.fontMetrics = QFontMetrics(contents.font);
+            painter->save();
+            painter->setFont(contents.font);
+            view_->style()->drawControl(QStyle::CE_ItemViewItem, &contents, painter, view_);
+            painter->restore();
+            return;
+        }
         if (view_->property("menuItemInk").toBool()) {
             QStyleOptionViewItem contents(option);
             initStyleOption(&contents, index);
@@ -396,12 +412,19 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
 };
 } // namespace
 
+QFont Resources::itemHoverBoldFont(QFont base)
+{
+    base.setWeight(QFont::Bold);
+    return base;
+}
+
 void Resources::setItemSelectionAppearance(QAbstractItemView *view, ItemSelectionAppearance appearance)
 {
     if (!view)
         return;
     view->setProperty("joinedSelectionOnly", appearance == ItemSelectionAppearance::JoinedOnly);
     view->setProperty("menuItemInk", appearance == ItemSelectionAppearance::MenuInk);
+    view->setProperty("itemHoverBold", appearance == ItemSelectionAppearance::HoverBold);
     view->viewport()->update();
 }
 

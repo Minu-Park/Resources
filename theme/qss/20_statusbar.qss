@@ -18,15 +18,12 @@ QStatusBar[maximized="true"] {
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
 }
-QTextEdit#SystemLogViewer {
-    background-color: @SURFACE@;
-    color: @TEXT@;
-    border: none;
-    border-radius: 0px;
-    padding: 0px 12px;
-
-    font-family: "@FONT_MONO@";
-    font-size: @FONT_CAPTION@px;
+QTextEdit#SystemLogDetail {
+    background: @SURFACE@;
+    border: 1px solid @BORDER@;
+    border-radius: @TREE_FRAME_RADIUS@px;
+    padding: 12px;
+    font-family: "@FONT_UI@";
 }
 QStatusBar::item {
     border: none;

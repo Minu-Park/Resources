@@ -379,6 +379,10 @@ QTableView::item {
     background: transparent;
 }
 
+QAbstractItemView[itemHoverBold="true"] {
+    selection-background-color: transparent;
+}
+
 QTreeView::item:hover,
 QListView::item:hover,
 QTableView::item:hover,
@@ -1466,6 +1470,7 @@ QSplitter[controlRole="resizeGrip"]::handle:horizontal {
     border: none;
     margin: 0;
 }
+QSplitter[controlRole="resizeGrip"][gripVisibility="always"]::handle:vertical,
 QSplitter[controlRole="resizeGrip"][orientation="Vertical"] QSplitterHandle:hover,
 QSplitter[controlRole="resizeGrip"]::handle:vertical:hover,
 QSplitter[controlRole="resizeGrip"]::handle:vertical:pressed {
@@ -1473,6 +1478,7 @@ QSplitter[controlRole="resizeGrip"]::handle:vertical:pressed {
     background-position: center;
     background-repeat: no-repeat;
 }
+QSplitter[controlRole="resizeGrip"][gripVisibility="always"]::handle:horizontal,
 QSplitter[controlRole="resizeGrip"][orientation="Horizontal"] QSplitterHandle:hover,
 QSplitter[controlRole="resizeGrip"]::handle:horizontal:hover,
 QSplitter[controlRole="resizeGrip"]::handle:horizontal:pressed {

@@ -82,18 +82,39 @@ void paintMdiAreaBackground(QWidget* viewport, QPainter& painter, const QPixmap&
     painter.drawPixmap(QRect(topLeft, logoSize), logo);
 }
 
+QColor logSeverityColor(QtMsgType type)
+{
+    const auto palette = themePalette();
+    switch (type) {
+    case QtInfoMsg: return palette.value(QStringLiteral("selectionAccent"));
+    case QtWarningMsg: return palette.value(QStringLiteral("warningText"));
+    case QtCriticalMsg: return palette.value(QStringLiteral("error"));
+    case QtFatalMsg: return palette.value(QStringLiteral("errorText"));
+    default: return palette.value(QStringLiteral("secondaryText"));
+    }
+}
+
+QFont logLabelFont()
+{
+    QFont font;
+    font.setWeight(QFont::DemiBold);
+    return font;
+}
+
 QString formatLogHtml(int messageType, const QString& timestamp, const QString& message)
 {
     QString typeStr;
-    QString color;
     switch (messageType) {
-        case QtDebugMsg:    typeStr = QStringLiteral("DEBUG"); color = themePalette().value(QStringLiteral("secondaryText")).name(QColor::HexRgb); break;
-        case QtInfoMsg:     typeStr = QStringLiteral("INFO");  color = themePalette().value(QStringLiteral("selectionAccent")).name(QColor::HexRgb); break;
-        case QtWarningMsg:  typeStr = QStringLiteral("WARN");  color = themePalette().value(QStringLiteral("warning")).name(QColor::HexRgb); break;
-        case QtCriticalMsg: typeStr = QStringLiteral("CRIT");  color = themePalette().value(QStringLiteral("error")).name(QColor::HexRgb); break;
-        case QtFatalMsg:    typeStr = QStringLiteral("FATAL"); color = themePalette().value(QStringLiteral("errorText")).name(QColor::HexRgb); break;
-        default:            typeStr = QStringLiteral("LOG");   color = themePalette().value(QStringLiteral("secondaryText")).name(QColor::HexRgb); break;
+    case QtDebugMsg: typeStr = QStringLiteral("DEBUG"); break;
+    case QtInfoMsg: typeStr = QStringLiteral("INFO"); break;
+    case QtWarningMsg: typeStr = QStringLiteral("WARN"); break;
+    case QtCriticalMsg: typeStr = QStringLiteral("CRIT"); break;
+    case QtFatalMsg: typeStr = QStringLiteral("FATAL"); break;
+    default: typeStr = QStringLiteral("LOG"); break;
     }
+    const QString color = (messageType == QtWarningMsg
+        ? themePalette().value(QStringLiteral("warning"))
+        : logSeverityColor(static_cast<QtMsgType>(messageType))).name(QColor::HexRgb);
 
     return QStringLiteral("<span style=\"color:%5;\">[%1]</span> <span style=\"color:%2; font-weight:bold;\">[%3]</span> %4")
         .arg(timestamp, color, typeStr, message.toHtmlEscaped(), themePalette().value(QStringLiteral("secondaryText")).name(QColor::HexRgb));

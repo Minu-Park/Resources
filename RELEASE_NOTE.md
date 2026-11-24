@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add an always-visible option to the shared resize grip, an item-view mode that applies bold on hover without interaction fills, and themed severity ink and detail padding for log viewers.
+
 - Remove the macOS combo-popup closing afterimage by disabling the popup's native window animation.
 
 - On macOS, draw the `ThemedFileDialog` detail header's sort indicator at the start of the sorted column, 6px before its title with its center of mass on the title's line, at the style's own size, instead of at the style's centered place. The Name title no longer reserves Qt's empty icon slot, so it starts at the section padding.
