@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Start the first dock tab and its selection indicator flush with the dock edge.
+
 - Apply the shared dock tab bar template and accessible per-tab close controls to main windows.
 
 - Add an always-visible option to the shared resize grip, an item-view mode that applies bold on hover without interaction fills, and themed severity ink and detail padding for log viewers.

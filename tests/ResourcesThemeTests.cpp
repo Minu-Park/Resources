@@ -96,10 +96,13 @@ private slots:
         window.addDockWidget(Qt::RightDockWidgetArea, &first);
         window.addDockWidget(Qt::RightDockWidgetArea, &second);
         window.tabifyDockWidget(&first, &second);
+        first.raise();
         window.statusBar(); window.resize(640, 480); window.show();
         QTabBar* bar = nullptr;
         QTRY_VERIFY((bar = window.findChild<QTabBar*>(QString(), Qt::FindDirectChildrenOnly)) != nullptr);
         QTRY_COMPARE(bar->count(), 2);
+        QCOMPARE(bar->tabRect(0).left(), 0);
+        QCOMPARE(bar->geometry().left(), first.geometry().left());
         QTRY_VERIFY(bar->tabButton(0, QTabBar::RightSide));
         QTRY_VERIFY(bar->tabButton(1, QTabBar::RightSide));
         for (int i = 0; i < bar->count(); ++i) {
