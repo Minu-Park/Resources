@@ -141,6 +141,30 @@ private slots:
         QCOMPARE(bar->height(), window.statusBar()->height());
     }
 
+    void singleDockRemovesTabBarSpace()
+    {
+        QMainWindow window;
+        QDockWidget first("First", &window), second("Second", &window);
+        first.setWidget(new QWidget); second.setWidget(new QWidget);
+        window.addDockWidget(Qt::RightDockWidgetArea, &first);
+        window.addDockWidget(Qt::RightDockWidgetArea, &second);
+        window.tabifyDockWidget(&first, &second);
+        window.resize(640, 480); window.show();
+        QTabBar* bar = nullptr;
+        QTRY_VERIFY((bar = window.findChild<QTabBar*>(QString(), Qt::FindDirectChildrenOnly)) != nullptr);
+        QTRY_VERIFY(bar->isVisible());
+        const int areaBottom = bar->geometry().bottom();
+        second.hide();
+        QTest::qWait(100);
+        QVERIFY(!bar->geometry().intersects(window.rect()));
+        QCOMPARE(first.geometry().bottom(), areaBottom);
+        second.show();
+        QTRY_COMPARE(bar->count(), 2);
+        QTRY_VERIFY(bar->geometry().intersects(window.rect()));
+        QTRY_VERIFY(bar->tabButton(0, QTabBar::RightSide));
+        QTRY_VERIFY(bar->tabButton(1, QTabBar::RightSide));
+    }
+
     void dockTabRemapsCloseButton()
     {
         QMainWindow window;
