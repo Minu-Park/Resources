@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Draw dock separators as a single border line while retaining Qt’s expanded resize target.
+
 - Start the first dock tab and its selection indicator flush with the dock edge.
 
 - Apply the shared dock tab bar template and accessible per-tab close controls to main windows.

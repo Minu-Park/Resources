@@ -88,6 +88,38 @@ private slots:
         QString error;
         QVERIFY2(Resources::reloadThemeFromDirectory(factory_.path() + "/qss", &error), qPrintable(error));
     }
+    void dockSeparatorHitMeasurement()
+    {
+        QMainWindow window;
+        window.setDockOptions(QMainWindow::AllowTabbedDocks);
+        window.setCentralWidget(new QWidget);
+        QDockWidget first("First", &window), second("Second", &window);
+        auto* content = new QWidget;
+        content->setStyleSheet("background: #208060;");
+        first.setWidget(content); second.setWidget(new QWidget);
+        window.addDockWidget(Qt::RightDockWidgetArea, &first);
+        window.splitDockWidget(&first, &second, Qt::Vertical);
+        window.resize(800, 600); window.show();
+        QTest::qWait(100);
+        const QRect dock = first.geometry();
+        QCOMPARE(dock.left() - window.centralWidget()->geometry().right() - 1, 1);
+        QCOMPARE(second.geometry().top() - dock.bottom() - 1, 1);
+        const QImage image = window.grab().toImage();
+        const QPoint contentPoint = content->mapTo(&window, QPoint(0, content->height() / 2));
+        QCOMPARE(image.pixelColor(contentPoint.x(), contentPoint.y()), QColor("#208060"));
+        QCOMPARE(image.pixelColor(contentPoint.x() + 2, contentPoint.y()), QColor("#208060"));
+        bool central = false, between = false;
+        const QPoint centralLine(dock.left() - 1, dock.center().y());
+        const QPoint dockLine(dock.center().x(), dock.bottom() + 1);
+        for (QWidget* splitter : window.findChildren<QWidget*>(QStringLiteral("qt_qmainwindow_extended_splitter"))) {
+            if (!splitter->isVisible()) continue;
+            if (splitter->geometry().contains(centralLine)) { central = true; QVERIFY(splitter->width() >= 5); }
+            if (splitter->geometry().contains(dockLine)) { between = true; QVERIFY(splitter->height() >= 5); }
+        }
+        QVERIFY(central);
+        QVERIFY(between);
+    }
+
     void dockTabsProvideCloseControls()
     {
         QMainWindow window;
