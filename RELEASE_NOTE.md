@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Apply the shared dock tab bar template and accessible per-tab close controls to main windows.
+
 - Add an always-visible option to the shared resize grip, an item-view mode that applies bold on hover without interaction fills, and themed severity ink and detail padding for log viewers.
 
 - Remove the macOS combo-popup closing afterimage by disabling the popup's native window animation.

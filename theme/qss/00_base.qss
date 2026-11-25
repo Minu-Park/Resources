@@ -166,6 +166,39 @@ QTabBar::tab:hover:!selected {
     border-bottom: 2px solid @HOVERBORDER@;
 }
 
+/* Tabified dock tab bars sit below their docks: a full-width border separates them from the
+   dock content, and the selection/hover indicator moves to the tab edge that meets it. */
+QMainWindow > QTabBar {
+    margin-left: 0px;
+    border-top: 1px solid @BORDER@;
+}
+
+QMainWindow > QTabBar::tab {
+    color: @TEXT@;
+}
+
+QMainWindow > QTabBar::tab:first {
+    margin-left: 6px;
+}
+
+/* The bottom tab bar matches the adjacent QStatusBar outer height (32px body, 3px padding,
+   1px border = 39px) so both bottom borders meet on one line: a 2px indicator plus a fixed
+   37px body that also contains the tab close glyph. */
+QMainWindow > QTabBar::tab:bottom {
+    border-bottom: none;
+    border-top: 2px solid transparent;
+    padding: 0px 8px;
+    height: 37px;
+}
+
+QMainWindow > QTabBar::tab:bottom:selected {
+    border-top: 2px solid @SELECTIONACCENT@;
+}
+
+QMainWindow > QTabBar::tab:bottom:hover:!selected {
+    border-top: 2px solid @HOVERBORDER@;
+}
+
 QTabBar::tear {
     width: 0px;
     border: none;

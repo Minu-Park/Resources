@@ -42,6 +42,9 @@
 #include <QProgressBar>
 #include <QStyleOptionProgressBar>
 #include <QTabBar>
+#include <QDockWidget>
+#include <QMainWindow>
+#include <QSet>
 #include <QToolButton>
 #include <QAbstractItemView>
 #include <QHeaderView>
@@ -1011,6 +1014,9 @@ private:
         }
         if (active || checkedState) return palette.value(QStringLiteral("focusBorder"));
         if (engaged) return palette.value(QStringLiteral("hoverBorder"));
+        // A selected dock tab keeps the same accent as its label until pointer interaction.
+        if (button->property("tabSelected").toBool())
+            return palette.value(QStringLiteral("selectionAccent"));
         // An inline action may rest in the palette role of the text it follows.
         const QString restRole = button->property("glyphRestRole").toString();
         return restRole.isEmpty() ? QColor() : palette.value(restRole);
@@ -1060,6 +1066,144 @@ static void adoptButtonGlyphStates(QAbstractButton& button)
             // A direct repolish sends no StyleChange; the dropped outline changes the size hint.
             button.updateGeometry();
         }
+    }
+}
+
+/** @brief Returns the main window that owns a Qt-created dock tab bar. */
+static QMainWindow* dockTabMainWindow(const QTabBar* bar)
+{
+    return qobject_cast<QMainWindow*>(bar->parentWidget());
+}
+
+/** @brief Resolves a dock tab through Qt's pointer data, then its title as a fallback. */
+static QDockWidget* dockForTab(const QTabBar* bar, int index)
+{
+    auto* main = dockTabMainWindow(bar);
+    if (!main || index < 0 || index >= bar->count()) return nullptr;
+    const quintptr id = bar->tabData(index).value<quintptr>();
+    const auto docks = main->findChildren<QDockWidget*>(Qt::FindDirectChildrenOnly);
+    for (auto* candidate : docks) {
+        if (reinterpret_cast<quintptr>(candidate) == id) return candidate;
+    }
+    for (auto* candidate : docks) {
+        if (candidate->windowTitle() == bar->tabText(index)) return candidate;
+    }
+    return nullptr;
+}
+
+/** @brief Keeps each close glyph's resting ink aligned with the selected tab. */
+static void syncDockTabSelection(QTabBar* bar)
+{
+    for (int i = 0; i < bar->count(); ++i) {
+        if (auto* button = qobject_cast<QToolButton*>(bar->tabButton(i, QTabBar::RightSide));
+            button && button->property("_resourcesDockTabClose").toBool()) {
+            const bool selected = i == bar->currentIndex();
+            if (button->property("tabSelected") != QVariant(selected)) {
+                button->setProperty("tabSelected", selected);
+                if (button->testAttribute(Qt::WA_WState_Polished)) {
+                    button->style()->unpolish(button);
+                    button->style()->polish(button);
+                }
+                button->update();
+            }
+        }
+    }
+}
+
+/** @brief Refreshes the explicit close command on every Qt-owned dock tab. */
+static void refreshDockTabButtons(QTabBar* bar)
+{
+    auto* main = dockTabMainWindow(bar);
+    if (!main) return;
+    for (int i = 0; i < bar->count(); ++i) {
+        QDockWidget* dock = dockForTab(bar, i);
+        auto* button = qobject_cast<QToolButton*>(bar->tabButton(i, QTabBar::RightSide));
+        const quintptr dockId = reinterpret_cast<quintptr>(dock);
+        if (button && button->property("_resourcesDockTabClose").toBool()
+            && button->property("_resourcesDockTabDock").toULongLong() != dockId) {
+            delete button;
+            button = nullptr;
+        }
+        if (!dock || button) continue;
+        button = new QToolButton(bar);
+        button->setObjectName(QStringLiteral("ResourcesDockTabClose"));
+        button->setIcon(QIcon(QStringLiteral(":/Resources/icon/close-48.png")));
+        button->setIconSize(QSize(12, 12));
+        button->setAutoRaise(true);
+        button->setCheckable(false);
+        button->setFocusPolicy(Qt::NoFocus);
+        button->setProperty("controlRole", QStringLiteral("tabClose"));
+        button->setProperty("glyphRestRole", QStringLiteral("text"));
+        button->setProperty("_resourcesDockTabClose", true);
+        button->setProperty("_resourcesDockTabDock", dockId);
+        const QString name = QStringLiteral("Close ") + dock->windowTitle();
+        button->setToolTip(name);
+        button->setAccessibleName(name);
+        const QPointer<QDockWidget> target(dock);
+        QObject::connect(button, &QToolButton::clicked, button, [target] {
+            if (target) target->close();
+        });
+        bar->setTabButton(i, QTabBar::RightSide, button);
+    }
+    syncDockTabSelection(bar);
+}
+
+/** @brief Observes Qt dock-tab rebuilds without polling or replacing native tab behavior. */
+class DockTabBarAdapter final : public QObject
+{
+public:
+    explicit DockTabBarAdapter(QTabBar* bar) : QObject(bar), _bar(bar)
+    {
+        bar->installEventFilter(this);
+        connect(bar, &QTabBar::tabMoved, this, [this] { refresh(); });
+        connect(bar, &QTabBar::currentChanged, this, [this] { refresh(); });
+        refresh();
+    }
+
+private:
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+        if (watched == _bar && (event->type() == QEvent::LayoutRequest || event->type() == QEvent::Show)) {
+            QMetaObject::invokeMethod(this, [this] { refresh(); }, Qt::QueuedConnection);
+        }
+        return QObject::eventFilter(watched, event);
+    }
+
+    void refresh()
+    {
+        if (!_bar) return;
+        auto* main = dockTabMainWindow(_bar);
+        if (!main) return;
+        for (auto* dock : main->findChildren<QDockWidget*>(Qt::FindDirectChildrenOnly)) {
+            if (_observedDocks.contains(dock)) continue;
+            _observedDocks.insert(dock);
+            connect(dock, &QDockWidget::windowTitleChanged, this, [this] { refresh(); });
+            connect(dock, &QDockWidget::visibilityChanged, this, [this] { refresh(); });
+            connect(dock, &QDockWidget::topLevelChanged, this, [this] { refresh(); });
+            connect(dock, &QDockWidget::dockLocationChanged, this, [this] { refresh(); });
+        }
+        refreshDockTabButtons(_bar);
+    }
+
+    QPointer<QTabBar> _bar;
+    QSet<QDockWidget*> _observedDocks;
+};
+
+/** @brief Adopts one direct-child main-window tab bar exactly once. */
+static void adoptDockTabBar(QTabBar* bar)
+{
+    if (!dockTabMainWindow(bar) || bar->property("_resourcesDockTabsAdopted").toBool()) return;
+    bar->setProperty("_resourcesDockTabsAdopted", true);
+    new DockTabBarAdapter(bar);
+}
+
+/** @brief Adopts every Qt-created dock tab bar currently owned by a main window. */
+static void adoptMainWindowDockTabs(QMainWindow* main)
+{
+    if (!main) return;
+    for (auto* bar : main->findChildren<QTabBar*>(Qt::FindDirectChildrenOnly)) {
+        adoptDockTabBar(bar);
+        refreshDockTabButtons(bar);
     }
 }
 
@@ -1175,6 +1319,10 @@ protected:
         }
         if (event->type() == QEvent::StyleChange)
             applyLayoutTheme(qobject_cast<QWidget*>(obj));
+        if (event->type() == QEvent::Polish || event->type() == QEvent::Show) {
+            if (auto* bar = qobject_cast<QTabBar*>(obj)) adoptDockTabBar(bar);
+            if (auto* main = qobject_cast<QMainWindow*>(obj)) adoptMainWindowDockTabs(main);
+        }
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show
             || event->type() == QEvent::ParentChange) {
             if (auto* widget = qobject_cast<QWidget*>(obj))

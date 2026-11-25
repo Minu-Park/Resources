@@ -88,6 +88,68 @@ private slots:
         QString error;
         QVERIFY2(Resources::reloadThemeFromDirectory(factory_.path() + "/qss", &error), qPrintable(error));
     }
+    void dockTabsProvideCloseControls()
+    {
+        QMainWindow window;
+        QDockWidget first("First", &window), second("Second", &window);
+        first.setWidget(new QWidget); second.setWidget(new QWidget);
+        window.addDockWidget(Qt::RightDockWidgetArea, &first);
+        window.addDockWidget(Qt::RightDockWidgetArea, &second);
+        window.tabifyDockWidget(&first, &second);
+        window.statusBar(); window.resize(640, 480); window.show();
+        QTabBar* bar = nullptr;
+        QTRY_VERIFY((bar = window.findChild<QTabBar*>(QString(), Qt::FindDirectChildrenOnly)) != nullptr);
+        QTRY_COMPARE(bar->count(), 2);
+        QTRY_VERIFY(bar->tabButton(0, QTabBar::RightSide));
+        QTRY_VERIFY(bar->tabButton(1, QTabBar::RightSide));
+        for (int i = 0; i < bar->count(); ++i) {
+            auto* button = qobject_cast<QToolButton*>(bar->tabButton(i, QTabBar::RightSide));
+            QVERIFY(button);
+            QCOMPARE(button->accessibleName(), QStringLiteral("Close ") + bar->tabText(i));
+            QVERIFY(!button->isCheckable());
+            QCOMPARE(button->property("tabSelected").toBool(), i == bar->currentIndex());
+        }
+        for (int i = 0; i < 2; ++i) {
+            bar->setCurrentIndex(i);
+            QApplication::processEvents();
+            for (int j = 0; j < 2; ++j) {
+                auto* button = qobject_cast<QToolButton*>(bar->tabButton(j, QTabBar::RightSide));
+                button->setAttribute(Qt::WA_UnderMouse, false);
+                button->grab();
+                const QImage icon = button->icon().pixmap(QSize(12, 12)).toImage();
+                const QColor expected = Resources::themePalette().value(i == j ? "selectionAccent" : "text");
+                bool found = false;
+                for (int y = 0; y < icon.height(); ++y)
+                    for (int x = 0; x < icon.width(); ++x) {
+                        const QColor pixel = icon.pixelColor(x, y);
+                        if (pixel.alpha() > 100 && qAbs(pixel.red() - expected.red()) <= 2 && qAbs(pixel.green() - expected.green()) <= 2 && qAbs(pixel.blue() - expected.blue()) <= 2) found = true;
+                    }
+                QVERIFY(found);
+            }
+        }
+        bar->setCurrentIndex(0);
+        QTRY_COMPARE(bar->tabButton(0, QTabBar::RightSide)->property("tabSelected").toBool(), true);
+        QCOMPARE(bar->tabButton(1, QTabBar::RightSide)->property("tabSelected").toBool(), false);
+        const QString closed = bar->tabText(0);
+        qobject_cast<QToolButton*>(bar->tabButton(0, QTabBar::RightSide))->click();
+        QDockWidget* target = closed == first.windowTitle() ? &first : &second;
+        QTRY_VERIFY(!target->isVisible());
+        target->show();
+        QTRY_COMPARE(bar->count(), 2);
+        QTRY_VERIFY(bar->tabButton(0, QTabBar::RightSide));
+        QTRY_VERIFY(bar->tabButton(1, QTabBar::RightSide));
+        QCOMPARE(bar->height(), window.statusBar()->height());
+    }
+
+    void windowWithoutDockTabsHasNoCloseButtons()
+    {
+        QMainWindow window;
+        QDockWidget dock("Only", &window);
+        window.addDockWidget(Qt::RightDockWidgetArea, &dock);
+        window.show(); QApplication::processEvents();
+        QVERIFY(window.findChildren<QToolButton*>("ResourcesDockTabClose").isEmpty());
+    }
+
     void installIsIdempotentAndFacadeUsesSameOwner()
     {
         auto& theme = ResourcesTheme::instance();
