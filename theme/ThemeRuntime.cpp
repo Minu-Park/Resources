@@ -1121,7 +1121,8 @@ static void refreshDockTabButtons(QTabBar* bar)
         const quintptr dockId = reinterpret_cast<quintptr>(dock);
         if (button && button->property("_resourcesDockTabClose").toBool()
             && button->property("_resourcesDockTabDock").toULongLong() != dockId) {
-            delete button;
+            bar->setTabButton(i, QTabBar::RightSide, nullptr);
+            button->deleteLater();
             button = nullptr;
         }
         if (!dock || button) continue;
@@ -1177,6 +1178,7 @@ private:
         for (auto* dock : main->findChildren<QDockWidget*>(Qt::FindDirectChildrenOnly)) {
             if (_observedDocks.contains(dock)) continue;
             _observedDocks.insert(dock);
+            connect(dock, &QObject::destroyed, this, [this, dock] { _observedDocks.remove(dock); });
             connect(dock, &QDockWidget::windowTitleChanged, this, [this] { refresh(); });
             connect(dock, &QDockWidget::visibilityChanged, this, [this] { refresh(); });
             connect(dock, &QDockWidget::topLevelChanged, this, [this] { refresh(); });

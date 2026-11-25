@@ -141,6 +141,32 @@ private slots:
         QCOMPARE(bar->height(), window.statusBar()->height());
     }
 
+    void dockTabRemapsCloseButton()
+    {
+        QMainWindow window;
+        QDockWidget first("First", &window), second("Second", &window), third("Third", &window);
+        window.addDockWidget(Qt::RightDockWidgetArea, &first);
+        window.addDockWidget(Qt::RightDockWidgetArea, &second);
+        window.addDockWidget(Qt::LeftDockWidgetArea, &third);
+        window.tabifyDockWidget(&first, &second);
+        window.show();
+        QTabBar* bar = nullptr;
+        QTRY_VERIFY((bar = window.findChild<QTabBar*>(QString(), Qt::FindDirectChildrenOnly)) != nullptr);
+        QTRY_COMPARE(bar->count(), 2);
+        QTRY_VERIFY(bar->tabButton(0, QTabBar::RightSide));
+        window.removeDockWidget(&second);
+        second.hide();
+        window.tabifyDockWidget(&first, &third);
+        third.show();
+        QTRY_COMPARE(bar->count(), 2);
+        int index = -1;
+        QTRY_VERIFY((index = bar->tabText(0) == "Third" ? 0 : (bar->tabText(1) == "Third" ? 1 : -1)) >= 0);
+        QTRY_VERIFY(bar->tabButton(index, QTabBar::RightSide));
+        QTRY_COMPARE(bar->tabButton(index, QTabBar::RightSide)->accessibleName(), QStringLiteral("Close Third"));
+        for (int i = 0; i < bar->count(); ++i)
+            QVERIFY(bar->tabButton(i, QTabBar::RightSide)->accessibleName() != QStringLiteral("Close Second"));
+    }
+
     void windowWithoutDockTabsHasNoCloseButtons()
     {
         QMainWindow window;
