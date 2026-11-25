@@ -111,6 +111,8 @@ private slots:
         bool central = false, between = false;
         const QPoint centralLine(dock.left() - 1, dock.center().y());
         const QPoint dockLine(dock.center().x(), dock.bottom() + 1);
+        QCOMPARE(image.pixelColor(centralLine), Resources::themePalette().value("border"));
+        QCOMPARE(image.pixelColor(dockLine), Resources::themePalette().value("border"));
         for (QWidget* splitter : window.findChildren<QWidget*>(QStringLiteral("qt_qmainwindow_extended_splitter"))) {
             if (!splitter->isVisible()) continue;
             if (splitter->geometry().contains(centralLine)) { central = true; QVERIFY(splitter->width() >= 5); }
@@ -133,10 +135,20 @@ private slots:
         QTabBar* bar = nullptr;
         QTRY_VERIFY((bar = window.findChild<QTabBar*>(QString(), Qt::FindDirectChildrenOnly)) != nullptr);
         QTRY_COMPARE(bar->count(), 2);
-        QCOMPARE(bar->tabRect(0).left(), 0);
+        const QImage tabImage = bar->grab().toImage();
+        QCOMPARE(tabImage.pixelColor(0, 0), Resources::themePalette().value("selectionAccent"));
+        QCOMPARE(tabImage.pixelColor(0, 1), Resources::themePalette().value("selectionAccent"));
         QCOMPARE(bar->geometry().left(), first.geometry().left());
         QTRY_VERIFY(bar->tabButton(0, QTabBar::RightSide));
         QTRY_VERIFY(bar->tabButton(1, QTabBar::RightSide));
+        first.setWindowTitle("Renamed");
+        QTRY_COMPARE(bar->tabButton(0, QTabBar::RightSide)->accessibleName(), QStringLiteral("Close Renamed"));
+        QCOMPARE(bar->tabButton(0, QTabBar::RightSide)->toolTip(), QStringLiteral("Close Renamed"));
+        first.setFeatures(first.features() & ~QDockWidget::DockWidgetClosable);
+        QTRY_VERIFY(!bar->tabButton(0, QTabBar::RightSide));
+        first.setFeatures(first.features() | QDockWidget::DockWidgetClosable);
+        QTRY_VERIFY(bar->tabButton(0, QTabBar::RightSide));
+        QTRY_COMPARE(bar->tabButton(0, QTabBar::RightSide)->accessibleName(), QStringLiteral("Close Renamed"));
         for (int i = 0; i < bar->count(); ++i) {
             auto* button = qobject_cast<QToolButton*>(bar->tabButton(i, QTabBar::RightSide));
             QVERIFY(button);

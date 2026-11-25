@@ -1120,12 +1120,21 @@ static void refreshDockTabButtons(QTabBar* bar)
         auto* button = qobject_cast<QToolButton*>(bar->tabButton(i, QTabBar::RightSide));
         const quintptr dockId = reinterpret_cast<quintptr>(dock);
         if (button && button->property("_resourcesDockTabClose").toBool()
-            && button->property("_resourcesDockTabDock").toULongLong() != dockId) {
+            && (button->property("_resourcesDockTabDock").toULongLong() != dockId
+                || !dock || !(dock->features() & QDockWidget::DockWidgetClosable))) {
             bar->setTabButton(i, QTabBar::RightSide, nullptr);
             button->deleteLater();
             button = nullptr;
         }
-        if (!dock || button) continue;
+        if (!dock || !(dock->features() & QDockWidget::DockWidgetClosable)) continue;
+        if (button) {
+            if (button->property("_resourcesDockTabClose").toBool()) {
+                const QString name = QStringLiteral("Close ") + dock->windowTitle();
+                button->setToolTip(name);
+                button->setAccessibleName(name);
+            }
+            continue;
+        }
         button = new QToolButton(bar);
         button->setObjectName(QStringLiteral("ResourcesDockTabClose"));
         button->setIcon(QIcon(QStringLiteral(":/Resources/icon/close-48.png")));
@@ -1180,6 +1189,7 @@ private:
             _observedDocks.insert(dock);
             connect(dock, &QObject::destroyed, this, [this, dock] { _observedDocks.remove(dock); });
             connect(dock, &QDockWidget::windowTitleChanged, this, [this] { refresh(); });
+            connect(dock, &QDockWidget::featuresChanged, this, [this] { refresh(); });
             connect(dock, &QDockWidget::visibilityChanged, this, [this] { refresh(); });
             connect(dock, &QDockWidget::topLevelChanged, this, [this] { refresh(); });
             connect(dock, &QDockWidget::dockLocationChanged, this, [this] { refresh(); });

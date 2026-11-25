@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep dock tab close controls synchronized with dock titles and closable features.
+
 - Draw dock separators as a single border line while retaining Qt’s expanded resize target.
 
 - Start the first dock tab and its selection indicator flush with the dock edge.
