@@ -5,7 +5,11 @@
 #include <QApplication>
 #include <QColor>
 #include <QCloseEvent>
+#include <QImage>
+#include <QLayout>
 #include <QMenuBar>
+#include <QPalette>
+#include <QtMath>
 #include <QMouseEvent>
 #include <QMdiSubWindow>
 #include <QPointer>
@@ -185,6 +189,7 @@ private slots:
     void frameRadiusDrivesContentAndShadowSilhouettes();
     void profilingTracksPaintWithoutRebuildingCache();
     void installedThemeKeepsMdiRadiusConsistent();
+    void maximizedContainerLeavesEveryEdgeToTheShell();
 };
 
 void ResourcesMdiShadowTests::minimumSizeDragKeepsPointerAnchor_data()
@@ -1034,6 +1039,52 @@ void ResourcesMdiShadowTests::installedThemeKeepsMdiRadiusConsistent()
     const int bottomArcRow = content->height() - 2;
     QVERIFY(!content->mask().contains(QPoint(7, bottomArcRow)));
     QVERIFY(content->mask().contains(QPoint(8, bottomArcRow)));
+
+    qApp->setStyleSheet(previousStyleSheet);
+}
+
+void ResourcesMdiShadowTests::maximizedContainerLeavesEveryEdgeToTheShell()
+{
+    const QString previousStyleSheet = qApp->styleSheet();
+    Resources::installResources(*qApp);
+
+    ThemedMdiArea area;
+    showArea(area);
+
+    auto* target = new QMdiSubWindow;
+    target->setWindowFlags(Qt::SubWindow | Qt::FramelessWindowHint);
+    auto* content = new QWidget;
+    content->setAutoFillBackground(true);
+    QPalette palette = content->palette();
+    palette.setColor(QPalette::Window, QColor(255, 0, 0));
+    content->setPalette(palette);
+    auto* container = new ThemedMdiContainer(target, content, new QMenuBar, target);
+    target->setWidget(container);
+    area.addSubWindow(target);
+    target->setGeometry(60, 60, 360, 260);
+    target->show();
+    QCoreApplication::processEvents();
+    QCOMPARE(container->layout()->contentsMargins(), QMargins(1, 1, 1, 1));
+
+    // The shell title bar and bottom bar own the maximized edge lines; a retained
+    // container frame would draw a second line beside each of them.
+    target->showMaximized();
+    QTRY_VERIFY(container->property("maximized").toBool());
+    QTRY_COMPARE(container->layout()->contentsMargins(), QMargins());
+    QTRY_COMPARE(content->geometry().bottom(), container->rect().bottom());
+    QCOMPARE(content->geometry().left(), 0);
+    QCOMPARE(content->geometry().right(), container->rect().right());
+    QWidget* titleBar = container->findChild<QWidget*>(QStringLiteral("ThemedMdiTitleBar"));
+    QVERIFY(titleBar);
+    QCOMPARE(titleBar->geometry().top(), 0);
+    const QImage image = container->grab().toImage();
+    const qreal dpr = image.devicePixelRatio();
+    const int x = qFloor(container->width() / 2 * dpr);
+    QCOMPARE(image.pixelColor(x, image.height() - 1), QColor(255, 0, 0));
+    QCOMPARE(image.pixelColor(qFloor(dpr), image.height() / 2), QColor(255, 0, 0));
+
+    target->showNormal();
+    QTRY_COMPARE(container->layout()->contentsMargins(), QMargins(1, 1, 1, 1));
 
     qApp->setStyleSheet(previousStyleSheet);
 }

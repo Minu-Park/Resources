@@ -22,7 +22,8 @@ ThemedMdiContainer::ThemedMdiContainer(QMdiSubWindow* subWin, QWidget* content, 
     setObjectName(QStringLiteral("ThemedMdiContainer"));
     
     // Keep a 1px inset for the normal rounded frame. Maximized MDI windows
-    // remove their lateral frame, so they must not retain a white side strip.
+    // remove the whole frame: the shell title bar and bottom bar already draw
+    // the edge lines, so a retained inset would double them or leave a strip.
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(1, 1, 1, 1);
     layout->setSpacing(0);
@@ -345,8 +346,8 @@ void ThemedMdiContainer::handleWindowStateChange()
 
     setProperty("maximized", maximized);
     if (auto* containerLayout = qobject_cast<QVBoxLayout*>(layout())) {
-        const int lateralInset = maximized ? 0 : 1;
-        containerLayout->setContentsMargins(lateralInset, 1, lateralInset, 1);
+        const int inset = maximized ? 0 : 1;
+        containerLayout->setContentsMargins(inset, inset, inset, inset);
     }
     style()->unpolish(this);
     style()->polish(this);

@@ -1,4 +1,5 @@
 #include "ThemedDockTitleBar.h"
+#include "ThemedMdiTitleBar.h"
 #include "Resources.h"
 #include <QDockWidget>
 #include <QHBoxLayout>
@@ -13,13 +14,15 @@
 #include <QVBoxLayout>
 #include <QTimer>
 
-ThemedDockTitleBar::ThemedDockTitleBar(QDockWidget* dockWidget, QWidget* parent)
+ThemedDockTitleBar::ThemedDockTitleBar(QDockWidget* dockWidget, QWidget* parent, const Height height)
     : QFrame(parent)
     , _dockWidget(dockWidget)
+    , _height(height == Height::Window ? ThemedMdiTitleBar::kHeight : kCompactHeight)
 {
     setObjectName(QStringLiteral("ThemedDockTitleBar"));
     setAttribute(Qt::WA_StyledBackground, true);
-    setFixedHeight(28); // Standard compact height for dock widget title bars
+    // Compact by default; a window-height dock lines its bottom rule up with an MDI title bar.
+    setFixedHeight(_height);
 
     auto* layout = new QHBoxLayout(this);
     // Align title bar text and buttons, adding slight top margin to lower the font
@@ -80,6 +83,14 @@ ThemedDockTitleBar::ThemedDockTitleBar(QDockWidget* dockWidget, QWidget* parent)
     applyFloatingChrome(_dockWidget->isFloating());
 }
 
+QRect ThemedDockTitleBar::bottomRule() const
+{
+    // Fill the last logical row like a QSS border-bottom. An antialiased 1px line on the
+    // integer y straddles two rows: half a pixel too high, so it misaligns with the
+    // neighbouring MDI title rule, and blurred.
+    return QRect(0, height() - 1, width(), 1);
+}
+
 void ThemedDockTitleBar::paintEvent(QPaintEvent* event)
 {
     Q_UNUSED(event);
@@ -103,13 +114,11 @@ void ThemedDockTitleBar::paintEvent(QPaintEvent* event)
         p.drawRoundedRect(QRectF(0.5, 0.5, width() - 1.0, height() + radius), radius, radius);
 
         // Draw the bottom border line (always straight at the bottom of the titlebar)
-        p.setPen(Resources::borderColor());
-        p.drawLine(0, height() - 1, width(), height() - 1);
+        p.fillRect(bottomRule(), Resources::borderColor());
     } else {
         // Docked state: plain white background and bottom border only
         p.fillRect(rect(), Qt::white);
-        p.setPen(Resources::borderColor());
-        p.drawLine(rect().bottomLeft(), rect().bottomRight());
+        p.fillRect(bottomRule(), Resources::borderColor());
     }
 }
 
@@ -235,15 +244,16 @@ QIcon ThemedDockTitleBar::createSmoothIcon(const QString& path, const QSize& log
 
 QSize ThemedDockTitleBar::sizeHint() const
 {
-    return QSize(QWidget::sizeHint().width(), 28);
+    return QSize(QWidget::sizeHint().width(), _height);
 }
 
 QSize ThemedDockTitleBar::minimumSizeHint() const
 {
-    return QSize(QWidget::minimumSizeHint().width(), 28);
+    return QSize(QWidget::minimumSizeHint().width(), _height);
 }
 
-void ThemedDockTitleBar::setupDockWidget(QDockWidget* dockWidget, QWidget* contentWidget)
+void ThemedDockTitleBar::setupDockWidget(QDockWidget* dockWidget, QWidget* contentWidget,
+                                         const Height height)
 {
     if (!dockWidget || !contentWidget) return;
 
@@ -262,7 +272,7 @@ void ThemedDockTitleBar::setupDockWidget(QDockWidget* dockWidget, QWidget* conte
 
     // Install the custom title bar as the real dock title bar so ignored
     // mouse events still reach QDockWidget's native drag/dock handler.
-    auto* titleBar = new ThemedDockTitleBar(dockWidget, dockWidget);
+    auto* titleBar = new ThemedDockTitleBar(dockWidget, dockWidget, height);
     dockWidget->setTitleBarWidget(titleBar);
 }
 

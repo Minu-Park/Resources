@@ -17,7 +17,7 @@ ThemedMdiTitleBar::ThemedMdiTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar
 {
     setObjectName(QStringLiteral("ThemedMdiTitleBar"));
     setAttribute(Qt::WA_StyledBackground, true);
-    setFixedHeight(32);
+    setFixedHeight(kHeight);
     setCursor(Qt::ArrowCursor);
 
     auto* layout = new QHBoxLayout(this);

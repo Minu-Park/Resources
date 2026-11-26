@@ -135,9 +135,9 @@ QWidget#ThemedMdiContainer {
     border-radius: 12px;
 }
 
+/* The shell title bar and bottom bar already draw the maximized edges. */
 QWidget#ThemedMdiContainer[maximized="true"] {
-    border-left: none;
-    border-right: none;
+    border: none;
     border-radius: 0px;
 }/* HMI display workspace and editable viewer shell */
 QWidget#HmiWorkspace {

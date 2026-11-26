@@ -11,7 +11,8 @@ ThemedMessageBox::ThemedMessageBox(
     const QString& title,
     const QString& text,
     QWidget* parent,
-    const bool question)
+    const bool question,
+    const QString& detail)
     : ThemedDialog(title, parent)
 {
     auto* body = new QHBoxLayout();
@@ -45,7 +46,22 @@ ThemedMessageBox::ThemedMessageBox(
     messageLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     messageLabel->setMinimumWidth(280);
     messageLabel->setMaximumWidth(520);
-    body->addWidget(messageLabel, 1);
+    auto* textLayout = new QVBoxLayout;
+    textLayout->setContentsMargins(0, 0, 0, 0);
+    textLayout->setSpacing(6);
+    textLayout->addWidget(messageLabel);
+    if (!detail.isEmpty())
+    {
+        auto* detailLabel = new QLabel(detail, this);
+        detailLabel->setObjectName(QStringLiteral("ThemedMessageBoxDetail"));
+        detailLabel->setProperty("textRole", "caption");
+        detailLabel->setWordWrap(true);
+        detailLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        detailLabel->setMinimumWidth(280);
+        detailLabel->setMaximumWidth(520);
+        textLayout->addWidget(detailLabel);
+    }
+    body->addLayout(textLayout, 1);
 
     contentLayout()->addLayout(body);
 
@@ -81,9 +97,9 @@ ThemedMessageBox::ThemedMessageBox(
     adjustSize();
 }
 
-void ThemedMessageBox::critical(QWidget* parent, const QString& title, const QString& text)
+void ThemedMessageBox::critical(QWidget* parent, const QString& title, const QString& text, const QString& detail)
 {
-    ThemedMessageBox box(Critical, title, text, parent);
+    ThemedMessageBox box(Critical, title, text, parent, false, detail);
     box.exec();
 }
 

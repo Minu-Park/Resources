@@ -3,6 +3,7 @@
 #include <Qt>
 
 class QAbstractItemView;
+class QComboBox;
 namespace Resources
 {
 /** @brief Set on an index to omit shared hover and selection fills while retaining ink and interaction. */
@@ -32,4 +33,6 @@ QFont itemHoverBoldFont(QFont base);
 void setItemSelectionAppearance(QAbstractItemView *view, ItemSelectionAppearance appearance);
 /** @brief Installs shared selection painting while retaining the view's delegate and editors. */
 void applyItemViewTheme(QAbstractItemView *view);
+/** @brief Wraps a plain combo popup view with fill-free current-value and tracked-row ink. */
+void applyComboPopupTheme(QAbstractItemView *view, QComboBox *combo);
 } // namespace Resources

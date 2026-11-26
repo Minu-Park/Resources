@@ -11,9 +11,11 @@
 #include <QPainterPath>
 #include <QPointer>
 #include <QPersistentModelIndex>
+#include <QScrollBar>
 #include <QSet>
 #include <QStyledItemDelegate>
 #include <QTableView>
+#include <QTreeView>
 #include <QLabel>
 
 /** @brief Receives shared surface metrics from QSS without changing the consumer layout. */
@@ -410,6 +412,311 @@ class ItemSurfaceDelegate final : public QStyledItemDelegate
     QPointer<QAbstractItemDelegate> source_;
     ResourcesItemSelectionSurface *surface_;
 };
+
+/** @brief Joins a visible horizontal header to the vertical scrollbar's top edge. */
+class ItemViewHeaderCap final : public QWidget
+{
+  public:
+    ItemViewHeaderCap(QAbstractItemView *view, QHeaderView *header, QScrollBar *scrollBar)
+        : QWidget(scrollBar->parentWidget()), view_(view), header_(header), scrollBar_(scrollBar)
+    {
+        setObjectName(QStringLiteral("ItemViewHeaderCap"));
+        setAttribute(Qt::WA_StyledBackground);
+        setAttribute(Qt::WA_TransparentForMouseEvents);
+        setFocusPolicy(Qt::NoFocus);
+        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        header_->installEventFilter(this);
+        scrollBar_->installEventFilter(this);
+        if (auto *container = scrollBar_->parentWidget())
+            container->installEventFilter(this);
+        headerDestroyedConnection_ = connect(header_, &QObject::destroyed, this, [this] {
+            header_ = nullptr;
+            sync();
+        });
+    }
+
+    void bindHeader(QHeaderView *header)
+    {
+        if (header_ == header)
+            return;
+        if (header_) {
+            header_->removeEventFilter(this);
+            QObject::disconnect(headerDestroyedConnection_);
+            setHeaderCapState(false);
+        }
+        header_ = header;
+        if (header_) {
+            header_->installEventFilter(this);
+            headerDestroyedConnection_ = connect(header_, &QObject::destroyed, this, [this] {
+                header_ = nullptr;
+                sync();
+            });
+        }
+        sync();
+    }
+
+    void sync()
+    {
+        const bool active = view_ && header_ && header_->isVisible() && header_->height() > 0 &&
+                            scrollBar_ && scrollBar_->isVisible();
+        setFixedHeight(active ? header_->height() : 0);
+        setVisible(active);
+        setHeaderCapState(active);
+    }
+
+  protected:
+    bool eventFilter(QObject *watched, QEvent *event) override
+    {
+        if (watched == header_ &&
+            (event->type() == QEvent::Resize || event->type() == QEvent::Show ||
+             event->type() == QEvent::Hide))
+            sync();
+        else if (watched == scrollBar_ &&
+                 (event->type() == QEvent::Show || event->type() == QEvent::Hide))
+            sync();
+        else if (watched == parentWidget() &&
+                 (event->type() == QEvent::Show || event->type() == QEvent::Hide))
+            sync();
+        return false;
+    }
+
+  private:
+    void setHeaderCapState(bool active)
+    {
+        if (!header_ || header_->property("headerScrollCap").toBool() == active)
+            return;
+        header_->setProperty("headerScrollCap", active);
+        header_->style()->unpolish(header_);
+        header_->style()->polish(header_);
+        header_->update();
+    }
+
+    QPointer<QAbstractItemView> view_;
+    QPointer<QHeaderView> header_;
+    QPointer<QScrollBar> scrollBar_;
+    QMetaObject::Connection headerDestroyedConnection_;
+};
+
+/** @brief Adds one top-aligned cap without widening the header or changing section geometry. */
+void applyItemViewHeaderCap(QAbstractItemView *view, QHeaderView *header)
+{
+    if (!view || !header)
+        return;
+    auto *scrollBar = view->verticalScrollBar();
+    auto *container = scrollBar->parentWidget();
+    if (!container)
+        return;
+    if (auto *existingWidget = container->findChild<QWidget *>(
+            QStringLiteral("ItemViewHeaderCap"), Qt::FindDirectChildrenOnly)) {
+        if (auto *existing = dynamic_cast<ItemViewHeaderCap *>(existingWidget)) {
+            existing->bindHeader(header);
+            return;
+        }
+    }
+    auto *cap = new ItemViewHeaderCap(view, header, scrollBar);
+    view->addScrollBarWidget(cap, Qt::AlignTop);
+    cap->sync();
+}
+
+/** @brief Paints a plain combo popup's current value and tracked row without interaction fills. */
+class ComboPopupDelegate final : public QStyledItemDelegate
+{
+    Q_OBJECT
+  public:
+    ComboPopupDelegate(QAbstractItemView *view, QComboBox *combo, QAbstractItemDelegate *source)
+        : QStyledItemDelegate(view), view_(view), combo_(combo), source_(source),
+          surface_(new ResourcesItemSelectionSurface(view))
+    {
+        surface_->ensurePolished();
+        observeSelection();
+        view_->viewport()->setAttribute(Qt::WA_Hover);
+        view_->viewport()->installEventFilter(this);
+        connect(source, &QAbstractItemDelegate::commitData, this, &QAbstractItemDelegate::commitData);
+        connect(source, &QAbstractItemDelegate::closeEditor, this,
+                [this](QWidget *editor, QAbstractItemDelegate::EndEditHint hint)
+                {
+                    if (forwardedEditors_.remove(editor))
+                        editor->removeEventFilter(source_);
+                    emit closeEditor(editor, hint);
+                });
+        connect(source, &QAbstractItemDelegate::sizeHintChanged, this,
+                &QAbstractItemDelegate::sizeHintChanged);
+        connect(combo_, &QComboBox::currentIndexChanged, view_->viewport(),
+                qOverload<>(&QWidget::update));
+        connect(combo_, &QComboBox::currentTextChanged, view_->viewport(),
+                qOverload<>(&QWidget::update));
+    }
+
+    void paint(QPainter *painter, const QStyleOptionViewItem &option,
+               const QModelIndex &index) const override
+    {
+        if (!source_)
+            return;
+        observeSelection();
+        auto contents = option;
+        clearInteractionState(contents);
+        const bool separator = index.data(Qt::AccessibleDescriptionRole).toString() ==
+                               QLatin1String("separator");
+        if (separator) {
+            source_->paint(painter, contents, index);
+            return;
+        }
+        const bool enabled = (option.state & QStyle::State_Enabled) &&
+                             (index.flags() & Qt::ItemIsEnabled);
+        if (!enabled) {
+            contents.state &= ~QStyle::State_Enabled;
+            const QColor disabledInk = QApplication::palette().color(QPalette::Disabled, QPalette::Text);
+            contents.palette.setColor(QPalette::Text, disabledInk);
+            contents.palette.setColor(QPalette::HighlightedText, disabledInk);
+            source_->paint(painter, contents, index);
+            return;
+        }
+
+        const bool active = combo_ && combo_->currentIndex() >= 0 && index.isValid() &&
+                            index.parent() == combo_->rootModelIndex() &&
+                            index.row() == combo_->currentIndex();
+        const QModelIndex tracked = trackedIndex();
+        const bool hovered = tracked.isValid() && tracked.parent() == index.parent() &&
+                             tracked.row() == index.row();
+        if (!active && !hovered) {
+            source_->paint(painter, contents, index);
+            return;
+        }
+
+        initStyleOption(&contents, index);
+        clearInteractionState(contents);
+        contents.font.setWeight(QFont::Weight(surface_->emphasisWeight));
+        contents.fontMetrics = QFontMetrics(contents.font);
+        const QColor ink = active ? surface_->accentColor : option.palette.color(QPalette::Text);
+        contents.palette.setColor(QPalette::Text, ink);
+        contents.palette.setColor(QPalette::HighlightedText, ink);
+        painter->save();
+        painter->setFont(contents.font);
+        view_->style()->drawControl(QStyle::CE_ItemViewItem, &contents, painter, view_);
+        painter->restore();
+    }
+
+    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
+    {
+        return source_ ? source_->sizeHint(option, index)
+                       : QStyledItemDelegate::sizeHint(option, index);
+    }
+
+    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
+                          const QModelIndex &index) const override
+    {
+        QWidget *editor = source_ ? source_->createEditor(parent, option, index) : nullptr;
+        if (editor && view_->itemDelegateForIndex(index) == this) {
+            editor->installEventFilter(source_);
+            forwardedEditors_.insert(editor);
+            connect(editor, &QObject::destroyed, this,
+                    [this, editor] { forwardedEditors_.remove(editor); });
+        }
+        return editor;
+    }
+
+    void destroyEditor(QWidget *editor, const QModelIndex &index) const override
+    {
+        if (forwardedEditors_.remove(editor))
+            editor->removeEventFilter(source_);
+        if (source_)
+            source_->destroyEditor(editor, index);
+        else
+            QStyledItemDelegate::destroyEditor(editor, index);
+    }
+
+    void setEditorData(QWidget *editor, const QModelIndex &index) const override
+    {
+        if (source_) source_->setEditorData(editor, index);
+    }
+
+    void setModelData(QWidget *editor, QAbstractItemModel *model,
+                      const QModelIndex &index) const override
+    {
+        if (source_) source_->setModelData(editor, model, index);
+    }
+
+    void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option,
+                              const QModelIndex &index) const override
+    {
+        if (source_) source_->updateEditorGeometry(editor, option, index);
+    }
+
+    bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option,
+                     const QModelIndex &index) override
+    {
+        return source_ && source_->editorEvent(event, model, option, index);
+    }
+
+    bool helpEvent(QHelpEvent *event, QAbstractItemView *view, const QStyleOptionViewItem &option,
+                   const QModelIndex &index) override
+    {
+        return source_ && source_->helpEvent(event, view, option, index);
+    }
+
+    bool matches(QAbstractItemView *view, QComboBox *combo) const
+    {
+        return view_ == view && combo_ == combo;
+    }
+
+    QAbstractItemDelegate *sourceDelegate() const { return source_; }
+
+  protected:
+    bool eventFilter(QObject *watched, QEvent *event) override
+    {
+        if (watched == view_->viewport() &&
+            (event->type() == QEvent::MouseMove || event->type() == QEvent::HoverMove ||
+             event->type() == QEvent::Enter || event->type() == QEvent::Leave ||
+             event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverLeave))
+            view_->viewport()->update();
+        return false;
+    }
+
+  private:
+    static void clearInteractionState(QStyleOptionViewItem &option)
+    {
+        option.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver | QStyle::State_HasFocus);
+        option.features &= ~QStyleOptionViewItem::Alternate;
+        option.backgroundBrush = Qt::NoBrush;
+    }
+
+    QModelIndex trackedIndex() const
+    {
+        if (!view_)
+            return {};
+        QWidget *viewport = view_->viewport();
+        const QPoint cursor = viewport->mapFromGlobal(QCursor::pos());
+        if (viewport->underMouse() && viewport->rect().contains(cursor)) {
+            const QModelIndex pointer = view_->indexAt(cursor);
+            if (pointer.isValid()) return pointer;
+        }
+        return view_->currentIndex();
+    }
+
+    void observeSelection() const
+    {
+        if (selection_ == view_->selectionModel())
+            return;
+        QObject::disconnect(selectionConnection_);
+        QObject::disconnect(currentConnection_);
+        selection_ = view_->selectionModel();
+        if (selection_) {
+            selectionConnection_ = QObject::connect(selection_, &QItemSelectionModel::selectionChanged,
+                                                     view_->viewport(), qOverload<>(&QWidget::update));
+            currentConnection_ = QObject::connect(selection_, &QItemSelectionModel::currentChanged,
+                                                   view_->viewport(), qOverload<>(&QWidget::update));
+        }
+    }
+
+    mutable QPointer<QItemSelectionModel> selection_;
+    mutable QMetaObject::Connection selectionConnection_;
+    mutable QMetaObject::Connection currentConnection_;
+    mutable QSet<QWidget *> forwardedEditors_;
+    QAbstractItemView *view_;
+    QPointer<QComboBox> combo_;
+    QPointer<QAbstractItemDelegate> source_;
+    ResourcesItemSelectionSurface *surface_;
+};
 } // namespace
 
 QFont Resources::itemHoverBoldFont(QFont base)
@@ -430,8 +737,7 @@ void Resources::setItemSelectionAppearance(QAbstractItemView *view, ItemSelectio
 
 void Resources::applyItemViewTheme(QAbstractItemView *view)
 {
-    if (!view || qobject_cast<QHeaderView *>(view) || !view->itemDelegate() ||
-        dynamic_cast<ItemSurfaceDelegate *>(view->itemDelegate()))
+    if (!view || qobject_cast<QHeaderView *>(view) || !view->itemDelegate())
         return;
     for (QWidget *ancestor = view; ancestor; ancestor = ancestor->parentWidget())
     {
@@ -439,6 +745,14 @@ void Resources::applyItemViewTheme(QAbstractItemView *view)
             ancestor->objectName() == QLatin1String("AutoCompletePopup"))
             return;
     }
+    QHeaderView *header = nullptr;
+    if (auto *tree = qobject_cast<QTreeView *>(view))
+        header = tree->header();
+    else if (auto *table = qobject_cast<QTableView *>(view))
+        header = table->horizontalHeader();
+    applyItemViewHeaderCap(view, header);
+    if (dynamic_cast<ItemSurfaceDelegate *>(view->itemDelegate()))
+        return;
     auto *source = view->itemDelegate();
     view->setItemDelegate(new ItemSurfaceDelegate(view, source));
     // Qt may retain direct connections to a previous delegate; forwarding must be the sole route.
@@ -453,5 +767,33 @@ void Resources::applyItemViewTheme(QAbstractItemView *view)
             header->style()->pixelMetric(QStyle::PM_HeaderDefaultSectionSizeVertical, nullptr, header))
             header->setDefaultSectionSize(qMax(30, view->fontMetrics().height() + 8));
     }
+}
+
+void Resources::applyComboPopupTheme(QAbstractItemView *view, QComboBox *combo)
+{
+    if (!view || !combo || !view->itemDelegate())
+        return;
+    const auto wrappers = view->findChildren<ComboPopupDelegate *>(QString(), Qt::FindDirectChildrenOnly);
+    for (auto *wrapper : wrappers) {
+        if (view->itemDelegate() == wrapper && wrapper->matches(view, combo))
+            return;
+    }
+
+    QAbstractItemDelegate *source = view->itemDelegate();
+    if (auto *wrapper = dynamic_cast<ComboPopupDelegate *>(source))
+        source = wrapper->sourceDelegate();
+    for (auto *wrapper : wrappers) {
+        if (source && source->parent() == wrapper)
+            source->setParent(view);
+        delete wrapper;
+    }
+    if (!source)
+        source = new QStyledItemDelegate(view);
+
+    view->setItemDelegate(new ComboPopupDelegate(view, combo, source));
+    // Qt may retain direct connections to a previous delegate; forwarding must be the sole route.
+    QObject::disconnect(source, &QAbstractItemDelegate::commitData, view, nullptr);
+    QObject::disconnect(source, &QAbstractItemDelegate::closeEditor, view, nullptr);
+    QObject::disconnect(source, &QAbstractItemDelegate::sizeHintChanged, view, nullptr);
 }
 #include "ItemViewTheme.moc"

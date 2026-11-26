@@ -1544,6 +1544,7 @@ protected:
             if (auto* combo = qobject_cast<QComboBox*>(obj)) {
                 if (auto* view = combo->view()) {
                     prepareComboPopup(view->window());
+                    Resources::applyComboPopupTheme(view, combo);
                 }
             }
             else if (auto* rubberBand = qobject_cast<QRubberBand*>(obj)) {
@@ -1643,6 +1644,7 @@ protected:
                         const bool above = geo.top() < combo->mapToGlobal(QPoint()).y();
                         setComboPopupDirection(combo, above ? QStringLiteral("above") : QStringLiteral("below"));
                         prepareComboPopup(widget);
+                        if (auto* view = combo->view()) Resources::applyComboPopupTheme(view, combo);
                         widget->setGeometry(geo);
                         applyPopupMask(widget, false);
 #ifdef Q_OS_MACOS

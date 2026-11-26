@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Extend themed tree and table header pills across a visible vertical scrollbar column while starting the scrollbar below the header.
+
+- Align combo box popup text with the field text by removing the extra horizontal row padding.
+
+- Add a window-height `ThemedDockTitleBar` (`Height::Window`) that matches `ThemedMdiTitleBar::kHeight`, so that a dock beside MDI windows can line up its title rule with theirs. The default compact dock title bar stays 28px.
+
+- Drop the whole `ThemedMdiContainer` frame while maximized. Its top and bottom borders no longer double the host shell's title-bar and bottom-bar edge lines.
+
+- Style the GraphicsEngine save-progress status bubble and show optional diagnostic detail in themed critical message boxes.
+
+- Make the hover-revealed resize grip the only `controlRole="resizeGrip"` presentation: the handle stays hidden at rest and shows its dash only on pointer hover or drag.
+
 - Keep dock tab close controls synchronized with dock titles and closable features.
 
 - Draw dock separators as a single border line while retaining Qt’s expanded resize target.
@@ -10,7 +22,11 @@
 
 - Apply the shared dock tab bar template and accessible per-tab close controls to main windows.
 
-- Add an always-visible option to the shared resize grip, an item-view mode that applies bold on hover without interaction fills, and themed severity ink and detail padding for log viewers.
+- Add an item-view mode that applies bold on hover without interaction fills, and themed severity ink and detail padding for log viewers.
+
+- Paint every plain combo popup without hover or selection fills: tracked rows use neutral bold text, and the current value keeps bold `selectionAccent` text while preserving consumer delegate contracts.
+
+- Replace tree/list/table item check switches with compact 14x14 blue, neutral, hover and disabled checkbox artwork while keeping standalone checkboxes and group boxes on the shared switch.
 
 - Remove the macOS combo-popup closing afterimage by disabling the popup's native window animation.
 

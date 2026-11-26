@@ -10,15 +10,17 @@ public:
     /**
      * @brief Creates a themed information, warning, critical, or question box.
      * @param question When true, creates themed No/Yes buttons instead of OK.
+     * @param detail Optional diagnostic detail shown below the message body.
      */
     explicit ThemedMessageBox(
         Icon icon,
         const QString& title,
         const QString& text,
         QWidget* parent = nullptr,
-        bool question = false);
+        bool question = false,
+        const QString& detail = {});
 
-    static void critical(QWidget* parent, const QString& title, const QString& text);
+    static void critical(QWidget* parent, const QString& title, const QString& text, const QString& detail = {});
     static void warning(QWidget* parent, const QString& title, const QString& text);
     static void information(QWidget* parent, const QString& title, const QString& text);
     /**

@@ -495,7 +495,7 @@ class ResourcesItemViewTests : public QObject
         option.rect = tree.visualRect(index);
         probe.initStyleOption(&option, index);
         const QRect indicator = tree.style()->subElementRect(QStyle::SE_ItemViewItemCheckIndicator, &option, &tree);
-        QCOMPARE(indicator.size(), QSize(40, 24));
+        QCOMPARE(indicator.size(), QSize(14, 14));
         movePointer(tree.viewport(), indicator.center());
         const qreal dpr = tree.devicePixelRatioF();
         const QRect pixels(QPoint(indicator.topLeft() * dpr), QSize(indicator.size() * dpr));
@@ -830,7 +830,7 @@ class ResourcesItemViewTests : public QObject
                              view->palette().highlight().color());
         }
     }
-    void itemSwitchUsesLeadingEdgeAndMatchingHitRect_data()
+    void itemCheckUsesLeadingEdgeAndMatchingHitRect_data()
     {
         QTest::addColumn<bool>("rtl");
         QTest::newRow("ltr") << false;
@@ -857,7 +857,7 @@ class ResourcesItemViewTests : public QObject
                      row == 1 ? Resources::themePalette().value(QStringLiteral("current")) : list.palette().highlight().color());
         }
     }
-    void rowSwitchRetainsHoverArtwork_data()
+    void rowCheckRetainsHoverArtwork_data()
     {
         QTest::addColumn<bool>("table");
         QTest::addColumn<int>("sample");
@@ -868,7 +868,7 @@ class ResourcesItemViewTests : public QObject
                     QTest::newRow(qPrintable(QString("%1-%2-%3").arg(table ? "table" : "tree")
                         .arg(sample).arg(hovered))) << table << sample << hovered;
     }
-    void rowSwitchRetainsHoverArtwork()
+    void rowCheckRetainsHoverArtwork()
     {
         QFETCH(bool, table);
         QFETCH(int, sample);
@@ -911,7 +911,7 @@ class ResourcesItemViewTests : public QObject
         option.state &= ~(QStyle::State_HasFocus | QStyle::State_Selected);
         const QRect indicator = view->style()->subElementRect(
             QStyle::SE_ItemViewItemCheckIndicator, &option, view.get());
-        QCOMPARE(indicator.size(), QSize(40, 24));
+        QCOMPARE(indicator.size(), QSize(14, 14));
         const qreal dpr = view->devicePixelRatioF();
         QImage image(QSize(400, 40) * dpr, QImage::Format_ARGB32_Premultiplied);
         image.setDevicePixelRatio(dpr);
@@ -919,10 +919,10 @@ class ResourcesItemViewTests : public QObject
         QPainter painter(&image);
         view->itemDelegate()->paint(&painter, option, index);
         painter.end();
-        const QString asset = ":/Resources/icon/switch-outline-"
+        const QString asset = ":/Resources/icon/item-check-"
             + QStringList{"off", "on", "mixed"}[sample % 3]
-            + (!enabled ? "-disabled" : hovered ? "-hover" : "") + ".svg";
-        const QRect glyph(indicator.topLeft() + QPoint(2, 2), QSize(36, 20));
+            + (!enabled ? "-disabled" : hovered && sample % 3 == 0 ? "-hover" : "") + ".svg";
+        const QRect glyph(indicator.topLeft(), QSize(14, 14));
         const QRect pixels(QPoint(qRound(glyph.x() * dpr), qRound(glyph.y() * dpr)), glyph.size() * dpr);
         QImage expected(image.size(), QImage::Format_ARGB32_Premultiplied);
         expected.setDevicePixelRatio(dpr);
@@ -932,7 +932,7 @@ class ResourcesItemViewTests : public QObject
         expectedPainter.end();
         QCOMPARE(image.copy(pixels), expected.copy(pixels));
     }
-    void itemSwitchUsesLeadingEdgeAndMatchingHitRect()
+    void itemCheckUsesLeadingEdgeAndMatchingHitRect()
     {
         QFETCH(bool, rtl);
         QTreeWidget tree;
@@ -956,7 +956,7 @@ class ResourcesItemViewTests : public QObject
             .arg(inset).arg(tree.property("layoutDirection").toString())));
         QVERIFY(!check.intersects(text));
         const int gap = rtl ? check.left() - text.right() - 1 : text.left() - check.right() - 1;
-        QVERIFY2(gap >= 0 && gap <= 10, qPrintable(QString("vacant switch/text gutter=%1").arg(gap)));
+        QVERIFY2(gap >= 0 && gap <= 10, qPrintable(QString("checkbox/text gutter=%1").arg(gap)));
         QTest::mouseClick(tree.viewport(), Qt::LeftButton, Qt::NoModifier, check.center());
         QCOMPARE(item->checkState(0), Qt::Checked);
         tree.setCurrentItem(item);
@@ -1134,6 +1134,135 @@ class ResourcesItemViewTests : public QObject
         QTRY_VERIFY(table.viewport()->underMouse());
         QVERIFY(color() != base);
     }
+    void headerCapJoinsHeaderAndScrollbar_data()
+    {
+        QTest::addColumn<bool>("tree");
+        QTest::newRow("tree") << true;
+        QTest::newRow("table") << false;
+    }
+    void headerCapJoinsHeaderAndScrollbar()
+    {
+        QFETCH(bool, tree);
+        std::unique_ptr<QAbstractItemView> view(tree
+            ? static_cast<QAbstractItemView *>(new QTreeView)
+            : static_cast<QAbstractItemView *>(new QTableView));
+        QHeaderView *header = nullptr;
+        if (auto *treeView = qobject_cast<QTreeView *>(view.get()))
+            header = treeView->header();
+        else if (auto *tableView = qobject_cast<QTableView *>(view.get()))
+            header = tableView->horizontalHeader();
+        QVERIFY(header);
+        QStandardItemModel model(80, 2);
+        model.setHeaderData(0, Qt::Horizontal, QStringLiteral("Feature"));
+        model.setHeaderData(1, Qt::Horizontal, QStringLiteral("Value"));
+        for (int row = 0; row < model.rowCount(); ++row) {
+            model.setData(model.index(row, 0), QStringLiteral("Feature %1").arg(row));
+            model.setData(model.index(row, 1), QStringLiteral("Value %1").arg(row));
+        }
+        view->setModel(&model);
+        header->setVisible(true);
+        view->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        view->resize(360, 180);
+        view->show();
+        QVERIFY(QTest::qWaitForWindowExposed(view.get()));
+        Resources::applyItemViewTheme(view.get());
+        Resources::applyItemViewTheme(view.get());
+        QCoreApplication::processEvents();
+
+        auto *scrollBar = view->verticalScrollBar();
+        auto *container = scrollBar->parentWidget();
+        QVERIFY(container);
+        const auto caps = view->findChildren<QWidget *>(QStringLiteral("ItemViewHeaderCap"));
+        QCOMPARE(caps.size(), 1);
+        auto *cap = caps.first();
+        QTRY_VERIFY(scrollBar->isVisible());
+        QTRY_VERIFY(cap->isVisible());
+        QTRY_COMPARE(cap->height(), header->height());
+        QCOMPARE(cap->width(), scrollBar->width());
+        const QPoint headerOrigin = header->mapTo(view.get(), QPoint());
+        const QPoint capOrigin = cap->mapTo(view.get(), QPoint());
+        QCOMPARE(capOrigin.y(), headerOrigin.y());
+        QCOMPARE(capOrigin.x(), headerOrigin.x() + header->width());
+        QVERIFY(scrollBar->mapTo(view.get(), QPoint()).y() >= headerOrigin.y() + header->height());
+        QVERIFY(header->property("headerScrollCap").toBool());
+
+        const QImage image = view->grab().toImage();
+        const qreal dpr = image.devicePixelRatio();
+        const auto pixel = [&](QPoint point) {
+            return image.pixelColor(qRound(point.x() * dpr), qRound(point.y() * dpr));
+        };
+        const QColor border = Resources::themePalette().value(QStringLiteral("border"));
+        const auto isBorder = [&](QColor color) {
+            return qAbs(color.red() - border.red()) <= 8 &&
+                   qAbs(color.green() - border.green()) <= 8 &&
+                   qAbs(color.blue() - border.blue()) <= 8;
+        };
+        const int headerSeamX = headerOrigin.x() + header->width() - 1;
+        const int capSeamX = capOrigin.x() + 1;
+        const int topY = headerOrigin.y();
+        const int bottomY = headerOrigin.y() + header->height() - 1;
+        for (const QPoint &point : {QPoint(headerSeamX, topY), QPoint(capSeamX, topY),
+                                    QPoint(capSeamX + 1, topY), QPoint(headerSeamX, bottomY),
+                                    QPoint(capSeamX, bottomY), QPoint(capSeamX + 1, bottomY),
+                                    QPoint(capOrigin.x() + cap->width() - 1, capOrigin.y() + cap->height() / 2)}) {
+            const QColor color = pixel(point);
+            QVERIFY2(isBorder(color), qPrintable(QString("Header cap border missing at %1,%2: %3")
+                .arg(point.x()).arg(point.y()).arg(color.name())));
+        }
+        QCOMPARE(pixel(QPoint(headerSeamX, topY)), pixel(QPoint(capSeamX, topY)));
+
+        const int originalHeight = header->height();
+        header->setFixedHeight(originalHeight + 7);
+        QTRY_COMPARE(cap->height(), header->height());
+        QCOMPARE(cap->mapTo(view.get(), QPoint()).y(), header->mapTo(view.get(), QPoint()).y());
+
+        model.setRowCount(2);
+        QTRY_VERIFY(!scrollBar->isVisible());
+        QTRY_VERIFY(!cap->isVisible());
+        QCOMPARE(cap->height(), 0);
+        QVERIFY(!header->property("headerScrollCap").toBool());
+
+        model.setRowCount(80);
+        QTRY_VERIFY(scrollBar->isVisible());
+        QTRY_VERIFY(cap->isVisible());
+        QVERIFY(header->property("headerScrollCap").toBool());
+        header->hide();
+        QTRY_VERIFY(!cap->isVisible());
+        QCOMPARE(cap->height(), 0);
+        QVERIFY(!header->property("headerScrollCap").toBool());
+        header->show();
+        QTRY_VERIFY(cap->isVisible());
+        QVERIFY(header->property("headerScrollCap").toBool());
+        Resources::applyItemViewTheme(view.get());
+        Resources::applyItemViewTheme(view.get());
+        QCOMPARE(view->findChildren<QWidget *>(QStringLiteral("ItemViewHeaderCap")).size(), 1);
+    }
+    void replacedHeaderRebindsWithoutDanglingObservers()
+    {
+        QTreeView view;
+        QStandardItemModel model(40, 1);
+        view.setModel(&model);
+        view.resize(320, 160);
+        view.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&view));
+        Resources::applyItemViewTheme(&view);
+        auto *cap = view.findChild<QWidget *>(QStringLiteral("ItemViewHeaderCap"));
+        QVERIFY(cap);
+        QPointer<QHeaderView> previous(view.header());
+        auto *replacement = new QHeaderView(Qt::Horizontal, &view);
+        replacement->setModel(&model);
+        replacement->setVisible(true);
+        view.setHeader(replacement);
+        QCoreApplication::processEvents();
+        QVERIFY(!previous);
+        QTRY_VERIFY(!cap->isVisible());
+        QCOMPARE(cap->height(), 0);
+        Resources::applyItemViewTheme(&view);
+        QTRY_VERIFY(cap->isVisible());
+        QCOMPARE(cap->height(), replacement->height());
+        QVERIFY(replacement->property("headerScrollCap").toBool());
+        QCOMPARE(view.findChildren<QWidget *>(QStringLiteral("ItemViewHeaderCap")).size(), 1);
+    }
     void themePreservesMouseTracking_data()
     {
         QTest::addColumn<int>("kind");
@@ -1238,7 +1367,7 @@ class ResourcesItemViewTests : public QObject
         QTest::mouseClick(tree.viewport(), Qt::LeftButton, Qt::NoModifier, star);
         QVERIFY(!tree.isFavorite(item));
     }
-    void popupsKeepTheirOriginalDelegates()
+    void popupsWrapDelegatesWithoutChangingSizeHints()
     {
         QComboBox combo;
         combo.addItems({"One", "Two"});
@@ -1246,7 +1375,12 @@ class ResourcesItemViewTests : public QObject
         combo.show();
         combo.showPopup();
         QCoreApplication::processEvents();
-        QCOMPARE(combo.view()->itemDelegate(), original);
+        QVERIFY(combo.view()->itemDelegate() != original);
+        QStyleOptionViewItem option;
+        option.initFrom(combo.view());
+        const QModelIndex index = combo.model()->index(0, 0);
+        QCOMPARE(combo.view()->itemDelegate()->sizeHint(option, index),
+                 original->sizeHint(option, index));
         combo.hidePopup();
     }
     void enabledAndDisabledSwitchesHaveIdenticalGeometry()

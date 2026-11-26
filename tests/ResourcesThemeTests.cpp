@@ -37,8 +37,11 @@
 #include <QGridLayout>
 #include <QFormLayout>
 #include <QLabel>
+#include <QCheckBox>
 #include <QRadioButton>
 #include <QStyleOptionButton>
+#include <QStyleOptionViewItem>
+#include <QStyledItemDelegate>
 #include <QtTest>
 
 // Unrelated consumer identities must opt into density using the Qt-only contract.
@@ -307,6 +310,66 @@ private slots:
         QTest::keyClick(&radio, Qt::Key_Space);
         QVERIFY(radio.isChecked());
     }
+    void itemViewChecksUseCompactCheckboxAndStandaloneKeepsSwitch()
+    {
+        QWidget host;
+        auto *layout = new QVBoxLayout(&host);
+        QTreeWidget tree;
+        tree.setHeaderHidden(true);
+        tree.setRootIsDecorated(false);
+        auto *unchecked = new QTreeWidgetItem(&tree, {QStringLiteral("Unchecked")});
+        auto *checked = new QTreeWidgetItem(&tree, {QStringLiteral("Checked")});
+        auto *partial = new QTreeWidgetItem(&tree, {QStringLiteral("Partial")});
+        auto *absent = new QTreeWidgetItem(&tree, {QStringLiteral("No check")});
+        unchecked->setCheckState(0, Qt::Unchecked);
+        checked->setCheckState(0, Qt::Checked);
+        partial->setCheckState(0, Qt::PartiallyChecked);
+        QCheckBox standalone(QStringLiteral("Standalone switch"));
+        standalone.setChecked(true);
+        layout->addWidget(&tree);
+        layout->addWidget(&standalone);
+        host.resize(360, 180);
+        host.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&host));
+        QCoreApplication::processEvents();
+
+        struct Probe : QStyledItemDelegate { using QStyledItemDelegate::initStyleOption; } probe;
+        const auto indicatorRect = [&](QTreeWidgetItem *item) {
+            QStyleOptionViewItem option;
+            option.initFrom(&tree);
+            option.widget = &tree;
+            option.rect = tree.visualItemRect(item);
+            probe.initStyleOption(&option, tree.indexFromItem(item));
+            return tree.style()->subElementRect(QStyle::SE_ItemViewItemCheckIndicator, &option, &tree);
+        };
+        const int rowHeight = tree.visualItemRect(absent).height();
+        for (auto *item : {unchecked, checked, partial}) {
+            const QRect indicator = indicatorRect(item);
+            QCOMPARE(indicator.size(), QSize(14, 14));
+            QCOMPARE(indicator.center().y(), tree.visualItemRect(item).center().y());
+            QCOMPARE(tree.visualItemRect(item).height(), rowHeight);
+        }
+        QStyleOptionButton buttonOption;
+        buttonOption.initFrom(&standalone);
+        const QRect standaloneIndicator = standalone.style()->subElementRect(
+            QStyle::SE_CheckBoxIndicator, &buttonOption, &standalone);
+        QCOMPARE(standaloneIndicator.size(), QSize(40, 24));
+
+        const auto capture = [&](QTreeWidgetItem *item) {
+            const QRect indicator = indicatorRect(item);
+            const QImage image = tree.viewport()->grab().toImage();
+            const qreal dpr = image.devicePixelRatio();
+            return image.copy(QRect(QPoint(qRound(indicator.left() * dpr), qRound(indicator.top() * dpr)),
+                                    indicator.size() * dpr));
+        };
+        const QImage uncheckedImage = capture(unchecked);
+        const QImage checkedImage = capture(checked);
+        const QImage partialImage = capture(partial);
+        QVERIFY(checkedImage != uncheckedImage);
+        QVERIFY(partialImage != checkedImage);
+        QVERIFY(partialImage != uncheckedImage);
+    }
+
     void fieldsResolveOneGeometryAcrossParents()
     {
         CompactConsumerWidget device;
@@ -545,6 +608,28 @@ private slots:
         QCOMPARE(warning.pixelColor(warning.width() / 2, 0), Resources::themePalette().value("warning"));
         QCOMPARE(counter->palette().color(QPalette::WindowText), Resources::themePalette().value("warningText"));
     }
+    void graphicsSaveBubbleRoleUsesStatusSurface()
+    {
+        QStatusBar bar;
+        bar.setSizeGripEnabled(false);
+        auto* bubble = new QWidget(&bar);
+        bubble->setObjectName(QStringLiteral("EngineStatusSave"));
+        bubble->setProperty("statusRole", "save");
+        bubble->setAttribute(Qt::WA_StyledBackground);
+        auto* layout = new QHBoxLayout(bubble);
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->addWidget(new QLabel(QStringLiteral("Saving frame.png…"), bubble));
+        bar.addWidget(bubble);
+        bar.setFixedHeight(32);
+        bar.show();
+        QApplication::processEvents();
+
+        QVERIFY(bubble->height() >= 24);
+        const QImage surface = bubble->grab().toImage();
+        QVERIFY(!surface.isNull());
+        QCOMPARE(surface.pixelColor(surface.width() / 2, 0), Resources::themePalette().value("controlBorder"));
+    }
+
     void deviceCounterRoleResolvesInDevicePanelRow()
     {
         QWidget panel;
@@ -1185,6 +1270,8 @@ private slots:
         const QString sheet = qApp->styleSheet();
         QVERIFY(sheet.contains(QStringLiteral("controlRole=\"resizeGrip\"]::handle:vertical")));
         QVERIFY(sheet.contains(QStringLiteral("controlRole=\"resizeGrip\"]::handle:horizontal")));
+        // Hover reveal is the only presentation; no selector keeps the grip visible at rest.
+        QVERIFY(!sheet.contains(QStringLiteral("gripVisibility")));
 
         QWidget host;
         auto* layout = new QVBoxLayout(&host);

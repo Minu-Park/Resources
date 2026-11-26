@@ -198,6 +198,13 @@
         <file>icon/switch-outline-off-disabled.svg</file>
         <file>icon/switch-outline-on-disabled.svg</file>
         <file>icon/switch-outline-mixed-disabled.svg</file>
+        <file>icon/item-check-off.svg</file>
+        <file>icon/item-check-off-hover.svg</file>
+        <file>icon/item-check-on.svg</file>
+        <file>icon/item-check-mixed.svg</file>
+        <file>icon/item-check-off-disabled.svg</file>
+        <file>icon/item-check-on-disabled.svg</file>
+        <file>icon/item-check-mixed-disabled.svg</file>
         <file>icon/radio-outline-off.svg</file>
         <file>icon/radio-outline-on.svg</file>
         <file>icon/radio-outline-off-disabled.svg</file>

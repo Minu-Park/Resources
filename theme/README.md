@@ -94,6 +94,8 @@ handle is transparent with no border or grip; pointer hover or an active drag
 shows a centered, neutral gray rounded dash (18 by 2 logical pixels, rotated
 for a horizontal splitter). Its 2× asset preserves the rounded ends on
 high-DPI displays. Qt supplies the orientation-specific resize cursor.
+This hover-revealed presentation is the role's only variant; a consumer
+cannot keep the grip visible at rest.
 The role adds no
 widget, wrapper, event filter or custom painting; QSplitter keeps its native
 dragging and accessible behavior. Unmarked splitters and plain
@@ -163,6 +165,16 @@ it does not yet validate literal `layoutRole`, `controlRole` or
 `statusBubbleVariant` values. Review those values against this contract rather
 than treating a clean policy result as role-value validation.
 
+Tree, list and table item check indicators use the dedicated 14x14 `item-check-*` vector set rather than the standalone switch: a 12x12 rounded square with a 1.3px stroke, blue `focusBorder`/`selectionAccent` fill and white check for Checked, neutral `disabledText` outline for Unchecked, `hoverBorder` outline on Unchecked hover, a white dash for PartiallyChecked, and the existing muted blue/gray disabled variants. The indicator stays vertically centered in the native row without increasing its height, and Qt retains check-state hit testing, keyboard toggling and accessibility. Standalone `QCheckBox` and checkable `QGroupBox` controls keep the 36x20 switch and 40x24 focus slot; menu check marks are unchanged. Combo-popup item indicators follow the item-view checkbox rule.
+
+## Item-view headers
+
+`Resources::applyItemViewTheme()` adds one mouse-transparent `ItemViewHeaderCap` to a `QTreeView` or `QTableView` that has a horizontal header. Qt places the cap at the top of the vertical scrollbar container through `addScrollBarWidget(cap, Qt::AlignTop)`, so the scrollbar begins below the header without widening the header, changing a section size, or adding horizontal scroll range. The cap has the header's current height and follows header resize, show and hide events. Combo popups, calendars, autocomplete popups and header views keep the existing exclusions.
+
+While the header and vertical scrollbar are visible, Resources sets `headerScrollCap="true"` on the header and repolishes it. `00_base.qss` removes the header's right border and right corner radii, and paints the cap with the same surface, top/right/bottom border, and right corner radii. The cap has no left border and zero margin, so the header and cap share one continuous top and bottom border row and read as a single pill. If a consumer frame introduces an origin offset, correct that offset through the cap's margin rather than moving Qt's header or scrollbar geometry.
+
+When the vertical scrollbar is hidden or the header is hidden, the cap collapses to zero height, hides, and clears `headerScrollCap`; the header keeps its normal full rounded pill and the scrollbar regains the full content height. Theme application is idempotent and leaves exactly one cap. The helper retains its header through `QPointer`; replacing a header with `setHeader()` is not a supported rebinding path, but a replaced or destroyed header cannot leave a dangling observer. Searchable-tree overlays, file-dialog header roles, analysis statistics tables and System Logs need no opt-out or consumer-specific geometry.
+
 ## Source reload
 
 `reloadThemeFromDirectory(qssDirectory)` reads every installed QSS fragment and
@@ -186,6 +198,9 @@ popup the runtime reserves the emphasized label width through the menu's minimum
 keeping any consumer minimum, so hover neither clips nor resizes a row. Checked rows paint
 no fill; check and radio glyphs, or the invoking control, show the current value.
 The shared menu template keeps 4px vertical padding for the existing row height.
+
+Plain `QComboBox` popup rows use no extra horizontal padding so their text aligns with the field. These popups paint no hover, tracked-selection or current-value fill and no outline. Pointer hover and keyboard tracking use neutral `WEIGHT_EMPHASIS` text; the row matching the combo's current index within its root model index uses bold `selectionAccent` text, including while it is tracked. Resources wraps the popup view's existing delegate at each opening, forwards its size-hint, editor and help contracts, and leaves separators, icons, decorations and Qt's disabled rendering intact. Editable completer popups and calendars keep their dedicated presentation.
+
 At `QEvent::Show`, Resources selects a screen from Qt's global menu geometry. It checks the top-left point, then the center, then falls back to `QWidget::screen()`. Open-direction checks and shadow-gutter clamping share the selected screen. Qt provides both the menu geometry and screen bounds in logical coordinates.
 On macOS, Resources observes `QEvent::ToolTip` on buttons and matches the native label's Show or Move event and text within that event-loop turn. Qt owns the label, including reuse and dismissals. Qt sends `QShowEvent` from `QWidgetPrivate::show_helper()` before `show_sys()` maps the native window, so Resources relocates the label on Show before it can appear at Qt's default position. When Qt reuses a visible label, `QToolTip::showText()` moves it inside the same turn and Resources relocates it on Move with a re-entrancy guard around its own `move()`. Placement is 14 logical px to the right of the hover position at cursor height, flips left if needed and clamps within the anchor screen's available geometry. Qt's position is kept when neither side fits. A request with no matching label event expires on the next event-loop turn through a posted cleanup event, so later calls to `QToolTip::showText()` keep Qt's placement. No timer delays the placement itself. Windows and Linux use Qt's placement.
 

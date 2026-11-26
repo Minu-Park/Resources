@@ -43,6 +43,7 @@
 #include <QSignalSpy>
 #include <QScopeGuard>
 #include <QSpinBox>
+#include <QStringListModel>
 #include <QDoubleSpinBox>
 #include <QFocusEvent>
 #include <QFormLayout>
@@ -970,6 +971,18 @@ private slots:
             QVERIFY(icon && message);
             QVERIFY(qAbs(icon->geometry().center().y() - message->geometry().center().y()) <= 1);
         }
+    }
+
+    void messageBoxShowsWriterDetail()
+    {
+        Resources::installResources(*qApp);
+        const QString detail = QStringLiteral("Permission denied.");
+        ThemedMessageBox dialog(ThemedMessageBox::Critical, QStringLiteral("Save failed"),
+            QStringLiteral("The file could not be saved."), nullptr, false, detail);
+        auto* detailLabel = dialog.findChild<QLabel*>(QStringLiteral("ThemedMessageBoxDetail"));
+        QVERIFY(detailLabel);
+        QCOMPARE(detailLabel->text(), detail);
+        QCOMPARE(detailLabel->property("textRole").toString(), QStringLiteral("caption"));
     }
 
     void menuHoverRecolorsTextAndIconWithoutFill()
@@ -2076,11 +2089,13 @@ private slots:
     void rowTableCheckIndicatorsAreVisible()
     {
         Resources::installResources(*qApp);
-        QTableWidget table(1, 1);
+        QTableWidget table(2, 1);
         table.setProperty("interactionMode", QStringLiteral("row"));
         auto* item = new QTableWidgetItem;
         item->setCheckState(Qt::Unchecked);
         table.setItem(0, 0, item);
+        auto* plain = new QTableWidgetItem(QStringLiteral("No check"));
+        table.setItem(1, 0, plain);
         table.resize(320, 160);
         table.show();
         QVERIFY(QTest::qWaitForWindowExposed(&table));
@@ -2093,8 +2108,8 @@ private slots:
         probe.initStyleOption(&option, table.model()->index(0, 0));
         const QRect indicator = table.style()->subElementRect(
             QStyle::SE_ItemViewItemCheckIndicator, &option, &table);
-        QVERIFY(indicator.width() >= 32);
-        QVERIFY(indicator.height() >= 18);
+        QCOMPARE(indicator.size(), QSize(14, 14));
+        QCOMPARE(table.visualItemRect(item).height(), table.visualItemRect(plain).height());
         const auto capture = [&] {
             QCoreApplication::processEvents();
             const QImage image = table.viewport()->grab().toImage();
@@ -2319,7 +2334,7 @@ private slots:
         }
     }
 
-    void comboPopupUsesNeutralRowsWithoutLeadingMarkers()
+    void comboPopupUsesFillFreeRowsWithoutLeadingMarkers()
     {
         Resources::installResources(*qApp);
         for (bool nested : {false, true}) for (bool editable : {false, true}) {
@@ -2355,7 +2370,7 @@ private slots:
                     }
                 const QColor background = image.pixelColor(qRound((logical.right() - 16) * dpr),
                                                            qRound(logical.center().y() * dpr));
-                return !marker && background == Resources::themePalette().value(QStringLiteral("selection"));
+                return !marker && background == Resources::themePalette().value(QStringLiteral("surface"));
             };
             QVERIFY(verifyRow(1));
             const QPoint hover = view->visualRect(combo.model()->index(2, 0)).center();
@@ -2370,6 +2385,251 @@ private slots:
             QCOMPARE(combo.currentIndex(), 2);
             QCOMPARE(activated.count(), 1);
         }
+    }
+
+    void comboPopupPaintsCurrentAndTrackedInkWithoutFill()
+    {
+        Resources::installResources(*qApp);
+        const auto restorePalette = qScopeGuard([] { Resources::resetThemePalette(); });
+        QComboBox combo;
+        combo.addItems({QStringLiteral("MMMM row"), QStringLiteral("MMMM row"),
+                        QStringLiteral("MMMM row")});
+        combo.setCurrentIndex(1);
+        combo.resize(280, 24);
+        combo.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&combo));
+        combo.showPopup();
+        auto *view = combo.view();
+        QTRY_VERIFY(view->isVisible());
+        QTest::keyClick(view, Qt::Key_Down);
+        QCoreApplication::processEvents();
+        QCOMPARE(view->currentIndex().row(), 2);
+        QCOMPARE(combo.currentIndex(), 1);
+
+        const qreal dpr = view->viewport()->devicePixelRatioF();
+        const QColor surface = Resources::themePalette().value(QStringLiteral("surface"));
+        const QColor accent = Resources::themePalette().value(QStringLiteral("selectionAccent"));
+        const QColor neutral = Resources::themePalette().value(QStringLiteral("text"));
+        const auto render = [&] {
+            QImage image(view->viewport()->size() * dpr, QImage::Format_RGB32);
+            image.setDevicePixelRatio(dpr);
+            image.fill(surface);
+            {
+                QPainter painter(&image);
+                view->viewport()->render(&painter);
+            }
+            return image;
+        };
+        const auto verifyBackground = [&](const QImage &image) {
+            for (int row = 0; row < 3; ++row) {
+                const QRect rect = view->visualRect(combo.model()->index(row, 0));
+                const QList<QPoint> samples = {
+                    QPoint(rect.left() + 1, rect.center().y()),
+                    QPoint(rect.right() - 1, rect.center().y()),
+                    QPoint(rect.center().x(), rect.top() + 1),
+                    QPoint(rect.center().x(), rect.bottom() - 1),
+                    QPoint(rect.right() - 8, rect.center().y())};
+                for (const QPoint &point : samples) {
+                    const QColor pixel = image.pixelColor(qRound(point.x() * dpr),
+                                                          qRound(point.y() * dpr));
+                    QVERIFY2(pixel == surface, qPrintable(QStringLiteral("Row %1 painted a fill or outline: %2")
+                                                              .arg(row).arg(pixel.name())));
+                }
+            }
+        };
+        struct Ink { int accentPixels = 0; int neutralPixels = 0; int width = 0; };
+        const auto inspectInk = [&](const QImage &image, int row, const QColor &accentInk) {
+            const QRect rect = view->visualRect(combo.model()->index(row, 0));
+            const QRect scan(qFloor(rect.left() * dpr), qFloor(rect.top() * dpr),
+                             qCeil(rect.width() * dpr), qCeil(rect.height() * dpr));
+            Ink ink;
+            QRect bounds;
+            for (int y = scan.top(); y <= scan.bottom(); ++y) {
+                for (int x = scan.left(); x <= scan.right(); ++x) {
+                    const QColor pixel = image.pixelColor(x, y);
+                    const bool accented = qAbs(pixel.red() - accentInk.red()) <= 2 &&
+                                          qAbs(pixel.green() - accentInk.green()) <= 2 &&
+                                          qAbs(pixel.blue() - accentInk.blue()) <= 2;
+                    const bool neutrallyInked = qAbs(pixel.red() - neutral.red()) <= 2 &&
+                                                qAbs(pixel.green() - neutral.green()) <= 2 &&
+                                                qAbs(pixel.blue() - neutral.blue()) <= 2;
+                    if (accented) ink.accentPixels++;
+                    if (neutrallyInked) ink.neutralPixels++;
+                    if (accented || neutrallyInked) bounds = bounds.united(QRect(x, y, 1, 1));
+                }
+            }
+            ink.width = bounds.width();
+            return ink;
+        };
+
+        const QImage image = render();
+        verifyBackground(image);
+        const Ink normal = inspectInk(image, 0, accent);
+        const Ink current = inspectInk(image, 1, accent);
+        const Ink tracked = inspectInk(image, 2, accent);
+        QVERIFY(normal.neutralPixels > 10);
+        QCOMPARE(normal.accentPixels, 0);
+        QVERIFY(current.accentPixels > 10);
+        QCOMPARE(current.neutralPixels, 0);
+        QVERIFY(tracked.neutralPixels > 10);
+        QCOMPARE(tracked.accentPixels, 0);
+        QVERIFY2(current.width > normal.width, "The current value did not paint with emphasis weight.");
+        QVERIFY2(tracked.width > normal.width, "The tracked row did not paint with emphasis weight.");
+
+        // The current value outranks pointer tracking when the pointer reaches its row.
+        const QPoint currentPoint = view->visualRect(combo.model()->index(1, 0)).center();
+        QMouseEvent move(QEvent::MouseMove, currentPoint, view->viewport()->mapToGlobal(currentPoint),
+                         Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+        QApplication::sendEvent(view->viewport(), &move);
+        QCoreApplication::processEvents();
+        QCOMPARE(view->currentIndex().row(), 1);
+        const QImage hoveredImage = render();
+        verifyBackground(hoveredImage);
+        const Ink hoveredCurrent = inspectInk(hoveredImage, 1, accent);
+        const Ink restingTracked = inspectInk(hoveredImage, 2, accent);
+        QVERIFY(hoveredCurrent.accentPixels > 10);
+        QCOMPARE(hoveredCurrent.neutralPixels, 0);
+        QCOMPARE(hoveredCurrent.width, current.width);
+        QVERIFY(restingTracked.neutralPixels > 10);
+        QCOMPARE(restingTracked.accentPixels, 0);
+        QCOMPARE(restingTracked.width, normal.width);
+
+        const QColor liveAccent(QStringLiteral("#6a3fa0"));
+        QVERIFY(Resources::setThemePalette({{QStringLiteral("selectionAccent"), liveAccent}}));
+        QCoreApplication::processEvents();
+        const QImage liveImage = render();
+        verifyBackground(liveImage);
+        const Ink liveCurrent = inspectInk(liveImage, 1, liveAccent);
+        QVERIFY(liveCurrent.accentPixels > 10);
+        QCOMPARE(liveCurrent.neutralPixels, 0);
+        combo.hidePopup();
+    }
+
+    void comboPopupPreservesSeparatorsAndDisabledRows()
+    {
+        Resources::installResources(*qApp);
+        QComboBox combo;
+        combo.addItem(QStringLiteral("Enabled row"));
+        combo.insertSeparator(1);
+        combo.addItem(QStringLiteral("Disabled row"));
+        const QModelIndex disabled = combo.model()->index(2, 0);
+        combo.setItemData(2, false, Qt::UserRole - 1);
+        combo.setCurrentIndex(0);
+        combo.resize(240, 24);
+        combo.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&combo));
+        combo.showPopup();
+        auto *view = combo.view();
+        QTRY_VERIFY(view->isVisible());
+
+        const qreal dpr = view->viewport()->devicePixelRatioF();
+        const QColor surface = Resources::themePalette().value(QStringLiteral("surface"));
+        const QColor disabledInk = Resources::themePalette().value(QStringLiteral("disabledText"));
+        QImage image(view->viewport()->size() * dpr, QImage::Format_RGB32);
+        image.setDevicePixelRatio(dpr);
+        image.fill(surface);
+        {
+            QPainter painter(&image);
+            view->viewport()->render(&painter);
+        }
+        const auto rowPixels = [&](int row) {
+            const QRect rect = view->visualRect(combo.model()->index(row, 0));
+            return QRect(qFloor(rect.left() * dpr), qFloor(rect.top() * dpr),
+                         qCeil(rect.width() * dpr), qCeil(rect.height() * dpr));
+        };
+        int separatorPixels = 0;
+        const QRect separator = rowPixels(1);
+        for (int y = separator.top(); y <= separator.bottom(); ++y)
+            for (int x = separator.left(); x <= separator.right(); ++x)
+                separatorPixels += image.pixelColor(x, y) != surface;
+        QVERIFY2(separatorPixels > 10, "QComboBox::insertSeparator lost its native rule.");
+
+        int disabledPixels = 0;
+        int disabledRowPixels = 0;
+        QColor darkestDisabled = surface;
+        const QRect disabledRow = rowPixels(2);
+        for (int y = disabledRow.top(); y <= disabledRow.bottom(); ++y)
+            for (int x = disabledRow.left(); x <= disabledRow.right(); ++x) {
+                const QColor pixel = image.pixelColor(x, y);
+                disabledRowPixels += pixel != surface;
+                if (qGray(pixel.rgb()) < qGray(darkestDisabled.rgb())) darkestDisabled = pixel;
+                disabledPixels += qAbs(pixel.red() - disabledInk.red()) <= 2 &&
+                                  qAbs(pixel.green() - disabledInk.green()) <= 2 &&
+                                  qAbs(pixel.blue() - disabledInk.blue()) <= 2;
+            }
+        QVERIFY2(disabledPixels > 10, qPrintable(QStringLiteral("The disabled combo row lost Qt's disabled ink: %1 matching, %2 ink pixels, darkest %3, expected %4")
+                                                     .arg(disabledPixels).arg(disabledRowPixels)
+                                                     .arg(darkestDisabled.name()).arg(disabledInk.name())));
+        const QRect rect = view->visualRect(disabled);
+        QCOMPARE(image.pixelColor(qRound((rect.right() - 8) * dpr),
+                                  qRound(rect.center().y() * dpr)), surface);
+        combo.hidePopup();
+    }
+
+    void comboPopupRewrapsViewsAndForwardsDelegateSizeHint()
+    {
+        Resources::installResources(*qApp);
+        struct SizedDelegate : QStyledItemDelegate
+        {
+            explicit SizedDelegate(QSize hint, QObject *parent = nullptr)
+                : QStyledItemDelegate(parent), hint(hint) {}
+            QSize sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const override
+            {
+                return hint;
+            }
+            QSize hint;
+        };
+        QComboBox combo;
+        combo.addItems({QStringLiteral("One"), QStringLiteral("Two"), QStringLiteral("Three")});
+        combo.resize(240, 24);
+        auto *source = new SizedDelegate(QSize(173, 31), &combo);
+        combo.setItemDelegate(source);
+        combo.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&combo));
+
+        const auto sizeHint = [&] {
+            QStyleOptionViewItem option;
+            option.initFrom(combo.view());
+            return combo.view()->itemDelegate()->sizeHint(option, combo.model()->index(0, 0));
+        };
+        combo.showPopup();
+        QTRY_VERIFY(combo.view()->isVisible());
+        auto *first = combo.view()->itemDelegate();
+        QVERIFY(first != source);
+        QCOMPARE(sizeHint(), QSize(173, 31));
+        combo.hidePopup();
+        QTRY_VERIFY(!combo.view()->isVisible());
+        combo.showPopup();
+        QTRY_VERIFY(combo.view()->isVisible());
+        QCOMPARE(combo.view()->itemDelegate(), first);
+        combo.hidePopup();
+        QTRY_VERIFY(!combo.view()->isVisible());
+
+        auto *replacementSource = new SizedDelegate(QSize(191, 37), &combo);
+        combo.setItemDelegate(replacementSource);
+        combo.showPopup();
+        QTRY_VERIFY(combo.view()->isVisible());
+        auto *second = combo.view()->itemDelegate();
+        QVERIFY(second != source);
+        QVERIFY(second != replacementSource);
+        QCOMPARE(sizeHint(), QSize(191, 37));
+        combo.hidePopup();
+        QTRY_VERIFY(!combo.view()->isVisible());
+
+        auto *replacement = new QListView;
+        replacement->setItemDelegate(source);
+        combo.setView(replacement);
+        combo.showPopup();
+        QTRY_VERIFY(combo.view()->isVisible());
+        QVERIFY(combo.view()->itemDelegate() != source);
+        QCOMPARE(sizeHint(), QSize(173, 31));
+        auto *wrapped = combo.view()->itemDelegate();
+        combo.setModel(new QStringListModel({QStringLiteral("Alpha"), QStringLiteral("Beta"),
+                                             QStringLiteral("Gamma")}, &combo));
+        combo.setCurrentIndex(1);
+        QCOMPARE(combo.view()->itemDelegate(), wrapped);
+        QCOMPARE(sizeHint(), QSize(173, 31));
+        combo.hidePopup();
     }
 
     void mixedMenuLabelsShareOneColumn()
@@ -2796,6 +3056,25 @@ private slots:
             QTest::mouseMove(combo->view()->viewport(), combo->view()->visualRect(combo->model()->index(0, 0)).center());
             QTest::qWait(30);
             const QImage shell = popup->grab().toImage();
+            const auto firstTextPixel = [](const QImage& image, int top, int bottom) {
+                const qreal dpr = image.devicePixelRatio();
+                for (int x = qCeil(3 * dpr); x < image.width() / 2; ++x) {
+                    for (int y = qCeil(top * dpr); y < qFloor(bottom * dpr); ++y) {
+                        const QColor color = image.pixelColor(x, y);
+                        if (color.alpha() == 255 && qGray(color.rgb()) < 150)
+                            return x / dpr;
+                    }
+                }
+                return -1.0;
+            };
+            const QRect firstRow = combo->view()->visualRect(combo->model()->index(0, 0));
+            const int rowTop = combo->view()->viewport()->mapTo(popup, firstRow.topLeft()).y();
+            const qreal fieldText = firstTextPixel(combo->grab().toImage(), 4, combo->height() - 4);
+            const qreal popupText = firstTextPixel(shell, rowTop + 2, rowTop + firstRow.height() - 2);
+            QVERIFY(fieldText >= 0 && popupText >= 0);
+            QVERIFY2(qAbs(fieldText - popupText) <= 1.0,
+                     qPrintable(QStringLiteral("Field text starts at %1, popup text at %2")
+                                    .arg(fieldText).arg(popupText)));
             const QString cornerError = comboCornerError(shell, popup->size(), false);
             QVERIFY2(cornerError.isEmpty(), qPrintable(cornerError));
             const auto checkBorder = [](QColor color, qreal coverage) {

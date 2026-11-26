@@ -11,6 +11,9 @@ class QMenuBar;
 class ThemedMdiTitleBar : public QWidget {
     Q_OBJECT
 public:
+    /** @brief Fixed height of an MDI window title bar; window-height dock title bars share it. */
+    static constexpr int kHeight = 32;
+
     explicit ThemedMdiTitleBar(QMdiSubWindow* subWindow, QMenuBar* menuBar, QWidget* parent = nullptr);
     void updateState(bool isMinimized);
 
