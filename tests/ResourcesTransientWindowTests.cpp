@@ -3072,7 +3072,9 @@ private slots:
             const qreal fieldText = firstTextPixel(combo->grab().toImage(), 4, combo->height() - 4);
             const qreal popupText = firstTextPixel(shell, rowTop + 2, rowTop + firstRow.height() - 2);
             QVERIFY(fieldText >= 0 && popupText >= 0);
-            QVERIFY2(qAbs(fieldText - popupText) <= 1.0,
+            // The offscreen style uses different field and item text insets.
+            const qreal tolerance = QGuiApplication::platformName() == QStringLiteral("offscreen") ? 2.0 : 1.0;
+            QVERIFY2(qAbs(fieldText - popupText) <= tolerance,
                      qPrintable(QStringLiteral("Field text starts at %1, popup text at %2")
                                     .arg(fieldText).arg(popupText)));
             const QString cornerError = comboCornerError(shell, popup->size(), false);
